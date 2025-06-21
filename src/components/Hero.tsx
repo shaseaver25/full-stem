@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Play, Users, Award, Globe, Star } from "lucide-react";
 
@@ -54,7 +55,7 @@ const Hero = () => {
           
           {/* Enhanced subtitle */}
           <p className="text-xl md:text-2xl text-gray-700 mb-12 max-w-3xl mx-auto leading-relaxed animate-fade-in">
-            Engaging, ethical, hands-on STEM for underrepresented communities.
+            Real STEM for real students: inclusive, ethical, and built for all kinds of minds.
           </p>
 
           {/* Enhanced CTA Buttons with better contrast */}
