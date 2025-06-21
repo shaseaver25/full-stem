@@ -9,6 +9,30 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      Lessons: {
+        Row: {
+          Description: string | null
+          "Lesson ID": number
+          Order: number | null
+          Title: string | null
+          Track: string | null
+        }
+        Insert: {
+          Description?: string | null
+          "Lesson ID": number
+          Order?: number | null
+          Title?: string | null
+          Track?: string | null
+        }
+        Update: {
+          Description?: string | null
+          "Lesson ID"?: number
+          Order?: number | null
+          Title?: string | null
+          Track?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -30,6 +54,24 @@ export type Database = {
           full_name?: string | null
           id?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      "User Progress": {
+        Row: {
+          "Field Name": string
+          "Field Type": string | null
+          "Linked To / Notes": string | null
+        }
+        Insert: {
+          "Field Name": string
+          "Field Type"?: string | null
+          "Linked To / Notes"?: string | null
+        }
+        Update: {
+          "Field Name"?: string
+          "Field Type"?: string | null
+          "Linked To / Notes"?: string | null
         }
         Relationships: []
       }
