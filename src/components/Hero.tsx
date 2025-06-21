@@ -1,6 +1,5 @@
-
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Play, Users, Award, Globe } from "lucide-react";
+import { ArrowRight, Play, Users, Award, Globe, Star } from "lucide-react";
 
 const Hero = () => {
   return (
@@ -96,9 +95,19 @@ const Hero = () => {
             </div>
           </div>
 
-          {/* Trust Indicators */}
-          <div className="animate-fade-in">
-            <p className="text-gray-600 mb-6 font-semibold">Created by award winning educators</p>
+          {/* Enhanced Trust Indicators - Made More Prominent */}
+          <div className="animate-fade-in bg-gradient-to-r from-amber-50 to-orange-50 rounded-2xl p-8 shadow-lg border border-amber-200/50 max-w-2xl mx-auto">
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <Star className="h-8 w-8 text-amber-500 fill-amber-500" />
+              <Star className="h-6 w-6 text-amber-400 fill-amber-400" />
+              <Star className="h-8 w-8 text-amber-500 fill-amber-500" />
+            </div>
+            <p className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent mb-2">
+              Created by Award-Winning Educators
+            </p>
+            <p className="text-gray-600 font-medium">
+              Trusted expertise in STEM education and curriculum development
+            </p>
           </div>
         </div>
       </div>
