@@ -1,8 +1,12 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Brain, BarChart3, Rocket, ArrowRight } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const CoreTracks = () => {
+  const navigate = useNavigate();
+
   const tracks = [
     {
       icon: <Brain className="h-12 w-12 text-blue-600" />,
@@ -18,7 +22,8 @@ const CoreTracks = () => {
       description: "Real-world spreadsheet skills with formulas and data analysis.",
       features: ["Advanced Formulas", "Data Visualization", "Task Management", "Templates"],
       gradient: "from-green-500 to-green-600",
-      bgGradient: "from-green-50 to-green-100"
+      bgGradient: "from-green-50 to-green-100",
+      route: "/course/excel"
     },
     {
       icon: <Rocket className="h-12 w-12 text-orange-600" />,
@@ -30,6 +35,15 @@ const CoreTracks = () => {
       comingSoon: true
     }
   ];
+
+  const handleTrackClick = (track: any) => {
+    if (track.comingSoon) {
+      return;
+    }
+    if (track.route) {
+      navigate(track.route);
+    }
+  };
 
   return (
     <section id="core-tracks" className="py-20 bg-gray-50">
@@ -80,6 +94,7 @@ const CoreTracks = () => {
                 <Button 
                   className={`w-full bg-gradient-to-r ${track.gradient} hover:shadow-lg text-white font-semibold py-3 rounded-full transition-all duration-300 ${track.comingSoon ? 'opacity-60 cursor-not-allowed' : ''}`}
                   disabled={track.comingSoon}
+                  onClick={() => handleTrackClick(track)}
                 >
                   {track.comingSoon ? 'Notify Me' : 'Start Learning'}
                   {!track.comingSoon && <ArrowRight className="ml-2 h-4 w-4" />}
