@@ -1,7 +1,6 @@
-
-
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Play, Users, Award, Globe, Star } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const Hero = () => {
   const scrollToTracks = () => {
@@ -79,14 +78,16 @@ const Hero = () => {
               Explore Lessons
               <ArrowRight className="ml-3 h-6 w-6" />
             </Button>
-            <Button 
-              variant="outline" 
-              size="lg"
-              className="border-3 border-green-600 text-green-700 hover:bg-green-600 hover:text-white px-10 py-6 text-xl font-bold rounded-full shadow-xl hover:shadow-green-500/25 transition-all duration-300 transform hover:scale-110 hover:-translate-y-1 bg-white/90 backdrop-blur-sm"
-            >
-              <Play className="mr-3 h-6 w-6" />
-              Start Free Trial
-            </Button>
+            <Link to="/trial">
+              <Button 
+                variant="outline" 
+                size="lg"
+                className="border-3 border-green-600 text-green-700 hover:bg-green-600 hover:text-white px-10 py-6 text-xl font-bold rounded-full shadow-xl hover:shadow-green-500/25 transition-all duration-300 transform hover:scale-110 hover:-translate-y-1 bg-white/90 backdrop-blur-sm"
+              >
+                <Play className="mr-3 h-6 w-6" />
+                Start Free Trial
+              </Button>
+            </Link>
           </div>
 
           {/* Enhanced Stats with icons */}
@@ -129,4 +130,3 @@ const Hero = () => {
 };
 
 export default Hero;
-
