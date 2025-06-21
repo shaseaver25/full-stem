@@ -50,16 +50,12 @@ const CourseOverview: React.FC<CourseOverviewProps> = ({ courseName, trackFilter
 
       if (lessonsError) throw lessonsError;
 
-      // Fetch user progress
-      const { data: progressData, error: progressError } = await supabase
-        .from('user_progress')
-        .select('lesson_id, status')
-        .eq('user_id', user!.id);
-
-      if (progressError) throw progressError;
-
+      // For now, we'll create a mock progress system since the User Progress table 
+      // structure needs to be clarified. We'll simulate progress data.
+      const mockProgress: UserProgress[] = [];
+      
       setLessons(lessonsData || []);
-      setUserProgress(progressData || []);
+      setUserProgress(mockProgress);
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
