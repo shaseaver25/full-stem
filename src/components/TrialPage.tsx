@@ -1,35 +1,8 @@
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Brain, BarChart3, Users, CheckCircle, Sparkles, Target, BookOpen } from "lucide-react";
-import { useState } from "react";
 
 const TrialPage = () => {
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    role: '',
-    organization: '',
-    betaConsent: false
-  });
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Form submission logic would go here - easily pluggable into Firebase/Airtable
-    console.log('Form submitted:', formData);
-    // TODO: Connect to your preferred backend service
-  };
-
-  const handleInputChange = (field: string, value: string | boolean) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-green-50 to-orange-50">
       {/* Background decorative elements */}
@@ -152,7 +125,7 @@ const TrialPage = () => {
               </CardContent>
             </Card>
 
-            {/* Sign-Up Form */}
+            {/* Airtable Form */}
             <Card className="bg-white/90 backdrop-blur-md shadow-2xl border-2 border-gray-100">
               <CardHeader>
                 <CardTitle className="text-2xl font-bold text-gray-900 text-center">
@@ -160,83 +133,17 @@ const TrialPage = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <form onSubmit={handleSubmit} className="space-y-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="name" className="text-gray-700 font-medium">Full Name *</Label>
-                    <Input
-                      id="name"
-                      type="text"
-                      required
-                      value={formData.name}
-                      onChange={(e) => handleInputChange('name', e.target.value)}
-                      className="border-2 border-gray-200 focus:border-blue-500 transition-colors"
-                      placeholder="Enter your full name"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="email" className="text-gray-700 font-medium">Email Address *</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      required
-                      value={formData.email}
-                      onChange={(e) => handleInputChange('email', e.target.value)}
-                      className="border-2 border-gray-200 focus:border-blue-500 transition-colors"
-                      placeholder="Enter your email"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="role" className="text-gray-700 font-medium">Your Role *</Label>
-                    <select
-                      id="role"
-                      required
-                      value={formData.role}
-                      onChange={(e) => handleInputChange('role', e.target.value)}
-                      className="w-full h-10 px-3 py-2 border-2 border-gray-200 rounded-md focus:border-blue-500 focus:outline-none transition-colors bg-white"
-                    >
-                      <option value="">Select your role</option>
-                      <option value="student">Student</option>
-                      <option value="educator">Educator</option>
-                      <option value="parent">Parent</option>
-                      <option value="other">Other</option>
-                    </select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="organization" className="text-gray-700 font-medium">School or Organization (Optional)</Label>
-                    <Input
-                      id="organization"
-                      type="text"
-                      value={formData.organization}
-                      onChange={(e) => handleInputChange('organization', e.target.value)}
-                      className="border-2 border-gray-200 focus:border-blue-500 transition-colors"
-                      placeholder="Enter your school or organization"
-                    />
-                  </div>
-
-                  <div className="flex items-start space-x-3 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                    <Checkbox
-                      id="betaConsent"
-                      checked={formData.betaConsent}
-                      onCheckedChange={(checked) => handleInputChange('betaConsent', checked === true)}
-                      className="mt-1"
-                    />
-                    <Label htmlFor="betaConsent" className="text-sm text-gray-700 leading-relaxed cursor-pointer">
-                      I agree to participate in the BETA program and may be contacted for feedback to help improve Full STEM's educational experience.
-                    </Label>
-                  </div>
-
-                  <Button
-                    type="submit"
-                    className="w-full bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white font-bold py-4 text-lg rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105"
-                    disabled={!formData.betaConsent}
-                  >
-                    Start My Free Trial
-                    <Sparkles className="ml-2 h-5 w-5" />
-                  </Button>
-                </form>
+                <iframe 
+                  className="airtable-embed w-full" 
+                  src="https://airtable.com/embed/appanbHfaMQ5ha3eE/shrxz9OpKOeSIs5bw" 
+                  style={{
+                    background: 'transparent',
+                    border: '1px solid #ccc',
+                    borderRadius: '8px'
+                  }}
+                  width="100%" 
+                  height="533"
+                />
               </CardContent>
             </Card>
           </div>
