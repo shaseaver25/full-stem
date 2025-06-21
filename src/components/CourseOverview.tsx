@@ -19,6 +19,7 @@ interface Lesson {
 interface UserProgress {
   lesson_id: number;
   status: 'Not Started' | 'In Progress' | 'Completed';
+  progress_percentage: number;
 }
 
 interface CourseOverviewProps {
@@ -57,19 +58,33 @@ const CourseOverview: React.FC<CourseOverviewProps> = ({ courseName, trackFilter
 
       console.log('Fetched lessons:', lessonsData);
 
-      // For now, we'll create a mock progress system since the User Progress table 
-      // structure needs to be clarified. We'll simulate progress data.
-      const mockProgress: UserProgress[] = [];
+      // Fetch user progress if user is authenticated
+      let progressData: UserProgress[] = [];
+      if (user && lessonsData?.length) {
+        const lessonIds = lessonsData.map(lesson => lesson['Lesson ID']);
+        const { data: userProgressData, error: progressError } = await supabase
+          .from('user_progress')
+          .select('lesson_id, status, progress_percentage')
+          .eq('user_id', user.id)
+          .in('lesson_id', lessonIds);
+
+        if (progressError) {
+          console.error('Error fetching user progress:', progressError);
+          // Don't throw here - progress is optional, lessons can still be shown
+        } else {
+          progressData = userProgressData || [];
+        }
+      }
       
       setLessons(lessonsData || []);
-      setUserProgress(mockProgress);
+      setUserProgress(progressData);
     } catch (error) {
       console.error('Error fetching data:', error);
       setError('Failed to load course data');
     } finally {
       setLoading(false);
     }
-  }, [trackFilter]);
+  }, [trackFilter, user]);
 
   useEffect(() => {
     fetchLessonsAndProgress();
@@ -78,6 +93,11 @@ const CourseOverview: React.FC<CourseOverviewProps> = ({ courseName, trackFilter
   const getLessonStatus = useCallback((lessonId: number): 'Not Started' | 'In Progress' | 'Completed' => {
     const progress = userProgress.find(p => p.lesson_id === lessonId);
     return progress?.status || 'Not Started';
+  }, [userProgress]);
+
+  const getLessonProgress = useCallback((lessonId: number): number => {
+    const progress = userProgress.find(p => p.lesson_id === lessonId);
+    return progress?.progress_percentage || 0;
   }, [userProgress]);
 
   const getButtonText = (status: string) => {
@@ -209,7 +229,7 @@ const CourseOverview: React.FC<CourseOverviewProps> = ({ courseName, trackFilter
             <Progress value={progress.percentage} className="mb-4" />
             
             {/* Continue Button */}
-            {continueLesson && (
+            {continueLesson && user && (
               <Button 
                 onClick={handleContinueClick}
                 className="bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white"
@@ -219,6 +239,22 @@ const CourseOverview: React.FC<CourseOverviewProps> = ({ courseName, trackFilter
                 Continue Where You Left Off
               </Button>
             )}
+            
+            {/* Sign in prompt for non-authenticated users */}
+            {!user && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <p className="text-blue-800 text-sm">
+                  Sign in to track your progress and continue where you left off.
+                </p>
+                <Button 
+                  onClick={() => navigate('/auth')}
+                  variant="outline"
+                  className="mt-2 border-blue-300 text-blue-700 hover:bg-blue-100"
+                >
+                  Sign In
+                </Button>
+              </div>
+            )}
           </div>
         </div>
 
@@ -226,6 +262,8 @@ const CourseOverview: React.FC<CourseOverviewProps> = ({ courseName, trackFilter
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {lessons.map((lesson) => {
             const status = getLessonStatus(lesson['Lesson ID']);
+            const progressPercentage = getLessonProgress(lesson['Lesson ID']);
+            
             return (
               <Card key={lesson['Lesson ID']} className="hover:shadow-lg transition-shadow">
                 <CardHeader>
@@ -242,6 +280,17 @@ const CourseOverview: React.FC<CourseOverviewProps> = ({ courseName, trackFilter
                       {getStatusBadge(status)}
                     </div>
                   </div>
+                  
+                  {/* Show progress bar for in-progress lessons */}
+                  {status === 'In Progress' && progressPercentage > 0 && (
+                    <div className="mt-3">
+                      <div className="flex items-center justify-between text-sm text-gray-600 mb-1">
+                        <span>Progress</span>
+                        <span>{progressPercentage}%</span>
+                      </div>
+                      <Progress value={progressPercentage} className="h-2" />
+                    </div>
+                  )}
                 </CardHeader>
                 <CardContent>
                   <Button

@@ -57,23 +57,49 @@ export type Database = {
         }
         Relationships: []
       }
-      "User Progress": {
+      user_progress: {
         Row: {
-          "Field Name": string
-          "Field Type": string | null
-          "Linked To / Notes": string | null
+          completed_at: string | null
+          created_at: string | null
+          id: string
+          lesson_id: number
+          progress_percentage: number | null
+          started_at: string | null
+          status: string
+          updated_at: string | null
+          user_id: string
         }
         Insert: {
-          "Field Name": string
-          "Field Type"?: string | null
-          "Linked To / Notes"?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          lesson_id: number
+          progress_percentage?: number | null
+          started_at?: string | null
+          status?: string
+          updated_at?: string | null
+          user_id: string
         }
         Update: {
-          "Field Name"?: string
-          "Field Type"?: string | null
-          "Linked To / Notes"?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          lesson_id?: number
+          progress_percentage?: number | null
+          started_at?: string | null
+          status?: string
+          updated_at?: string | null
+          user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "user_progress_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "Lessons"
+            referencedColumns: ["Lesson ID"]
+          },
+        ]
       }
     }
     Views: {
