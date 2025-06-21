@@ -8,26 +8,26 @@ const CoreTracks = () => {
     {
       icon: <Brain className="h-12 w-12 text-blue-600" />,
       title: "Ethical AI for Students",
-      description: "Interactive lessons on fairness, data bias, and responsible AI development. Learn to build AI systems that work for everyone.",
-      features: ["Bias Detection Tools", "Fairness Algorithms", "Real-world Case Studies", "Hands-on Projects"],
-      gradient: "from-blue-500 to-cyan-500",
-      bgGradient: "from-blue-50 to-cyan-50"
+      description: "Interactive lessons on fairness, bias, and responsible AI development.",
+      features: ["Bias Detection", "Fairness Algorithms", "Case Studies", "Projects"],
+      gradient: "from-blue-500 to-blue-600",
+      bgGradient: "from-blue-50 to-blue-100"
     },
     {
       icon: <BarChart3 className="h-12 w-12 text-green-600" />,
       title: "Excel for Interns",
-      description: "Master real-world spreadsheet skills with task logs, advanced formulas, and data analysis techniques used in professional environments.",
-      features: ["Advanced Formulas", "Data Visualization", "Task Management", "Professional Templates"],
-      gradient: "from-green-500 to-emerald-500",
-      bgGradient: "from-green-50 to-emerald-50"
+      description: "Real-world spreadsheet skills with formulas and data analysis.",
+      features: ["Advanced Formulas", "Data Visualization", "Task Management", "Templates"],
+      gradient: "from-green-500 to-green-600",
+      bgGradient: "from-green-50 to-green-100"
     },
     {
-      icon: <Rocket className="h-12 w-12 text-purple-600" />,
+      icon: <Rocket className="h-12 w-12 text-orange-600" />,
       title: "STEM in Action",
-      description: "Upcoming hands-on projects and simulations that bring STEM concepts to life through interactive experiences and real-world applications.",
-      features: ["3D Simulations", "Virtual Labs", "Project-Based Learning", "Peer Collaboration"],
-      gradient: "from-purple-500 to-pink-500",
-      bgGradient: "from-purple-50 to-pink-50",
+      description: "Hands-on projects bringing STEM concepts to life.",
+      features: ["3D Simulations", "Virtual Labs", "Project Learning", "Collaboration"],
+      gradient: "from-orange-500 to-orange-600",
+      bgGradient: "from-orange-50 to-orange-100",
       comingSoon: true
     }
   ];
@@ -37,11 +37,10 @@ const CoreTracks = () => {
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
-            Three Powerful Learning Tracks
+            Three Learning Tracks
           </h2>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Choose your path or explore all three. Each track is designed to build practical skills 
-            while fostering ethical thinking and inclusive innovation.
+          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            Build practical skills while fostering ethical thinking.
           </p>
         </div>
 
@@ -52,7 +51,7 @@ const CoreTracks = () => {
               className={`relative overflow-hidden bg-gradient-to-br ${track.bgGradient} border-0 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 group`}
             >
               {track.comingSoon && (
-                <div className="absolute top-4 right-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
+                <div className="absolute top-4 right-4 bg-gradient-to-r from-orange-500 to-yellow-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
                   Coming Soon
                 </div>
               )}
