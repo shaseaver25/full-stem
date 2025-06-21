@@ -22,56 +22,56 @@ export const useLessonData = (lessonId: string) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchLessonData = async () => {
-      if (!lessonId) return;
+  const fetchLessonData = async () => {
+    if (!lessonId) return;
 
-      try {
-        setLoading(true);
-        setError(null);
+    try {
+      setLoading(true);
+      setError(null);
 
-        // Fetch lesson data
-        const { data: lessonData, error: lessonError } = await supabase
-          .from('Lessons')
-          .select('*')
-          .eq('Lesson ID', parseInt(lessonId))
-          .single();
+      // Fetch lesson data
+      const { data: lessonData, error: lessonError } = await supabase
+        .from('Lessons')
+        .select('*')
+        .eq('Lesson ID', parseInt(lessonId))
+        .single();
 
-        if (lessonError) {
-          console.error('Error fetching lesson:', lessonError);
-          setError('Failed to load lesson data');
-          return;
-        }
-
-        setLesson(lessonData);
-
-        // Fetch user progress if user is authenticated
-        if (user) {
-          const { data: progressData, error: progressError } = await supabase
-            .from('user_progress')
-            .select('lesson_id, status, progress_percentage, completed_at, date_completed')
-            .eq('user_id', user.id)
-            .eq('lesson_id', parseInt(lessonId))
-            .maybeSingle();
-
-          if (progressError) {
-            console.error('Error fetching progress:', progressError);
-          } else if (progressData) {
-            setUserProgress({
-              lesson_id: progressData.lesson_id,
-              status: progressData.status as 'Not Started' | 'In Progress' | 'Completed',
-              progress_percentage: progressData.progress_percentage || 0
-            });
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching lesson data:', error);
+      if (lessonError) {
+        console.error('Error fetching lesson:', lessonError);
         setError('Failed to load lesson data');
-      } finally {
-        setLoading(false);
+        return;
       }
-    };
 
+      setLesson(lessonData);
+
+      // Fetch user progress if user is authenticated
+      if (user) {
+        const { data: progressData, error: progressError } = await supabase
+          .from('user_progress')
+          .select('lesson_id, status, progress_percentage, completed_at, date_completed')
+          .eq('user_id', user.id)
+          .eq('lesson_id', parseInt(lessonId))
+          .maybeSingle();
+
+        if (progressError) {
+          console.error('Error fetching progress:', progressError);
+        } else if (progressData) {
+          setUserProgress({
+            lesson_id: progressData.lesson_id,
+            status: progressData.status as 'Not Started' | 'In Progress' | 'Completed',
+            progress_percentage: progressData.progress_percentage || 0
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching lesson data:', error);
+      setError('Failed to load lesson data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchLessonData();
   }, [lessonId, user]);
 
@@ -112,9 +112,6 @@ export const useLessonData = (lessonId: string) => {
     error,
     getContentForReadingLevel,
     getTranslatedContent,
-    refetch: () => {
-      setLoading(true);
-      fetchLessonData();
-    }
+    refetch: fetchLessonData
   };
 };
