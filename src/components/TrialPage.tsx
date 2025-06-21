@@ -1,6 +1,6 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Brain, BarChart3, Users, CheckCircle, Sparkles, Target, BookOpen } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const TrialPage = () => {
   return (
@@ -37,11 +37,13 @@ const TrialPage = () => {
           {/* Header Section */}
           <div className="text-center mb-12">
             <div className="mb-6">
-              <img 
-                src="/lovable-uploads/3674debe-cc91-44e5-b661-71199ab7a186.png" 
-                alt="Full STEM Logo" 
-                className="h-16 md:h-20 mx-auto"
-              />
+              <Link to="/">
+                <img 
+                  src="/lovable-uploads/3674debe-cc91-44e5-b661-71199ab7a186.png" 
+                  alt="Full STEM Logo" 
+                  className="h-16 md:h-20 mx-auto hover:scale-105 transition-transform duration-300 cursor-pointer"
+                />
+              </Link>
             </div>
             
             <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight">
