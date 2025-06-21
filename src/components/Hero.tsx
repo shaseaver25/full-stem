@@ -99,12 +99,6 @@ const Hero = () => {
           {/* Trust Indicators */}
           <div className="animate-fade-in">
             <p className="text-gray-600 mb-6 font-semibold">Created by award winning educators</p>
-            <div className="flex flex-wrap justify-center items-center gap-8 opacity-60">
-              <div className="bg-gray-200 px-6 py-3 rounded-lg font-semibold text-gray-700">UC Berkeley</div>
-              <div className="bg-gray-200 px-6 py-3 rounded-lg font-semibold text-gray-700">Stanford</div>
-              <div className="bg-gray-200 px-6 py-3 rounded-lg font-semibold text-gray-700">MIT</div>
-              <div className="bg-gray-200 px-6 py-3 rounded-lg font-semibold text-gray-700">Carnegie Mellon</div>
-            </div>
           </div>
         </div>
       </div>
