@@ -9,18 +9,22 @@ const Hero = () => {
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {/* Animated floating shapes */}
         <div className="absolute top-20 left-10 w-32 h-32 bg-blue-200/30 rounded-full blur-xl animate-pulse"></div>
-        <div className="absolute top-40 right-20 w-48 h-48 bg-orange-200/20 rounded-full blur-2xl animate-pulse delay-1000"></div>
-        <div className="absolute bottom-20 left-1/4 w-40 h-40 bg-green-200/25 rounded-full blur-xl animate-pulse delay-500"></div>
+        <div className="absolute top-40 right-20 w-48 h-48 bg-orange-200/20 rounded-full blur-2xl animate-pulse" style={{animationDelay: '1s'}}></div>
+        <div className="absolute bottom-20 left-1/4 w-40 h-40 bg-green-200/25 rounded-full blur-xl animate-pulse" style={{animationDelay: '0.5s'}}></div>
         
         {/* Code snippet decorations */}
         <div className="absolute top-1/4 left-1/6 text-blue-500/20 font-mono text-sm transform rotate-12">
-          if (student.engaged) {<br />
-          &nbsp;&nbsp;learn.more();<br />
-          }
+          if (student.engaged) {'{'}
+          <br />
+          &nbsp;&nbsp;learn.more();
+          <br />
+          {'}'}
         </div>
         <div className="absolute bottom-1/3 right-1/6 text-green-500/20 font-mono text-sm transform -rotate-12">
-          &lt;STEM&gt;<br />
-          &nbsp;&nbsp;for all<br />
+          &lt;STEM&gt;
+          <br />
+          &nbsp;&nbsp;for all
+          <br />
           &lt;/STEM&gt;
         </div>
         
