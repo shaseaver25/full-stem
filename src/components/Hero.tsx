@@ -1,8 +1,19 @@
 
+
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Play, Users, Award, Globe, Star } from "lucide-react";
 
 const Hero = () => {
+  const scrollToTracks = () => {
+    const tracksSection = document.getElementById('core-tracks');
+    if (tracksSection) {
+      tracksSection.scrollIntoView({ 
+        behavior: 'smooth',
+        block: 'start'
+      });
+    }
+  };
+
   return (
     <section className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-green-50 to-orange-50 overflow-hidden">
       {/* Enhanced Background with animated elements */}
@@ -63,6 +74,7 @@ const Hero = () => {
             <Button 
               size="lg" 
               className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-10 py-6 text-xl font-bold rounded-full shadow-2xl hover:shadow-blue-500/25 transition-all duration-300 transform hover:scale-110 hover:-translate-y-1"
+              onClick={scrollToTracks}
             >
               Explore Lessons
               <ArrowRight className="ml-3 h-6 w-6" />
@@ -117,3 +129,4 @@ const Hero = () => {
 };
 
 export default Hero;
+

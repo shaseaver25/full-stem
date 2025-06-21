@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Brain, BarChart3, Rocket, ArrowRight } from "lucide-react";
@@ -33,7 +32,7 @@ const CoreTracks = () => {
   ];
 
   return (
-    <section className="py-20 bg-gray-50">
+    <section id="core-tracks" className="py-20 bg-gray-50">
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
