@@ -19,8 +19,8 @@ const Hero = () => {
         <div className="max-w-4xl mx-auto">
           {/* Main headline */}
           <h1 className="text-5xl md:text-7xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent mb-6 leading-tight">
-            STEM for All.<br />
-            Built by All.
+            TailorED by Full STEM:<br />
+            Personalized STEM learning, powered by tech, guided by humans.
           </h1>
           
           {/* Subtitle */}
