@@ -57,6 +57,33 @@ export type Database = {
         }
         Relationships: []
       }
+      "User Preferences": {
+        Row: {
+          "Enable Read-Aloud": boolean | null
+          "Enable Translation View": boolean | null
+          "Preferred Language": string | null
+          "Reading Level": string | null
+          "Text Speed": string | null
+          "User Email": string
+        }
+        Insert: {
+          "Enable Read-Aloud"?: boolean | null
+          "Enable Translation View"?: boolean | null
+          "Preferred Language"?: string | null
+          "Reading Level"?: string | null
+          "Text Speed"?: string | null
+          "User Email": string
+        }
+        Update: {
+          "Enable Read-Aloud"?: boolean | null
+          "Enable Translation View"?: boolean | null
+          "Preferred Language"?: string | null
+          "Reading Level"?: string | null
+          "Text Speed"?: string | null
+          "User Email"?: string
+        }
+        Relationships: []
+      }
       user_progress: {
         Row: {
           completed_at: string | null

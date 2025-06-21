@@ -10,6 +10,7 @@ import Auth from "./pages/Auth";
 import TrialPage from "./components/TrialPage";
 import ExcelCourse from "./pages/ExcelCourse";
 import LessonPage from "./pages/LessonPage";
+import UserPreferences from "./pages/UserPreferences";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -27,6 +28,7 @@ const App = () => (
             <Route path="/trial" element={<TrialPage />} />
             <Route path="/course/excel" element={<ExcelCourse />} />
             <Route path="/lesson/:lessonId" element={<LessonPage />} />
+            <Route path="/preferences" element={<UserPreferences />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

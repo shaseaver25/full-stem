@@ -7,7 +7,7 @@ import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { Link } from "react-router-dom";
-import { User, LogOut } from "lucide-react";
+import { User, LogOut, Settings } from "lucide-react";
 
 const Index = () => {
   const { user, signOut, loading } = useAuth();
@@ -30,6 +30,15 @@ const Index = () => {
               <User className="h-4 w-4" />
               <span>{user.email}</span>
             </div>
+            <Link to="/preferences">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="p-2 hover:bg-blue-50 hover:text-blue-600 rounded-full"
+              >
+                <Settings className="h-4 w-4" />
+              </Button>
+            </Link>
             <Button
               onClick={signOut}
               variant="ghost"
