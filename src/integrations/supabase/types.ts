@@ -11,25 +11,43 @@ export type Database = {
     Tables: {
       Lessons: {
         Row: {
+          Content: string | null
           Description: string | null
           "Lesson ID": number
           Order: number | null
+          "Text (Grade 3)": string | null
+          "Text (Grade 5)": string | null
+          "Text (Grade 8)": string | null
+          "Text (High School)": string | null
           Title: string | null
           Track: string | null
+          "Translated Content": Json | null
         }
         Insert: {
+          Content?: string | null
           Description?: string | null
           "Lesson ID": number
           Order?: number | null
+          "Text (Grade 3)"?: string | null
+          "Text (Grade 5)"?: string | null
+          "Text (Grade 8)"?: string | null
+          "Text (High School)"?: string | null
           Title?: string | null
           Track?: string | null
+          "Translated Content"?: Json | null
         }
         Update: {
+          Content?: string | null
           Description?: string | null
           "Lesson ID"?: number
           Order?: number | null
+          "Text (Grade 3)"?: string | null
+          "Text (Grade 5)"?: string | null
+          "Text (Grade 8)"?: string | null
+          "Text (High School)"?: string | null
           Title?: string | null
           Track?: string | null
+          "Translated Content"?: Json | null
         }
         Relationships: []
       }
@@ -88,6 +106,7 @@ export type Database = {
         Row: {
           completed_at: string | null
           created_at: string | null
+          date_completed: string | null
           id: string
           lesson_id: number
           progress_percentage: number | null
@@ -99,6 +118,7 @@ export type Database = {
         Insert: {
           completed_at?: string | null
           created_at?: string | null
+          date_completed?: string | null
           id?: string
           lesson_id: number
           progress_percentage?: number | null
@@ -110,6 +130,7 @@ export type Database = {
         Update: {
           completed_at?: string | null
           created_at?: string | null
+          date_completed?: string | null
           id?: string
           lesson_id?: number
           progress_percentage?: number | null
