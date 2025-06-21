@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -36,7 +35,7 @@ const CourseOverview: React.FC<CourseOverviewProps> = ({ courseName, trackFilter
   const [error, setError] = useState<string | null>(null);
 
   const fetchLessonsAndProgress = useCallback(async () => {
-    if (!user || !trackFilter) return;
+    if (!trackFilter) return;
     
     try {
       setLoading(true);
@@ -70,7 +69,7 @@ const CourseOverview: React.FC<CourseOverviewProps> = ({ courseName, trackFilter
     } finally {
       setLoading(false);
     }
-  }, [user, trackFilter]);
+  }, [trackFilter]);
 
   useEffect(() => {
     fetchLessonsAndProgress();
