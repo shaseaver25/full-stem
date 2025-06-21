@@ -5,9 +5,12 @@ import { ArrowLeft, BookOpen } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import ProtectedRoute from '@/components/ProtectedRoute';
+import ReadAloudButton from '@/components/ReadAloudButton';
 
 const LessonPage = () => {
   const { lessonId } = useParams<{ lessonId: string }>();
+
+  const lessonContent = `This is a placeholder for lesson content. The actual lesson content will be implemented here. Lesson ID: ${lessonId}`;
 
   return (
     <ProtectedRoute>
@@ -35,15 +38,18 @@ const LessonPage = () => {
               <CardTitle className="text-2xl font-bold">
                 Lesson {lessonId}
               </CardTitle>
+              <div className="mt-4">
+                <ReadAloudButton 
+                  text={`Lesson ${lessonId}. ${lessonContent}`}
+                  className="justify-center"
+                />
+              </div>
             </CardHeader>
             <CardContent className="text-center py-12">
               <p className="text-gray-600 mb-6">
-                This is a placeholder for lesson content. The actual lesson content will be implemented here.
+                {lessonContent}
               </p>
               <div className="space-y-4">
-                <p className="text-sm text-gray-500">
-                  Lesson ID: {lessonId}
-                </p>
                 <Button 
                   variant="outline"
                   onClick={() => window.history.back()}

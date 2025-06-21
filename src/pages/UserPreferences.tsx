@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
 import ProtectedRoute from '@/components/ProtectedRoute';
+import ReadAloudButton from '@/components/ReadAloudButton';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -68,6 +69,8 @@ const UserPreferences = () => {
     );
   }
 
+  const testText = "This is a test of the read-aloud functionality. You can use this button to listen to content when the read-aloud feature is enabled in your preferences.";
+
   return (
     <ProtectedRoute>
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
@@ -100,6 +103,15 @@ const UserPreferences = () => {
                   Settings for: {user.email}
                 </p>
               )}
+              <div className="mt-4">
+                <ReadAloudButton 
+                  text={testText}
+                  className="justify-center"
+                />
+                <p className="text-xs text-gray-500 mt-2">
+                  Test the read-aloud feature with your current settings
+                </p>
+              </div>
             </CardHeader>
             <CardContent>
               <Form {...form}>
