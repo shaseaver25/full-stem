@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+
+import React, { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -32,15 +33,17 @@ const CourseOverview: React.FC<CourseOverviewProps> = ({ courseName, trackFilter
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [userProgress, setUserProgress] = useState<UserProgress[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (user) {
-      fetchLessonsAndProgress();
-    }
-  }, [user, trackFilter]);
-
-  const fetchLessonsAndProgress = async () => {
+  const fetchLessonsAndProgress = useCallback(async () => {
+    if (!user || !trackFilter) return;
+    
     try {
+      setLoading(true);
+      setError(null);
+      
+      console.log('Fetching lessons for track:', trackFilter);
+      
       // Fetch lessons for the specific track
       const { data: lessonsData, error: lessonsError } = await supabase
         .from('Lessons')
@@ -48,7 +51,12 @@ const CourseOverview: React.FC<CourseOverviewProps> = ({ courseName, trackFilter
         .eq('Track', trackFilter)
         .order('Order', { ascending: true });
 
-      if (lessonsError) throw lessonsError;
+      if (lessonsError) {
+        console.error('Error fetching lessons:', lessonsError);
+        throw lessonsError;
+      }
+
+      console.log('Fetched lessons:', lessonsData);
 
       // For now, we'll create a mock progress system since the User Progress table 
       // structure needs to be clarified. We'll simulate progress data.
@@ -58,15 +66,20 @@ const CourseOverview: React.FC<CourseOverviewProps> = ({ courseName, trackFilter
       setUserProgress(mockProgress);
     } catch (error) {
       console.error('Error fetching data:', error);
+      setError('Failed to load course data');
     } finally {
       setLoading(false);
     }
-  };
+  }, [user, trackFilter]);
 
-  const getLessonStatus = (lessonId: number): 'Not Started' | 'In Progress' | 'Completed' => {
+  useEffect(() => {
+    fetchLessonsAndProgress();
+  }, [fetchLessonsAndProgress]);
+
+  const getLessonStatus = useCallback((lessonId: number): 'Not Started' | 'In Progress' | 'Completed' => {
     const progress = userProgress.find(p => p.lesson_id === lessonId);
     return progress?.status || 'Not Started';
-  };
+  }, [userProgress]);
 
   const getButtonText = (status: string) => {
     switch (status) {
@@ -111,7 +124,7 @@ const CourseOverview: React.FC<CourseOverviewProps> = ({ courseName, trackFilter
     );
   };
 
-  const calculateProgress = () => {
+  const calculateProgress = useCallback(() => {
     const completedLessons = lessons.filter(lesson => 
       getLessonStatus(lesson['Lesson ID']) === 'Completed'
     ).length;
@@ -120,9 +133,9 @@ const CourseOverview: React.FC<CourseOverviewProps> = ({ courseName, trackFilter
       total: lessons.length,
       percentage: lessons.length > 0 ? (completedLessons / lessons.length) * 100 : 0
     };
-  };
+  }, [lessons, getLessonStatus]);
 
-  const getContinueLesson = () => {
+  const getContinueLesson = useCallback(() => {
     // First, find any lesson in progress
     const inProgressLesson = lessons.find(lesson => 
       getLessonStatus(lesson['Lesson ID']) === 'In Progress'
@@ -136,23 +149,34 @@ const CourseOverview: React.FC<CourseOverviewProps> = ({ courseName, trackFilter
     );
     
     return notStartedLesson || lessons[0];
-  };
+  }, [lessons, getLessonStatus]);
 
-  const handleLessonClick = (lessonId: number) => {
+  const handleLessonClick = useCallback((lessonId: number) => {
     navigate(`/lesson/${lessonId}`);
-  };
+  }, [navigate]);
 
-  const handleContinueClick = () => {
+  const handleContinueClick = useCallback(() => {
     const continueLesson = getContinueLesson();
     if (continueLesson) {
       handleLessonClick(continueLesson['Lesson ID']);
     }
-  };
+  }, [getContinueLesson, handleLessonClick]);
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-600 mb-4">{error}</p>
+          <Button onClick={fetchLessonsAndProgress}>Retry</Button>
+        </div>
       </div>
     );
   }
