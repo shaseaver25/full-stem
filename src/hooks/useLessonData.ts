@@ -1,108 +1,91 @@
-
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
-import { useUserPreferences } from '@/hooks/useUserPreferences';
-import { Lesson, UserProgress } from '@/types/courseTypes';
+import { getSupabaseClient } from '@/lib/supabase';
 
-interface LessonData extends Lesson {
-  'Content': string | null;
+interface LessonData {
+  'Lesson ID': number;
+  Title: string | null;
+  Description: string | null;
+  Track: string | null;
+  Order: number | null;
+  Content: string | null;
   'Text (Grade 3)': string | null;
   'Text (Grade 5)': string | null;
   'Text (Grade 8)': string | null;
-  'Text (High School)': string | null;
+  'Text (Grade X)': string | null;
   'Translated Content': any;
+  'Source Doc URL': string | null;
+}
+
+interface UserProgress {
+  'Lesson ID': number;
+  'User ID': string;
+  Completed: boolean;
 }
 
 export const useLessonData = (lessonId: string) => {
   const { user } = useAuth();
-  const { preferences } = useUserPreferences();
-  const [lesson, setLesson] = useState<LessonData | null>(null);
-  const [userProgress, setUserProgress] = useState<UserProgress | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchLessonData = async () => {
-    if (!lessonId) return;
-
-    try {
-      setLoading(true);
-      setError(null);
-
-      // Fetch lesson data
-      const { data: lessonData, error: lessonError } = await supabase
-        .from('Lessons')
-        .select('*')
-        .eq('Lesson ID', parseInt(lessonId))
-        .single();
-
-      if (lessonError) {
-        console.error('Error fetching lesson:', lessonError);
-        setError('Failed to load lesson data');
-        return;
-      }
-
-      setLesson(lessonData);
-
-      // Fetch user progress if user is authenticated
-      if (user) {
-        const { data: progressData, error: progressError } = await supabase
-          .from('user_progress')
-          .select('lesson_id, status, progress_percentage, completed_at, date_completed')
-          .eq('user_id', user.id)
-          .eq('lesson_id', parseInt(lessonId))
-          .maybeSingle();
-
-        if (progressError) {
-          console.error('Error fetching progress:', progressError);
-        } else if (progressData) {
-          setUserProgress({
-            lesson_id: progressData.lesson_id,
-            status: progressData.status as 'Not Started' | 'In Progress' | 'Completed',
-            progress_percentage: progressData.progress_percentage || 0
-          });
-        }
-      }
-    } catch (error) {
-      console.error('Error fetching lesson data:', error);
-      setError('Failed to load lesson data');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [readingLevel, setReadingLevel] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchLessonData();
-  }, [lessonId, user]);
+    // Determine user's reading level here based on user data or preferences
+    // For now, let's just set it to Grade 5 as a default
+    setReadingLevel('Text (Grade 5)');
+  }, [user]);
 
-  const getContentForReadingLevel = (): string => {
-    if (!lesson) return '';
-    
-    const readingLevel = preferences?.['Reading Level'];
-    
-    switch (readingLevel) {
-      case 'Grade 3':
-        return lesson['Text (Grade 3)'] || lesson['Content'] || '';
-      case 'Grade 5':
-        return lesson['Text (Grade 5)'] || lesson['Content'] || '';
-      case 'Grade 8':
-        return lesson['Text (Grade 8)'] || lesson['Content'] || '';
-      case 'High School':
-        return lesson['Text (High School)'] || lesson['Content'] || '';
-      default:
-        return lesson['Content'] || lesson['Text (Grade 5)'] || '';
-    }
+  const { data: lesson, error, isLoading: loading } = useQuery({
+    queryKey: ['lesson', lessonId],
+    queryFn: async (): Promise<LessonData | null> => {
+      if (!lessonId) return null;
+
+      const supabase = getSupabaseClient();
+      const { data, error } = await supabase
+        .from('Lessons')
+        .select('*')
+        .eq('Lesson ID', lessonId)
+        .single();
+
+      if (error) {
+        console.error('Error fetching lesson:', error);
+        throw error;
+      }
+
+      return data as LessonData;
+    },
+  });
+
+  const { data: userProgress } = useQuery({
+    queryKey: ['userProgress', lessonId, user?.id],
+    queryFn: async (): Promise<UserProgress | null> => {
+      if (!lessonId || !user?.id) return null;
+
+      const supabase = getSupabaseClient();
+      const { data, error } = await supabase
+        .from('UserProgress')
+        .select('*')
+        .eq('Lesson ID', lessonId)
+        .eq('User ID', user.id)
+        .single();
+
+      if (error) {
+        console.error('Error fetching user progress:', error);
+        return null; // Return null instead of throwing an error
+      }
+
+      return data as UserProgress;
+    },
+    enabled: !!user?.id, // Only run this query if the user is logged in
+  });
+
+  const getContentForReadingLevel = () => {
+    if (!lesson || !readingLevel) return null;
+    return lesson[readingLevel] || lesson.Content || null;
   };
 
-  const getTranslatedContent = (): string | null => {
-    if (!lesson || !preferences?.['Preferred Language']) return null;
-    
-    const translatedContent = lesson['Translated Content'];
-    if (!translatedContent || typeof translatedContent !== 'object') return null;
-    
-    // Simple language code mapping - in production, you'd want more robust language detection
-    const languageCode = preferences['Preferred Language'].toLowerCase().substring(0, 2);
-    return translatedContent[languageCode] || null;
+  const getTranslatedContent = () => {
+    if (!lesson) return null;
+    return lesson['Translated Content'] || null;
   };
 
   return {
@@ -112,6 +95,5 @@ export const useLessonData = (lessonId: string) => {
     error,
     getContentForReadingLevel,
     getTranslatedContent,
-    refetch: fetchLessonData
   };
 };

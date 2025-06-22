@@ -5,6 +5,7 @@ import { BookOpen, AlertCircle, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
+import Header from '@/components/Header';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import AdaptiveContentBox from '@/components/lesson/AdaptiveContentBox';
 import LessonStatusNav from '@/components/lesson/LessonStatusNav';
@@ -40,6 +41,7 @@ const LessonPage = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
+        <Header />
         <div className="max-w-4xl mx-auto px-4 py-8">
           <div className="flex items-center justify-center min-h-[400px]">
             <div className="flex items-center gap-3">
@@ -55,6 +57,7 @@ const LessonPage = () => {
   if (error || !lesson) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
+        <Header />
         <div className="max-w-4xl mx-auto px-4 py-8">
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
@@ -72,6 +75,7 @@ const LessonPage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
+      <Header />
       <div className="max-w-5xl mx-auto px-4 py-8">
         {/* Header Section */}
         <Card className="mb-8 shadow-lg">
