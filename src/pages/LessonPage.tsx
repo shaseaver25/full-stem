@@ -55,6 +55,8 @@ const LessonPage = () => {
   }
 
   if (error || !lesson) {
+    const errorMessage = error instanceof Error ? error.message : String(error || 'Lesson not found. Please check the lesson ID and try again.');
+    
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
         <Header />
@@ -62,7 +64,7 @@ const LessonPage = () => {
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
-              {error || 'Lesson not found. Please check the lesson ID and try again.'}
+              {errorMessage}
             </AlertDescription>
           </Alert>
         </div>
@@ -72,6 +74,20 @@ const LessonPage = () => {
 
   const content = getContentForReadingLevel();
   const translatedContent = getTranslatedContent();
+
+  // Convert the old UserProgress format to the new format for compatibility
+  const convertedUserProgress = userProgress ? {
+    lesson_id: userProgress['Lesson ID'],
+    user_id: userProgress['User ID'],
+    status: userProgress.Completed ? 'Completed' as const : 'Not Started' as const,
+    progress_percentage: userProgress.Completed ? 100 : 0,
+    id: '', // placeholder
+    created_at: '', // placeholder
+    updated_at: '', // placeholder
+    started_at: null,
+    completed_at: null,
+    date_completed: null
+  } : null;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
@@ -135,7 +151,7 @@ const LessonPage = () => {
 
           {/* Lesson Status and Navigation */}
           <LessonStatusNav
-            userProgress={userProgress}
+            userProgress={convertedUserProgress}
             lessonId={lesson['Lesson ID']}
             trackName={lesson.Track?.toLowerCase() || 'excel'}
             onMarkComplete={handleMarkComplete}

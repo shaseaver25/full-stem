@@ -1,7 +1,8 @@
+
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
-import { getSupabaseClient } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 
 interface LessonData {
   'Lesson ID': number;
@@ -39,7 +40,6 @@ export const useLessonData = (lessonId: string) => {
     queryFn: async (): Promise<LessonData | null> => {
       if (!lessonId) return null;
 
-      const supabase = getSupabaseClient();
       const { data, error } = await supabase
         .from('Lessons')
         .select('*')
@@ -60,7 +60,6 @@ export const useLessonData = (lessonId: string) => {
     queryFn: async (): Promise<UserProgress | null> => {
       if (!lessonId || !user?.id) return null;
 
-      const supabase = getSupabaseClient();
       const { data, error } = await supabase
         .from('UserProgress')
         .select('*')
