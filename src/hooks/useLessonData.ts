@@ -43,7 +43,7 @@ export const useLessonData = (lessonId: string) => {
       const { data, error } = await supabase
         .from('Lessons')
         .select('*')
-        .eq('Lesson ID', lessonId)
+        .eq('Lesson ID', parseInt(lessonId))
         .single();
 
       if (error) {
@@ -60,21 +60,28 @@ export const useLessonData = (lessonId: string) => {
     queryFn: async (): Promise<UserProgress | null> => {
       if (!lessonId || !user?.id) return null;
 
-      const { data, error } = await supabase
-        .from('UserProgress')
+      // Try the new user_progress table first
+      const { data: newData, error: newError } = await supabase
+        .from('user_progress')
         .select('*')
-        .eq('Lesson ID', lessonId)
-        .eq('User ID', user.id)
-        .single();
+        .eq('lesson_id', parseInt(lessonId))
+        .eq('user_id', user.id)
+        .maybeSingle();
 
-      if (error) {
-        console.error('Error fetching user progress:', error);
-        return null; // Return null instead of throwing an error
+      if (!newError && newData) {
+        // Convert new format to old format for compatibility
+        return {
+          'Lesson ID': newData.lesson_id,
+          'User ID': newData.user_id,
+          Completed: newData.status === 'Completed'
+        } as UserProgress;
       }
 
-      return data as UserProgress;
+      // If new table doesn't work, return null (old UserProgress table doesn't exist)
+      console.log('No user progress found or table does not exist');
+      return null;
     },
-    enabled: !!user?.id, // Only run this query if the user is logged in
+    enabled: !!user?.id,
   });
 
   const getContentForReadingLevel = () => {
