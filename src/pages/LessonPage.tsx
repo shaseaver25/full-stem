@@ -1,9 +1,10 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { BookOpen, AlertCircle, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import AdaptiveContentBox from '@/components/lesson/AdaptiveContentBox';
 import LessonStatusNav from '@/components/lesson/LessonStatusNav';
@@ -14,6 +15,7 @@ import { useAuth } from '@/contexts/AuthContext';
 const LessonPage = () => {
   const { lessonId } = useParams<{ lessonId: string }>();
   const { user } = useAuth();
+  const [showPersonalizedView, setShowPersonalizedView] = useState(false);
   const { 
     lesson, 
     userProgress, 
@@ -29,6 +31,10 @@ const LessonPage = () => {
     if (lesson) {
       await markLessonComplete(lesson['Lesson ID']);
     }
+  };
+
+  const toggleLessonView = () => {
+    setShowPersonalizedView(!showPersonalizedView);
   };
 
   if (loading) {
@@ -85,13 +91,43 @@ const LessonPage = () => {
         </Card>
 
         <div className="space-y-8">
-          {/* Adaptive Content Box */}
-          <AdaptiveContentBox
-            content={content}
-            translatedContent={translatedContent}
-            readingLevel={null} // Will be determined inside the component
-            lessonTitle={lesson.Title || `Lesson ${lesson['Lesson ID']}`}
-          />
+          {/* Toggle Button */}
+          <div className="flex justify-center">
+            <Button 
+              onClick={toggleLessonView}
+              className="bg-green-500 hover:bg-green-600 text-white px-4 py-2"
+            >
+              Toggle Profile Requests
+            </Button>
+          </div>
+
+          {/* Default Lesson View - Google Doc iframe */}
+          {!showPersonalizedView && (
+            <Card className="w-full">
+              <CardContent className="p-0">
+                <iframe 
+                  src="https://docs.google.com/document/d/1U8cD5O28L4HFNVsfNpchR08RIDiPdj1C99EEV7YaKxo/preview" 
+                  width="100%" 
+                  height="600px" 
+                  style={{ border: 'none' }}
+                  title="Lesson Content"
+                />
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Personalized Lesson View */}
+          {showPersonalizedView && (
+            <div className="space-y-8">
+              {/* Adaptive Content Box */}
+              <AdaptiveContentBox
+                content={content}
+                translatedContent={translatedContent}
+                readingLevel={null} // Will be determined inside the component
+                lessonTitle={lesson.Title || `Lesson ${lesson['Lesson ID']}`}
+              />
+            </div>
+          )}
 
           {/* Lesson Status and Navigation */}
           <LessonStatusNav

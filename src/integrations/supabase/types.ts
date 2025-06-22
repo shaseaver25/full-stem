@@ -15,10 +15,11 @@ export type Database = {
           Description: string | null
           "Lesson ID": number
           Order: number | null
+          "Source Doc URL": string | null
           "Text (Grade 3)": string | null
           "Text (Grade 5)": string | null
           "Text (Grade 8)": string | null
-          "Text (High School)": string | null
+          "Text (Grade X)": string | null
           Title: string | null
           Track: string | null
           "Translated Content": Json | null
@@ -28,10 +29,11 @@ export type Database = {
           Description?: string | null
           "Lesson ID": number
           Order?: number | null
+          "Source Doc URL"?: string | null
           "Text (Grade 3)"?: string | null
           "Text (Grade 5)"?: string | null
           "Text (Grade 8)"?: string | null
-          "Text (High School)"?: string | null
+          "Text (Grade X)"?: string | null
           Title?: string | null
           Track?: string | null
           "Translated Content"?: Json | null
@@ -41,10 +43,11 @@ export type Database = {
           Description?: string | null
           "Lesson ID"?: number
           Order?: number | null
+          "Source Doc URL"?: string | null
           "Text (Grade 3)"?: string | null
           "Text (Grade 5)"?: string | null
           "Text (Grade 8)"?: string | null
-          "Text (High School)"?: string | null
+          "Text (Grade X)"?: string | null
           Title?: string | null
           Track?: string | null
           "Translated Content"?: Json | null
