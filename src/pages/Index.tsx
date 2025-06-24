@@ -17,6 +17,11 @@ const Index = () => {
       <Footer />
     </div>
   );
+  <ReadAloudLesson
+  lessonText={lessonData.text}
+  lessonId={lessonData.id}  // Make sure lessonId is passed
+/>
+
 };
 
 export default Index;
