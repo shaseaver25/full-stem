@@ -5,6 +5,17 @@ import HowItWorks from "@/components/HowItWorks";
 import Testimonials from "@/components/Testimonials";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
+import ReadAloudLesson from '../components/ReadAloudLesson';
+const lesson = {
+  id: 'lesson-1',
+  title: 'What is an Algorithm?',
+  text: 'An algorithm is a set of steps to solve a problem efficiently.'
+};
+<main>
+  <h1>{lesson.title}</h1>
+  <ReadAloudLesson lessonText={lesson.text} lessonId={lesson.id} />
+</main>
+
 
 const Index = () => {
   return (
