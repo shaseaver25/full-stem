@@ -11,10 +11,7 @@ const lesson = {
   title: 'What is an Algorithm?',
   text: 'An algorithm is a set of steps to solve a problem efficiently.'
 };
-<main>
-  <h1>{lesson.title}</h1>
-  <ReadAloudLesson lessonText={lesson.text} lessonId={lesson.id} />
-</main>
+
 
 
 const Index = () => {
