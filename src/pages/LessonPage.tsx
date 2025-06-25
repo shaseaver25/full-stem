@@ -90,8 +90,11 @@ const LessonPage = () => {
     date_completed: null
   } : null;
 
-  // Get the lesson text for read-aloud functionality
-  const lessonText = content || lesson.text || '';
+  // Get the lesson text for read-aloud functionality - ensure we have fallback text
+  const lessonText = content || lesson.text || lesson['Text (Grade 5)'] || lesson['Text (Grade 3)'] || lesson['Text (Grade 8)'] || 'No content available for this lesson.';
+
+  console.log('Lesson data:', lesson);
+  console.log('Lesson text for read-aloud:', lessonText);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
