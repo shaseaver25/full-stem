@@ -21,6 +21,7 @@ const TeacherAuth = () => {
 
   useEffect(() => {
     if (user) {
+      console.log('User authenticated, redirecting to dashboard');
       navigate('/teacher/dashboard');
     }
   }, [user, navigate]);
@@ -30,11 +31,15 @@ const TeacherAuth = () => {
     setLoading(true);
     setError('');
 
+    console.log('Attempting sign in with email:', email);
+
     const { error } = await signIn(email, password);
     
     if (error) {
+      console.error('Sign in error:', error);
       setError(error.message);
     } else {
+      console.log('Sign in successful');
       navigate('/teacher/dashboard');
     }
     
@@ -46,11 +51,15 @@ const TeacherAuth = () => {
     setLoading(true);
     setError('');
 
+    console.log('Attempting sign up with email:', email);
+
     const { error } = await signUp(email, password, fullName);
     
     if (error) {
+      console.error('Sign up error:', error);
       setError(error.message);
     } else {
+      console.log('Sign up successful, redirecting to onboarding');
       navigate('/teacher/onboarding');
     }
     
@@ -95,6 +104,7 @@ const TeacherAuth = () => {
                       onChange={(e) => setEmail(e.target.value)}
                       required
                       disabled={loading}
+                      placeholder="Enter your email"
                     />
                   </div>
                   <div className="space-y-2">
@@ -106,6 +116,7 @@ const TeacherAuth = () => {
                       onChange={(e) => setPassword(e.target.value)}
                       required
                       disabled={loading}
+                      placeholder="Enter your password"
                     />
                   </div>
                   <Button type="submit" className="w-full" disabled={loading}>
@@ -126,6 +137,7 @@ const TeacherAuth = () => {
                       onChange={(e) => setFullName(e.target.value)}
                       required
                       disabled={loading}
+                      placeholder="Enter your full name"
                     />
                   </div>
                   <div className="space-y-2">
@@ -137,6 +149,7 @@ const TeacherAuth = () => {
                       onChange={(e) => setEmail(e.target.value)}
                       required
                       disabled={loading}
+                      placeholder="Enter your email"
                     />
                   </div>
                   <div className="space-y-2">
@@ -149,6 +162,7 @@ const TeacherAuth = () => {
                       required
                       disabled={loading}
                       minLength={6}
+                      placeholder="Create a password (min 6 characters)"
                     />
                   </div>
                   <Button type="submit" className="w-full" disabled={loading}>
@@ -164,6 +178,10 @@ const TeacherAuth = () => {
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
+
+            <div className="mt-4 text-center text-sm text-gray-600">
+              <p>Having trouble? Try creating a new account if you don't have one yet.</p>
+            </div>
           </CardContent>
         </Card>
       </div>
