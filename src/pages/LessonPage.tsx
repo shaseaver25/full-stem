@@ -92,14 +92,20 @@ const LessonPage = () => {
     date_completed: null
   } : null;
 
-  // Get the lesson text for read-aloud functionality - ensure we have fallback text
-  const lessonText = content || lesson.text || lesson['Text (Grade 5)'] || lesson['Text (Grade 3)'] || lesson['Text (Grade 8)'] || 'No content available for this lesson.';
+  // Get comprehensive lesson text for read-aloud functionality
+  const lessonTitle = lesson.Title || `Lesson ${lesson['Lesson ID']}`;
+  const lessonDescription = lesson.Description || '';
+  const lessonContent = content || lesson.text || lesson['Text (Grade 5)'] || lesson['Text (Grade 3)'] || lesson['Text (Grade 8)'] || 'No content available for this lesson.';
+  
+  // Combine all text content for comprehensive read-aloud
+  const fullLessonText = `${lessonTitle}. ${lessonDescription ? lessonDescription + '. ' : ''}${lessonContent}`;
 
   // Video URL for this specific lesson
   const videoUrl = "https://youtu.be/c2dcRy1X9AA";
 
   console.log('Lesson data:', lesson);
-  console.log('Lesson text for read-aloud:', lessonText);
+  console.log('Full lesson text for read-aloud:', fullLessonText.substring(0, 200) + '...');
+  console.log('Show personalized view:', showPersonalizedView);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
@@ -112,7 +118,7 @@ const LessonPage = () => {
               <BookOpen className="h-8 w-8 text-blue-600" />
             </div>
             <CardTitle className="text-3xl font-bold text-gray-900 mb-2">
-              {lesson.Title || `Lesson ${lesson['Lesson ID']}`}
+              {lessonTitle}
             </CardTitle>
             {lesson.Description && (
               <p className="text-lg text-gray-600 max-w-2xl mx-auto leading-relaxed">
@@ -126,32 +132,65 @@ const LessonPage = () => {
           {/* Video Section */}
           <VideoSection 
             videoUrl={videoUrl}
-            title={`${lesson.Title || `Lesson ${lesson['Lesson ID']}`} - Video Tutorial`}
+            title={`${lessonTitle} - Video Tutorial`}
           />
 
-          {/* Read Aloud Toggler */}
+          {/* Read Aloud Toggler - Works for entire page content */}
           <Card>
             <CardContent className="p-6">
-              <ReadAloudToggler
-                lessonText={lessonText}
-                lessonId={lesson['Lesson ID'].toString()}
-              />
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div>
+                  <h3 className="font-semibold text-lg mb-2">Audio Reading</h3>
+                  <p className="text-gray-600 text-sm">
+                    Listen to the entire lesson content including title, description, and main content.
+                  </p>
+                </div>
+                <ReadAloudToggler
+                  lessonText={fullLessonText}
+                  lessonId={lesson['Lesson ID'].toString()}
+                />
+              </div>
             </CardContent>
           </Card>
 
-          {/* Toggle Button */}
-          <div className="flex justify-center">
-            <Button 
-              onClick={toggleLessonView}
-              className="bg-green-500 hover:bg-green-600 text-white px-4 py-2"
-            >
-              Toggle Profile Requests
-            </Button>
-          </div>
+          {/* Profile Toggle Switch */}
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div>
+                  <h3 className="font-semibold text-lg mb-2">Content View</h3>
+                  <p className="text-gray-600 text-sm">
+                    {showPersonalizedView 
+                      ? 'Currently showing personalized content based on your profile preferences.'
+                      : 'Currently showing the standard lesson format with interactive document.'
+                    }
+                  </p>
+                </div>
+                <Button 
+                  onClick={toggleLessonView}
+                  variant={showPersonalizedView ? "default" : "outline"}
+                  className={`min-w-[200px] ${
+                    showPersonalizedView 
+                      ? 'bg-green-500 hover:bg-green-600 text-white' 
+                      : 'border-green-500 text-green-500 hover:bg-green-50'
+                  }`}
+                >
+                  {showPersonalizedView ? 'Using Profile Settings' : 'Use Profile Settings'}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
 
-          {/* Default Lesson View - Google Doc iframe */}
-          {!showPersonalizedView && (
+          {/* Content Section - Switches based on toggle */}
+          {!showPersonalizedView ? (
+            /* Standard Google Doc View */
             <Card className="w-full">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <BookOpen className="h-5 w-5" />
+                  Standard Lesson Content
+                </CardTitle>
+              </CardHeader>
               <CardContent className="p-0">
                 <iframe 
                   src="https://docs.google.com/document/d/1U8cD5O28L4HFNVsfNpchR08RIDiPdj1C99EEV7YaKxo/preview" 
@@ -159,20 +198,18 @@ const LessonPage = () => {
                   height="600px" 
                   style={{ border: 'none' }}
                   title="Lesson Content"
+                  className="rounded-b-lg"
                 />
               </CardContent>
             </Card>
-          )}
-
-          {/* Personalized Lesson View */}
-          {showPersonalizedView && (
-            <div className="space-y-8">
-              {/* Adaptive Content Box */}
+          ) : (
+            /* Personalized Adaptive View */
+            <div className="space-y-6">
               <AdaptiveContentBox
-                content={content}
+                content={lessonContent}
                 translatedContent={translatedContent}
                 readingLevel={null} // Will be determined inside the component
-                lessonTitle={lesson.Title || `Lesson ${lesson['Lesson ID']}`}
+                lessonTitle={lessonTitle}
               />
             </div>
           )}

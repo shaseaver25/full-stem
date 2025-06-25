@@ -24,24 +24,33 @@ const AdaptiveContentBox: React.FC<AdaptiveContentBoxProps> = ({
   const enableReadAloud = preferences?.['Enable Read-Aloud'];
 
   const shouldShowTranslation = enableTranslation && translatedContent;
+  
+  // Create comprehensive text for read-aloud including title and content
+  const fullContentText = `${lessonTitle}. ${content}`;
+  const fullTranslatedText = translatedContent ? `${lessonTitle}. ${translatedContent}` : '';
 
   return (
     <Card className="w-full">
       <CardHeader>
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-4">
           <CardTitle className="flex items-center gap-2">
             <BookOpen className="h-5 w-5" />
-            Lesson Content
+            Personalized Lesson Content
           </CardTitle>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             {readingLevel && (
               <Badge variant="secondary" className="text-xs">
                 {readingLevel} Level
               </Badge>
             )}
+            {enableTranslation && (
+              <Badge variant="outline" className="text-xs">
+                Translation Enabled
+              </Badge>
+            )}
             {enableReadAloud && (
               <ReadAloudButton 
-                text={`${lessonTitle}. ${content}`}
+                text={shouldShowTranslation ? fullTranslatedText : fullContentText}
                 className="flex-shrink-0"
               />
             )}
@@ -52,9 +61,15 @@ const AdaptiveContentBox: React.FC<AdaptiveContentBoxProps> = ({
         {shouldShowTranslation ? (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="space-y-3">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <h3 className="font-semibold text-sm">English</h3>
                 <Badge variant="outline" className="text-xs">Original</Badge>
+                {enableReadAloud && (
+                  <ReadAloudButton 
+                    text={fullContentText}
+                    className="ml-auto"
+                  />
+                )}
               </div>
               <div className="prose prose-sm max-w-none bg-white p-4 rounded-lg border shadow-sm">
                 <p className="whitespace-pre-wrap leading-relaxed text-gray-800">
@@ -63,10 +78,16 @@ const AdaptiveContentBox: React.FC<AdaptiveContentBoxProps> = ({
               </div>
             </div>
             <div className="space-y-3">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <Globe className="h-4 w-4" />
                 <h3 className="font-semibold text-sm">{preferences?.['Preferred Language'] || 'Translation'}</h3>
                 <Badge variant="outline" className="text-xs">Translation</Badge>
+                {enableReadAloud && (
+                  <ReadAloudButton 
+                    text={fullTranslatedText}
+                    className="ml-auto"
+                  />
+                )}
               </div>
               <div className="prose prose-sm max-w-none bg-blue-50 p-4 rounded-lg border border-blue-200 shadow-sm">
                 <p className="whitespace-pre-wrap leading-relaxed text-gray-800">
