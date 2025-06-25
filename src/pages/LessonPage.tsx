@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { BookOpen, AlertCircle, Loader2 } from 'lucide-react';
@@ -15,6 +14,9 @@ import AssignmentSection from '@/components/assignments/AssignmentSection';
 import { useLessonData } from '@/hooks/useLessonData';
 import { useLessonProgressUpdate } from '@/hooks/useLessonProgressUpdate';
 import { useAuth } from '@/contexts/AuthContext';
+import LiveTranslationBox from '@/components/lesson/LiveTranslationBox';
+import { Badge } from '@/components/ui/badge';
+import { Globe } from 'lucide-react';
 
 const LessonPage = () => {
   const { lessonId } = useParams<{ lessonId: string }>();
@@ -30,6 +32,8 @@ const LessonPage = () => {
   } = useLessonData(lessonId || '');
   
   const { markLessonComplete, updating } = useLessonProgressUpdate();
+  const [liveTranslatedContent, setLiveTranslatedContent] = useState<string | null>(null);
+  const [liveTranslationLanguage, setLiveTranslationLanguage] = useState<string | null>(null);
 
   const handleMarkComplete = async () => {
     if (lesson) {
@@ -107,6 +111,11 @@ const LessonPage = () => {
   console.log('Full lesson text for read-aloud:', fullLessonText.substring(0, 200) + '...');
   console.log('Show personalized view:', showPersonalizedView);
 
+  const handleLiveTranslationComplete = (translatedContent: string, language: string) => {
+    setLiveTranslatedContent(translatedContent);
+    setLiveTranslationLanguage(language);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
       <Header />
@@ -135,7 +144,7 @@ const LessonPage = () => {
             title={`${lessonTitle} - Video Tutorial`}
           />
 
-          {/* Read Aloud Toggler - Works for entire page content */}
+          {/* Read Aloud Toggler */}
           <Card>
             <CardContent className="p-6">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -181,6 +190,13 @@ const LessonPage = () => {
             </CardContent>
           </Card>
 
+          {/* Live Translation Section */}
+          <LiveTranslationBox
+            originalContent={lessonContent}
+            lessonTitle={lessonTitle}
+            onTranslationComplete={handleLiveTranslationComplete}
+          />
+
           {/* Content Section - Switches based on toggle */}
           {!showPersonalizedView ? (
             /* Standard Google Doc View */
@@ -189,26 +205,58 @@ const LessonPage = () => {
                 <CardTitle className="flex items-center gap-2">
                   <BookOpen className="h-5 w-5" />
                   Standard Lesson Content
+                  {liveTranslatedContent && liveTranslationLanguage && (
+                    <Badge variant="outline" className="ml-2">
+                      Live translation available
+                    </Badge>
+                  )}
                 </CardTitle>
               </CardHeader>
-              <CardContent className="p-0">
-                <iframe 
-                  src="https://docs.google.com/document/d/1U8cD5O28L4HFNVsfNpchR08RIDiPdj1C99EEV7YaKxo/preview" 
-                  width="100%" 
-                  height="600px" 
-                  style={{ border: 'none' }}
-                  title="Lesson Content"
-                  className="rounded-b-lg"
-                />
+              <CardContent className="space-y-4">
+                {liveTranslatedContent && liveTranslationLanguage ? (
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div className="space-y-3">
+                      <h3 className="font-semibold text-sm">English (Original)</h3>
+                      <iframe 
+                        src="https://docs.google.com/document/d/1U8cD5O28L4HFNVsfNpchR08RIDiPdj1C99EEV7YaKxo/preview" 
+                        width="100%" 
+                        height="500px" 
+                        style={{ border: 'none' }}
+                        title="Lesson Content"
+                        className="rounded-lg"
+                      />
+                    </div>
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <Globe className="h-4 w-4" />
+                        <h3 className="font-semibold text-sm">{liveTranslationLanguage} (Live Translation)</h3>
+                      </div>
+                      <div className="prose prose-sm max-w-none bg-blue-50 p-4 rounded-lg border border-blue-200 shadow-sm h-[500px] overflow-y-auto">
+                        <p className="whitespace-pre-wrap leading-relaxed text-gray-800">
+                          {liveTranslatedContent}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <iframe 
+                    src="https://docs.google.com/document/d/1U8cD5O28L4HFNVsfNpchR08RIDiPdj1C99EEV7YaKxo/preview" 
+                    width="100%" 
+                    height="600px" 
+                    style={{ border: 'none' }}
+                    title="Lesson Content"
+                    className="rounded-b-lg"
+                  />
+                )}
               </CardContent>
             </Card>
           ) : (
             /* Personalized Adaptive View */
             <div className="space-y-6">
               <AdaptiveContentBox
-                content={lessonContent}
+                content={liveTranslatedContent || lessonContent}
                 translatedContent={translatedContent}
-                readingLevel={null} // Will be determined inside the component
+                readingLevel={null}
                 lessonTitle={lessonTitle}
               />
             </div>
