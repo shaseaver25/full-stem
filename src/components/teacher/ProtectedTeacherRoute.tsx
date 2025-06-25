@@ -32,14 +32,15 @@ const ProtectedTeacherRoute: React.FC<ProtectedTeacherRouteProps> = ({
     return <Navigate to="/teacher/onboarding" replace />;
   }
 
-  // If we're on the onboarding page and onboarding is already completed, go to dashboard
-  if (!requireOnboarding && profile.onboarding_completed) {
-    return <Navigate to="/teacher/dashboard" replace />;
-  }
-
-  // If we need onboarding but it's not completed, go to onboarding
+  // If we require onboarding to be completed but it's not, redirect to onboarding
   if (requireOnboarding && !profile.onboarding_completed) {
     return <Navigate to="/teacher/onboarding" replace />;
+  }
+
+  // If we don't require onboarding (i.e., we're on the onboarding page) 
+  // but onboarding is already completed, redirect to dashboard
+  if (!requireOnboarding && profile.onboarding_completed) {
+    return <Navigate to="/teacher/dashboard" replace />;
   }
 
   // Allow access to the current page
