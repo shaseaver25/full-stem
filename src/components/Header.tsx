@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { User, LogOut, Settings, Menu } from 'lucide-react';
+import { User, LogOut, Settings, Menu, GraduationCap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import {
@@ -44,6 +44,13 @@ const Header = () => {
 
           {/* Navigation Links */}
           <div className="hidden md:flex items-center space-x-6">
+            <Link 
+              to="/teacher/auth" 
+              className="text-gray-700 hover:text-indigo-600 font-medium transition-colors flex items-center gap-2"
+            >
+              <GraduationCap className="w-4 h-4" />
+              Teacher Portal
+            </Link>
             {user && (
               <Link 
                 to="/preferences" 
@@ -67,6 +74,12 @@ const Header = () => {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-48 bg-white">
+                      <DropdownMenuItem asChild>
+                        <Link to="/teacher/auth" className="flex items-center gap-2 w-full">
+                          <GraduationCap className="h-4 w-4" />
+                          Teacher Portal
+                        </Link>
+                      </DropdownMenuItem>
                       <DropdownMenuItem asChild>
                         <Link to="/preferences" className="flex items-center gap-2 w-full">
                           <Settings className="h-4 w-4" />
@@ -103,11 +116,19 @@ const Header = () => {
                 </div>
               </>
             ) : (
-              <Link to="/auth">
-                <Button className="bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white rounded-full px-6">
-                  Sign In
-                </Button>
-              </Link>
+              <div className="flex items-center gap-3">
+                <Link to="/teacher/auth" className="hidden sm:block">
+                  <Button variant="outline" size="sm" className="flex items-center gap-2">
+                    <GraduationCap className="w-4 h-4" />
+                    Teacher Portal
+                  </Button>
+                </Link>
+                <Link to="/auth">
+                  <Button className="bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white rounded-full px-6">
+                    Sign In
+                  </Button>
+                </Link>
+              </div>
             )}
           </div>
         </div>

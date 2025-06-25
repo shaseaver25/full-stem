@@ -33,7 +33,7 @@ const Index = () => {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8 mb-12">
+          <div className="grid md:grid-cols-3 gap-8">
             <Card className="text-center">
               <CardHeader>
                 <div className="mx-auto w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center mb-4">
@@ -69,15 +69,6 @@ const Index = () => {
                 </CardDescription>
               </CardHeader>
             </Card>
-          </div>
-
-          <div className="text-center">
-            <Link to="/teacher/auth">
-              <Button size="lg" className="bg-indigo-600 hover:bg-indigo-700">
-                <GraduationCap className="w-5 h-5 mr-2" />
-                Access Teacher Portal
-              </Button>
-            </Link>
           </div>
         </div>
       </section>
