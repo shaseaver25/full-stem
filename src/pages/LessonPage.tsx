@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { BookOpen, AlertCircle, Loader2 } from 'lucide-react';
@@ -10,6 +11,7 @@ import AdaptiveContentBox from '@/components/lesson/AdaptiveContentBox';
 import LessonStatusNav from '@/components/lesson/LessonStatusNav';
 import ReadAloudToggler from '@/components/ReadAloudToggler';
 import VideoSection from '@/components/lesson/VideoSection';
+import AssignmentSection from '@/components/assignments/AssignmentSection';
 import { useLessonData } from '@/hooks/useLessonData';
 import { useLessonProgressUpdate } from '@/hooks/useLessonProgressUpdate';
 import { useAuth } from '@/contexts/AuthContext';
@@ -174,6 +176,9 @@ const LessonPage = () => {
               />
             </div>
           )}
+
+          {/* Assignment Section */}
+          <AssignmentSection lessonId={lessonId || ''} />
 
           {/* Lesson Status and Navigation */}
           <LessonStatusNav

@@ -9,6 +9,103 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      assignment_submissions: {
+        Row: {
+          assignment_id: string
+          created_at: string
+          file_names: string[] | null
+          file_types: string[] | null
+          file_urls: string[] | null
+          id: string
+          last_edited_at: string | null
+          status: string | null
+          submitted_at: string | null
+          text_response: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          assignment_id: string
+          created_at?: string
+          file_names?: string[] | null
+          file_types?: string[] | null
+          file_urls?: string[] | null
+          id?: string
+          last_edited_at?: string | null
+          status?: string | null
+          submitted_at?: string | null
+          text_response?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          assignment_id?: string
+          created_at?: string
+          file_names?: string[] | null
+          file_types?: string[] | null
+          file_urls?: string[] | null
+          id?: string
+          last_edited_at?: string | null
+          status?: string | null
+          submitted_at?: string | null
+          text_response?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assignment_submissions_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "assignments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      assignments: {
+        Row: {
+          allow_text_response: boolean | null
+          created_at: string
+          file_types_allowed: string[] | null
+          id: string
+          instructions: string
+          lesson_id: number
+          max_files: number | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          allow_text_response?: boolean | null
+          created_at?: string
+          file_types_allowed?: string[] | null
+          id?: string
+          instructions: string
+          lesson_id: number
+          max_files?: number | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          allow_text_response?: boolean | null
+          created_at?: string
+          file_types_allowed?: string[] | null
+          id?: string
+          instructions?: string
+          lesson_id?: number
+          max_files?: number | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assignments_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "Lessons"
+            referencedColumns: ["Lesson ID"]
+          },
+        ]
+      }
       Lessons: {
         Row: {
           Description: string | null
