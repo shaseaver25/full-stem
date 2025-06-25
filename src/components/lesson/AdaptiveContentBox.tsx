@@ -22,12 +22,19 @@ const AdaptiveContentBox: React.FC<AdaptiveContentBoxProps> = ({
   const { preferences } = useUserPreferences();
   const enableTranslation = preferences?.['Enable Translation View'];
   const enableReadAloud = preferences?.['Enable Read-Aloud'];
+  const userReadingLevel = preferences?.['Reading Level'] || 'Grade 5';
+  const preferredLanguage = preferences?.['Preferred Language'];
 
-  const shouldShowTranslation = enableTranslation && translatedContent;
+  const shouldShowTranslation = enableTranslation && translatedContent && preferredLanguage;
   
   // Create comprehensive text for read-aloud including title and content
   const fullContentText = `${lessonTitle}. ${content}`;
   const fullTranslatedText = translatedContent ? `${lessonTitle}. ${translatedContent}` : '';
+
+  console.log('AdaptiveContentBox - Enable translation:', enableTranslation);
+  console.log('AdaptiveContentBox - Translated content:', translatedContent);
+  console.log('AdaptiveContentBox - Should show translation:', shouldShowTranslation);
+  console.log('AdaptiveContentBox - Preferred language:', preferredLanguage);
 
   return (
     <Card className="w-full">
@@ -38,14 +45,12 @@ const AdaptiveContentBox: React.FC<AdaptiveContentBoxProps> = ({
             Personalized Lesson Content
           </CardTitle>
           <div className="flex items-center gap-2 flex-wrap">
-            {readingLevel && (
-              <Badge variant="secondary" className="text-xs">
-                {readingLevel} Level
-              </Badge>
-            )}
-            {enableTranslation && (
+            <Badge variant="secondary" className="text-xs">
+              {userReadingLevel} Level
+            </Badge>
+            {enableTranslation && preferredLanguage && (
               <Badge variant="outline" className="text-xs">
-                Translation Enabled
+                {translatedContent ? 'Translation Available' : 'Translation Enabled'}
               </Badge>
             )}
             {enableReadAloud && (
@@ -80,7 +85,7 @@ const AdaptiveContentBox: React.FC<AdaptiveContentBoxProps> = ({
             <div className="space-y-3">
               <div className="flex items-center gap-2 flex-wrap">
                 <Globe className="h-4 w-4" />
-                <h3 className="font-semibold text-sm">{preferences?.['Preferred Language'] || 'Translation'}</h3>
+                <h3 className="font-semibold text-sm">{preferredLanguage}</h3>
                 <Badge variant="outline" className="text-xs">Translation</Badge>
                 {enableReadAloud && (
                   <ReadAloudButton 
@@ -97,10 +102,25 @@ const AdaptiveContentBox: React.FC<AdaptiveContentBoxProps> = ({
             </div>
           </div>
         ) : (
-          <div className="prose prose-lg max-w-none bg-white p-6 rounded-lg border shadow-sm">
-            <p className="whitespace-pre-wrap leading-relaxed text-gray-800 text-lg">
-              {content}
-            </p>
+          <div className="space-y-4">
+            <div className="prose prose-lg max-w-none bg-white p-6 rounded-lg border shadow-sm">
+              <p className="whitespace-pre-wrap leading-relaxed text-gray-800 text-lg">
+                {content}
+              </p>
+            </div>
+            {enableTranslation && preferredLanguage && !translatedContent && (
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <div className="flex">
+                  <Globe className="h-5 w-5 text-yellow-600 mr-2 mt-0.5" />
+                  <div>
+                    <h4 className="text-sm font-medium text-yellow-800">Translation Not Available</h4>
+                    <p className="text-sm text-yellow-700 mt-1">
+                      Translation to {preferredLanguage} is not available for this lesson yet.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </CardContent>

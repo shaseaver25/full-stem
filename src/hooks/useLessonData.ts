@@ -1,6 +1,8 @@
+
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
+import { useUserPreferences } from '@/hooks/useUserPreferences';
 import { supabase } from '@/integrations/supabase/client';
 
 interface LessonData {
@@ -13,6 +15,7 @@ interface LessonData {
   'Text (Grade 3)': string | null;
   'Text (Grade 5)': string | null;
   'Text (Grade 8)': string | null;
+  'Text (High School)': string | null;
   texta: string | null;
   'Translated Content': any;
   'Source Doc URL': string | null;
@@ -27,13 +30,7 @@ interface UserProgress {
 
 export const useLessonData = (lessonId: string) => {
   const { user } = useAuth();
-  const [readingLevel, setReadingLevel] = useState<string | null>(null);
-
-  useEffect(() => {
-    // Determine user's reading level here based on user data or preferences
-    // For now, let's just set it to Grade 5 as a default
-    setReadingLevel('Text (Grade 5)');
-  }, [user]);
+  const { preferences } = useUserPreferences();
 
   const { data: lesson, error, isLoading: loading } = useQuery({
     queryKey: ['lesson', lessonId],
@@ -85,13 +82,63 @@ export const useLessonData = (lessonId: string) => {
   });
 
   const getContentForReadingLevel = () => {
-    if (!lesson || !readingLevel) return null;
-    return lesson[readingLevel] || lesson.text || null;
+    if (!lesson) return null;
+    
+    // Get reading level from user preferences, default to Grade 5
+    const userReadingLevel = preferences?.['Reading Level'] || 'Grade 5';
+    const readingLevelKey = `Text (${userReadingLevel})` as keyof LessonData;
+    
+    console.log('User reading level:', userReadingLevel);
+    console.log('Reading level key:', readingLevelKey);
+    console.log('Available content keys:', Object.keys(lesson));
+    
+    // Try to get content for the user's reading level
+    let content = lesson[readingLevelKey] as string | null;
+    
+    // Fallback to other reading levels if not available
+    if (!content) {
+      content = lesson['Text (Grade 5)'] || lesson['Text (Grade 3)'] || lesson['Text (Grade 8)'] || lesson['Text (High School)'] || lesson.text;
+    }
+    
+    console.log('Selected content length:', content?.length || 0);
+    return content;
   };
 
   const getTranslatedContent = () => {
-    if (!lesson) return null;
-    return lesson['Translated Content'] || null;
+    if (!lesson || !preferences?.['Preferred Language']) return null;
+    
+    const translatedContent = lesson['Translated Content'];
+    const preferredLanguage = preferences['Preferred Language'];
+    
+    console.log('Translated content:', translatedContent);
+    console.log('Preferred language:', preferredLanguage);
+    
+    if (!translatedContent) return null;
+    
+    // If translatedContent is a JSON object, try to find the translation
+    if (typeof translatedContent === 'object' && translatedContent !== null) {
+      // Try different language code formats
+      const languageKeys = [
+        preferredLanguage.toLowerCase(),
+        preferredLanguage.toLowerCase().substring(0, 2), // First 2 letters
+        preferredLanguage,
+      ];
+      
+      for (const key of languageKeys) {
+        if (translatedContent[key]) {
+          console.log('Found translation for key:', key);
+          return translatedContent[key];
+        }
+      }
+    }
+    
+    // If translatedContent is a string, return it directly
+    if (typeof translatedContent === 'string') {
+      return translatedContent;
+    }
+    
+    console.log('No translation found for language:', preferredLanguage);
+    return null;
   };
 
   return {
