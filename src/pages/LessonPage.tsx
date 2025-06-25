@@ -9,6 +9,7 @@ import Header from '@/components/Header';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import AdaptiveContentBox from '@/components/lesson/AdaptiveContentBox';
 import LessonStatusNav from '@/components/lesson/LessonStatusNav';
+import ReadAloudToggler from '@/components/ReadAloudToggler';
 import { useLessonData } from '@/hooks/useLessonData';
 import { useLessonProgressUpdate } from '@/hooks/useLessonProgressUpdate';
 import { useAuth } from '@/contexts/AuthContext';
@@ -89,6 +90,9 @@ const LessonPage = () => {
     date_completed: null
   } : null;
 
+  // Get the lesson text for read-aloud functionality
+  const lessonText = content || lesson.Content || lesson.text || '';
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
       <Header />
@@ -111,6 +115,16 @@ const LessonPage = () => {
         </Card>
 
         <div className="space-y-8">
+          {/* Read Aloud Toggler */}
+          <Card>
+            <CardContent className="p-6">
+              <ReadAloudToggler
+                lessonText={lessonText}
+                lessonId={lesson['Lesson ID'].toString()}
+              />
+            </CardContent>
+          </Card>
+
           {/* Toggle Button */}
           <div className="flex justify-center">
             <Button 

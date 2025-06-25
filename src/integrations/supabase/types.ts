@@ -11,43 +11,46 @@ export type Database = {
     Tables: {
       Lessons: {
         Row: {
-          Content: string | null
           Description: string | null
           "Lesson ID": number
           Order: number | null
+          slug: string | null
           "Source Doc URL": string | null
+          text: string | null
           "Text (Grade 3)": string | null
           "Text (Grade 5)": string | null
           "Text (Grade 8)": string | null
-          "Text (Grade X)": string | null
+          texta: string | null
           Title: string | null
           Track: string | null
           "Translated Content": Json | null
         }
         Insert: {
-          Content?: string | null
           Description?: string | null
           "Lesson ID": number
           Order?: number | null
+          slug?: string | null
           "Source Doc URL"?: string | null
+          text?: string | null
           "Text (Grade 3)"?: string | null
           "Text (Grade 5)"?: string | null
           "Text (Grade 8)"?: string | null
-          "Text (Grade X)"?: string | null
+          texta?: string | null
           Title?: string | null
           Track?: string | null
           "Translated Content"?: Json | null
         }
         Update: {
-          Content?: string | null
           Description?: string | null
           "Lesson ID"?: number
           Order?: number | null
+          slug?: string | null
           "Source Doc URL"?: string | null
+          text?: string | null
           "Text (Grade 3)"?: string | null
           "Text (Grade 5)"?: string | null
           "Text (Grade 8)"?: string | null
-          "Text (Grade X)"?: string | null
+          texta?: string | null
           Title?: string | null
           Track?: string | null
           "Translated Content"?: Json | null
