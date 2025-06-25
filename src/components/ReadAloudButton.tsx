@@ -12,11 +12,10 @@ interface ReadAloudButtonProps {
 const ReadAloudButton: React.FC<ReadAloudButtonProps> = ({ text, className }) => {
   const { speak, pause, resume, stop, isPlaying, isPaused, isEnabled } = useTextToSpeech();
 
-  if (!isEnabled) {
-    return null;
-  }
+  console.log('ReadAloudButton state:', { isPlaying, isPaused, isEnabled, hasText: !!text });
 
   const handleClick = () => {
+    console.log('ReadAloud button clicked');
     if (isPlaying && !isPaused) {
       pause();
     } else if (isPaused) {

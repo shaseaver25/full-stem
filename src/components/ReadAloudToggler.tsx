@@ -16,6 +16,8 @@ const ReadAloudToggler: React.FC<ReadAloudTogglerProps> = ({ lessonText, lessonI
     setIsVisible(!isVisible);
   };
 
+  console.log('ReadAloudToggler rendering with text:', lessonText?.substring(0, 100) + '...');
+
   return (
     <div className="space-y-4">
       <Button

@@ -8,10 +8,13 @@ export const useTextToSpeech = () => {
   const [isPaused, setIsPaused] = useState(false);
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
 
-  const isEnabled = preferences?.['Enable Read-Aloud'] === true;
+  // Always enable text-to-speech functionality
+  const isEnabled = true;
 
   const speak = useCallback((text: string) => {
-    if (!isEnabled || !text.trim()) return;
+    if (!text.trim()) return;
+
+    console.log('Starting to speak text:', text.substring(0, 100) + '...');
 
     // Stop any current speech
     window.speechSynthesis.cancel();
@@ -19,7 +22,7 @@ export const useTextToSpeech = () => {
     const utterance = new SpeechSynthesisUtterance(text);
     utteranceRef.current = utterance;
 
-    // Set speech rate based on user preference
+    // Set speech rate based on user preference, with fallback
     const textSpeed = preferences?.['Text Speed'] || 'Normal';
     switch (textSpeed) {
       case 'Slow':
@@ -33,22 +36,25 @@ export const useTextToSpeech = () => {
     }
 
     utterance.onstart = () => {
+      console.log('Speech started');
       setIsPlaying(true);
       setIsPaused(false);
     };
 
     utterance.onend = () => {
+      console.log('Speech ended');
       setIsPlaying(false);
       setIsPaused(false);
     };
 
-    utterance.onerror = () => {
+    utterance.onerror = (event) => {
+      console.error('Speech error:', event);
       setIsPlaying(false);
       setIsPaused(false);
     };
 
     window.speechSynthesis.speak(utterance);
-  }, [isEnabled, preferences]);
+  }, [preferences]);
 
   const pause = useCallback(() => {
     if (window.speechSynthesis.speaking && !window.speechSynthesis.paused) {
