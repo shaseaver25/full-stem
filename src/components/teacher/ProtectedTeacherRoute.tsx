@@ -25,6 +25,7 @@ const ProtectedTeacherRoute: React.FC<ProtectedTeacherRouteProps> = ({
     currentPath: window.location.pathname
   });
 
+  // Show loading while auth or profile is loading
   if (authLoading || profileLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -33,31 +34,50 @@ const ProtectedTeacherRoute: React.FC<ProtectedTeacherRouteProps> = ({
     );
   }
 
+  // If no user, redirect to auth
   if (!user) {
     console.log('No user, redirecting to auth');
     return <Navigate to="/teacher/auth" replace />;
   }
 
-  if (!profile) {
+  // If no profile exists yet, redirect to onboarding (unless already there)
+  if (!profile && window.location.pathname !== '/teacher/onboarding') {
     console.log('No profile, redirecting to onboarding');
     return <Navigate to="/teacher/onboarding" replace />;
   }
 
-  console.log('Profile found:', { onboarding_completed: profile.onboarding_completed });
-
-  // If we require onboarding to be completed but it's not
-  if (requireOnboarding && !profile.onboarding_completed) {
-    console.log('Onboarding required but not completed, redirecting to onboarding');
-    return <Navigate to="/teacher/onboarding" replace />;
+  // If profile exists and onboarding is completed
+  if (profile && profile.onboarding_completed) {
+    // If we're on onboarding page but already completed, go to dashboard
+    if (window.location.pathname === '/teacher/onboarding') {
+      console.log('On onboarding page but already completed, redirecting to dashboard');
+      return <Navigate to="/teacher/dashboard" replace />;
+    }
+    
+    // If we require onboarding completion and it's done, allow access
+    if (requireOnboarding) {
+      console.log('Onboarding completed, allowing access to protected route');
+      return <>{children}</>;
+    }
   }
 
-  // If we're on the onboarding page but onboarding is already completed
-  if (!requireOnboarding && profile.onboarding_completed) {
-    console.log('On onboarding page but already completed, redirecting to dashboard');
-    return <Navigate to="/teacher/dashboard" replace />;
+  // If profile exists but onboarding is not completed
+  if (profile && !profile.onboarding_completed) {
+    // If we require onboarding but it's not completed, redirect to onboarding
+    if (requireOnboarding && window.location.pathname !== '/teacher/onboarding') {
+      console.log('Onboarding required but not completed, redirecting to onboarding');
+      return <Navigate to="/teacher/onboarding" replace />;
+    }
+    
+    // If we're on onboarding page and onboarding is not completed, allow access
+    if (window.location.pathname === '/teacher/onboarding') {
+      console.log('On onboarding page and onboarding not completed, allowing access');
+      return <>{children}</>;
+    }
   }
 
-  console.log('Allowing access to current page');
+  // Default: allow access
+  console.log('Default: allowing access to current page');
   return <>{children}</>;
 };
 
