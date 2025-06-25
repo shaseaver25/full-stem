@@ -10,7 +10,7 @@ import HowItWorks from "@/components/HowItWorks";
 import CoreTracks from "@/components/CoreTracks";
 import Testimonials from "@/components/Testimonials";
 import Footer from "@/components/Footer";
-import { GraduationCap, Users, BookOpen } from "lucide-react";
+import { GraduationCap, Users, BookOpen, ArrowRight } from "lucide-react";
 
 const Index = () => {
   const { user } = useAuth();
@@ -27,10 +27,16 @@ const Index = () => {
             <h2 className="text-3xl font-bold text-gray-900 mb-4">
               Are You an Educator?
             </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
               Access our comprehensive teacher dashboard with class management, 
               progress tracking, and AI-personalized curriculum tools.
             </p>
+            <Link to="/teacher/auth">
+              <Button size="lg" className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 text-lg">
+                Get Started as a Teacher
+                <ArrowRight className="w-5 h-5 ml-2" />
+              </Button>
+            </Link>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
