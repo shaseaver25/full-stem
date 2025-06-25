@@ -1,11 +1,11 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { useTeacherProfile } from '@/hooks/useTeacherProfile';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Link } from 'react-router-dom';
+import CreateClassModal from './CreateClassModal';
 import { 
   Users, 
   BookOpen, 
@@ -24,6 +24,7 @@ import {
 const TeacherDashboard = () => {
   const { profile, loading } = useTeacherProfile();
   const { user, signOut } = useAuth();
+  const [createClassModalOpen, setCreateClassModalOpen] = useState(false);
 
   if (loading) {
     return (
@@ -45,6 +46,11 @@ const TeacherDashboard = () => {
     { type: 'alert', message: '3 students need attention in Physics Module', time: '4 hours ago' },
     { type: 'feedback', message: 'Lesson feedback received for "Forces & Motion"', time: '1 day ago' },
   ];
+
+  const handleClassCreated = () => {
+    // Optionally refresh dashboard data here
+    console.log('Class created successfully!');
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -117,7 +123,11 @@ const TeacherDashboard = () => {
               <CardTitle>Quick Actions</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <Button className="w-full justify-start" variant="outline">
+              <Button 
+                className="w-full justify-start" 
+                variant="outline"
+                onClick={() => setCreateClassModalOpen(true)}
+              >
                 <Plus className="w-4 h-4 mr-2" />
                 Create New Class
               </Button>
@@ -239,6 +249,13 @@ const TeacherDashboard = () => {
           </Card>
         </div>
       </div>
+
+      {/* Create Class Modal */}
+      <CreateClassModal 
+        open={createClassModalOpen}
+        onOpenChange={setCreateClassModalOpen}
+        onClassCreated={handleClassCreated}
+      />
     </div>
   );
 };
