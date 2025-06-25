@@ -106,6 +106,134 @@ export type Database = {
           },
         ]
       }
+      class_assignments: {
+        Row: {
+          assigned_date: string | null
+          class_id: string
+          created_at: string | null
+          due_date: string | null
+          id: string
+          lesson_id: number
+        }
+        Insert: {
+          assigned_date?: string | null
+          class_id: string
+          created_at?: string | null
+          due_date?: string | null
+          id?: string
+          lesson_id: number
+        }
+        Update: {
+          assigned_date?: string | null
+          class_id?: string
+          created_at?: string | null
+          due_date?: string | null
+          id?: string
+          lesson_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "class_assignments_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "class_assignments_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "Lessons"
+            referencedColumns: ["Lesson ID"]
+          },
+        ]
+      }
+      classes: {
+        Row: {
+          created_at: string | null
+          grade_level: string | null
+          id: string
+          name: string
+          school_year: string | null
+          subject: string | null
+          teacher_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          grade_level?: string | null
+          id?: string
+          name: string
+          school_year?: string | null
+          subject?: string | null
+          teacher_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          grade_level?: string | null
+          id?: string
+          name?: string
+          school_year?: string | null
+          subject?: string | null
+          teacher_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "classes_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lesson_feedback: {
+        Row: {
+          created_at: string | null
+          feedback_text: string | null
+          id: string
+          lesson_id: number
+          rating: number | null
+          suggested_improvements: string | null
+          teacher_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          feedback_text?: string | null
+          id?: string
+          lesson_id: number
+          rating?: number | null
+          suggested_improvements?: string | null
+          teacher_id: string
+        }
+        Update: {
+          created_at?: string | null
+          feedback_text?: string | null
+          id?: string
+          lesson_id?: number
+          rating?: number | null
+          suggested_improvements?: string | null
+          teacher_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lesson_feedback_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "Lessons"
+            referencedColumns: ["Lesson ID"]
+          },
+          {
+            foreignKeyName: "lesson_feedback_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       Lessons: {
         Row: {
           Description: string | null
@@ -175,6 +303,199 @@ export type Database = {
           full_name?: string | null
           id?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      student_progress: {
+        Row: {
+          completed_at: string | null
+          created_at: string | null
+          id: string
+          lesson_id: number
+          needs_attention: boolean | null
+          progress_percentage: number | null
+          started_at: string | null
+          status: string | null
+          student_id: string
+          time_spent: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          lesson_id: number
+          needs_attention?: boolean | null
+          progress_percentage?: number | null
+          started_at?: string | null
+          status?: string | null
+          student_id: string
+          time_spent?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          lesson_id?: number
+          needs_attention?: boolean | null
+          progress_percentage?: number | null
+          started_at?: string | null
+          status?: string | null
+          student_id?: string
+          time_spent?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_progress_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "Lessons"
+            referencedColumns: ["Lesson ID"]
+          },
+          {
+            foreignKeyName: "student_progress_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      students: {
+        Row: {
+          class_id: string
+          created_at: string | null
+          first_name: string
+          grade_level: string | null
+          id: string
+          iep_accommodations: string[] | null
+          interests: string[] | null
+          language_preference: string | null
+          last_name: string
+          learning_style: string | null
+          reading_level: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          class_id: string
+          created_at?: string | null
+          first_name: string
+          grade_level?: string | null
+          id?: string
+          iep_accommodations?: string[] | null
+          interests?: string[] | null
+          language_preference?: string | null
+          last_name: string
+          learning_style?: string | null
+          reading_level?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          class_id?: string
+          created_at?: string | null
+          first_name?: string
+          grade_level?: string | null
+          id?: string
+          iep_accommodations?: string[] | null
+          interests?: string[] | null
+          language_preference?: string | null
+          last_name?: string
+          learning_style?: string | null
+          reading_level?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "students_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      support_sessions: {
+        Row: {
+          completed_at: string | null
+          created_at: string | null
+          id: string
+          notes: string | null
+          scheduled_at: string | null
+          session_type: string
+          status: string | null
+          teacher_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          scheduled_at?: string | null
+          session_type: string
+          status?: string | null
+          teacher_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          scheduled_at?: string | null
+          session_type?: string
+          status?: string | null
+          teacher_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_sessions_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      teacher_profiles: {
+        Row: {
+          certification_status: string | null
+          created_at: string | null
+          grade_levels: string[] | null
+          id: string
+          onboarding_completed: boolean | null
+          pd_hours: number | null
+          school_name: string | null
+          subjects: string[] | null
+          updated_at: string | null
+          user_id: string
+          years_experience: number | null
+        }
+        Insert: {
+          certification_status?: string | null
+          created_at?: string | null
+          grade_levels?: string[] | null
+          id?: string
+          onboarding_completed?: boolean | null
+          pd_hours?: number | null
+          school_name?: string | null
+          subjects?: string[] | null
+          updated_at?: string | null
+          user_id: string
+          years_experience?: number | null
+        }
+        Update: {
+          certification_status?: string | null
+          created_at?: string | null
+          grade_levels?: string[] | null
+          id?: string
+          onboarding_completed?: boolean | null
+          pd_hours?: number | null
+          school_name?: string | null
+          subjects?: string[] | null
+          updated_at?: string | null
+          user_id?: string
+          years_experience?: number | null
         }
         Relationships: []
       }

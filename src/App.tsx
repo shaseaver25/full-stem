@@ -12,6 +12,10 @@ import ExcelCourse from "./pages/ExcelCourse";
 import LessonPage from "./pages/LessonPage";
 import UserPreferences from "./pages/UserPreferences";
 import NotFound from "./pages/NotFound";
+import TeacherAuth from "./pages/TeacherAuth";
+import TeacherOnboarding from "./pages/TeacherOnboarding";
+import TeacherDashboard from "./components/teacher/TeacherDashboard";
+import ProtectedTeacherRoute from "./components/teacher/ProtectedTeacherRoute";
 
 const queryClient = new QueryClient();
 
@@ -29,6 +33,26 @@ const App = () => (
             <Route path="/course/excel" element={<ExcelCourse />} />
             <Route path="/lesson/:lessonId" element={<LessonPage />} />
             <Route path="/preferences" element={<UserPreferences />} />
+            
+            {/* Teacher Routes */}
+            <Route path="/teacher/auth" element={<TeacherAuth />} />
+            <Route 
+              path="/teacher/onboarding" 
+              element={
+                <ProtectedTeacherRoute requireOnboarding={false}>
+                  <TeacherOnboarding />
+                </ProtectedTeacherRoute>
+              } 
+            />
+            <Route 
+              path="/teacher/dashboard" 
+              element={
+                <ProtectedTeacherRoute requireOnboarding={true}>
+                  <TeacherDashboard />
+                </ProtectedTeacherRoute>
+              } 
+            />
+            
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
