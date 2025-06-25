@@ -8,7 +8,7 @@ export const useHighlightedSpeech = (text: string) => {
   const [currentWordIndex, setCurrentWordIndex] = useState(-1);
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
   const timeoutsRef = useRef<NodeJS.Timeout[]>([]);
-  const startTimeRef = useRef<number>(0);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Split text into words, keeping spaces separate for proper rendering
   const textParts = text.split(/(\s+)/);
@@ -23,34 +23,42 @@ export const useHighlightedSpeech = (text: string) => {
   const clearTimeouts = useCallback(() => {
     timeoutsRef.current.forEach(timeout => clearTimeout(timeout));
     timeoutsRef.current = [];
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
   }, []);
 
   const startWordHighlighting = useCallback((rate: number) => {
-    // More accurate timing calculation
-    const baseWPM = 180; // Slightly faster base for better sync
+    // Calculate timing based on speech rate
+    const baseWPM = 150; // More conservative base WPM
     const adjustedWPM = baseWPM * rate;
     const msPerWord = (60 / adjustedWPM) * 1000;
 
-    console.log(`Starting word highlighting with ${wordPositions.length} words at ${adjustedWPM} WPM`);
+    console.log(`Starting word highlighting with ${wordPositions.length} words at ${adjustedWPM} WPM, ${msPerWord}ms per word`);
 
-    wordPositions.forEach((_, index) => {
-      const timeout = setTimeout(() => {
-        if (isPlaying && !isPaused) {
-          console.log(`Highlighting word ${index}: "${textParts[wordPositions[index]]}"`);
-          setCurrentWordIndex(index);
+    let currentIndex = 0;
+    setCurrentWordIndex(0);
+
+    // Use interval instead of individual timeouts for more reliable timing
+    intervalRef.current = setInterval(() => {
+      if (currentIndex < wordPositions.length - 1) {
+        currentIndex++;
+        console.log(`Highlighting word ${currentIndex}: "${textParts[wordPositions[currentIndex]]}"`);
+        setCurrentWordIndex(currentIndex);
+      } else {
+        // Clear highlighting after the last word
+        setTimeout(() => {
+          setCurrentWordIndex(-1);
+        }, 1000);
+        if (intervalRef.current) {
+          clearInterval(intervalRef.current);
+          intervalRef.current = null;
         }
-      }, index * msPerWord);
-      
-      timeoutsRef.current.push(timeout);
-    });
+      }
+    }, msPerWord);
 
-    // Clear highlighting after the last word
-    const finalTimeout = setTimeout(() => {
-      setCurrentWordIndex(-1);
-    }, wordPositions.length * msPerWord + 1000);
-    
-    timeoutsRef.current.push(finalTimeout);
-  }, [wordPositions, textParts, isPlaying, isPaused]);
+  }, [wordPositions, textParts]);
 
   const speak = useCallback(() => {
     if (!text.trim()) return;
@@ -68,10 +76,10 @@ export const useHighlightedSpeech = (text: string) => {
     const textSpeed = preferences?.['Text Speed'] || 'Normal';
     switch (textSpeed) {
       case 'Slow':
-        utterance.rate = 0.6;
+        utterance.rate = 0.7;
         break;
       case 'Fast':
-        utterance.rate = 1.4;
+        utterance.rate = 1.3;
         break;
       default:
         utterance.rate = 1.0;
@@ -81,8 +89,6 @@ export const useHighlightedSpeech = (text: string) => {
       console.log('Highlighted speech started');
       setIsPlaying(true);
       setIsPaused(false);
-      setCurrentWordIndex(0);
-      startTimeRef.current = Date.now();
       startWordHighlighting(utterance.rate);
     };
 
@@ -96,10 +102,13 @@ export const useHighlightedSpeech = (text: string) => {
 
     utterance.onerror = (event) => {
       console.error('Highlighted speech error:', event);
-      setIsPlaying(false);
-      setIsPaused(false);
-      setCurrentWordIndex(-1);
-      clearTimeouts();
+      // Don't stop highlighting on speech errors - continue the visual feedback
+      console.log('Continuing word highlighting despite speech error');
+    };
+
+    // Add boundary event to sync with actual speech
+    utterance.onboundary = (event) => {
+      console.log('Speech boundary event:', event);
     };
 
     window.speechSynthesis.speak(utterance);
@@ -109,16 +118,40 @@ export const useHighlightedSpeech = (text: string) => {
     if (window.speechSynthesis.speaking && !window.speechSynthesis.paused) {
       window.speechSynthesis.pause();
       setIsPaused(true);
-      clearTimeouts();
+      // Pause the word highlighting
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
     }
-  }, [clearTimeouts]);
+  }, []);
 
   const resume = useCallback(() => {
     if (window.speechSynthesis.paused) {
       window.speechSynthesis.resume();
       setIsPaused(false);
+      // Resume word highlighting from current position
+      if (currentWordIndex >= 0 && currentWordIndex < wordPositions.length) {
+        const rate = utteranceRef.current?.rate || 1.0;
+        const baseWPM = 150;
+        const adjustedWPM = baseWPM * rate;
+        const msPerWord = (60 / adjustedWPM) * 1000;
+        
+        let currentIndex = currentWordIndex;
+        intervalRef.current = setInterval(() => {
+          if (currentIndex < wordPositions.length - 1) {
+            currentIndex++;
+            setCurrentWordIndex(currentIndex);
+          } else {
+            if (intervalRef.current) {
+              clearInterval(intervalRef.current);
+              intervalRef.current = null;
+            }
+          }
+        }, msPerWord);
+      }
     }
-  }, []);
+  }, [currentWordIndex, wordPositions.length]);
 
   const stop = useCallback(() => {
     window.speechSynthesis.cancel();
