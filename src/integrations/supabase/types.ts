@@ -189,6 +189,142 @@ export type Database = {
           },
         ]
       }
+      grade_categories: {
+        Row: {
+          color: string | null
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+          weight: number
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          updated_at?: string
+          weight?: number
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          updated_at?: string
+          weight?: number
+        }
+        Relationships: []
+      }
+      gradebook_summary: {
+        Row: {
+          category_grades: Json | null
+          course_track: string
+          created_at: string
+          id: string
+          last_calculated: string
+          overall_letter_grade: string | null
+          overall_percentage: number | null
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          category_grades?: Json | null
+          course_track?: string
+          created_at?: string
+          id?: string
+          last_calculated?: string
+          overall_letter_grade?: string | null
+          overall_percentage?: number | null
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          category_grades?: Json | null
+          course_track?: string
+          created_at?: string
+          id?: string
+          last_calculated?: string
+          overall_letter_grade?: string | null
+          overall_percentage?: number | null
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      grades: {
+        Row: {
+          assignment_id: string | null
+          category_id: string
+          comments: string | null
+          created_at: string
+          graded_at: string
+          graded_by: string
+          id: string
+          lesson_id: number | null
+          letter_grade: string | null
+          percentage: number | null
+          points_earned: number | null
+          points_possible: number
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          assignment_id?: string | null
+          category_id: string
+          comments?: string | null
+          created_at?: string
+          graded_at?: string
+          graded_by: string
+          id?: string
+          lesson_id?: number | null
+          letter_grade?: string | null
+          percentage?: number | null
+          points_earned?: number | null
+          points_possible: number
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          assignment_id?: string | null
+          category_id?: string
+          comments?: string | null
+          created_at?: string
+          graded_at?: string
+          graded_by?: string
+          id?: string
+          lesson_id?: number | null
+          letter_grade?: string | null
+          percentage?: number | null
+          points_earned?: number | null
+          points_possible?: number
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "grades_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "assignments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "grades_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "grade_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "grades_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "Lessons"
+            referencedColumns: ["Lesson ID"]
+          },
+        ]
+      }
       lesson_feedback: {
         Row: {
           created_at: string | null
@@ -578,7 +714,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      calculate_letter_grade: {
+        Args: { percentage: number }
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never
