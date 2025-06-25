@@ -68,7 +68,12 @@ export const useAssignments = (lessonId: string) => {
         .eq('user_id', user.id);
 
       if (error) throw error;
-      return data || [];
+      
+      // Type assertion to ensure status is properly typed
+      return (data || []).map(submission => ({
+        ...submission,
+        status: submission.status as 'draft' | 'submitted'
+      }));
     },
     enabled: !!user?.id && !!assignments?.length,
   });
