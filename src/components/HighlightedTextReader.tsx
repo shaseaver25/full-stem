@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Volume2, VolumeX, Pause, Play } from 'lucide-react';
@@ -16,9 +15,11 @@ const HighlightedTextReader: React.FC<HighlightedTextReaderProps> = ({ text, cla
   const [currentWordIndex, setCurrentWordIndex] = useState(-1);
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
   const timeoutsRef = useRef<NodeJS.Timeout[]>([]);
+  const startTimeRef = useRef<number>(0);
 
-  // Split text into words
-  const words = text.split(/(\s+)/).filter(word => word.trim().length > 0);
+  // Split text into words, keeping spaces separate for proper rendering
+  const textParts = text.split(/(\s+)/);
+  const words = textParts.filter(part => !part.match(/^\s*$/)); // Only actual words for highlighting
 
   const clearTimeouts = () => {
     timeoutsRef.current.forEach(timeout => clearTimeout(timeout));
@@ -28,7 +29,7 @@ const HighlightedTextReader: React.FC<HighlightedTextReaderProps> = ({ text, cla
   const speak = () => {
     if (!text.trim()) return;
 
-    console.log('Starting highlighted text reading:', text.substring(0, 100) + '...');
+    console.log('Starting highlighted text reading');
 
     // Stop any current speech
     window.speechSynthesis.cancel();
@@ -41,10 +42,10 @@ const HighlightedTextReader: React.FC<HighlightedTextReaderProps> = ({ text, cla
     const textSpeed = preferences?.['Text Speed'] || 'Normal';
     switch (textSpeed) {
       case 'Slow':
-        utterance.rate = 0.7;
+        utterance.rate = 0.6;
         break;
       case 'Fast':
-        utterance.rate = 1.3;
+        utterance.rate = 1.4;
         break;
       default:
         utterance.rate = 1.0;
@@ -54,6 +55,8 @@ const HighlightedTextReader: React.FC<HighlightedTextReaderProps> = ({ text, cla
       console.log('Highlighted speech started');
       setIsPlaying(true);
       setIsPaused(false);
+      setCurrentWordIndex(0);
+      startTimeRef.current = Date.now();
       startWordHighlighting(utterance.rate);
     };
 
@@ -77,20 +80,30 @@ const HighlightedTextReader: React.FC<HighlightedTextReaderProps> = ({ text, cla
   };
 
   const startWordHighlighting = (rate: number) => {
-    // Estimate words per minute based on speech rate
-    const baseWPM = 150; // Average speaking speed
+    // More accurate timing calculation
+    const baseWPM = 180; // Slightly faster base for better sync
     const adjustedWPM = baseWPM * rate;
     const msPerWord = (60 / adjustedWPM) * 1000;
+
+    console.log(`Starting word highlighting with ${words.length} words at ${adjustedWPM} WPM`);
 
     words.forEach((word, index) => {
       const timeout = setTimeout(() => {
         if (isPlaying && !isPaused) {
+          console.log(`Highlighting word ${index}: "${word}"`);
           setCurrentWordIndex(index);
         }
       }, index * msPerWord);
       
       timeoutsRef.current.push(timeout);
     });
+
+    // Clear highlighting after the last word
+    const finalTimeout = setTimeout(() => {
+      setCurrentWordIndex(-1);
+    }, words.length * msPerWord + 1000);
+    
+    timeoutsRef.current.push(finalTimeout);
   };
 
   const pause = () => {
@@ -105,10 +118,6 @@ const HighlightedTextReader: React.FC<HighlightedTextReaderProps> = ({ text, cla
     if (window.speechSynthesis.paused) {
       window.speechSynthesis.resume();
       setIsPaused(false);
-      // Resume highlighting from current position
-      if (utteranceRef.current) {
-        startWordHighlighting(utteranceRef.current.rate);
-      }
     }
   };
 
@@ -185,20 +194,31 @@ const HighlightedTextReader: React.FC<HighlightedTextReaderProps> = ({ text, cla
       </div>
       
       <div className="prose prose-lg max-w-none">
-        <p className="text-gray-800 leading-relaxed">
-          {words.map((word, index) => (
-            <span
-              key={index}
-              className={`${
-                index === currentWordIndex
-                  ? 'bg-yellow-300 font-semibold transition-colors duration-200'
-                  : ''
-              }`}
-            >
-              {word}{' '}
-            </span>
-          ))}
-        </p>
+        <div className="text-gray-800 leading-relaxed text-lg">
+          {textParts.map((part, index) => {
+            // Skip whitespace parts for highlighting logic
+            if (part.match(/^\s+$/)) {
+              return <span key={index}>{part}</span>;
+            }
+            
+            // Find the word index for highlighting
+            const wordIndex = words.indexOf(part);
+            const isCurrentWord = wordIndex === currentWordIndex;
+            
+            return (
+              <span
+                key={index}
+                className={`${
+                  isCurrentWord
+                    ? 'bg-yellow-300 font-semibold transition-all duration-300 px-1 rounded'
+                    : ''
+                } transition-all duration-200`}
+              >
+                {part}
+              </span>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
