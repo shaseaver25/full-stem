@@ -34,12 +34,15 @@ export const useLiveTranslation = () => {
     // Check cache first
     const cacheKey = `${text}_${targetLanguage}`;
     if (translationCache.has(cacheKey)) {
+      console.log('Using cached translation');
       return translationCache.get(cacheKey)!;
     }
 
     setIsTranslating(true);
     
     try {
+      console.log('Starting translation request:', { targetLanguage, textLength: text.length });
+      
       const { data, error } = await supabase.functions.invoke('translate-text', {
         body: {
           text,
@@ -48,11 +51,13 @@ export const useLiveTranslation = () => {
         }
       });
 
+      console.log('Translation response:', { data, error });
+
       if (error) {
         console.error('Translation error:', error);
         toast({
           title: "Translation Error",
-          description: "Failed to translate text. Please try again.",
+          description: error.message || "Failed to translate text. Please try again.",
           variant: "destructive",
         });
         return null;
@@ -73,7 +78,7 @@ export const useLiveTranslation = () => {
       console.error('Translation error:', error);
       toast({
         title: "Translation Error",
-        description: "Failed to translate text. Please try again.",
+        description: "Failed to translate text. Please check your connection and try again.",
         variant: "destructive",
       });
       return null;
@@ -84,6 +89,10 @@ export const useLiveTranslation = () => {
 
   const clearCache = () => {
     setTranslationCache(new Map());
+    toast({
+      title: "Cache Cleared",
+      description: "Translation cache has been cleared.",
+    });
   };
 
   return {

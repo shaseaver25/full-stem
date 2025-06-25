@@ -18,6 +18,12 @@ serve(async (req) => {
   try {
     const { text, targetLanguage, sourceLanguage = 'auto' } = await req.json();
 
+    console.log('Translation request received:', { 
+      targetLanguage, 
+      sourceLanguage, 
+      textLength: text?.length 
+    });
+
     if (!text || !targetLanguage) {
       return new Response(
         JSON.stringify({ error: 'Text and target language are required' }),
@@ -26,11 +32,14 @@ serve(async (req) => {
     }
 
     if (!openAIApiKey) {
+      console.error('OpenAI API key not found in environment variables');
       return new Response(
-        JSON.stringify({ error: 'OpenAI API key not configured' }),
+        JSON.stringify({ error: 'Translation service is not properly configured' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+
+    console.log('Calling OpenAI API for translation...');
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -55,17 +64,22 @@ serve(async (req) => {
       }),
     });
 
+    console.log('OpenAI API response status:', response.status);
+
     const data = await response.json();
     
     if (!response.ok) {
       console.error('OpenAI API error:', data);
       return new Response(
-        JSON.stringify({ error: 'Translation service unavailable' }),
+        JSON.stringify({ 
+          error: data.error?.message || 'Translation service unavailable' 
+        }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
     const translatedText = data.choices[0].message.content;
+    console.log('Translation completed successfully');
 
     return new Response(
       JSON.stringify({
@@ -79,7 +93,9 @@ serve(async (req) => {
   } catch (error) {
     console.error('Translation function error:', error);
     return new Response(
-      JSON.stringify({ error: 'Internal server error' }),
+      JSON.stringify({ 
+        error: error.message || 'Internal server error' 
+      }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
