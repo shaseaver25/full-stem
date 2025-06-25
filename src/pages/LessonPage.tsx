@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { BookOpen, AlertCircle, Loader2 } from 'lucide-react';
@@ -10,6 +9,7 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 import AdaptiveContentBox from '@/components/lesson/AdaptiveContentBox';
 import LessonStatusNav from '@/components/lesson/LessonStatusNav';
 import ReadAloudToggler from '@/components/ReadAloudToggler';
+import VideoSection from '@/components/lesson/VideoSection';
 import { useLessonData } from '@/hooks/useLessonData';
 import { useLessonProgressUpdate } from '@/hooks/useLessonProgressUpdate';
 import { useAuth } from '@/contexts/AuthContext';
@@ -93,6 +93,9 @@ const LessonPage = () => {
   // Get the lesson text for read-aloud functionality - ensure we have fallback text
   const lessonText = content || lesson.text || lesson['Text (Grade 5)'] || lesson['Text (Grade 3)'] || lesson['Text (Grade 8)'] || 'No content available for this lesson.';
 
+  // Video URL for this specific lesson
+  const videoUrl = "https://youtu.be/c2dcRy1X9AA";
+
   console.log('Lesson data:', lesson);
   console.log('Lesson text for read-aloud:', lessonText);
 
@@ -118,6 +121,12 @@ const LessonPage = () => {
         </Card>
 
         <div className="space-y-8">
+          {/* Video Section */}
+          <VideoSection 
+            videoUrl={videoUrl}
+            title={`${lesson.Title || `Lesson ${lesson['Lesson ID']}`} - Video Tutorial`}
+          />
+
           {/* Read Aloud Toggler */}
           <Card>
             <CardContent className="p-6">
