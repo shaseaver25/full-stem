@@ -91,7 +91,7 @@ const LessonPage = () => {
   } : null;
 
   // Get the lesson text for read-aloud functionality
-  const lessonText = content || lesson.Content || lesson.text || '';
+  const lessonText = content || lesson.text || '';
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">

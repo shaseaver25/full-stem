@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
@@ -10,13 +9,14 @@ interface LessonData {
   Description: string | null;
   Track: string | null;
   Order: number | null;
-  Content: string | null;
+  text: string | null;
   'Text (Grade 3)': string | null;
   'Text (Grade 5)': string | null;
   'Text (Grade 8)': string | null;
-  'Text (Grade X)': string | null;
+  texta: string | null;
   'Translated Content': any;
   'Source Doc URL': string | null;
+  slug: string | null;
 }
 
 interface UserProgress {
@@ -86,7 +86,7 @@ export const useLessonData = (lessonId: string) => {
 
   const getContentForReadingLevel = () => {
     if (!lesson || !readingLevel) return null;
-    return lesson[readingLevel] || lesson.Content || null;
+    return lesson[readingLevel] || lesson.text || null;
   };
 
   const getTranslatedContent = () => {
