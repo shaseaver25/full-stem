@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Volume2, VolumeX, Pause, Play } from 'lucide-react';
@@ -19,7 +20,13 @@ const HighlightedTextReader: React.FC<HighlightedTextReaderProps> = ({ text, cla
 
   // Split text into words, keeping spaces separate for proper rendering
   const textParts = text.split(/(\s+)/);
-  const words = textParts.filter(part => !part.match(/^\s*$/)); // Only actual words for highlighting
+  // Create a mapping of word positions for highlighting
+  const wordPositions: number[] = [];
+  textParts.forEach((part, index) => {
+    if (!part.match(/^\s*$/)) { // If it's not just whitespace
+      wordPositions.push(index);
+    }
+  });
 
   const clearTimeouts = () => {
     timeoutsRef.current.forEach(timeout => clearTimeout(timeout));
@@ -85,12 +92,12 @@ const HighlightedTextReader: React.FC<HighlightedTextReaderProps> = ({ text, cla
     const adjustedWPM = baseWPM * rate;
     const msPerWord = (60 / adjustedWPM) * 1000;
 
-    console.log(`Starting word highlighting with ${words.length} words at ${adjustedWPM} WPM`);
+    console.log(`Starting word highlighting with ${wordPositions.length} words at ${adjustedWPM} WPM`);
 
-    words.forEach((word, index) => {
+    wordPositions.forEach((_, index) => {
       const timeout = setTimeout(() => {
         if (isPlaying && !isPaused) {
-          console.log(`Highlighting word ${index}: "${word}"`);
+          console.log(`Highlighting word ${index}: "${textParts[wordPositions[index]]}"`);
           setCurrentWordIndex(index);
         }
       }, index * msPerWord);
@@ -101,7 +108,7 @@ const HighlightedTextReader: React.FC<HighlightedTextReaderProps> = ({ text, cla
     // Clear highlighting after the last word
     const finalTimeout = setTimeout(() => {
       setCurrentWordIndex(-1);
-    }, words.length * msPerWord + 1000);
+    }, wordPositions.length * msPerWord + 1000);
     
     timeoutsRef.current.push(finalTimeout);
   };
@@ -201,9 +208,9 @@ const HighlightedTextReader: React.FC<HighlightedTextReaderProps> = ({ text, cla
               return <span key={index}>{part}</span>;
             }
             
-            // Find the word index for highlighting
-            const wordIndex = words.indexOf(part);
-            const isCurrentWord = wordIndex === currentWordIndex;
+            // Find if this text part position matches the current highlighted word
+            const wordPositionIndex = wordPositions.indexOf(index);
+            const isCurrentWord = wordPositionIndex === currentWordIndex;
             
             return (
               <span
