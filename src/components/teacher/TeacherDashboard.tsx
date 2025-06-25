@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Link } from 'react-router-dom';
 import { 
   Users, 
   BookOpen, 
@@ -16,7 +17,8 @@ import {
   Plus,
   GraduationCap,
   Settings,
-  LogOut
+  LogOut,
+  ClipboardList
 } from 'lucide-react';
 
 const TeacherDashboard = () => {
@@ -127,6 +129,12 @@ const TeacherDashboard = () => {
                 <Users className="w-4 h-4 mr-2" />
                 Add Students
               </Button>
+              <Link to="/teacher/gradebook">
+                <Button className="w-full justify-start" variant="outline">
+                  <ClipboardList className="w-4 h-4 mr-2" />
+                  Gradebook
+                </Button>
+              </Link>
               <Button className="w-full justify-start" variant="outline">
                 <MessageCircle className="w-4 h-4 mr-2" />
                 Live Help Support
