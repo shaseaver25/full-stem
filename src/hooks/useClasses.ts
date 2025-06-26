@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTeacherProfile } from '@/hooks/useTeacherProfile';
 import { toast } from '@/hooks/use-toast';
 
 export interface Class {
@@ -17,11 +18,12 @@ export interface Class {
 
 export const useClasses = () => {
   const { user } = useAuth();
+  const { profile } = useTeacherProfile();
   const [classes, setClasses] = useState<Class[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchClasses = async () => {
-    if (!user) {
+    if (!user || !profile) {
       setLoading(false);
       return;
     }
@@ -30,7 +32,7 @@ export const useClasses = () => {
       const { data, error } = await supabase
         .from('classes')
         .select('*')
-        .eq('teacher_id', user.id)
+        .eq('teacher_id', profile.id)
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -62,7 +64,14 @@ export const useClasses = () => {
     subject: string;
     school_year?: string;
   }) => {
-    if (!user) return false;
+    if (!user || !profile) {
+      toast({
+        title: "Error",
+        description: "Teacher profile not found. Please complete your profile setup.",
+        variant: "destructive",
+      });
+      return false;
+    }
 
     try {
       const { data, error } = await supabase
@@ -71,7 +80,7 @@ export const useClasses = () => {
           name: classData.name,
           grade_level: classData.grade_level,
           subject: classData.subject,
-          teacher_id: user.id,
+          teacher_id: profile.id, // Use teacher profile ID instead of user ID
           school_year: classData.school_year || new Date().getFullYear().toString(),
         })
         .select()
@@ -109,7 +118,7 @@ export const useClasses = () => {
 
   useEffect(() => {
     fetchClasses();
-  }, [user]);
+  }, [user, profile]);
 
   return {
     classes,
