@@ -1,5 +1,7 @@
+
 import React, { useState } from 'react';
 import { useTeacherProfile } from '@/hooks/useTeacherProfile';
+import { useClasses } from '@/hooks/useClasses';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -22,11 +24,12 @@ import {
 } from 'lucide-react';
 
 const TeacherDashboard = () => {
-  const { profile, loading } = useTeacherProfile();
+  const { profile, loading: profileLoading } = useTeacherProfile();
+  const { classes, loading: classesLoading, createClass } = useClasses();
   const { user, signOut } = useAuth();
   const [createClassModalOpen, setCreateClassModalOpen] = useState(false);
 
-  if (loading) {
+  if (profileLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
@@ -36,7 +39,7 @@ const TeacherDashboard = () => {
 
   const stats = [
     { title: 'Total Students', value: '127', icon: Users, color: 'bg-blue-500' },
-    { title: 'Active Classes', value: '5', icon: BookOpen, color: 'bg-green-500' },
+    { title: 'Active Classes', value: classes.length.toString(), icon: BookOpen, color: 'bg-green-500' },
     { title: 'Lessons Assigned', value: '23', icon: Calendar, color: 'bg-purple-500' },
     { title: 'Average Progress', value: '78%', icon: TrendingUp, color: 'bg-orange-500' },
   ];
@@ -48,7 +51,6 @@ const TeacherDashboard = () => {
   ];
 
   const handleClassCreated = () => {
-    // Optionally refresh dashboard data here
     console.log('Class created successfully!');
   };
 
@@ -156,39 +158,50 @@ const TeacherDashboard = () => {
             </CardContent>
           </Card>
 
-          {/* Recent Activity */}
+          {/* My Classes */}
           <Card>
             <CardHeader>
-              <CardTitle>Recent Activity</CardTitle>
+              <CardTitle className="flex items-center justify-between">
+                My Classes
+                {classesLoading && (
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-indigo-600"></div>
+                )}
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {recentActivity.map((activity, index) => (
-                  <div key={index} className="flex items-start space-x-3">
-                    <div className="flex-shrink-0">
-                      {activity.type === 'assignment' && (
-                        <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                          <BookOpen className="w-4 h-4 text-blue-600" />
-                        </div>
-                      )}
-                      {activity.type === 'alert' && (
-                        <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
-                          <Bell className="w-4 h-4 text-red-600" />
-                        </div>
-                      )}
-                      {activity.type === 'feedback' && (
-                        <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                          <MessageCircle className="w-4 h-4 text-green-600" />
-                        </div>
-                      )}
+              {classes.length === 0 ? (
+                <div className="text-center py-6">
+                  <BookOpen className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-500 mb-4">No classes created yet</p>
+                  <Button 
+                    onClick={() => setCreateClassModalOpen(true)}
+                    size="sm"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Create Your First Class
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {classes.map((classItem) => (
+                    <div key={classItem.id} className="p-3 bg-gray-50 rounded-lg">
+                      <h4 className="font-medium text-gray-900">{classItem.name}</h4>
+                      <div className="flex items-center gap-2 mt-1">
+                        {classItem.grade_level && (
+                          <Badge variant="outline" className="text-xs">
+                            Grade {classItem.grade_level}
+                          </Badge>
+                        )}
+                        {classItem.subject && (
+                          <Badge variant="secondary" className="text-xs">
+                            {classItem.subject}
+                          </Badge>
+                        )}
+                      </div>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm text-gray-900">{activity.message}</p>
-                      <p className="text-xs text-gray-500">{activity.time}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -219,35 +232,41 @@ const TeacherDashboard = () => {
           </Card>
         </div>
 
-        {/* Additional Features Preview */}
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <Card className="border-dashed border-2 border-gray-300">
-            <CardContent className="p-6 text-center">
-              <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="font-semibold text-gray-700 mb-2">Class Management</h3>
-              <p className="text-sm text-gray-500 mb-4">Organize students and track their progress</p>
-              <Button variant="outline" size="sm">Coming Soon</Button>
-            </CardContent>
-          </Card>
-
-          <Card className="border-dashed border-2 border-gray-300">
-            <CardContent className="p-6 text-center">
-              <BookOpen className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="font-semibold text-gray-700 mb-2">Curriculum Browser</h3>
-              <p className="text-sm text-gray-500 mb-4">Browse and assign STEM lessons</p>
-              <Button variant="outline" size="sm">Coming Soon</Button>
-            </CardContent>
-          </Card>
-
-          <Card className="border-dashed border-2 border-gray-300">
-            <CardContent className="p-6 text-center">
-              <TrendingUp className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="font-semibold text-gray-700 mb-2">Progress Reports</h3>
-              <p className="text-sm text-gray-500 mb-4">Generate detailed student reports</p>
-              <Button variant="outline" size="sm">Coming Soon</Button>
-            </CardContent>
-          </Card>
-        </div>
+        {/* Recent Activity */}
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle>Recent Activity</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {recentActivity.map((activity, index) => (
+                <div key={index} className="flex items-start space-x-3">
+                  <div className="flex-shrink-0">
+                    {activity.type === 'assignment' && (
+                      <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                        <BookOpen className="w-4 h-4 text-blue-600" />
+                      </div>
+                    )}
+                    {activity.type === 'alert' && (
+                      <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
+                        <Bell className="w-4 h-4 text-red-600" />
+                      </div>
+                    )}
+                    {activity.type === 'feedback' && (
+                      <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                        <MessageCircle className="w-4 h-4 text-green-600" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-gray-900">{activity.message}</p>
+                    <p className="text-xs text-gray-500">{activity.time}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Create Class Modal */}
@@ -255,6 +274,7 @@ const TeacherDashboard = () => {
         open={createClassModalOpen}
         onOpenChange={setCreateClassModalOpen}
         onClassCreated={handleClassCreated}
+        createClass={createClass}
       />
     </div>
   );

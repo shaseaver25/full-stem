@@ -1,7 +1,5 @@
 
 import React, { useState } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -22,16 +20,20 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { X } from 'lucide-react';
 
 interface CreateClassModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onClassCreated?: () => void;
+  createClass: (classData: {
+    name: string;
+    grade_level: string;
+    subject: string;
+    school_year?: string;
+  }) => Promise<boolean>;
 }
 
-const CreateClassModal = ({ open, onOpenChange, onClassCreated }: CreateClassModalProps) => {
-  const { user } = useAuth();
+const CreateClassModal = ({ open, onOpenChange, onClassCreated, createClass }: CreateClassModalProps) => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -88,42 +90,28 @@ const CreateClassModal = ({ open, onOpenChange, onClassCreated }: CreateClassMod
     setLoading(true);
 
     try {
-      const { error } = await supabase
-        .from('classes')
-        .insert({
-          name: formData.name.trim(),
-          grade_level: formData.gradeLevel,
-          subject: formData.subjects.join(', '),
-          teacher_id: user?.id,
-          school_year: new Date().getFullYear().toString(),
+      const success = await createClass({
+        name: formData.name.trim(),
+        grade_level: formData.gradeLevel,
+        subject: formData.subjects.join(', '),
+        school_year: new Date().getFullYear().toString(),
+      });
+
+      if (success) {
+        // Reset form
+        setFormData({
+          name: '',
+          gradeLevel: '',
+          subjects: [],
+          learningProfiles: [],
+          studentCountEstimate: '',
         });
 
-      if (error) throw error;
-
-      toast({
-        title: "Success!",
-        description: "Class created successfully.",
-      });
-
-      // Reset form
-      setFormData({
-        name: '',
-        gradeLevel: '',
-        subjects: [],
-        learningProfiles: [],
-        studentCountEstimate: '',
-      });
-
-      onOpenChange(false);
-      onClassCreated?.();
-
+        onOpenChange(false);
+        onClassCreated?.();
+      }
     } catch (error) {
-      console.error('Error creating class:', error);
-      toast({
-        title: "Error",
-        description: "Failed to create class. Please try again.",
-        variant: "destructive",
-      });
+      console.error('Error in form submission:', error);
     } finally {
       setLoading(false);
     }
@@ -151,13 +139,18 @@ const CreateClassModal = ({ open, onOpenChange, onClassCreated }: CreateClassMod
               onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
               placeholder="e.g., Advanced Excel 2024"
               className="w-full"
+              disabled={loading}
             />
           </div>
 
           {/* Grade Level */}
           <div className="space-y-2">
             <Label className="text-sm font-medium">Grade Level *</Label>
-            <Select value={formData.gradeLevel} onValueChange={(value) => setFormData(prev => ({ ...prev, gradeLevel: value }))}>
+            <Select 
+              value={formData.gradeLevel} 
+              onValueChange={(value) => setFormData(prev => ({ ...prev, gradeLevel: value }))}
+              disabled={loading}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Select grade level" />
               </SelectTrigger>
@@ -181,6 +174,7 @@ const CreateClassModal = ({ open, onOpenChange, onClassCreated }: CreateClassMod
                     id={`subject-${subject}`}
                     checked={formData.subjects.includes(subject)}
                     onCheckedChange={(checked) => handleSubjectChange(subject, checked as boolean)}
+                    disabled={loading}
                   />
                   <Label htmlFor={`subject-${subject}`} className="text-sm">
                     {subject}
@@ -200,6 +194,7 @@ const CreateClassModal = ({ open, onOpenChange, onClassCreated }: CreateClassMod
                     id={`profile-${profile}`}
                     checked={formData.learningProfiles.includes(profile)}
                     onCheckedChange={(checked) => handleLearningProfileChange(profile, checked as boolean)}
+                    disabled={loading}
                   />
                   <Label htmlFor={`profile-${profile}`} className="text-sm">
                     {profile}
@@ -223,6 +218,7 @@ const CreateClassModal = ({ open, onOpenChange, onClassCreated }: CreateClassMod
               min="1"
               max="50"
               className="w-full"
+              disabled={loading}
             />
           </div>
 
