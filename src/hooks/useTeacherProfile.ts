@@ -24,8 +24,38 @@ export const useTeacherProfile = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
+  const createInitialProfile = async () => {
+    if (!user) return null;
+
+    try {
+      const { data, error } = await supabase
+        .from('teacher_profiles')
+        .insert({
+          user_id: user.id,
+          onboarding_completed: false,
+          certification_status: 'pending',
+          pd_hours: 0
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error creating initial teacher profile:', error);
+        return null;
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Error creating initial teacher profile:', error);
+      return null;
+    }
+  };
+
   const fetchProfile = async () => {
-    if (!user) return;
+    if (!user) {
+      setLoading(false);
+      return;
+    }
 
     try {
       const { data, error } = await supabase
@@ -41,10 +71,18 @@ export const useTeacherProfile = () => {
           description: "Failed to load teacher profile.",
           variant: "destructive",
         });
+        setLoading(false);
         return;
       }
 
-      setProfile(data);
+      // If no profile exists, create one
+      if (!data) {
+        console.log('No profile found, creating initial profile...');
+        const newProfile = await createInitialProfile();
+        setProfile(newProfile);
+      } else {
+        setProfile(data);
+      }
     } catch (error) {
       console.error('Error fetching teacher profile:', error);
       toast({
