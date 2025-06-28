@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -17,6 +18,7 @@ import TeacherDashboard from "./components/teacher/TeacherDashboard";
 import ProtectedTeacherRoute from "./components/teacher/ProtectedTeacherRoute";
 import GradebookPage from "./pages/GradebookPage";
 import AssignmentSubmissionsPage from "./pages/AssignmentSubmissionsPage";
+import AssignmentGradebookPage from "./pages/AssignmentGradebookPage";
 
 const queryClient = new QueryClient();
 
@@ -66,6 +68,14 @@ const App = () => (
               element={
                 <ProtectedTeacherRoute requireOnboarding={true}>
                   <AssignmentSubmissionsPage />
+                </ProtectedTeacherRoute>
+              } 
+            />
+            <Route 
+              path="/teacher/assignment-gradebook" 
+              element={
+                <ProtectedTeacherRoute requireOnboarding={true}>
+                  <AssignmentGradebookPage />
                 </ProtectedTeacherRoute>
               } 
             />
