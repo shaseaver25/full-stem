@@ -483,6 +483,130 @@ export type Database = {
         }
         Relationships: []
       }
+      rubric_criteria: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          max_points: number
+          name: string
+          order_index: number
+          rubric_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          max_points: number
+          name: string
+          order_index?: number
+          rubric_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          max_points?: number
+          name?: string
+          order_index?: number
+          rubric_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rubric_criteria_rubric_id_fkey"
+            columns: ["rubric_id"]
+            isOneToOne: false
+            referencedRelation: "rubrics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rubric_grades: {
+        Row: {
+          created_at: string
+          criterion_id: string
+          feedback: string | null
+          id: string
+          points_earned: number
+          submission_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          criterion_id: string
+          feedback?: string | null
+          id?: string
+          points_earned?: number
+          submission_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          criterion_id?: string
+          feedback?: string | null
+          id?: string
+          points_earned?: number
+          submission_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rubric_grades_criterion_id_fkey"
+            columns: ["criterion_id"]
+            isOneToOne: false
+            referencedRelation: "rubric_criteria"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rubric_grades_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "assignment_submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rubrics: {
+        Row: {
+          assignment_id: string
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          total_points: number
+          updated_at: string
+        }
+        Insert: {
+          assignment_id: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          total_points?: number
+          updated_at?: string
+        }
+        Update: {
+          assignment_id?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          total_points?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rubrics_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "assignments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       student_progress: {
         Row: {
           completed_at: string | null
