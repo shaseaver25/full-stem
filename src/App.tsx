@@ -16,6 +16,7 @@ import TeacherOnboarding from "./pages/TeacherOnboarding";
 import TeacherDashboard from "./components/teacher/TeacherDashboard";
 import ProtectedTeacherRoute from "./components/teacher/ProtectedTeacherRoute";
 import GradebookPage from "./pages/GradebookPage";
+import AssignmentSubmissionsPage from "./pages/AssignmentSubmissionsPage";
 
 const queryClient = new QueryClient();
 
@@ -57,6 +58,14 @@ const App = () => (
               element={
                 <ProtectedTeacherRoute requireOnboarding={true}>
                   <GradebookPage />
+                </ProtectedTeacherRoute>
+              } 
+            />
+            <Route 
+              path="/teacher/submissions" 
+              element={
+                <ProtectedTeacherRoute requireOnboarding={true}>
+                  <AssignmentSubmissionsPage />
                 </ProtectedTeacherRoute>
               } 
             />

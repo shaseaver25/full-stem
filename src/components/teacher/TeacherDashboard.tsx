@@ -151,6 +151,12 @@ const TeacherDashboard = () => {
                   Gradebook
                 </Button>
               </Link>
+              <Link to="/teacher/submissions">
+                <Button className="w-full justify-start" variant="outline">
+                  <Award className="w-4 h-4 mr-2" />
+                  Assignment Submissions
+                </Button>
+              </Link>
               <Button className="w-full justify-start" variant="outline">
                 <MessageCircle className="w-4 h-4 mr-2" />
                 Live Help Support
