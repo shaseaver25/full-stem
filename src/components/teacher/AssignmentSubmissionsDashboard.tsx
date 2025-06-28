@@ -3,6 +3,8 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import {
   Table,
   TableBody,
@@ -13,10 +15,11 @@ import {
 } from '@/components/ui/table';
 import { useAssignmentSubmissions, SubmissionWithDetails } from '@/hooks/useAssignmentSubmissions';
 import GradingModal from './GradingModal';
-import { Download, FileText, GraduationCap, Calendar, User } from 'lucide-react';
+import { Download, FileText, GraduationCap, Calendar, User, Filter } from 'lucide-react';
 
 const AssignmentSubmissionsDashboard = () => {
-  const { submissions, loading, refetch } = useAssignmentSubmissions();
+  const [showUngradedOnly, setShowUngradedOnly] = useState(false);
+  const { submissions, loading, refetch } = useAssignmentSubmissions(showUngradedOnly);
   const [selectedSubmission, setSelectedSubmission] = useState<SubmissionWithDetails | null>(null);
   const [gradingModalOpen, setGradingModalOpen] = useState(false);
 
@@ -51,18 +54,36 @@ const AssignmentSubmissionsDashboard = () => {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center">
-            <GraduationCap className="w-5 h-5 mr-2" />
-            Assignment Submissions
+          <CardTitle className="flex items-center justify-between">
+            <div className="flex items-center">
+              <GraduationCap className="w-5 h-5 mr-2" />
+              Assignment Submissions
+            </div>
+            <div className="flex items-center space-x-2">
+              <Filter className="w-4 h-4 text-gray-500" />
+              <Label htmlFor="ungraded-filter" className="text-sm font-medium">
+                Ungraded only
+              </Label>
+              <Switch
+                id="ungraded-filter"
+                checked={showUngradedOnly}
+                onCheckedChange={setShowUngradedOnly}
+              />
+            </div>
           </CardTitle>
         </CardHeader>
         <CardContent>
           {submissions.length === 0 ? (
             <div className="text-center py-8">
               <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-500">No submitted assignments found</p>
+              <p className="text-gray-500">
+                {showUngradedOnly ? 'No ungraded submissions found' : 'No submitted assignments found'}
+              </p>
               <p className="text-sm text-gray-400 mt-2">
-                Submissions will appear here once students submit their work
+                {showUngradedOnly 
+                  ? 'All submissions have been graded!' 
+                  : 'Submissions will appear here once students submit their work'
+                }
               </p>
             </div>
           ) : (
@@ -73,6 +94,7 @@ const AssignmentSubmissionsDashboard = () => {
                     <TableHead>Student</TableHead>
                     <TableHead>Assignment</TableHead>
                     <TableHead>Submitted</TableHead>
+                    <TableHead>Status</TableHead>
                     <TableHead>Files</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
@@ -110,6 +132,13 @@ const AssignmentSubmissionsDashboard = () => {
                         </div>
                       </TableCell>
                       <TableCell>
+                        {submission.has_grade ? (
+                          <Badge variant="secondary">Graded</Badge>
+                        ) : (
+                          <Badge variant="destructive">Ungraded</Badge>
+                        )}
+                      </TableCell>
+                      <TableCell>
                         {submission.file_urls && submission.file_urls.length > 0 ? (
                           <div className="space-y-1">
                             {submission.file_urls.map((fileUrl, index) => {
@@ -136,8 +165,9 @@ const AssignmentSubmissionsDashboard = () => {
                         <Button
                           onClick={() => handleGradeSubmission(submission)}
                           size="sm"
+                          variant={submission.has_grade ? "outline" : "default"}
                         >
-                          Grade
+                          {submission.has_grade ? "Edit Grade" : "Grade"}
                         </Button>
                       </TableCell>
                     </TableRow>

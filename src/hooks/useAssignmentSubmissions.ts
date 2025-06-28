@@ -17,9 +17,10 @@ export interface SubmissionWithDetails {
   assignment_title: string;
   student_name: string;
   student_email: string;
+  has_grade: boolean;
 }
 
-export const useAssignmentSubmissions = () => {
+export const useAssignmentSubmissions = (showUngradedOnly: boolean = false) => {
   const { user } = useAuth();
   const [submissions, setSubmissions] = useState<SubmissionWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
@@ -102,11 +103,23 @@ export const useAssignmentSubmissions = () => {
 
       if (profilesError) throw profilesError;
 
+      // Get existing grades for these submissions
+      const submissionIds = submissionsData.map(s => s.id);
+      const { data: grades, error: gradesError } = await supabase
+        .from('assignment_grades')
+        .select('submission_id')
+        .in('submission_id', submissionIds);
+
+      if (gradesError) throw gradesError;
+
+      const gradedSubmissionIds = new Set(grades?.map(g => g.submission_id) || []);
+
       // Combine all data
-      const submissionsWithDetails: SubmissionWithDetails[] = submissionsData.map(submission => {
+      let submissionsWithDetails: SubmissionWithDetails[] = submissionsData.map(submission => {
         const assignment = assignments?.find(a => a.id === submission.assignment_id);
         const student = students.find(s => s.id === submission.user_id);
         const profile = profiles?.find(p => p.id === submission.user_id);
+        const hasGrade = gradedSubmissionIds.has(submission.id);
         
         return {
           ...submission,
@@ -115,8 +128,14 @@ export const useAssignmentSubmissions = () => {
             ? `${student.first_name} ${student.last_name}`
             : profile?.full_name || 'Unknown Student',
           student_email: profile?.email || '',
+          has_grade: hasGrade,
         };
       });
+
+      // Filter ungraded submissions if requested
+      if (showUngradedOnly) {
+        submissionsWithDetails = submissionsWithDetails.filter(s => !s.has_grade);
+      }
 
       setSubmissions(submissionsWithDetails);
     } catch (error) {
@@ -133,7 +152,7 @@ export const useAssignmentSubmissions = () => {
 
   useEffect(() => {
     fetchSubmissions();
-  }, [user]);
+  }, [user, showUngradedOnly]);
 
   return {
     submissions,
