@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,8 +6,9 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { useAssignmentGradebook } from '@/hooks/useAssignmentGradebook';
-import { Download, Filter, TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { useAssignmentGradebook, AssignmentGradeRow } from '@/hooks/useAssignmentGradebook';
+import { Download, Filter, TrendingUp, TrendingDown, Minus, Edit } from 'lucide-react';
+import EditGradeModal from './EditGradeModal';
 
 const AssignmentGradebook = () => {
   const {
@@ -21,10 +21,12 @@ const AssignmentGradebook = () => {
     uniqueAssignments,
     uniqueStudents,
     assignmentAverages,
+    updateGrade,
   } = useAssignmentGradebook();
 
   const [sortBy, setSortBy] = useState<'grade' | 'date' | 'student' | 'assignment'>('date');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [editingGrade, setEditingGrade] = useState<AssignmentGradeRow | null>(null);
 
   const getGradeColor = (grade: number) => {
     if (grade >= 90) return 'bg-green-100 text-green-800';
@@ -224,6 +226,7 @@ const AssignmentGradebook = () => {
                       {getSortIcon('date')}
                     </div>
                   </TableHead>
+                  <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -246,6 +249,15 @@ const AssignmentGradebook = () => {
                     <TableCell className="text-sm text-gray-600">
                       {grade.graded_at}
                     </TableCell>
+                    <TableCell>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setEditingGrade(grade)}
+                      >
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -258,6 +270,16 @@ const AssignmentGradebook = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Edit Grade Modal */}
+      {editingGrade && (
+        <EditGradeModal
+          isOpen={!!editingGrade}
+          onClose={() => setEditingGrade(null)}
+          grade={editingGrade}
+          onUpdate={updateGrade}
+        />
+      )}
     </div>
   );
 };

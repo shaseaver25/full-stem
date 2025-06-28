@@ -81,6 +81,38 @@ export const useAssignmentGradebook = () => {
     }
   };
 
+  const updateGrade = async (gradeId: string, updates: { grade: number; feedback?: string }): Promise<boolean> => {
+    try {
+      const { error } = await supabase
+        .from('assignment_grades')
+        .update({
+          grade: updates.grade,
+          feedback: updates.feedback,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', gradeId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Grade updated successfully!",
+      });
+
+      // Refresh the grades list
+      await fetchGrades();
+      return true;
+    } catch (error) {
+      console.error('Error updating grade:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update grade. Please try again.",
+        variant: "destructive",
+      });
+      return false;
+    }
+  };
+
   useEffect(() => {
     fetchGrades();
   }, [user]);
@@ -116,5 +148,6 @@ export const useAssignmentGradebook = () => {
     uniqueStudents,
     assignmentAverages,
     refreshGrades: fetchGrades,
+    updateGrade,
   };
 };
