@@ -12,7 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { useGradebook } from '@/hooks/useGradebook';
+import { useAssignmentGrading } from '@/hooks/useAssignmentGrading';
 import { SubmissionWithDetails } from '@/hooks/useAssignmentSubmissions';
 import { Download, FileText, Image, Video } from 'lucide-react';
 
@@ -24,34 +24,25 @@ interface GradingModalProps {
 }
 
 const GradingModal = ({ open, onOpenChange, submission, onGradeSubmitted }: GradingModalProps) => {
-  const [pointsEarned, setPointsEarned] = useState('');
-  const [pointsPossible, setPointsPossible] = useState('100');
-  const [comments, setComments] = useState('');
-  const [categoryId, setCategoryId] = useState('');
-  const { categories, addGrade } = useGradebook();
+  const [grade, setGrade] = useState('');
+  const [feedback, setFeedback] = useState('');
+  const { submitGrade, loading } = useAssignmentGrading();
 
   // Reset form when modal opens with new submission
   useEffect(() => {
     if (submission && open) {
-      setPointsEarned('');
-      setComments('');
-      // Set default category (first one available)
-      if (categories.length > 0) {
-        setCategoryId(categories[0].id);
-      }
+      setGrade('');
+      setFeedback('');
     }
-  }, [submission, open, categories]);
+  }, [submission, open]);
 
   const handleSubmitGrade = async () => {
-    if (!submission || !pointsEarned || !pointsPossible || !categoryId) return;
+    if (!submission || !grade) return;
 
-    const success = await addGrade({
-      student_id: submission.user_id,
-      assignment_id: submission.assignment_id,
-      category_id: categoryId,
-      points_earned: parseFloat(pointsEarned),
-      points_possible: parseFloat(pointsPossible),
-      comments: comments || undefined,
+    const success = await submitGrade({
+      submission_id: submission.id,
+      grade: parseFloat(grade),
+      feedback: feedback || undefined,
     });
 
     if (success) {
@@ -82,7 +73,7 @@ const GradingModal = ({ open, onOpenChange, submission, onGradeSubmitted }: Grad
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Grade Assignment Submission</DialogTitle>
+          <DialogTitle>Grade Submission</DialogTitle>
         </DialogHeader>
         
         <div className="space-y-6">
@@ -137,7 +128,7 @@ const GradingModal = ({ open, onOpenChange, submission, onGradeSubmitted }: Grad
                         <div className="flex items-center space-x-2">
                           {getFileIcon(fileType)}
                           <span className="text-sm font-medium">{fileName}</span>
-                          <Badge variant="outline" className="text-xs">{fileType}</Badge>
+                          {fileType && <Badge variant="outline" className="text-xs">{fileType}</Badge>}
                         </div>
                         <Button
                           variant="outline"
@@ -158,55 +149,28 @@ const GradingModal = ({ open, onOpenChange, submission, onGradeSubmitted }: Grad
           {/* Grading Form */}
           <Card>
             <CardContent className="p-4">
-              <Label className="text-sm font-medium text-gray-600 mb-3 block">Grade Assignment</Label>
-              <div className="grid grid-cols-2 gap-4 mb-4">
-                <div>
-                  <Label htmlFor="pointsEarned">Points Earned</Label>
-                  <Input
-                    id="pointsEarned"
-                    type="number"
-                    value={pointsEarned}
-                    onChange={(e) => setPointsEarned(e.target.value)}
-                    placeholder="Enter points earned"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="pointsPossible">Points Possible</Label>
-                  <Input
-                    id="pointsPossible"
-                    type="number"
-                    value={pointsPossible}
-                    onChange={(e) => setPointsPossible(e.target.value)}
-                  />
-                </div>
-              </div>
+              <Label className="text-sm font-medium text-gray-600 mb-3 block">Grade Submission</Label>
               
-              {categories.length > 0 && (
-                <div className="mb-4">
-                  <Label htmlFor="category">Grade Category</Label>
-                  <select
-                    id="category"
-                    value={categoryId}
-                    onChange={(e) => setCategoryId(e.target.value)}
-                    className="w-full mt-1 p-2 border border-gray-300 rounded-md"
-                  >
-                    {categories.map((category) => (
-                      <option key={category.id} value={category.id}>
-                        {category.name} ({category.weight}%)
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
+              <div className="mb-4">
+                <Label htmlFor="grade">Grade</Label>
+                <Input
+                  id="grade"
+                  type="number"
+                  value={grade}
+                  onChange={(e) => setGrade(e.target.value)}
+                  placeholder="Enter grade (e.g., 85)"
+                  step="0.1"
+                />
+              </div>
 
               <div className="mb-4">
-                <Label htmlFor="comments">Comments (Optional)</Label>
+                <Label htmlFor="feedback">Feedback</Label>
                 <Textarea
-                  id="comments"
-                  value={comments}
-                  onChange={(e) => setComments(e.target.value)}
-                  placeholder="Add feedback or comments for the student..."
-                  rows={3}
+                  id="feedback"
+                  value={feedback}
+                  onChange={(e) => setFeedback(e.target.value)}
+                  placeholder="Add feedback for the student..."
+                  rows={4}
                 />
               </div>
 
@@ -216,9 +180,9 @@ const GradingModal = ({ open, onOpenChange, submission, onGradeSubmitted }: Grad
                 </Button>
                 <Button 
                   onClick={handleSubmitGrade}
-                  disabled={!pointsEarned || !pointsPossible || !categoryId}
+                  disabled={!grade || loading}
                 >
-                  Submit Grade
+                  {loading ? 'Submitting...' : 'Submit Grade'}
                 </Button>
               </div>
             </CardContent>
