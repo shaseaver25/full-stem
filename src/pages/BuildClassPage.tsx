@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -27,12 +26,18 @@ import {
 import { Link as RouterLink } from 'react-router-dom';
 import Header from '@/components/Header';
 
+interface Video {
+  id: string;
+  url: string;
+  title: string;
+}
+
 interface Lesson {
   id: string;
   title: string;
   description: string;
   objectives: string[];
-  videoUrl: string;
+  videos: Video[];
   materials: string[];
   instructions: string;
   duration: number;
@@ -47,6 +52,24 @@ interface Assignment {
   instructions: string;
   rubric: string;
   maxPoints: number;
+}
+
+interface ClassroomActivity {
+  id: string;
+  title: string;
+  description: string;
+  duration: number;
+  materials: string[];
+  instructions: string;
+}
+
+interface IndividualActivity {
+  id: string;
+  title: string;
+  description: string;
+  estimatedTime: number;
+  instructions: string;
+  resources: string[];
 }
 
 interface Resource {
@@ -74,13 +97,15 @@ const BuildClassPage = () => {
 
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [assignments, setAssignments] = useState<Assignment[]>([]);
+  const [classroomActivities, setClassroomActivities] = useState<ClassroomActivity[]>([]);
+  const [individualActivities, setIndividualActivities] = useState<IndividualActivity[]>([]);
   const [resources, setResources] = useState<Resource[]>([]);
 
   const [currentLesson, setCurrentLesson] = useState<Partial<Lesson>>({
     title: '',
     description: '',
     objectives: [''],
-    videoUrl: '',
+    videos: [{ id: Date.now().toString(), url: '', title: '' }],
     materials: [''],
     instructions: '',
     duration: 60,
@@ -96,6 +121,22 @@ const BuildClassPage = () => {
     maxPoints: 100
   });
 
+  const [currentClassroomActivity, setCurrentClassroomActivity] = useState<Partial<ClassroomActivity>>({
+    title: '',
+    description: '',
+    duration: 30,
+    materials: [''],
+    instructions: ''
+  });
+
+  const [currentIndividualActivity, setCurrentIndividualActivity] = useState<Partial<IndividualActivity>>({
+    title: '',
+    description: '',
+    estimatedTime: 20,
+    instructions: '',
+    resources: ['']
+  });
+
   const [currentResource, setCurrentResource] = useState<Partial<Resource>>({
     title: '',
     type: 'pdf',
@@ -107,6 +148,34 @@ const BuildClassPage = () => {
     setClassData(prev => ({ ...prev, [field]: value }));
   };
 
+  const addVideoToLesson = () => {
+    const newVideo: Video = {
+      id: Date.now().toString(),
+      url: '',
+      title: ''
+    };
+    setCurrentLesson(prev => ({
+      ...prev,
+      videos: [...(prev.videos || []), newVideo]
+    }));
+  };
+
+  const removeVideoFromLesson = (videoId: string) => {
+    setCurrentLesson(prev => ({
+      ...prev,
+      videos: prev.videos?.filter(video => video.id !== videoId) || []
+    }));
+  };
+
+  const updateLessonVideo = (videoId: string, field: 'url' | 'title', value: string) => {
+    setCurrentLesson(prev => ({
+      ...prev,
+      videos: prev.videos?.map(video => 
+        video.id === videoId ? { ...video, [field]: value } : video
+      ) || []
+    }));
+  };
+
   const addLesson = () => {
     if (currentLesson.title && currentLesson.description) {
       const newLesson: Lesson = {
@@ -114,7 +183,7 @@ const BuildClassPage = () => {
         title: currentLesson.title!,
         description: currentLesson.description!,
         objectives: currentLesson.objectives || [''],
-        videoUrl: currentLesson.videoUrl || '',
+        videos: currentLesson.videos || [],
         materials: currentLesson.materials || [''],
         instructions: currentLesson.instructions || '',
         duration: currentLesson.duration || 60,
@@ -125,7 +194,7 @@ const BuildClassPage = () => {
         title: '',
         description: '',
         objectives: [''],
-        videoUrl: '',
+        videos: [{ id: Date.now().toString(), url: '', title: '' }],
         materials: [''],
         instructions: '',
         duration: 60,
@@ -157,6 +226,48 @@ const BuildClassPage = () => {
     }
   };
 
+  const addClassroomActivity = () => {
+    if (currentClassroomActivity.title && currentClassroomActivity.description) {
+      const newActivity: ClassroomActivity = {
+        id: Date.now().toString(),
+        title: currentClassroomActivity.title!,
+        description: currentClassroomActivity.description!,
+        duration: currentClassroomActivity.duration || 30,
+        materials: currentClassroomActivity.materials || [''],
+        instructions: currentClassroomActivity.instructions || ''
+      };
+      setClassroomActivities([...classroomActivities, newActivity]);
+      setCurrentClassroomActivity({
+        title: '',
+        description: '',
+        duration: 30,
+        materials: [''],
+        instructions: ''
+      });
+    }
+  };
+
+  const addIndividualActivity = () => {
+    if (currentIndividualActivity.title && currentIndividualActivity.description) {
+      const newActivity: IndividualActivity = {
+        id: Date.now().toString(),
+        title: currentIndividualActivity.title!,
+        description: currentIndividualActivity.description!,
+        estimatedTime: currentIndividualActivity.estimatedTime || 20,
+        instructions: currentIndividualActivity.instructions || '',
+        resources: currentIndividualActivity.resources || ['']
+      };
+      setIndividualActivities([...individualActivities, newActivity]);
+      setCurrentIndividualActivity({
+        title: '',
+        description: '',
+        estimatedTime: 20,
+        instructions: '',
+        resources: ['']
+      });
+    }
+  };
+
   const addResource = () => {
     if (currentResource.title && currentResource.url) {
       const newResource: Resource = {
@@ -184,6 +295,14 @@ const BuildClassPage = () => {
     setAssignments(assignments.filter(assignment => assignment.id !== id));
   };
 
+  const removeClassroomActivity = (id: string) => {
+    setClassroomActivities(classroomActivities.filter(activity => activity.id !== id));
+  };
+
+  const removeIndividualActivity = (id: string) => {
+    setIndividualActivities(individualActivities.filter(activity => activity.id !== id));
+  };
+
   const removeResource = (id: string) => {
     setResources(resources.filter(resource => resource.id !== id));
   };
@@ -193,6 +312,8 @@ const BuildClassPage = () => {
       ...classData,
       lessons,
       assignments,
+      classroomActivities,
+      individualActivities,
       resources,
       createdAt: new Date().toISOString()
     };
@@ -203,7 +324,7 @@ const BuildClassPage = () => {
 
   const getCompletionPercentage = () => {
     let completed = 0;
-    let total = 6;
+    let total = 8;
     
     if (classData.title) completed++;
     if (classData.description) completed++;
@@ -211,6 +332,8 @@ const BuildClassPage = () => {
     if (classData.subject) completed++;
     if (lessons.length > 0) completed++;
     if (assignments.length > 0) completed++;
+    if (classroomActivities.length > 0) completed++;
+    if (individualActivities.length > 0) completed++;
     
     return (completed / total) * 100;
   };
@@ -247,9 +370,11 @@ const BuildClassPage = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-7">
             <TabsTrigger value="details">Class Details</TabsTrigger>
             <TabsTrigger value="lessons">Lessons</TabsTrigger>
+            <TabsTrigger value="classroom-activities">Classroom Activities</TabsTrigger>
+            <TabsTrigger value="individual-activities">Individual Activities</TabsTrigger>
             <TabsTrigger value="assignments">Assignments</TabsTrigger>
             <TabsTrigger value="resources">Resources</TabsTrigger>
             <TabsTrigger value="preview">Preview</TabsTrigger>
@@ -398,12 +523,48 @@ const BuildClassPage = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Video URL</Label>
-                    <Input
-                      value={currentLesson.videoUrl || ''}
-                      onChange={(e) => setCurrentLesson({...currentLesson, videoUrl: e.target.value})}
-                      placeholder="https://youtube.com/watch?v=..."
-                    />
+                    <div className="flex items-center justify-between">
+                      <Label>Videos</Label>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={addVideoToLesson}
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <div className="space-y-3">
+                      {currentLesson.videos?.map((video, index) => (
+                        <div key={video.id} className="border rounded-lg p-3">
+                          <div className="flex items-center justify-between mb-2">
+                            <Label className="text-sm">Video {index + 1}</Label>
+                            {currentLesson.videos!.length > 1 && (
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => removeVideoFromLesson(video.id)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </div>
+                          <div className="space-y-2">
+                            <Input
+                              placeholder="Video title"
+                              value={video.title}
+                              onChange={(e) => updateLessonVideo(video.id, 'title', e.target.value)}
+                            />
+                            <Input
+                              placeholder="https://youtube.com/watch?v=..."
+                              value={video.url}
+                              onChange={(e) => updateLessonVideo(video.id, 'url', e.target.value)}
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
@@ -478,16 +639,220 @@ const BuildClassPage = () => {
                             {lesson.duration}min
                           </span>
                           <span>Order: {lesson.order}</span>
-                          {lesson.videoUrl && (
-                            <Badge variant="secondary" className="text-xs">
-                              Video
-                            </Badge>
-                          )}
+                          <span>{lesson.videos.length} video(s)</span>
                         </div>
                       </div>
                     ))}
                     {lessons.length === 0 && (
                       <p className="text-gray-500 text-center py-8">No lessons added yet</p>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          {/* Classroom Activities Tab */}
+          <TabsContent value="classroom-activities" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Add New Classroom Activity */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Plus className="h-5 w-5" />
+                    Add Classroom Activity
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Activity Title</Label>
+                    <Input
+                      value={currentClassroomActivity.title || ''}
+                      onChange={(e) => setCurrentClassroomActivity({...currentClassroomActivity, title: e.target.value})}
+                      placeholder="Enter activity title"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label>Description</Label>
+                    <Textarea
+                      value={currentClassroomActivity.description || ''}
+                      onChange={(e) => setCurrentClassroomActivity({...currentClassroomActivity, description: e.target.value})}
+                      placeholder="Activity overview and description"
+                      rows={3}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Duration (minutes)</Label>
+                    <Input
+                      type="number"
+                      value={currentClassroomActivity.duration || 30}
+                      onChange={(e) => setCurrentClassroomActivity({...currentClassroomActivity, duration: parseInt(e.target.value)})}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Materials Needed</Label>
+                    <Textarea
+                      value={currentClassroomActivity.materials?.join('\n') || ''}
+                      onChange={(e) => setCurrentClassroomActivity({...currentClassroomActivity, materials: e.target.value.split('\n')})}
+                      placeholder="One material per line"
+                      rows={3}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Instructions</Label>
+                    <Textarea
+                      value={currentClassroomActivity.instructions || ''}
+                      onChange={(e) => setCurrentClassroomActivity({...currentClassroomActivity, instructions: e.target.value})}
+                      placeholder="Detailed activity instructions"
+                      rows={4}
+                    />
+                  </div>
+
+                  <Button onClick={addClassroomActivity} className="w-full">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Classroom Activity
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* Classroom Activities List */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Classroom Activities ({classroomActivities.length})</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {classroomActivities.map((activity) => (
+                      <div key={activity.id} className="border rounded-lg p-4">
+                        <div className="flex justify-between items-start mb-2">
+                          <h3 className="font-medium">{activity.title}</h3>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeClassroomActivity(activity.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        <p className="text-sm text-gray-600 mb-2">{activity.description}</p>
+                        <div className="flex items-center gap-4 text-xs text-gray-500">
+                          <span>{activity.duration} minutes</span>
+                          <Badge variant="secondary" className="text-xs">
+                            Classroom
+                          </Badge>
+                        </div>
+                      </div>
+                    ))}
+                    {classroomActivities.length === 0 && (
+                      <p className="text-gray-500 text-center py-8">No classroom activities added yet</p>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          {/* Individual Activities Tab */}
+          <TabsContent value="individual-activities" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Add New Individual Activity */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Plus className="h-5 w-5" />
+                    Add Individual Activity
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Activity Title</Label>
+                    <Input
+                      value={currentIndividualActivity.title || ''}
+                      onChange={(e) => setCurrentIndividualActivity({...currentIndividualActivity, title: e.target.value})}
+                      placeholder="Enter activity title"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label>Description</Label>
+                    <Textarea
+                      value={currentIndividualActivity.description || ''}
+                      onChange={(e) => setCurrentIndividualActivity({...currentIndividualActivity, description: e.target.value})}
+                      placeholder="Activity overview and description"
+                      rows={3}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Estimated Time (minutes)</Label>
+                    <Input
+                      type="number"
+                      value={currentIndividualActivity.estimatedTime || 20}
+                      onChange={(e) => setCurrentIndividualActivity({...currentIndividualActivity, estimatedTime: parseInt(e.target.value)})}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Resources</Label>
+                    <Textarea
+                      value={currentIndividualActivity.resources?.join('\n') || ''}
+                      onChange={(e) => setCurrentIndividualActivity({...currentIndividualActivity, resources: e.target.value.split('\n')})}
+                      placeholder="One resource per line"
+                      rows={3}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Instructions</Label>
+                    <Textarea
+                      value={currentIndividualActivity.instructions || ''}
+                      onChange={(e) => setCurrentIndividualActivity({...currentIndividualActivity, instructions: e.target.value})}
+                      placeholder="Detailed activity instructions"
+                      rows={4}
+                    />
+                  </div>
+
+                  <Button onClick={addIndividualActivity} className="w-full">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Individual Activity
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* Individual Activities List */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Individual Activities ({individualActivities.length})</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {individualActivities.map((activity) => (
+                      <div key={activity.id} className="border rounded-lg p-4">
+                        <div className="flex justify-between items-start mb-2">
+                          <h3 className="font-medium">{activity.title}</h3>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeIndividualActivity(activity.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        <p className="text-sm text-gray-600 mb-2">{activity.description}</p>
+                        <div className="flex items-center gap-4 text-xs text-gray-500">
+                          <span>{activity.estimatedTime} minutes</span>
+                          <Badge variant="outline" className="text-xs">
+                            Individual
+                          </Badge>
+                        </div>
+                      </div>
+                    ))}
+                    {individualActivities.length === 0 && (
+                      <p className="text-gray-500 text-center py-8">No individual activities added yet</p>
                     )}
                   </div>
                 </CardContent>
@@ -747,6 +1112,8 @@ const BuildClassPage = () => {
                     <h3 className="font-semibold mb-2">Content Summary</h3>
                     <div className="space-y-2 text-sm">
                       <p><strong>Lessons:</strong> {lessons.length}</p>
+                      <p><strong>Classroom Activities:</strong> {classroomActivities.length}</p>
+                      <p><strong>Individual Activities:</strong> {individualActivities.length}</p>
                       <p><strong>Assignments:</strong> {assignments.length}</p>
                       <p><strong>Resources:</strong> {resources.length}</p>
                       <p><strong>Completion:</strong> {Math.round(getCompletionPercentage())}%</p>
