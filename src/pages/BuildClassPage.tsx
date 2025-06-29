@@ -1,17 +1,16 @@
 
 import React, { useState } from 'react';
+import { useParams } from 'react-router-dom';
 import Header from '@/components/Header';
 import BuildClassHeader from '@/components/build-class/BuildClassHeader';
 import BuildClassTabs from '@/components/build-class/BuildClassTabs';
 import { useClassCreation } from '@/hooks/useClassCreation';
 import { useBuildClassActions } from '@/hooks/useBuildClassActions';
-import { saveClass } from '@/services/classService';
-import { useToast } from '@/hooks/use-toast';
+import { useClassData } from '@/hooks/useClassData';
 
 const BuildClassPage = () => {
-  const { toast } = useToast();
+  const { classId } = useParams<{ classId?: string }>();
   const [activeTab, setActiveTab] = useState('details');
-  const [isSaving, setIsSaving] = useState(false);
   
   const {
     classData,
@@ -66,9 +65,9 @@ const BuildClassPage = () => {
     setCurrentResource
   );
 
+  const { saveClassData, isSaving, isDirty, markDirty } = useClassData(classId);
+
   const handleSaveClass = async () => {
-    setIsSaving(true);
-    
     const classDataToSave = {
       classData,
       lessons,
@@ -78,23 +77,13 @@ const BuildClassPage = () => {
       resources
     };
 
-    const result = await saveClass(classDataToSave);
-    
-    if (result.success) {
-      toast({
-        title: "Success!",
-        description: "Class saved successfully.",
-      });
-    } else {
-      toast({
-        title: "Error",
-        description: "Failed to save class. Please try again.",
-        variant: "destructive",
-      });
-    }
-    
-    setIsSaving(false);
+    await saveClassData(classDataToSave);
   };
+
+  // Mark as dirty when any data changes
+  React.useEffect(() => {
+    markDirty();
+  }, [classData, lessons, assignments, classroomActivities, individualActivities, resources, markDirty]);
 
   return (
     <div className="min-h-screen bg-gray-50">

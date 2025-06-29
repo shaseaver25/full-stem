@@ -14,26 +14,43 @@ export interface Class {
   school_year: string | null;
   created_at: string | null;
   updated_at: string | null;
+  published?: boolean;
+  description?: string | null;
+  duration?: string | null;
+  instructor?: string | null;
+  schedule?: string | null;
+  learning_objectives?: string | null;
+  prerequisites?: string | null;
+  max_students?: number | null;
 }
 
-export const useClasses = () => {
+export const useClasses = (publishedOnly: boolean = false) => {
   const { user } = useAuth();
   const { profile } = useTeacherProfile();
   const [classes, setClasses] = useState<Class[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchClasses = async () => {
-    if (!user || !profile) {
+    if (!user) {
       setLoading(false);
       return;
     }
 
     try {
-      const { data, error } = await supabase
-        .from('classes')
-        .select('*')
-        .eq('teacher_id', profile.id)
-        .order('created_at', { ascending: false });
+      let query = supabase.from('classes').select('*');
+      
+      if (publishedOnly) {
+        // Fetch all published classes for teachers to browse
+        query = query.eq('published', true);
+      } else if (profile) {
+        // Fetch only user's own classes
+        query = query.eq('teacher_id', profile.id);
+      } else {
+        setLoading(false);
+        return;
+      }
+
+      const { data, error } = await query.order('created_at', { ascending: false });
 
       if (error) {
         console.error('Error fetching classes:', error);
@@ -80,8 +97,9 @@ export const useClasses = () => {
           name: classData.name,
           grade_level: classData.grade_level,
           subject: classData.subject,
-          teacher_id: profile.id, // Use teacher profile ID instead of user ID
+          teacher_id: profile.id,
           school_year: classData.school_year || new Date().getFullYear().toString(),
+          published: false
         })
         .select()
         .single();
@@ -116,14 +134,44 @@ export const useClasses = () => {
     }
   };
 
+  const deleteClass = async (classId: string) => {
+    try {
+      const { error } = await supabase
+        .from('classes')
+        .delete()
+        .eq('id', classId);
+
+      if (error) throw error;
+
+      // Remove from local state
+      setClasses(prev => prev.filter(cls => cls.id !== classId));
+      
+      toast({
+        title: "Success!",
+        description: "Class deleted successfully.",
+      });
+
+      return true;
+    } catch (error) {
+      console.error('Error deleting class:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete class.",
+        variant: "destructive",
+      });
+      return false;
+    }
+  };
+
   useEffect(() => {
     fetchClasses();
-  }, [user, profile]);
+  }, [user, profile, publishedOnly]);
 
   return {
     classes,
     loading,
     createClass,
+    deleteClass,
     refetch: fetchClasses,
   };
 };
