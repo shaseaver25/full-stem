@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -21,9 +20,14 @@ import {
   Resource,
   Video
 } from '@/types/buildClassTypes';
+import { saveClass } from '@/services/classService';
+import { useToast } from '@/hooks/use-toast';
 
 const BuildClassPage = () => {
+  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('details');
+  const [isSaving, setIsSaving] = useState(false);
+  
   const [classData, setClassData] = useState<ClassData>({
     title: '',
     description: '',
@@ -249,18 +253,34 @@ const BuildClassPage = () => {
     setResources(resources.filter(resource => resource.id !== id));
   };
 
-  const handleSaveClass = () => {
-    const fullClassData = {
-      ...classData,
+  const handleSaveClass = async () => {
+    setIsSaving(true);
+    
+    const classDataToSave = {
+      classData,
       lessons,
       assignments,
       classroomActivities,
       individualActivities,
-      resources,
-      createdAt: new Date().toISOString()
+      resources
     };
-    console.log('Saving class:', fullClassData);
-    alert('Class saved successfully!');
+
+    const result = await saveClass(classDataToSave);
+    
+    if (result.success) {
+      toast({
+        title: "Success!",
+        description: "Class saved successfully.",
+      });
+    } else {
+      toast({
+        title: "Error",
+        description: "Failed to save class. Please try again.",
+        variant: "destructive",
+      });
+    }
+    
+    setIsSaving(false);
   };
 
   const getCompletionPercentage = () => {
@@ -303,9 +323,13 @@ const BuildClassPage = () => {
               <p className="text-sm text-gray-600">Progress</p>
               <Progress value={getCompletionPercentage()} className="w-32" />
             </div>
-            <Button onClick={handleSaveClass} className="bg-blue-600 hover:bg-blue-700">
+            <Button 
+              onClick={handleSaveClass} 
+              className="bg-blue-600 hover:bg-blue-700"
+              disabled={isSaving}
+            >
               <Save className="h-4 w-4 mr-2" />
-              Save Class
+              {isSaving ? 'Saving...' : 'Save Class'}
             </Button>
           </div>
         </div>
