@@ -17,14 +17,15 @@ import {
   MessageSquare,
   TrendingUp
 } from 'lucide-react';
+import { DateRange } from 'react-day-picker';
 
 const AdminReports = () => {
-  const [dateRange, setDateRange] = useState({
+  const [dateRange, setDateRange] = useState<{from: Date; to: Date}>({
     from: new Date(2024, 0, 1),
     to: new Date()
   });
   const [reportType, setReportType] = useState('enrollment');
-  const [format, setFormat] = useState('pdf');
+  const [reportFormat, setReportFormat] = useState('pdf');
 
   const reportTypes = [
     {
@@ -87,8 +88,14 @@ const AdminReports = () => {
   ];
 
   const handleGenerateReport = () => {
-    console.log('Generating report:', { reportType, dateRange, format });
+    console.log('Generating report:', { reportType, dateRange, format: reportFormat });
     // Implementation would generate and download the report
+  };
+
+  const handleDateRangeSelect = (range: DateRange | undefined) => {
+    if (range?.from && range?.to) {
+      setDateRange({ from: range.from, to: range.to });
+    }
   };
 
   return (
@@ -140,10 +147,7 @@ const AdminReports = () => {
                 <PopoverTrigger asChild>
                   <Button variant="outline" className="w-fit">
                     <CalendarIcon className="h-4 w-4 mr-2" />
-                    {dateRange.from && dateRange.to 
-                      ? `${format(dateRange.from, 'MMM dd')} - ${format(dateRange.to, 'MMM dd, yyyy')}`
-                      : 'Select date range'
-                    }
+                    {format(dateRange.from, 'MMM dd')} - {format(dateRange.to, 'MMM dd, yyyy')}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
@@ -151,14 +155,14 @@ const AdminReports = () => {
                     mode="range"
                     defaultMonth={dateRange.from}
                     selected={dateRange}
-                    onSelect={(range) => range && setDateRange(range)}
+                    onSelect={handleDateRangeSelect}
                     numberOfMonths={2}
                   />
                 </PopoverContent>
               </Popover>
             </div>
 
-            <Select value={format} onValueChange={setFormat}>
+            <Select value={reportFormat} onValueChange={setReportFormat}>
               <SelectTrigger className="w-48">
                 <SelectValue placeholder="Select format" />
               </SelectTrigger>
