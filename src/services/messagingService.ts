@@ -96,7 +96,14 @@ export const getClassMessages = async (classId: string) => {
 
     if (error) throw error;
 
-    return { success: true, data: data || [] };
+    // Type cast the data to ensure proper typing
+    const typedData = (data || []).map(message => ({
+      ...message,
+      message_type: message.message_type as 'announcement' | 'general' | 'urgent',
+      priority: message.priority as 'low' | 'normal' | 'high' | 'urgent'
+    })) as ClassMessage[];
+
+    return { success: true, data: typedData };
   } catch (error) {
     console.error('Error fetching class messages:', error);
     return { success: false, error };
@@ -142,7 +149,12 @@ export const getDirectMessages = async (recipientId?: string) => {
       .or(`sender_id.eq.${user.id},recipient_id.eq.${user.id}`);
 
     if (recipientId) {
-      query = query.and(`recipient_id.eq.${recipientId},sender_id.eq.${recipientId}`);
+      // Fix the query chaining - use separate filters instead of 'and'
+      query = supabase
+        .from('direct_messages')
+        .select('*')
+        .or(`sender_id.eq.${user.id},recipient_id.eq.${user.id}`)
+        .or(`sender_id.eq.${recipientId},recipient_id.eq.${recipientId}`);
     }
 
     const { data, error } = await query.order('created_at', { ascending: false });
