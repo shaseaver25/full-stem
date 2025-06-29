@@ -24,9 +24,9 @@ const Header = () => {
               <img
                 className="h-8 w-auto"
                 src="/lovable-uploads/3674debe-cc91-44e5-b661-71199ab7a186.png"
-                alt="CoreAchieve"
+                alt="TailorEDU"
               />
-              <span className="ml-2 text-xl font-bold text-blue-600">CoreAchieve</span>
+              <span className="ml-2 text-xl font-bold text-blue-600">TailorEDU</span>
             </Link>
           </div>
 
@@ -38,10 +38,10 @@ const Header = () => {
               Home
             </Link>
             <Link
-              to="/excel-course"
+              to="/teacher/auth"
               className="text-gray-500 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
             >
-              Excel Course
+              Teacher Portal
             </Link>
             <Link
               to="/admin/dashboard"
