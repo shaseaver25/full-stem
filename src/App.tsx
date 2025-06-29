@@ -85,6 +85,14 @@ const App = () => (
                 </ProtectedTeacherRoute>
               } 
             />
+            <Route 
+              path="/teacher/analytics" 
+              element={
+                <ProtectedTeacherRoute requireOnboarding={true}>
+                  <AnalyticsDashboard />
+                </ProtectedTeacherRoute>
+              } 
+            />
             
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
