@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Search, Plus, Users, Clock, BookOpen } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const AdminClassManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -145,10 +146,12 @@ const AdminClassManagement = () => {
                 Manage all classes across your platform
               </CardDescription>
             </div>
-            <Button className="bg-blue-600 hover:bg-blue-700">
-              <Plus className="h-4 w-4 mr-2" />
-              Build Class
-            </Button>
+            <Link to="/admin/build-class">
+              <Button className="bg-blue-600 hover:bg-blue-700">
+                <Plus className="h-4 w-4 mr-2" />
+                Build Class
+              </Button>
+            </Link>
           </div>
         </CardHeader>
         <CardContent>

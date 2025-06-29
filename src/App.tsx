@@ -20,6 +20,7 @@ import GradebookPage from "./pages/GradebookPage";
 import AssignmentSubmissionsPage from "./pages/AssignmentSubmissionsPage";
 import AssignmentGradebookPage from "./pages/AssignmentGradebookPage";
 import AdminDashboard from "./pages/AdminDashboard";
+import BuildClassPage from "./pages/BuildClassPage";
 
 const queryClient = new QueryClient();
 
@@ -40,6 +41,7 @@ const App = () => (
             
             {/* Admin Routes */}
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
+            <Route path="/admin/build-class" element={<BuildClassPage />} />
             
             {/* Teacher Routes */}
             <Route path="/teacher/auth" element={<TeacherAuth />} />
