@@ -286,6 +286,66 @@ export type Database = {
           },
         ]
       }
+      class_messages: {
+        Row: {
+          class_id: string
+          content: string
+          created_at: string
+          id: string
+          is_pinned: boolean | null
+          message_type: string
+          priority: string
+          scheduled_at: string | null
+          sent_at: string | null
+          teacher_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          class_id: string
+          content: string
+          created_at?: string
+          id?: string
+          is_pinned?: boolean | null
+          message_type?: string
+          priority?: string
+          scheduled_at?: string | null
+          sent_at?: string | null
+          teacher_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          class_id?: string
+          content?: string
+          created_at?: string
+          id?: string
+          is_pinned?: boolean | null
+          message_type?: string
+          priority?: string
+          scheduled_at?: string | null
+          sent_at?: string | null
+          teacher_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "class_messages_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "class_messages_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       class_resources: {
         Row: {
           class_id: string
@@ -432,6 +492,63 @@ export type Database = {
             columns: ["class_id"]
             isOneToOne: false
             referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      direct_messages: {
+        Row: {
+          attachment_urls: string[] | null
+          class_id: string | null
+          content: string
+          created_at: string
+          id: string
+          is_read: boolean | null
+          parent_message_id: string | null
+          recipient_id: string
+          sender_id: string
+          subject: string | null
+          updated_at: string
+        }
+        Insert: {
+          attachment_urls?: string[] | null
+          class_id?: string | null
+          content: string
+          created_at?: string
+          id?: string
+          is_read?: boolean | null
+          parent_message_id?: string | null
+          recipient_id: string
+          sender_id: string
+          subject?: string | null
+          updated_at?: string
+        }
+        Update: {
+          attachment_urls?: string[] | null
+          class_id?: string | null
+          content?: string
+          created_at?: string
+          id?: string
+          is_read?: boolean | null
+          parent_message_id?: string | null
+          recipient_id?: string
+          sender_id?: string
+          subject?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "direct_messages_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "direct_messages_parent_message_id_fkey"
+            columns: ["parent_message_id"]
+            isOneToOne: false
+            referencedRelation: "direct_messages"
             referencedColumns: ["id"]
           },
         ]
@@ -744,6 +861,38 @@ export type Database = {
         }
         Relationships: []
       }
+      message_recipients: {
+        Row: {
+          created_at: string
+          id: string
+          message_id: string
+          read_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message_id: string
+          read_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message_id?: string
+          read_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_recipients_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "class_messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           created_at: string
@@ -803,6 +952,85 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      published_assignments: {
+        Row: {
+          allow_text_response: boolean | null
+          class_assignment_id: string
+          class_id: string
+          created_at: string
+          description: string | null
+          due_date: string | null
+          file_types_allowed: string[] | null
+          id: string
+          instructions: string
+          is_active: boolean | null
+          lesson_id: number | null
+          max_files: number | null
+          max_points: number | null
+          published_at: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          allow_text_response?: boolean | null
+          class_assignment_id: string
+          class_id: string
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          file_types_allowed?: string[] | null
+          id?: string
+          instructions: string
+          is_active?: boolean | null
+          lesson_id?: number | null
+          max_files?: number | null
+          max_points?: number | null
+          published_at?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          allow_text_response?: boolean | null
+          class_assignment_id?: string
+          class_id?: string
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          file_types_allowed?: string[] | null
+          id?: string
+          instructions?: string
+          is_active?: boolean | null
+          lesson_id?: number | null
+          max_files?: number | null
+          max_points?: number | null
+          published_at?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "published_assignments_class_assignment_id_fkey"
+            columns: ["class_assignment_id"]
+            isOneToOne: false
+            referencedRelation: "class_assignments_new"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "published_assignments_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "published_assignments_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "Lessons"
+            referencedColumns: ["Lesson ID"]
+          },
+        ]
       }
       rubric_criteria: {
         Row: {
