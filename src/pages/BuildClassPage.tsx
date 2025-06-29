@@ -11,15 +11,7 @@ import { ClassroomActivitiesForm, IndividualActivitiesForm } from '@/components/
 import AssignmentsForm from '@/components/build-class/AssignmentsForm';
 import ResourcesForm from '@/components/build-class/ResourcesForm';
 import ClassPreview from '@/components/build-class/ClassPreview';
-import {
-  ClassData,
-  Lesson,
-  Assignment,
-  ClassroomActivity,
-  IndividualActivity,
-  Resource,
-  Video
-} from '@/types/buildClassTypes';
+import { useClassCreation } from '@/hooks/useClassCreation';
 import { saveClass } from '@/services/classService';
 import { useToast } from '@/hooks/use-toast';
 
@@ -28,103 +20,33 @@ const BuildClassPage = () => {
   const [activeTab, setActiveTab] = useState('details');
   const [isSaving, setIsSaving] = useState(false);
   
-  const [classData, setClassData] = useState<ClassData>({
-    title: '',
-    description: '',
-    gradeLevel: '',
-    subject: '',
-    duration: '',
-    instructor: '',
-    schedule: '',
-    learningObjectives: '',
-    prerequisites: '',
-    maxStudents: 25
-  });
-
-  const [lessons, setLessons] = useState<Lesson[]>([]);
-  const [assignments, setAssignments] = useState<Assignment[]>([]);
-  const [classroomActivities, setClassroomActivities] = useState<ClassroomActivity[]>([]);
-  const [individualActivities, setIndividualActivities] = useState<IndividualActivity[]>([]);
-  const [resources, setResources] = useState<Resource[]>([]);
-
-  const [currentLesson, setCurrentLesson] = useState<Partial<Lesson>>({
-    title: '',
-    description: '',
-    objectives: [''],
-    videos: [{ id: Date.now().toString(), url: '', title: '' }],
-    materials: [''],
-    instructions: '',
-    duration: 60,
-    order: lessons.length + 1
-  });
-
-  const [currentAssignment, setCurrentAssignment] = useState<Partial<Assignment>>({
-    title: '',
-    description: '',
-    dueDate: '',
-    instructions: '',
-    rubric: '',
-    maxPoints: 100
-  });
-
-  const [currentClassroomActivity, setCurrentClassroomActivity] = useState<Partial<ClassroomActivity>>({
-    title: '',
-    description: '',
-    duration: 30,
-    materials: [''],
-    instructions: ''
-  });
-
-  const [currentIndividualActivity, setCurrentIndividualActivity] = useState<Partial<IndividualActivity>>({
-    title: '',
-    description: '',
-    estimatedTime: 20,
-    instructions: '',
-    resources: ['']
-  });
-
-  const [currentResource, setCurrentResource] = useState<Partial<Resource>>({
-    title: '',
-    type: 'pdf',
-    url: '',
-    description: ''
-  });
-
-  const handleClassDataChange = (field: string, value: string | number) => {
-    setClassData(prev => ({ ...prev, [field]: value }));
-  };
-
-  const addVideoToLesson = () => {
-    const newVideo: Video = {
-      id: Date.now().toString(),
-      url: '',
-      title: ''
-    };
-    setCurrentLesson(prev => ({
-      ...prev,
-      videos: [...(prev.videos || []), newVideo]
-    }));
-  };
-
-  const removeVideoFromLesson = (videoId: string) => {
-    setCurrentLesson(prev => ({
-      ...prev,
-      videos: prev.videos?.filter(video => video.id !== videoId) || []
-    }));
-  };
-
-  const updateLessonVideo = (videoId: string, field: 'url' | 'title', value: string) => {
-    setCurrentLesson(prev => ({
-      ...prev,
-      videos: prev.videos?.map(video => 
-        video.id === videoId ? { ...video, [field]: value } : video
-      ) || []
-    }));
-  };
+  const {
+    classData,
+    lessons,
+    assignments,
+    classroomActivities,
+    individualActivities,
+    resources,
+    currentLesson,
+    currentAssignment,
+    currentClassroomActivity,
+    currentIndividualActivity,
+    currentResource,
+    setCurrentLesson,
+    setCurrentAssignment,
+    setCurrentClassroomActivity,
+    setCurrentIndividualActivity,
+    setCurrentResource,
+    handleClassDataChange,
+    addVideoToLesson,
+    removeVideoFromLesson,
+    updateLessonVideo,
+    getCompletionPercentage
+  } = useClassCreation();
 
   const addLesson = () => {
     if (currentLesson.title && currentLesson.description) {
-      const newLesson: Lesson = {
+      const newLesson = {
         id: Date.now().toString(),
         title: currentLesson.title!,
         description: currentLesson.description!,
@@ -135,7 +57,7 @@ const BuildClassPage = () => {
         duration: currentLesson.duration || 60,
         order: currentLesson.order || lessons.length + 1
       };
-      setLessons([...lessons, newLesson]);
+      lessons.push(newLesson);
       setCurrentLesson({
         title: '',
         description: '',
@@ -151,7 +73,7 @@ const BuildClassPage = () => {
 
   const addAssignment = () => {
     if (currentAssignment.title && currentAssignment.description) {
-      const newAssignment: Assignment = {
+      const newAssignment = {
         id: Date.now().toString(),
         title: currentAssignment.title!,
         description: currentAssignment.description!,
@@ -160,7 +82,7 @@ const BuildClassPage = () => {
         rubric: currentAssignment.rubric || '',
         maxPoints: currentAssignment.maxPoints || 100
       };
-      setAssignments([...assignments, newAssignment]);
+      assignments.push(newAssignment);
       setCurrentAssignment({
         title: '',
         description: '',
@@ -174,7 +96,7 @@ const BuildClassPage = () => {
 
   const addClassroomActivity = () => {
     if (currentClassroomActivity.title && currentClassroomActivity.description) {
-      const newActivity: ClassroomActivity = {
+      const newActivity = {
         id: Date.now().toString(),
         title: currentClassroomActivity.title!,
         description: currentClassroomActivity.description!,
@@ -182,7 +104,7 @@ const BuildClassPage = () => {
         materials: currentClassroomActivity.materials || [''],
         instructions: currentClassroomActivity.instructions || ''
       };
-      setClassroomActivities([...classroomActivities, newActivity]);
+      classroomActivities.push(newActivity);
       setCurrentClassroomActivity({
         title: '',
         description: '',
@@ -195,7 +117,7 @@ const BuildClassPage = () => {
 
   const addIndividualActivity = () => {
     if (currentIndividualActivity.title && currentIndividualActivity.description) {
-      const newActivity: IndividualActivity = {
+      const newActivity = {
         id: Date.now().toString(),
         title: currentIndividualActivity.title!,
         description: currentIndividualActivity.description!,
@@ -203,7 +125,7 @@ const BuildClassPage = () => {
         instructions: currentIndividualActivity.instructions || '',
         resources: currentIndividualActivity.resources || ['']
       };
-      setIndividualActivities([...individualActivities, newActivity]);
+      individualActivities.push(newActivity);
       setCurrentIndividualActivity({
         title: '',
         description: '',
@@ -216,14 +138,14 @@ const BuildClassPage = () => {
 
   const addResource = () => {
     if (currentResource.title && currentResource.url) {
-      const newResource: Resource = {
+      const newResource = {
         id: Date.now().toString(),
         title: currentResource.title!,
         type: currentResource.type as 'pdf' | 'link' | 'video' | 'document',
         url: currentResource.url!,
         description: currentResource.description || ''
       };
-      setResources([...resources, newResource]);
+      resources.push(newResource);
       setCurrentResource({
         title: '',
         type: 'pdf',
@@ -234,23 +156,23 @@ const BuildClassPage = () => {
   };
 
   const removeLesson = (id: string) => {
-    setLessons(lessons.filter(lesson => lesson.id !== id));
+    lessons.filter(lesson => lesson.id !== id)
   };
 
   const removeAssignment = (id: string) => {
-    setAssignments(assignments.filter(assignment => assignment.id !== id));
+    assignments.filter(assignment => assignment.id !== id)
   };
 
   const removeClassroomActivity = (id: string) => {
-    setClassroomActivities(classroomActivities.filter(activity => activity.id !== id));
+    classroomActivities.filter(activity => activity.id !== id)
   };
 
   const removeIndividualActivity = (id: string) => {
-    setIndividualActivities(individualActivities.filter(activity => activity.id !== id));
+    individualActivities.filter(activity => activity.id !== id)
   };
 
   const removeResource = (id: string) => {
-    setResources(resources.filter(resource => resource.id !== id));
+    resources.filter(resource => resource.id !== id)
   };
 
   const handleSaveClass = async () => {
@@ -281,22 +203,6 @@ const BuildClassPage = () => {
     }
     
     setIsSaving(false);
-  };
-
-  const getCompletionPercentage = () => {
-    let completed = 0;
-    let total = 8;
-    
-    if (classData.title) completed++;
-    if (classData.description) completed++;
-    if (classData.gradeLevel) completed++;
-    if (classData.subject) completed++;
-    if (lessons.length > 0) completed++;
-    if (assignments.length > 0) completed++;
-    if (classroomActivities.length > 0) completed++;
-    if (individualActivities.length > 0) completed++;
-    
-    return (completed / total) * 100;
   };
 
   return (
