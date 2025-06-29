@@ -19,6 +19,7 @@ import ProtectedTeacherRoute from "./components/teacher/ProtectedTeacherRoute";
 import GradebookPage from "./pages/GradebookPage";
 import AssignmentSubmissionsPage from "./pages/AssignmentSubmissionsPage";
 import AssignmentGradebookPage from "./pages/AssignmentGradebookPage";
+import AdminDashboard from "./pages/AdminDashboard";
 
 const queryClient = new QueryClient();
 
@@ -36,6 +37,9 @@ const App = () => (
             <Route path="/course/excel" element={<ExcelCourse />} />
             <Route path="/lesson/:lessonId" element={<LessonPage />} />
             <Route path="/preferences" element={<UserPreferences />} />
+            
+            {/* Admin Routes */}
+            <Route path="/admin/dashboard" element={<AdminDashboard />} />
             
             {/* Teacher Routes */}
             <Route path="/teacher/auth" element={<TeacherAuth />} />
