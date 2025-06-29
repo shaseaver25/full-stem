@@ -421,22 +421,148 @@ export const updateClass = async (classId: string, data: SaveClassData) => {
 
     if (classError) throw classError;
 
-    // For now, we'll handle updates by deleting existing data and re-inserting
-    // This could be optimized later to do proper updates/deletes/inserts
+    // Delete existing related data properly
+    // First get lesson IDs to delete their videos
+    const { data: existingLessons } = await supabase
+      .from('class_lessons')
+      .select('id')
+      .eq('class_id', classId);
 
-    // Delete existing related data
-    await supabase.from('lesson_videos').delete().in('lesson_id', 
-      supabase.from('class_lessons').select('id').eq('class_id', classId)
-    );
+    if (existingLessons && existingLessons.length > 0) {
+      const lessonIds = existingLessons.map(lesson => lesson.id);
+      
+      // Delete lesson videos first
+      await supabase
+        .from('lesson_videos')
+        .delete()
+        .in('lesson_id', lessonIds);
+    }
+
+    // Delete existing lessons
     await supabase.from('class_lessons').delete().eq('class_id', classId);
+    
+    // Delete other related data
     await supabase.from('classroom_activities').delete().eq('class_id', classId);
     await supabase.from('individual_activities').delete().eq('class_id', classId);
     await supabase.from('class_assignments_new').delete().eq('class_id', classId);
     await supabase.from('class_resources').delete().eq('class_id', classId);
 
-    // Re-insert all data (reuse save logic)
-    const saveResult = await saveClass({ ...data, classData: { ...data.classData, title: data.classData.title } });
-    
+    // Re-insert all data using the same logic as saveClass
+    // Save lessons
+    if (data.lessons.length > 0) {
+      const lessonsToInsert = data.lessons.map(lesson => ({
+        class_id: classId,
+        title: lesson.title,
+        description: lesson.description,
+        objectives: lesson.objectives,
+        materials: lesson.materials,
+        instructions: lesson.instructions,
+        duration: lesson.duration,
+        order_index: lesson.order
+      }));
+
+      const { data: lessonResults, error: lessonsError } = await supabase
+        .from('class_lessons')
+        .insert(lessonsToInsert)
+        .select();
+
+      if (lessonsError) throw lessonsError;
+
+      // Save lesson videos
+      for (let i = 0; i < data.lessons.length; i++) {
+        const lesson = data.lessons[i];
+        const savedLesson = lessonResults[i];
+        
+        if (lesson.videos && lesson.videos.length > 0) {
+          const videosToInsert = lesson.videos.map((video, index) => ({
+            lesson_id: savedLesson.id,
+            title: video.title,
+            url: video.url,
+            order_index: index
+          }));
+
+          const { error: videosError } = await supabase
+            .from('lesson_videos')
+            .insert(videosToInsert);
+
+          if (videosError) throw videosError;
+        }
+      }
+    }
+
+    // Save classroom activities
+    if (data.classroomActivities.length > 0) {
+      const activitiesToInsert = data.classroomActivities.map(activity => ({
+        class_id: classId,
+        title: activity.title,
+        description: activity.description,
+        duration: activity.duration,
+        materials: activity.materials,
+        instructions: activity.instructions
+      }));
+
+      const { error: activitiesError } = await supabase
+        .from('classroom_activities')
+        .insert(activitiesToInsert);
+
+      if (activitiesError) throw activitiesError;
+    }
+
+    // Save individual activities
+    if (data.individualActivities.length > 0) {
+      const activitiesToInsert = data.individualActivities.map(activity => ({
+        class_id: classId,
+        title: activity.title,
+        description: activity.description,
+        estimated_time: activity.estimatedTime,
+        instructions: activity.instructions,
+        resources: activity.resources
+      }));
+
+      const { error: activitiesError } = await supabase
+        .from('individual_activities')
+        .insert(activitiesToInsert);
+
+      if (activitiesError) throw activitiesError;
+    }
+
+    // Save assignments
+    if (data.assignments.length > 0) {
+      const assignmentsToInsert = data.assignments.map(assignment => ({
+        class_id: classId,
+        title: assignment.title,
+        description: assignment.description,
+        due_date: assignment.dueDate,
+        instructions: assignment.instructions,
+        rubric: assignment.rubric,
+        max_points: assignment.maxPoints
+      }));
+
+      const { error: assignmentsError } = await supabase
+        .from('class_assignments_new')
+        .insert(assignmentsToInsert);
+
+      if (assignmentsError) throw assignmentsError;
+    }
+
+    // Save resources
+    if (data.resources.length > 0) {
+      const resourcesToInsert = data.resources.map(resource => ({
+        class_id: classId,
+        title: resource.title,
+        type: resource.type,
+        url: resource.url,
+        description: resource.description
+      }));
+
+      const { error: resourcesError } = await supabase
+        .from('class_resources')
+        .insert(resourcesToInsert);
+
+      if (resourcesError) throw resourcesError;
+    }
+
+    console.log('Class updated successfully');
     return { success: true, classId };
   } catch (error) {
     console.error('Error updating class:', error);
