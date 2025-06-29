@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -21,6 +22,9 @@ import AssignmentGradebookPage from "./pages/AssignmentGradebookPage";
 import AdminDashboard from "./pages/AdminDashboard";
 import BuildClassPage from "./pages/BuildClassPage";
 import AnalyticsDashboard from "./pages/AnalyticsDashboard";
+import ContentManagementPage from "./pages/ContentManagementPage";
+import ParentPortalPage from "./pages/ParentPortalPage";
+import AdvancedAdminPage from "./pages/AdvancedAdminPage";
 
 const queryClient = new QueryClient();
 
@@ -39,9 +43,16 @@ const App = () => (
             <Route path="/lesson/:lessonId" element={<LessonPage />} />
             <Route path="/preferences" element={<UserPreferences />} />
             
+            {/* Content Management */}
+            <Route path="/content" element={<ContentManagementPage />} />
+            
+            {/* Parent Portal */}
+            <Route path="/parent" element={<ParentPortalPage />} />
+            
             {/* Admin Routes */}
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
             <Route path="/admin/build-class" element={<BuildClassPage />} />
+            <Route path="/admin/advanced" element={<AdvancedAdminPage />} />
             
             {/* Teacher Routes */}
             <Route path="/teacher/auth" element={<TeacherAuth />} />

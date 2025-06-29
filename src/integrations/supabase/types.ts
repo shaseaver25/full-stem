@@ -147,6 +147,45 @@ export type Database = {
           },
         ]
       }
+      backup_logs: {
+        Row: {
+          backup_type: string
+          completed_at: string | null
+          error_message: string | null
+          file_path: string | null
+          file_size: number | null
+          id: string
+          metadata: Json | null
+          started_at: string
+          started_by: string
+          status: string
+        }
+        Insert: {
+          backup_type: string
+          completed_at?: string | null
+          error_message?: string | null
+          file_path?: string | null
+          file_size?: number | null
+          id?: string
+          metadata?: Json | null
+          started_at?: string
+          started_by: string
+          status?: string
+        }
+        Update: {
+          backup_type?: string
+          completed_at?: string | null
+          error_message?: string | null
+          file_path?: string | null
+          file_size?: number | null
+          id?: string
+          metadata?: Json | null
+          started_at?: string
+          started_by?: string
+          status?: string
+        }
+        Relationships: []
+      }
       class_assignments: {
         Row: {
           assigned_date: string | null
@@ -492,6 +531,104 @@ export type Database = {
             columns: ["class_id"]
             isOneToOne: false
             referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      content_library: {
+        Row: {
+          content_type: string
+          created_at: string
+          created_by: string
+          description: string | null
+          file_url: string | null
+          grade_level: string | null
+          id: string
+          is_published: boolean | null
+          metadata: Json | null
+          subject: string | null
+          tags: string[] | null
+          thumbnail_url: string | null
+          title: string
+          updated_at: string
+          version_number: number | null
+        }
+        Insert: {
+          content_type?: string
+          created_at?: string
+          created_by: string
+          description?: string | null
+          file_url?: string | null
+          grade_level?: string | null
+          id?: string
+          is_published?: boolean | null
+          metadata?: Json | null
+          subject?: string | null
+          tags?: string[] | null
+          thumbnail_url?: string | null
+          title: string
+          updated_at?: string
+          version_number?: number | null
+        }
+        Update: {
+          content_type?: string
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          file_url?: string | null
+          grade_level?: string | null
+          id?: string
+          is_published?: boolean | null
+          metadata?: Json | null
+          subject?: string | null
+          tags?: string[] | null
+          thumbnail_url?: string | null
+          title?: string
+          updated_at?: string
+          version_number?: number | null
+        }
+        Relationships: []
+      }
+      content_versions: {
+        Row: {
+          changes_summary: string | null
+          content_id: string
+          created_at: string
+          created_by: string
+          description: string | null
+          file_url: string | null
+          id: string
+          title: string
+          version_number: number
+        }
+        Insert: {
+          changes_summary?: string | null
+          content_id: string
+          created_at?: string
+          created_by: string
+          description?: string | null
+          file_url?: string | null
+          id?: string
+          title: string
+          version_number: number
+        }
+        Update: {
+          changes_summary?: string | null
+          content_id?: string
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          file_url?: string | null
+          id?: string
+          title?: string
+          version_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_versions_content_id_fkey"
+            columns: ["content_id"]
+            isOneToOne: false
+            referencedRelation: "content_library"
             referencedColumns: ["id"]
           },
         ]
@@ -929,6 +1066,136 @@ export type Database = {
         }
         Relationships: []
       }
+      parent_profiles: {
+        Row: {
+          created_at: string
+          emergency_contact: boolean | null
+          first_name: string
+          id: string
+          last_name: string
+          phone_number: string | null
+          preferred_contact_method: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          emergency_contact?: boolean | null
+          first_name: string
+          id?: string
+          last_name: string
+          phone_number?: string | null
+          preferred_contact_method?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          emergency_contact?: boolean | null
+          first_name?: string
+          id?: string
+          last_name?: string
+          phone_number?: string | null
+          preferred_contact_method?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      parent_teacher_messages: {
+        Row: {
+          created_at: string
+          id: string
+          is_read: boolean | null
+          message: string
+          parent_id: string
+          priority: string | null
+          sender_type: string
+          student_id: string
+          subject: string
+          teacher_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_read?: boolean | null
+          message: string
+          parent_id: string
+          priority?: string | null
+          sender_type: string
+          student_id: string
+          subject: string
+          teacher_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_read?: boolean | null
+          message?: string
+          parent_id?: string
+          priority?: string | null
+          sender_type?: string
+          student_id?: string
+          subject?: string
+          teacher_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "parent_teacher_messages_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "parent_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "parent_teacher_messages_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "parent_teacher_messages_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      performance_metrics: {
+        Row: {
+          id: string
+          metadata: Json | null
+          metric_name: string
+          metric_type: string
+          recorded_at: string
+          unit: string
+          value: number
+        }
+        Insert: {
+          id?: string
+          metadata?: Json | null
+          metric_name: string
+          metric_type: string
+          recorded_at?: string
+          unit: string
+          value: number
+        }
+        Update: {
+          id?: string
+          metadata?: Json | null
+          metric_name?: string
+          metric_type?: string
+          recorded_at?: string
+          unit?: string
+          value?: number
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -1152,6 +1419,54 @@ export type Database = {
             columns: ["assignment_id"]
             isOneToOne: false
             referencedRelation: "assignments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      student_parent_relationships: {
+        Row: {
+          can_receive_communications: boolean | null
+          can_view_attendance: boolean | null
+          can_view_grades: boolean | null
+          created_at: string
+          id: string
+          parent_id: string
+          relationship_type: string
+          student_id: string
+        }
+        Insert: {
+          can_receive_communications?: boolean | null
+          can_view_attendance?: boolean | null
+          can_view_grades?: boolean | null
+          created_at?: string
+          id?: string
+          parent_id: string
+          relationship_type?: string
+          student_id: string
+        }
+        Update: {
+          can_receive_communications?: boolean | null
+          can_view_attendance?: boolean | null
+          can_view_grades?: boolean | null
+          created_at?: string
+          id?: string
+          parent_id?: string
+          relationship_type?: string
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_parent_relationships_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "parent_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_parent_relationships_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
             referencedColumns: ["id"]
           },
         ]
@@ -1423,6 +1738,45 @@ export type Database = {
           },
         ]
       }
+      user_role_permissions: {
+        Row: {
+          created_at: string
+          id: string
+          permission: Database["public"]["Enums"]["permission_type"]
+          role: Database["public"]["Enums"]["app_role"]
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          permission: Database["public"]["Enums"]["permission_type"]
+          role: Database["public"]["Enums"]["app_role"]
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          permission?: Database["public"]["Enums"]["permission_type"]
+          role?: Database["public"]["Enums"]["app_role"]
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -1432,9 +1786,41 @@ export type Database = {
         Args: { percentage: number }
         Returns: string
       }
+      has_permission: {
+        Args: {
+          _user_id: string
+          _permission: Database["public"]["Enums"]["permission_type"]
+        }
+        Returns: boolean
+      }
+      has_role: {
+        Args: {
+          _user_id: string
+          _role: Database["public"]["Enums"]["app_role"]
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "moderator" | "user"
+      permission_type:
+        | "read_users"
+        | "write_users"
+        | "delete_users"
+        | "read_classes"
+        | "write_classes"
+        | "delete_classes"
+        | "read_content"
+        | "write_content"
+        | "delete_content"
+        | "read_grades"
+        | "write_grades"
+        | "delete_grades"
+        | "read_analytics"
+        | "write_analytics"
+        | "system_admin"
+        | "backup_data"
+        | "manage_permissions"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1549,6 +1935,27 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "moderator", "user"],
+      permission_type: [
+        "read_users",
+        "write_users",
+        "delete_users",
+        "read_classes",
+        "write_classes",
+        "delete_classes",
+        "read_content",
+        "write_content",
+        "delete_content",
+        "read_grades",
+        "write_grades",
+        "delete_grades",
+        "read_analytics",
+        "write_analytics",
+        "system_admin",
+        "backup_data",
+        "manage_permissions",
+      ],
+    },
   },
 } as const
