@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -207,7 +206,7 @@ const StudentProgressAnalytics: React.FC<{ classId: string }> = ({ classId }) =>
       total_students: totalStudents,
       average_progress: averageProgress,
       completion_rate: completionRate,
-      engagement_metrics
+      engagement_metrics: engagementMetrics
     };
   };
 
