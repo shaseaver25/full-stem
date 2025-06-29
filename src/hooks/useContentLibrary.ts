@@ -50,12 +50,24 @@ export const useContentLibrary = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
+      // Ensure required fields are present
+      const insertData = {
+        title: contentData.title || '',
+        description: contentData.description,
+        content_type: contentData.content_type || 'document',
+        file_url: contentData.file_url,
+        thumbnail_url: contentData.thumbnail_url,
+        tags: contentData.tags || [],
+        subject: contentData.subject,
+        grade_level: contentData.grade_level,
+        created_by: user.id,
+        is_published: contentData.is_published || false,
+        version_number: contentData.version_number || 1
+      };
+
       const { data, error } = await supabase
         .from('content_library')
-        .insert({
-          ...contentData,
-          created_by: user.id
-        })
+        .insert(insertData)
         .select()
         .single();
 

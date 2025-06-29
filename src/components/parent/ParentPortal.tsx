@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -172,25 +171,49 @@ const ParentPortal = () => {
           is_read,
           priority,
           created_at,
-          teacher_profiles (user_id, profiles (full_name)),
+          teacher_id,
           students (first_name, last_name)
         `)
         .eq('parent_id', parentId)
         .order('created_at', { ascending: false });
 
-      const messagesData = data?.map(msg => ({
-        id: msg.id,
-        subject: msg.subject,
-        message: msg.message,
-        sender_type: msg.sender_type,
-        is_read: msg.is_read,
-        priority: msg.priority,
-        created_at: msg.created_at,
-        teacher_name: msg.teacher_profiles?.profiles?.full_name || 'Teacher',
-        student_name: `${msg.students?.first_name || ''} ${msg.students?.last_name || ''}`.trim()
-      })) || [];
+      if (data) {
+        // Get teacher info separately to avoid relation issues
+        const messagesData = await Promise.all(
+          data.map(async (msg) => {
+            const { data: teacherProfile } = await supabase
+              .from('teacher_profiles')
+              .select('user_id')
+              .eq('id', msg.teacher_id)
+              .single();
 
-      setMessages(messagesData);
+            let teacherName = 'Teacher';
+            if (teacherProfile) {
+              const { data: profile } = await supabase
+                .from('profiles')
+                .select('full_name')
+                .eq('id', teacherProfile.user_id)
+                .single();
+              
+              teacherName = profile?.full_name || 'Teacher';
+            }
+
+            return {
+              id: msg.id,
+              subject: msg.subject,
+              message: msg.message,
+              sender_type: msg.sender_type,
+              is_read: msg.is_read,
+              priority: msg.priority,
+              created_at: msg.created_at,
+              teacher_name: teacherName,
+              student_name: `${msg.students?.first_name || ''} ${msg.students?.last_name || ''}`.trim()
+            };
+          })
+        );
+
+        setMessages(messagesData);
+      }
     } catch (error) {
       console.error('Error fetching messages:', error);
     }

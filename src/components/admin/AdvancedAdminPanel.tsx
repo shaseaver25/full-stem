@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -62,7 +61,7 @@ const AdvancedAdminPanel = () => {
 
   const [roleForm, setRoleForm] = useState({
     user_id: '',
-    role: 'user'
+    role: 'user' as 'admin' | 'moderator' | 'user'
   });
 
   const [backupForm, setBackupForm] = useState({
@@ -75,25 +74,33 @@ const AdvancedAdminPanel = () => {
 
   const fetchAdminData = async () => {
     try {
-      // Fetch user roles
+      // Fetch user roles with profile information
       const { data: rolesData } = await supabase
         .from('user_roles')
-        .select(`
-          id,
-          user_id,
-          role,
-          profiles (email, full_name)
-        `);
+        .select('id, user_id, role');
 
-      const userRolesData = rolesData?.map(role => ({
-        id: role.id,
-        user_id: role.user_id,
-        role: role.role,
-        user_email: role.profiles?.email || 'Unknown',
-        user_name: role.profiles?.full_name || 'Unknown User'
-      })) || [];
+      if (rolesData) {
+        // Get profile info separately to avoid relation issues
+        const userRolesData = await Promise.all(
+          rolesData.map(async (role) => {
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('email, full_name')
+              .eq('id', role.user_id)
+              .single();
 
-      setUserRoles(userRolesData);
+            return {
+              id: role.id,
+              user_id: role.user_id,
+              role: role.role,
+              user_email: profile?.email || 'Unknown',
+              user_name: profile?.full_name || 'Unknown User'
+            };
+          })
+        );
+
+        setUserRoles(userRolesData);
+      }
 
       // Fetch permissions
       const { data: permissionsData } = await supabase
@@ -302,7 +309,7 @@ const AdvancedAdminPanel = () => {
                   <Label htmlFor="role">Role</Label>
                   <Select
                     value={roleForm.role}
-                    onValueChange={(value) => setRoleForm(prev => ({ ...prev, role: value }))}
+                    onValueChange={(value: 'admin' | 'moderator' | 'user') => setRoleForm(prev => ({ ...prev, role: value }))}
                   >
                     <SelectTrigger>
                       <SelectValue />
