@@ -207,10 +207,21 @@ export const lessonApi = {
     return data as ApiLesson[];
   },
 
-  async create(lessonData: Partial<ApiLesson>) {
+  async create(lessonData: Partial<ApiLesson> & { class_id: string; title: string }) {
+    const dbData = {
+      class_id: lessonData.class_id,
+      title: lessonData.title,
+      description: lessonData.description || null,
+      objectives: lessonData.objectives || [],
+      content: lessonData.content || {},
+      materials: lessonData.materials || [],
+      duration: lessonData.duration || 60,
+      order_index: lessonData.order_index || 0
+    };
+
     const { data, error } = await supabase
       .from('lessons')
-      .insert(lessonData)
+      .insert(dbData)
       .select()
       .single();
     
@@ -253,10 +264,21 @@ export const activityApi = {
     return data as ApiActivity[];
   },
 
-  async create(activityData: Partial<ApiActivity>) {
+  async create(activityData: Partial<ApiActivity> & { lesson_id: string; title: string }) {
+    const dbData = {
+      lesson_id: activityData.lesson_id,
+      title: activityData.title,
+      description: activityData.description || null,
+      activity_type: activityData.activity_type || 'general',
+      resources: activityData.resources || [],
+      instructions: activityData.instructions || null,
+      estimated_time: activityData.estimated_time || 30,
+      order_index: activityData.order_index || 0
+    };
+
     const { data, error } = await supabase
       .from('activities')
-      .insert(activityData)
+      .insert(dbData)
       .select()
       .single();
     
