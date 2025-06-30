@@ -34,7 +34,6 @@ interface ContentFiltersProps {
  * @returns {JSX.Element} Rendered filter controls
  * 
  * @example
- * ```tsx
  * function ContentLibrary() {
  *   const [searchTerm, setSearchTerm] = useState('');
  *   const [filterType, setFilterType] = useState('all');
@@ -47,11 +46,9 @@ interface ContentFiltersProps {
  *         filterType={filterType}
  *         setFilterType={setFilterType}
  *       />
- *       {/* Content list filtered by searchTerm and filterType */}
  *     </div>
  *   );
  * }
- * ```
  * 
  * @component
  * @category Content Management

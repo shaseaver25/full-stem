@@ -39,13 +39,11 @@ interface ContentHeaderProps {
  * @returns {JSX.Element} Rendered header with title and create button
  * 
  * @example
- * ```tsx
  * function ContentManagementPage() {
  *   const [isModalOpen, setIsModalOpen] = useState(false);
  *   const [formData, setFormData] = useState(initialFormData);
  *   
  *   const handleCreateContent = async () => {
- *     // Handle content creation logic
  *     await createContent(formData);
  *     setIsModalOpen(false);
  *   };
@@ -59,11 +57,9 @@ interface ContentHeaderProps {
  *         setFormData={setFormData}
  *         onCreateContent={handleCreateContent}
  *       />
- *       {/* Rest of content management interface */}
  *     </div>
  *   );
  * }
- * ```
  * 
  * @component
  * @category Content Management

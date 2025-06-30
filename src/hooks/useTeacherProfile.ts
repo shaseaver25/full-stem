@@ -21,7 +21,6 @@ export { type TeacherProfile } from './useTeacherProfileData';
  * @returns {Function} returns.refetch - Function to manually refetch profile data
  * 
  * @example
- * ```tsx
  * function TeacherProfileForm() {
  *   const { profile, loading, saving, saveProfile } = useTeacherProfile();
  *   
@@ -44,7 +43,6 @@ export { type TeacherProfile } from './useTeacherProfileData';
  *     </form>
  *   );
  * }
- * ```
  * 
  * @sideEffects
  * - Automatically fetches profile data when user authentication changes
