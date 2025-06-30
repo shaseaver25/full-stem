@@ -1,19 +1,9 @@
 
-import { supabase } from "@/integrations/supabase/client";
-import { ClassData, Lesson, Assignment, ClassroomActivity, IndividualActivity, Resource } from "@/types/buildClassTypes";
+import { supabase } from '@/integrations/supabase/client';
 
-export interface SaveClassData {
-  classData: ClassData;
-  lessons: Lesson[];
-  assignments: Assignment[];
-  classroomActivities: ClassroomActivity[];
-  individualActivities: IndividualActivity[];
-  resources: Resource[];
-}
-
-export interface SavedClass {
+export interface ApiClass {
   id: string;
-  name: string;
+  title: string;
   description: string | null;
   grade_level: string | null;
   subject: string | null;
@@ -24,564 +14,153 @@ export interface SavedClass {
   prerequisites: string | null;
   max_students: number | null;
   published: boolean;
+  status: string;
+  published_at: string | null;
   teacher_id: string;
   created_at: string;
   updated_at: string;
 }
 
-export const saveClass = async (data: SaveClassData) => {
-  try {
-    console.log('Saving class data:', data);
+// Helper function to transform database class to API class
+const transformDbClassToApi = (dbClass: any): ApiClass => ({
+  id: dbClass.id,
+  title: dbClass.name || dbClass.title || '',
+  description: dbClass.description,
+  grade_level: dbClass.grade_level,
+  subject: dbClass.subject,
+  duration: dbClass.duration,
+  instructor: dbClass.instructor,
+  schedule: dbClass.schedule,
+  learning_objectives: dbClass.learning_objectives,
+  prerequisites: dbClass.prerequisites,
+  max_students: dbClass.max_students,
+  published: dbClass.published,
+  status: dbClass.status || 'draft',
+  published_at: dbClass.published_at,
+  teacher_id: dbClass.teacher_id,
+  created_at: dbClass.created_at,
+  updated_at: dbClass.updated_at
+});
+
+export const classApi = {
+  async getAll(published?: boolean) {
+    let query = supabase.from('classes').select('*');
     
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      throw new Error('User not authenticated');
+    if (published !== undefined) {
+      query = query.eq('published', published);
     }
+    
+    const { data, error } = await query.order('created_at', { ascending: false });
+    
+    if (error) throw error;
+    return (data || []).map(transformDbClassToApi);
+  },
 
-    // Get teacher profile
-    const { data: teacherProfile } = await supabase
-      .from('teacher_profiles')
-      .select('id')
-      .eq('user_id', user.id)
-      .single();
-
-    if (!teacherProfile) {
-      throw new Error('Teacher profile not found');
-    }
-
-    // Save class data to the classes table
-    const { data: classResult, error: classError } = await supabase
-      .from('classes')
-      .insert({
-        name: data.classData.title,
-        description: data.classData.description,
-        grade_level: data.classData.gradeLevel,
-        subject: data.classData.subject,
-        duration: data.classData.duration,
-        instructor: data.classData.instructor,
-        schedule: data.classData.schedule,
-        learning_objectives: data.classData.learningObjectives,
-        prerequisites: data.classData.prerequisites,
-        max_students: data.classData.maxStudents,
-        teacher_id: teacherProfile.id,
-        published: false
-      })
-      .select()
-      .single();
-
-    if (classError) {
-      console.error('Error saving class:', classError);
-      throw classError;
-    }
-
-    const classId = classResult.id;
-
-    // Save lessons
-    if (data.lessons.length > 0) {
-      const lessonsToInsert = data.lessons.map(lesson => ({
-        class_id: classId,
-        title: lesson.title,
-        description: lesson.description,
-        objectives: lesson.objectives,
-        materials: lesson.materials,
-        instructions: lesson.instructions,
-        duration: lesson.duration,
-        order_index: lesson.order
-      }));
-
-      const { data: lessonResults, error: lessonsError } = await supabase
-        .from('class_lessons')
-        .insert(lessonsToInsert)
-        .select();
-
-      if (lessonsError) {
-        console.error('Error saving lessons:', lessonsError);
-        throw lessonsError;
-      }
-
-      // Save lesson videos
-      for (let i = 0; i < data.lessons.length; i++) {
-        const lesson = data.lessons[i];
-        const savedLesson = lessonResults[i];
-        
-        if (lesson.videos && lesson.videos.length > 0) {
-          const videosToInsert = lesson.videos.map((video, index) => ({
-            lesson_id: savedLesson.id,
-            title: video.title,
-            url: video.url,
-            order_index: index
-          }));
-
-          const { error: videosError } = await supabase
-            .from('lesson_videos')
-            .insert(videosToInsert);
-
-          if (videosError) {
-            console.error('Error saving lesson videos:', videosError);
-            throw videosError;
-          }
-        }
-      }
-    }
-
-    // Save classroom activities
-    if (data.classroomActivities.length > 0) {
-      const activitiesToInsert = data.classroomActivities.map(activity => ({
-        class_id: classId,
-        title: activity.title,
-        description: activity.description,
-        duration: activity.duration,
-        materials: activity.materials,
-        instructions: activity.instructions
-      }));
-
-      const { error: activitiesError } = await supabase
-        .from('classroom_activities')
-        .insert(activitiesToInsert);
-
-      if (activitiesError) {
-        console.error('Error saving classroom activities:', activitiesError);
-        throw activitiesError;
-      }
-    }
-
-    // Save individual activities
-    if (data.individualActivities.length > 0) {
-      const activitiesToInsert = data.individualActivities.map(activity => ({
-        class_id: classId,
-        title: activity.title,
-        description: activity.description,
-        estimated_time: activity.estimatedTime,
-        instructions: activity.instructions,
-        resources: activity.resources
-      }));
-
-      const { error: activitiesError } = await supabase
-        .from('individual_activities')
-        .insert(activitiesToInsert);
-
-      if (activitiesError) {
-        console.error('Error saving individual activities:', activitiesError);
-        throw activitiesError;
-      }
-    }
-
-    // Save assignments
-    if (data.assignments.length > 0) {
-      const assignmentsToInsert = data.assignments.map(assignment => ({
-        class_id: classId,
-        title: assignment.title,
-        description: assignment.description,
-        due_date: assignment.dueDate,
-        instructions: assignment.instructions,
-        rubric: assignment.rubric,
-        max_points: assignment.maxPoints
-      }));
-
-      const { error: assignmentsError } = await supabase
-        .from('class_assignments_new')
-        .insert(assignmentsToInsert);
-
-      if (assignmentsError) {
-        console.error('Error saving assignments:', assignmentsError);
-        throw assignmentsError;
-      }
-    }
-
-    // Save resources
-    if (data.resources.length > 0) {
-      const resourcesToInsert = data.resources.map(resource => ({
-        class_id: classId,
-        title: resource.title,
-        type: resource.type,
-        url: resource.url,
-        description: resource.description
-      }));
-
-      const { error: resourcesError } = await supabase
-        .from('class_resources')
-        .insert(resourcesToInsert);
-
-      if (resourcesError) {
-        console.error('Error saving resources:', resourcesError);
-        throw resourcesError;
-      }
-    }
-
-    console.log('Class saved successfully:', classResult);
-    return { success: true, classId: classResult.id };
-  } catch (error) {
-    console.error('Error saving class:', error);
-    return { success: false, error };
-  }
-};
-
-export const publishClass = async (classId: string) => {
-  try {
+  async getById(id: string) {
     const { data, error } = await supabase
       .from('classes')
-      .update({ published: true })
-      .eq('id', classId)
-      .select()
+      .select('*')
+      .eq('id', id)
       .single();
-
+    
     if (error) throw error;
+    return transformDbClassToApi(data);
+  },
 
-    return { success: true, data };
-  } catch (error) {
-    console.error('Error publishing class:', error);
-    return { success: false, error };
-  }
-};
-
-export const getMyClasses = async (): Promise<{ success: boolean; data?: SavedClass[]; error?: any }> => {
-  try {
+  async create(classData: Partial<ApiClass>) {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      throw new Error('User not authenticated');
-    }
+    if (!user) throw new Error('User not authenticated');
 
-    // Get teacher profile
     const { data: teacherProfile } = await supabase
       .from('teacher_profiles')
       .select('id')
       .eq('user_id', user.id)
       .single();
 
-    if (!teacherProfile) {
-      throw new Error('Teacher profile not found');
-    }
+    if (!teacherProfile) throw new Error('Teacher profile not found');
 
-    const { data: classes, error } = await supabase
-      .from('classes')
-      .select('*')
-      .eq('teacher_id', teacherProfile.id)
-      .order('created_at', { ascending: false });
-
-    if (error) throw error;
-
-    return { success: true, data: classes || [] };
-  } catch (error) {
-    console.error('Error fetching classes:', error);
-    return { success: false, error };
-  }
-};
-
-export const getFullClassData = async (classId: string) => {
-  try {
-    // Get class data
-    const { data: classData, error: classError } = await supabase
-      .from('classes')
-      .select('*')
-      .eq('id', classId)
-      .single();
-
-    if (classError) throw classError;
-
-    // Get lessons with videos
-    const { data: lessons, error: lessonsError } = await supabase
-      .from('class_lessons')
-      .select(`
-        *,
-        lesson_videos(*)
-      `)
-      .eq('class_id', classId)
-      .order('order_index');
-
-    if (lessonsError) throw lessonsError;
-
-    // Get classroom activities
-    const { data: classroomActivities, error: classroomError } = await supabase
-      .from('classroom_activities')
-      .select('*')
-      .eq('class_id', classId);
-
-    if (classroomError) throw classroomError;
-
-    // Get individual activities
-    const { data: individualActivities, error: individualError } = await supabase
-      .from('individual_activities')
-      .select('*')
-      .eq('class_id', classId);
-
-    if (individualError) throw individualError;
-
-    // Get assignments
-    const { data: assignments, error: assignmentsError } = await supabase
-      .from('class_assignments_new')
-      .select('*')
-      .eq('class_id', classId);
-
-    if (assignmentsError) throw assignmentsError;
-
-    // Get resources
-    const { data: resources, error: resourcesError } = await supabase
-      .from('class_resources')
-      .select('*')
-      .eq('class_id', classId);
-
-    if (resourcesError) throw resourcesError;
-
-    // Transform data to match expected format
-    const transformedData = {
-      classId: classData.id,
-      classData: {
-        title: classData.name,
-        description: classData.description || '',
-        gradeLevel: classData.grade_level || '',
-        subject: classData.subject || '',
-        duration: classData.duration || '',
-        instructor: classData.instructor || '',
-        schedule: classData.schedule || '',
-        learningObjectives: classData.learning_objectives || '',
-        prerequisites: classData.prerequisites || '',
-        maxStudents: classData.max_students || 25
-      },
-      lessons: lessons?.map(lesson => ({
-        id: lesson.id,
-        title: lesson.title,
-        description: lesson.description || '',
-        objectives: lesson.objectives || [],
-        videos: lesson.lesson_videos?.map(video => ({
-          id: video.id,
-          title: video.title,
-          url: video.url
-        })) || [],
-        materials: lesson.materials || [],
-        instructions: lesson.instructions || '',
-        duration: lesson.duration || 60,
-        order: lesson.order_index
-      })) || [],
-      assignments: assignments?.map(assignment => ({
-        id: assignment.id,
-        title: assignment.title,
-        description: assignment.description || '',
-        dueDate: assignment.due_date || '',
-        instructions: assignment.instructions || '',
-        rubric: assignment.rubric || '',
-        maxPoints: assignment.max_points || 100
-      })) || [],
-      classroomActivities: classroomActivities?.map(activity => ({
-        id: activity.id,
-        title: activity.title,
-        description: activity.description || '',
-        duration: activity.duration || 30,
-        materials: activity.materials || [],
-        instructions: activity.instructions || ''
-      })) || [],
-      individualActivities: individualActivities?.map(activity => ({
-        id: activity.id,
-        title: activity.title,
-        description: activity.description || '',
-        estimatedTime: activity.estimated_time || 20,
-        instructions: activity.instructions || '',
-        resources: activity.resources || []
-      })) || [],
-      resources: resources?.map(resource => ({
-        id: resource.id,
-        title: resource.title,
-        type: resource.type as 'pdf' | 'link' | 'video' | 'document',
-        url: resource.url,
-        description: resource.description || ''
-      })) || []
+    // Map API fields to database fields
+    const dbData = {
+      name: classData.title || '',
+      description: classData.description,
+      grade_level: classData.grade_level,
+      subject: classData.subject,
+      duration: classData.duration,
+      instructor: classData.instructor,
+      schedule: classData.schedule,
+      learning_objectives: classData.learning_objectives,
+      prerequisites: classData.prerequisites,
+      max_students: classData.max_students,
+      teacher_id: teacherProfile.id,
+      status: 'draft',
+      published: false
     };
 
-    return { success: true, data: transformedData };
-  } catch (error) {
-    console.error('Error fetching full class data:', error);
-    return { success: false, error };
-  }
-};
-
-export const updateClass = async (classId: string, data: SaveClassData) => {
-  try {
-    console.log('Updating class data:', classId, data);
-    
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      throw new Error('User not authenticated');
-    }
-
-    // Update class data
-    const { error: classError } = await supabase
+    const { data, error } = await supabase
       .from('classes')
-      .update({
-        name: data.classData.title,
-        description: data.classData.description,
-        grade_level: data.classData.gradeLevel,
-        subject: data.classData.subject,
-        duration: data.classData.duration,
-        instructor: data.classData.instructor,
-        schedule: data.classData.schedule,
-        learning_objectives: data.classData.learningObjectives,
-        prerequisites: data.classData.prerequisites,
-        max_students: data.classData.maxStudents
-      })
-      .eq('id', classId);
-
-    if (classError) throw classError;
-
-    // Delete existing related data properly
-    // First get lesson IDs to delete their videos
-    const { data: existingLessons } = await supabase
-      .from('class_lessons')
-      .select('id')
-      .eq('class_id', classId);
-
-    if (existingLessons && existingLessons.length > 0) {
-      const lessonIds = existingLessons.map(lesson => lesson.id);
-      
-      // Delete lesson videos first
-      await supabase
-        .from('lesson_videos')
-        .delete()
-        .in('lesson_id', lessonIds);
-    }
-
-    // Delete existing lessons
-    await supabase.from('class_lessons').delete().eq('class_id', classId);
+      .insert(dbData)
+      .select()
+      .single();
     
-    // Delete other related data
-    await supabase.from('classroom_activities').delete().eq('class_id', classId);
-    await supabase.from('individual_activities').delete().eq('class_id', classId);
-    await supabase.from('class_assignments_new').delete().eq('class_id', classId);
-    await supabase.from('class_resources').delete().eq('class_id', classId);
+    if (error) throw error;
+    return transformDbClassToApi(data);
+  },
 
-    // Re-insert all data using the same logic as saveClass
-    // Save lessons
-    if (data.lessons.length > 0) {
-      const lessonsToInsert = data.lessons.map(lesson => ({
-        class_id: classId,
-        title: lesson.title,
-        description: lesson.description,
-        objectives: lesson.objectives,
-        materials: lesson.materials,
-        instructions: lesson.instructions,
-        duration: lesson.duration,
-        order_index: lesson.order
-      }));
+  async update(id: string, classData: Partial<ApiClass>) {
+    // Map API fields to database fields for update
+    const dbData: any = {};
+    if (classData.title !== undefined) dbData.name = classData.title;
+    if (classData.description !== undefined) dbData.description = classData.description;
+    if (classData.grade_level !== undefined) dbData.grade_level = classData.grade_level;
+    if (classData.subject !== undefined) dbData.subject = classData.subject;
+    if (classData.duration !== undefined) dbData.duration = classData.duration;
+    if (classData.instructor !== undefined) dbData.instructor = classData.instructor;
+    if (classData.schedule !== undefined) dbData.schedule = classData.schedule;
+    if (classData.learning_objectives !== undefined) dbData.learning_objectives = classData.learning_objectives;
+    if (classData.prerequisites !== undefined) dbData.prerequisites = classData.prerequisites;
+    if (classData.max_students !== undefined) dbData.max_students = classData.max_students;
 
-      const { data: lessonResults, error: lessonsError } = await supabase
-        .from('class_lessons')
-        .insert(lessonsToInsert)
-        .select();
+    const { data, error } = await supabase
+      .from('classes')
+      .update(dbData)
+      .eq('id', id)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return transformDbClassToApi(data);
+  },
 
-      if (lessonsError) throw lessonsError;
-
-      // Save lesson videos
-      for (let i = 0; i < data.lessons.length; i++) {
-        const lesson = data.lessons[i];
-        const savedLesson = lessonResults[i];
-        
-        if (lesson.videos && lesson.videos.length > 0) {
-          const videosToInsert = lesson.videos.map((video, index) => ({
-            lesson_id: savedLesson.id,
-            title: video.title,
-            url: video.url,
-            order_index: index
-          }));
-
-          const { error: videosError } = await supabase
-            .from('lesson_videos')
-            .insert(videosToInsert);
-
-          if (videosError) throw videosError;
-        }
-      }
-    }
-
-    // Save classroom activities
-    if (data.classroomActivities.length > 0) {
-      const activitiesToInsert = data.classroomActivities.map(activity => ({
-        class_id: classId,
-        title: activity.title,
-        description: activity.description,
-        duration: activity.duration,
-        materials: activity.materials,
-        instructions: activity.instructions
-      }));
-
-      const { error: activitiesError } = await supabase
-        .from('classroom_activities')
-        .insert(activitiesToInsert);
-
-      if (activitiesError) throw activitiesError;
-    }
-
-    // Save individual activities
-    if (data.individualActivities.length > 0) {
-      const activitiesToInsert = data.individualActivities.map(activity => ({
-        class_id: classId,
-        title: activity.title,
-        description: activity.description,
-        estimated_time: activity.estimatedTime,
-        instructions: activity.instructions,
-        resources: activity.resources
-      }));
-
-      const { error: activitiesError } = await supabase
-        .from('individual_activities')
-        .insert(activitiesToInsert);
-
-      if (activitiesError) throw activitiesError;
-    }
-
-    // Save assignments
-    if (data.assignments.length > 0) {
-      const assignmentsToInsert = data.assignments.map(assignment => ({
-        class_id: classId,
-        title: assignment.title,
-        description: assignment.description,
-        due_date: assignment.dueDate,
-        instructions: assignment.instructions,
-        rubric: assignment.rubric,
-        max_points: assignment.maxPoints
-      }));
-
-      const { error: assignmentsError } = await supabase
-        .from('class_assignments_new')
-        .insert(assignmentsToInsert);
-
-      if (assignmentsError) throw assignmentsError;
-    }
-
-    // Save resources
-    if (data.resources.length > 0) {
-      const resourcesToInsert = data.resources.map(resource => ({
-        class_id: classId,
-        title: resource.title,
-        type: resource.type,
-        url: resource.url,
-        description: resource.description
-      }));
-
-      const { error: resourcesError } = await supabase
-        .from('class_resources')
-        .insert(resourcesToInsert);
-
-      if (resourcesError) throw resourcesError;
-    }
-
-    console.log('Class updated successfully');
-    return { success: true, classId };
-  } catch (error) {
-    console.error('Error updating class:', error);
-    return { success: false, error };
-  }
-};
-
-export const deleteClass = async (classId: string) => {
-  try {
+  async delete(id: string) {
     const { error } = await supabase
       .from('classes')
       .delete()
-      .eq('id', classId);
-
+      .eq('id', id);
+    
     if (error) throw error;
+  },
 
-    return { success: true };
-  } catch (error) {
-    console.error('Error deleting class:', error);
-    return { success: false, error };
+  async publish(id: string) {
+    const { data, error } = await supabase
+      .from('classes')
+      .update({ published: true })
+      .eq('id', id)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return transformDbClassToApi(data);
+  },
+
+  async unpublish(id: string) {
+    const { data, error } = await supabase
+      .from('classes')
+      .update({ published: false })
+      .eq('id', id)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return transformDbClassToApi(data);
   }
 };
