@@ -39,7 +39,7 @@ export { type TeacherProfile } from './useTeacherProfileData';
  *   
  *   return (
  *     <form onSubmit={handleSave}>
- *       {/* profile form fields */}
+ *       Profile form fields here
  *     </form>
  *   );
  * }
