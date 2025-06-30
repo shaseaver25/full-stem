@@ -136,15 +136,12 @@ const BuildClassPage = () => {
         });
       } else {
         // Create new class
-        const newClass = await new Promise((resolve, reject) => {
-          createClass(classDataToSave, {
-            onSuccess: resolve,
-            onError: reject
-          });
+        const newClass = await new Promise<any>((resolve, reject) => {
+          createClass(classDataToSave);
         });
         
         // Navigate to the edit page for the new class
-        if (newClass && 'id' in newClass) {
+        if (newClass && typeof newClass === 'object' && 'id' in newClass) {
           navigate(`/admin/build-class/${newClass.id}`);
         }
       }

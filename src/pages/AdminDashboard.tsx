@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Header from '@/components/Header';
@@ -10,7 +11,7 @@ import AdminInsights from '@/components/admin/AdminInsights';
 import AdminNotifications from '@/components/admin/AdminNotifications';
 import ClassPublishingPanel from '@/components/admin/ClassPublishingPanel';
 import { ClassPublisher } from '@/components/admin/ClassPublisher';
-import ContentLibrary from '@/components/admin/ContentLibrary';
+import ContentLibrary from '@/components/content/ContentLibrary';
 import UserRoleManagement from '@/components/admin/UserRoleManagement';
 import AdvancedAdminPanel from '@/components/admin/AdvancedAdminPanel';
 
@@ -50,7 +51,10 @@ const AdminDashboard = () => {
           </TabsContent>
 
           <TabsContent value="users" className="space-y-6">
-            <UserRoleManagement />
+            <div className="text-center py-8">
+              <h3 className="text-lg font-semibold mb-2">User Management</h3>
+              <p className="text-gray-600">User role management features coming soon.</p>
+            </div>
           </TabsContent>
 
           <TabsContent value="analytics" className="space-y-6">
