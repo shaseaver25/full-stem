@@ -3,6 +3,22 @@ import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 
+/**
+ * TypeScript interface for teacher profile data structure
+ * 
+ * @interface TeacherProfile
+ * @property {string} id - Unique identifier for the profile
+ * @property {string} user_id - Associated user ID from auth system
+ * @property {string|null} school_name - Name of the school where teacher works
+ * @property {string[]|null} grade_levels - Array of grade levels taught
+ * @property {string[]|null} subjects - Array of subjects taught
+ * @property {number|null} years_experience - Years of teaching experience
+ * @property {string} certification_status - Teacher certification status
+ * @property {number} pd_hours - Professional development hours completed
+ * @property {boolean} onboarding_completed - Whether onboarding is complete
+ * @property {string} created_at - Profile creation timestamp
+ * @property {string} updated_at - Last update timestamp
+ */
 export interface TeacherProfile {
   id: string;
   user_id: string;
@@ -17,6 +33,38 @@ export interface TeacherProfile {
   updated_at: string;
 }
 
+/**
+ * Hook for managing teacher profile data operations
+ * 
+ * @description Handles fetching, caching, and state management for teacher profile data.
+ * Automatically creates initial profile if none exists for a user.
+ * 
+ * @returns {Object} Profile data management object
+ * @returns {TeacherProfile|null} returns.profile - Current profile data
+ * @returns {boolean} returns.loading - Loading state for fetch operations
+ * @returns {Function} returns.setProfile - Direct state setter for profile
+ * @returns {Function} returns.fetchProfile - Function to fetch profile by user ID
+ * 
+ * @example
+ * ```tsx
+ * function useProfileEffect() {
+ *   const { profile, loading, fetchProfile } = useTeacherProfileData();
+ *   
+ *   useEffect(() => {
+ *     if (userId) {
+ *       fetchProfile(userId);
+ *     }
+ *   }, [userId]);
+ *   
+ *   return { profile, loading };
+ * }
+ * ```
+ * 
+ * @sideEffects
+ * - Creates initial profile in database if none exists
+ * - Shows toast notifications for errors
+ * - Updates loading state during operations
+ */
 export const useTeacherProfileData = () => {
   const [profile, setProfile] = useState<TeacherProfile | null>(null);
   const [loading, setLoading] = useState(true);
