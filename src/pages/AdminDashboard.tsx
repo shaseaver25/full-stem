@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Header from '@/components/Header';
@@ -10,6 +9,10 @@ import AdminReports from '@/components/admin/AdminReports';
 import AdminInsights from '@/components/admin/AdminInsights';
 import AdminNotifications from '@/components/admin/AdminNotifications';
 import ClassPublishingPanel from '@/components/admin/ClassPublishingPanel';
+import { ClassPublisher } from '@/components/admin/ClassPublisher';
+import ContentLibrary from '@/components/admin/ContentLibrary';
+import UserRoleManagement from '@/components/admin/UserRoleManagement';
+import AdvancedAdminPanel from '@/components/admin/AdvancedAdminPanel';
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
@@ -25,47 +28,37 @@ const AdminDashboard = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-8">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="classes">Classes</TabsTrigger>
-            <TabsTrigger value="publishing">Publishing</TabsTrigger>
-            <TabsTrigger value="teachers">Teachers</TabsTrigger>
-            <TabsTrigger value="pilot">Pilot</TabsTrigger>
-            <TabsTrigger value="reports">Reports</TabsTrigger>
-            <TabsTrigger value="insights">Insights</TabsTrigger>
-            <TabsTrigger value="notifications">Notifications</TabsTrigger>
+            <TabsTrigger value="content">Content</TabsTrigger>
+            <TabsTrigger value="users">Users</TabsTrigger>
+            <TabsTrigger value="analytics">Analytics</TabsTrigger>
+            <TabsTrigger value="settings">Settings</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="overview">
+          <TabsContent value="overview" className="space-y-6">
             <AdminSiteOverview />
           </TabsContent>
 
-          <TabsContent value="classes">
-            <AdminClassManagement />
+          <TabsContent value="classes" className="space-y-6">
+            <ClassPublisher />
           </TabsContent>
 
-          <TabsContent value="publishing">
-            <ClassPublishingPanel />
+          <TabsContent value="content" className="space-y-6">
+            <ContentLibrary />
           </TabsContent>
 
-          <TabsContent value="teachers">
-            <AdminTeacherSupport />
+          <TabsContent value="users" className="space-y-6">
+            <UserRoleManagement />
           </TabsContent>
 
-          <TabsContent value="pilot">
-            <AdminPilotTracking />
-          </TabsContent>
-
-          <TabsContent value="reports">
+          <TabsContent value="analytics" className="space-y-6">
             <AdminReports />
           </TabsContent>
 
-          <TabsContent value="insights">
-            <AdminInsights />
-          </TabsContent>
-
-          <TabsContent value="notifications">
-            <AdminNotifications />
+          <TabsContent value="settings" className="space-y-6">
+            <AdvancedAdminPanel />
           </TabsContent>
         </Tabs>
       </div>

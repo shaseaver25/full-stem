@@ -9,6 +9,56 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      activities: {
+        Row: {
+          activity_type: string
+          created_at: string | null
+          description: string | null
+          estimated_time: number | null
+          id: string
+          instructions: string | null
+          lesson_id: string
+          order_index: number
+          resources: Json | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          activity_type?: string
+          created_at?: string | null
+          description?: string | null
+          estimated_time?: number | null
+          id?: string
+          instructions?: string | null
+          lesson_id: string
+          order_index?: number
+          resources?: Json | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          activity_type?: string
+          created_at?: string | null
+          description?: string | null
+          estimated_time?: number | null
+          id?: string
+          instructions?: string | null
+          lesson_id?: string
+          order_index?: number
+          resources?: Json | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activities_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       assignment_grades: {
         Row: {
           created_at: string
@@ -428,6 +478,7 @@ export type Database = {
       }
       classes: {
         Row: {
+          content_metadata: Json | null
           created_at: string | null
           description: string | null
           duration: string | null
@@ -439,13 +490,16 @@ export type Database = {
           name: string
           prerequisites: string | null
           published: boolean | null
+          published_at: string | null
           schedule: string | null
           school_year: string | null
+          status: string | null
           subject: string | null
           teacher_id: string
           updated_at: string | null
         }
         Insert: {
+          content_metadata?: Json | null
           created_at?: string | null
           description?: string | null
           duration?: string | null
@@ -457,13 +511,16 @@ export type Database = {
           name: string
           prerequisites?: string | null
           published?: boolean | null
+          published_at?: string | null
           schedule?: string | null
           school_year?: string | null
+          status?: string | null
           subject?: string | null
           teacher_id: string
           updated_at?: string | null
         }
         Update: {
+          content_metadata?: Json | null
           created_at?: string | null
           description?: string | null
           duration?: string | null
@@ -475,8 +532,10 @@ export type Database = {
           name?: string
           prerequisites?: string | null
           published?: boolean | null
+          published_at?: string | null
           schedule?: string | null
           school_year?: string | null
+          status?: string | null
           subject?: string | null
           teacher_id?: string
           updated_at?: string | null
@@ -946,6 +1005,56 @@ export type Database = {
             columns: ["lesson_id"]
             isOneToOne: false
             referencedRelation: "class_lessons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lessons: {
+        Row: {
+          class_id: string
+          content: Json | null
+          created_at: string | null
+          description: string | null
+          duration: number | null
+          id: string
+          materials: string[] | null
+          objectives: string[] | null
+          order_index: number
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          class_id: string
+          content?: Json | null
+          created_at?: string | null
+          description?: string | null
+          duration?: number | null
+          id?: string
+          materials?: string[] | null
+          objectives?: string[] | null
+          order_index?: number
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          class_id?: string
+          content?: Json | null
+          created_at?: string | null
+          description?: string | null
+          duration?: number | null
+          id?: string
+          materials?: string[] | null
+          objectives?: string[] | null
+          order_index?: number
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lessons_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
             referencedColumns: ["id"]
           },
         ]
