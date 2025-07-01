@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { BookOpen, AlertCircle, Loader2, Globe } from 'lucide-react';
@@ -103,7 +104,7 @@ const LessonPage = () => {
   // Get comprehensive lesson text for read-aloud functionality
   const lessonTitle = lesson.Title || `Lesson ${lesson['Lesson ID']}`;
   const lessonDescription = lesson.Description || '';
-  const lessonContent = content || lesson.text || lesson['Text (Grade 5)'] || lesson['Text (Grade 3)'] || lesson['Text (Grade 8)'] || 'No content available for this lesson.';
+  const lessonContent = content || lesson.Text || lesson['Text (Grade 5)'] || lesson['Text (Grade 3)'] || lesson['Text (Grade 8)'] || 'No content available for this lesson.';
   
   // Combine all text content for comprehensive read-aloud
   const fullLessonText = `${lessonTitle}. ${lessonDescription ? lessonDescription + '. ' : ''}${lessonContent}`;
