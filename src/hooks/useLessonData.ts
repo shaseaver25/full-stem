@@ -11,12 +11,12 @@ interface LessonData {
   Description: string | null;
   Track: string | null;
   Order: number | null;
-  text: string | null;
+  Text: string | null;
   'Text (Grade 3)': string | null;
   'Text (Grade 5)': string | null;
   'Text (Grade 8)': string | null;
   'Text (High School)': string | null;
-  texta: string | null;
+  Texta: string | null;
   'Translated Content': any;
   'Source Doc URL': string | null;
   slug: string | null;
@@ -97,7 +97,7 @@ export const useLessonData = (lessonId: string) => {
     
     // Fallback to other reading levels if not available
     if (!content) {
-      content = lesson['Text (Grade 5)'] || lesson['Text (Grade 3)'] || lesson['Text (Grade 8)'] || lesson['Text (High School)'] || lesson.text;
+      content = lesson['Text (Grade 5)'] || lesson['Text (Grade 3)'] || lesson['Text (Grade 8)'] || lesson['Text (High School)'] || lesson.Text;
     }
     
     console.log('Selected content length:', content?.length || 0);
