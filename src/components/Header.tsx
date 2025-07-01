@@ -1,18 +1,25 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import NotificationBell from '@/components/NotificationBell';
+import { Menu } from 'lucide-react';
 
 const Header = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     navigate('/');
+  };
+
+  const closeMobileMenu = () => {
+    setMobileMenuOpen(false);
   };
 
   return (
@@ -30,6 +37,7 @@ const Header = () => {
             </Link>
           </div>
 
+          {/* Desktop Navigation */}
           <nav className="hidden md:flex space-x-8">
             <Link
               to="/"
@@ -57,19 +65,72 @@ const Header = () => {
                 <NotificationBell />
                 <Link
                   to="/preferences"
-                  className="text-gray-500 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                  className="hidden md:block text-gray-500 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
                 >
                   Preferences
                 </Link>
-                <Button onClick={handleSignOut} variant="outline">
+                <Button onClick={handleSignOut} variant="outline" className="hidden md:flex">
                   Sign Out
                 </Button>
               </>
             ) : (
-              <Link to="/auth">
+              <Link to="/auth" className="hidden md:block">
                 <Button>Sign In</Button>
               </Link>
             )}
+            
+            {/* Mobile Menu Button */}
+            <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="sm" className="md:hidden p-2">
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-80">
+                <div className="flex flex-col space-y-4 mt-8">
+                  <Link
+                    to="/"
+                    className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-base font-medium"
+                    onClick={closeMobileMenu}
+                  >
+                    Home
+                  </Link>
+                  <Link
+                    to="/teacher/auth"
+                    className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-base font-medium"
+                    onClick={closeMobileMenu}
+                  >
+                    Teacher Portal
+                  </Link>
+                  <Link
+                    to="/admin/dashboard"
+                    className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-base font-medium"
+                    onClick={closeMobileMenu}
+                  >
+                    Admin
+                  </Link>
+                  
+                  {user ? (
+                    <>
+                      <Link
+                        to="/preferences"
+                        className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-base font-medium"
+                        onClick={closeMobileMenu}
+                      >
+                        Preferences
+                      </Link>
+                      <Button onClick={() => { handleSignOut(); closeMobileMenu(); }} variant="outline" className="mx-3">
+                        Sign Out
+                      </Button>
+                    </>
+                  ) : (
+                    <Link to="/auth" onClick={closeMobileMenu}>
+                      <Button className="mx-3 w-full">Sign In</Button>
+                    </Link>
+                  )}
+                </div>
+              </SheetContent>
+            </Sheet>
           </div>
         </div>
       </div>

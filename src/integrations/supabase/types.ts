@@ -1066,11 +1066,11 @@ export type Database = {
           Order: number | null
           slug: string | null
           "Source Doc URL": string | null
-          text: string | null
+          Text: string | null
           "Text (Grade 3)": string | null
           "Text (Grade 5)": string | null
           "Text (Grade 8)": string | null
-          texta: string | null
+          Texta: string | null
           Title: string | null
           Track: string | null
           "Translated Content": Json | null
@@ -1081,11 +1081,11 @@ export type Database = {
           Order?: number | null
           slug?: string | null
           "Source Doc URL"?: string | null
-          text?: string | null
+          Text?: string | null
           "Text (Grade 3)"?: string | null
           "Text (Grade 5)"?: string | null
           "Text (Grade 8)"?: string | null
-          texta?: string | null
+          Texta?: string | null
           Title?: string | null
           Track?: string | null
           "Translated Content"?: Json | null
@@ -1096,11 +1096,11 @@ export type Database = {
           Order?: number | null
           slug?: string | null
           "Source Doc URL"?: string | null
-          text?: string | null
+          Text?: string | null
           "Text (Grade 3)"?: string | null
           "Text (Grade 5)"?: string | null
           "Text (Grade 8)"?: string | null
-          texta?: string | null
+          Texta?: string | null
           Title?: string | null
           Track?: string | null
           "Translated Content"?: Json | null
