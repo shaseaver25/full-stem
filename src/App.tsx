@@ -10,6 +10,8 @@ import Auth from "./pages/Auth";
 import TrialPage from "./components/TrialPage";
 import ExcelCourse from "./pages/ExcelCourse";
 import WordCourse from "./pages/WordCourse";
+import PowerPointCourse from "./pages/PowerPointCourse";
+import OutlookCourse from "./pages/OutlookCourse";
 import LessonPage from "./pages/LessonPage";
 import UserPreferences from "./pages/UserPreferences";
 import NotFound from "./pages/NotFound";
@@ -42,6 +44,8 @@ const App = () => (
             <Route path="/trial" element={<TrialPage />} />
             <Route path="/course/excel" element={<ExcelCourse />} />
             <Route path="/course/word" element={<WordCourse />} />
+            <Route path="/course/powerpoint" element={<PowerPointCourse />} />
+            <Route path="/course/outlook" element={<OutlookCourse />} />
             <Route path="/lesson/:lessonId" element={<LessonPage />} />
             <Route path="/preferences" element={<UserPreferences />} />
             

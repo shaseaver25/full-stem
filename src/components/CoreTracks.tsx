@@ -20,9 +20,9 @@ const CoreTracks = () => {
     },
     {
       icon: <BarChart3 className="h-12 w-12 text-green-600" />,
-      title: "MOS Suite",
+      title: "Microsoft Office Suite",
       description: "Microsoft Office Specialist certification preparation courses.",
-      features: ["Excel Mastery", "Word Proficiency", "Real-world Projects", "Certification Prep"],
+      features: ["Excel Mastery", "Word Proficiency", "PowerPoint Design", "Outlook Management"],
       gradient: "from-green-500 to-green-600",
       bgGradient: "from-green-50 to-green-100",
       subTracks: [
@@ -35,6 +35,16 @@ const CoreTracks = () => {
           title: "Word Training",
           description: "Professional document creation and formatting skills.",
           route: "/course/word"
+        },
+        {
+          title: "PowerPoint Mastery",
+          description: "Create compelling presentations with advanced design techniques.",
+          route: "/course/powerpoint"
+        },
+        {
+          title: "Outlook Essentials",
+          description: "Email management, calendar, and productivity workflows.",
+          route: "/course/outlook"
         }
       ]
     },
