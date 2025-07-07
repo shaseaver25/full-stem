@@ -60,10 +60,12 @@ const CoreTracks = () => {
   ];
 
   const handleTrackClick = (track: any) => {
+    console.log('Track clicked:', track.title, 'Has subTracks:', !!track.subTracks);
     if (track.comingSoon) {
       return;
     }
     if (track.subTracks) {
+      console.log('Setting selected track:', track.title);
       setSelectedTrack(track);
     } else if (track.route) {
       navigate(track.route);
