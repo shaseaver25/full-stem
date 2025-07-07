@@ -1079,6 +1079,7 @@ export type Database = {
           Title: string | null
           Track: string | null
           "Translated Content": Json | null
+          video_url: string | null
         }
         Insert: {
           Description?: string | null
@@ -1094,6 +1095,7 @@ export type Database = {
           Title?: string | null
           Track?: string | null
           "Translated Content"?: Json | null
+          video_url?: string | null
         }
         Update: {
           Description?: string | null
@@ -1109,6 +1111,7 @@ export type Database = {
           Title?: string | null
           Track?: string | null
           "Translated Content"?: Json | null
+          video_url?: string | null
         }
         Relationships: []
       }
