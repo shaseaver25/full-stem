@@ -74,18 +74,30 @@ const LessonTemplateManager = () => {
         const values = line.split(',').map(v => v.trim().replace(/^"|"$/g, ''));
         const lessonData: any = {};
 
+        // Only process essential columns and skip empty values
+        const essentialColumns = ['Lesson ID', 'Title', 'Description', 'Track', 'Order', 'Text'];
+        
         headers.forEach((header, index) => {
-          lessonData[header] = values[index] || null;
+          const value = values[index]?.trim();
+          // Only add non-empty values or essential columns
+          if (value || essentialColumns.includes(header)) {
+            lessonData[header] = value || null;
+          }
         });
 
-        // Convert Lesson ID to number
+        // Convert Lesson ID to number (required)
         if (lessonData['Lesson ID']) {
           lessonData['Lesson ID'] = parseInt(lessonData['Lesson ID']);
         }
 
-        // Convert Order to number
+        // Convert Order to number (required)
         if (lessonData['Order']) {
           lessonData['Order'] = parseInt(lessonData['Order']);
+        }
+
+        // Skip row if missing essential data
+        if (!lessonData['Lesson ID'] || !lessonData['Title']) {
+          continue;
         }
 
         // Insert or update lesson in database
