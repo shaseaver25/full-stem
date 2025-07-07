@@ -7,6 +7,7 @@ import UserRoleManagement from './UserRoleManagement';
 import PermissionsMatrix from './PermissionsMatrix';
 import BackupManagement from './BackupManagement';
 import PerformanceMonitoring from './PerformanceMonitoring';
+import LessonTemplateManager from './LessonTemplateManager';
 
 interface UserRole {
   id: string;
@@ -240,6 +241,7 @@ const AdvancedAdminPanel = () => {
         <TabsList>
           <TabsTrigger value="roles">User Roles</TabsTrigger>
           <TabsTrigger value="permissions">Permissions</TabsTrigger>
+          <TabsTrigger value="templates">Lesson Templates</TabsTrigger>
           <TabsTrigger value="backups">Backups</TabsTrigger>
           <TabsTrigger value="performance">Performance</TabsTrigger>
         </TabsList>
@@ -254,6 +256,10 @@ const AdvancedAdminPanel = () => {
 
         <TabsContent value="permissions" className="space-y-4">
           <PermissionsMatrix permissions={permissions} />
+        </TabsContent>
+
+        <TabsContent value="templates" className="space-y-4">
+          <LessonTemplateManager />
         </TabsContent>
 
         <TabsContent value="backups" className="space-y-4">
