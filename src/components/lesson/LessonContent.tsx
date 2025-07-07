@@ -50,7 +50,7 @@ const LessonContent: React.FC<LessonContentProps> = ({
             {liveTranslatedContent && liveTranslationLanguage && (
               <Badge variant="outline" className="ml-2">
                 <Globe className="h-3 w-3 mr-1" />
-                Translation Available
+                {liveTranslationLanguage} Translation
               </Badge>
             )}
           </div>
@@ -62,29 +62,41 @@ const LessonContent: React.FC<LessonContentProps> = ({
       </CardHeader>
       <CardContent>
         <div className={`grid gap-6 ${liveTranslatedContent && liveTranslationLanguage ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1'}`}>
-          {/* English content - always shown */}
-          <div className="space-y-3">
-            <h3 className="font-semibold text-sm flex items-center gap-2">
-              English (Original)
-            </h3>
-            <div className="prose prose-sm max-w-none bg-white p-4 rounded-lg border shadow-sm">
-              <p className="whitespace-pre-wrap leading-relaxed text-gray-800">
+          {/* English content pane - always shown on left */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 mb-3">
+              <h3 className="font-semibold text-base text-primary">English (Primary Instruction)</h3>
+            </div>
+            <div className="prose prose-sm max-w-none bg-background p-6 rounded-lg border shadow-sm min-h-[400px]">
+              <div className="whitespace-pre-wrap leading-relaxed text-foreground">
                 {lessonContent}
-              </p>
+              </div>
+            </div>
+            {/* Accessibility features */}
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <span>📖 Screen reader compatible</span>
+              <span>•</span>
+              <span>🎯 IEP/504 accommodations supported</span>
             </div>
           </div>
 
-          {/* Translated content - only shown when available */}
+          {/* Translated content pane - only shown when translation is available */}
           {liveTranslatedContent && liveTranslationLanguage && (
-            <div className="space-y-3">
-              <h3 className="font-semibold text-sm flex items-center gap-2">
-                <Globe className="h-4 w-4" />
-                {liveTranslationLanguage} (Translation)
-              </h3>
-              <div className="prose prose-sm max-w-none bg-blue-50 p-4 rounded-lg border border-blue-200 shadow-sm">
-                <p className="whitespace-pre-wrap leading-relaxed text-gray-800">
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 mb-3">
+                <Globe className="h-4 w-4 text-blue-600" />
+                <h3 className="font-semibold text-base text-blue-600">{liveTranslationLanguage} (Language Support)</h3>
+              </div>
+              <div className="prose prose-sm max-w-none bg-blue-50 p-6 rounded-lg border border-blue-200 shadow-sm min-h-[400px]">
+                <div className="whitespace-pre-wrap leading-relaxed text-gray-800">
                   {liveTranslatedContent}
-                </p>
+                </div>
+              </div>
+              {/* EL support indicator */}
+              <div className="flex items-center gap-2 text-xs text-blue-600">
+                <span>🌍 English Learner Support</span>
+                <span>•</span>
+                <span>🗣️ Multilingual accessibility</span>
               </div>
             </div>
           )}
