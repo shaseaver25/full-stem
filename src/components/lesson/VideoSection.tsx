@@ -5,7 +5,7 @@ import { Play } from 'lucide-react';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 
 interface VideoSectionProps {
-  videoUrl: string;
+  videoUrl: string | null;
   title?: string;
 }
 
@@ -19,6 +19,11 @@ const VideoSection: React.FC<VideoSectionProps> = ({ videoUrl, title }) => {
     }
     return null;
   };
+
+  // Return null if no video URL is provided
+  if (!videoUrl) {
+    return null;
+  }
 
   const embedUrl = getYouTubeEmbedUrl(videoUrl);
 

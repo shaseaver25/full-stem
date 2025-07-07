@@ -76,6 +76,7 @@ export const useLessonPageLogic = (lessonId: string) => {
     lessonDescription,
     lessonContent,
     fullLessonText,
+    videoUrl: lesson?.video_url || null,
     updating,
     handleMarkComplete,
     toggleLessonView,

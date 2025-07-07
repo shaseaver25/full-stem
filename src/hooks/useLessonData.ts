@@ -20,6 +20,7 @@ interface LessonData {
   'Translated Content': any;
   'Source Doc URL': string | null;
   slug: string | null;
+  video_url: string | null;
 }
 
 interface UserProgress {

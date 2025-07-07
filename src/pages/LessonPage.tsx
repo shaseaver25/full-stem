@@ -32,6 +32,7 @@ const LessonPage = () => {
     lessonDescription,
     lessonContent,
     fullLessonText,
+    videoUrl,
     updating,
     handleMarkComplete,
     toggleLessonView,
@@ -72,12 +73,10 @@ const LessonPage = () => {
     );
   }
 
-  // Video URL for this specific lesson
-  const videoUrl = "https://youtu.be/c2dcRy1X9AA";
-
   console.log('Lesson data:', lesson);
   console.log('Full lesson text for read-aloud:', fullLessonText.substring(0, 200) + '...');
   console.log('Show personalized view:', showPersonalizedView);
+  console.log('Dynamic video URL:', videoUrl);
 
   return (
     <RealTimeTranslationProvider>
