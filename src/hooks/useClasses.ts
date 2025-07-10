@@ -80,6 +80,7 @@ export const useClasses = (publishedOnly: boolean = false) => {
     grade_level: string;
     subject: string;
     school_year?: string;
+    courses?: string[];
   }) => {
     if (!user || !profile) {
       toast({
@@ -114,12 +115,67 @@ export const useClasses = (publishedOnly: boolean = false) => {
         return false;
       }
 
+      // Create class-course relationships if courses were selected
+      if (classData.courses && classData.courses.length > 0) {
+        const classCourseData = classData.courses.map(track => ({
+          class_id: data.id,
+          track: track
+        }));
+
+        const { error: courseError } = await supabase
+          .from('class_courses')
+          .insert(classCourseData);
+
+        if (courseError) {
+          console.error('Error linking courses to class:', courseError);
+          // Don't fail the whole operation, just log the error
+        }
+      }
+
+      // Auto-populate lessons from selected courses
+      if (classData.courses && classData.courses.length > 0) {
+        try {
+          // Fetch lessons from selected tracks
+          const { data: lessonsData, error: lessonsError } = await supabase
+            .from('Lessons')
+            .select('*')
+            .in('Track', classData.courses)
+            .order('Order', { ascending: true });
+
+          if (!lessonsError && lessonsData && lessonsData.length > 0) {
+            // Create class lessons from the template lessons
+            const classLessonsData = lessonsData.map((lesson, index) => ({
+              class_id: data.id,
+              title: lesson.Title || `Lesson ${lesson['Lesson ID']}`,
+              description: lesson.Description || '',
+              objectives: lesson.Description ? [lesson.Description] : [],
+              materials: [],
+              instructions: lesson.Text || '',
+              duration: 60, // Default duration
+              order_index: index,
+            }));
+
+            const { error: insertLessonsError } = await supabase
+              .from('lessons')
+              .insert(classLessonsData);
+
+            if (insertLessonsError) {
+              console.error('Error creating lessons from courses:', insertLessonsError);
+            }
+          }
+        } catch (err) {
+          console.error('Error auto-populating lessons:', err);
+        }
+      }
+
       // Add the new class to the local state
       setClasses(prev => [data, ...prev]);
       
       toast({
         title: "Success!",
-        description: "Class created successfully.",
+        description: classData.courses && classData.courses.length > 0 
+          ? "Class created successfully with lessons from selected courses."
+          : "Class created successfully.",
       });
 
       return true;

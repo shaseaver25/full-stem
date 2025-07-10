@@ -330,6 +330,35 @@ export type Database = {
           },
         ]
       }
+      class_courses: {
+        Row: {
+          class_id: string
+          created_at: string
+          id: string
+          track: string
+        }
+        Insert: {
+          class_id: string
+          created_at?: string
+          id?: string
+          track: string
+        }
+        Update: {
+          class_id?: string
+          created_at?: string
+          id?: string
+          track?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "class_courses_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       class_lessons: {
         Row: {
           class_id: string

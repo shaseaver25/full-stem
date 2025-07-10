@@ -7,6 +7,7 @@ import BuildClassTabs from '@/components/build-class/BuildClassTabs';
 import { useClassCreation } from '@/hooks/useClassCreation';
 import { useBuildClassActions } from '@/hooks/useBuildClassActions';
 import { useClassApi } from '@/hooks/useClassApi';
+import { useClassCourses } from '@/hooks/useClassCourses';
 import { toast } from '@/hooks/use-toast';
 
 const BuildClassPage = () => {
@@ -69,6 +70,7 @@ const BuildClassPage = () => {
   );
 
   const { createClass, updateClass, useClassWithContent } = useClassApi();
+  const { classCourses } = useClassCourses(classId);
 
   // Load existing class data if editing
   const { data: existingClassData, isLoading } = useClassWithContent(classId || '');
@@ -180,6 +182,20 @@ const BuildClassPage = () => {
           onSave={handleSaveClass}
           isSaving={isSaving}
         />
+
+        {/* Show selected courses if any */}
+        {classCourses.length > 0 && (
+          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <h3 className="text-sm font-medium text-blue-900 mb-2">Selected Courses</h3>
+            <div className="flex flex-wrap gap-2">
+              {classCourses.map((classCourse) => (
+                <span key={classCourse.id} className="px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full">
+                  {classCourse.track}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
 
         <BuildClassTabs
           activeTab={activeTab}

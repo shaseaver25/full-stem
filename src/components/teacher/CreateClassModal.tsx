@@ -20,6 +20,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
+import { useCourses } from '@/hooks/useCourses';
 
 interface CreateClassModalProps {
   open: boolean;
@@ -30,11 +31,13 @@ interface CreateClassModalProps {
     grade_level: string;
     subject: string;
     school_year?: string;
+    courses?: string[];
   }) => Promise<boolean>;
 }
 
 const CreateClassModal = ({ open, onOpenChange, onClassCreated, createClass }: CreateClassModalProps) => {
   const { toast } = useToast();
+  const { courses, loading: coursesLoading } = useCourses();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
@@ -42,6 +45,7 @@ const CreateClassModal = ({ open, onOpenChange, onClassCreated, createClass }: C
     subjects: [] as string[],
     learningProfiles: [] as string[],
     studentCountEstimate: '',
+    selectedCourses: [] as string[],
   });
 
   const gradeLevels = ['K', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'];
@@ -63,6 +67,15 @@ const CreateClassModal = ({ open, onOpenChange, onClassCreated, createClass }: C
       learningProfiles: checked 
         ? [...prev.learningProfiles, profile]
         : prev.learningProfiles.filter(p => p !== profile)
+    }));
+  };
+
+  const handleCourseChange = (course: string, checked: boolean) => {
+    setFormData(prev => ({
+      ...prev,
+      selectedCourses: checked 
+        ? [...prev.selectedCourses, course]
+        : prev.selectedCourses.filter(c => c !== course)
     }));
   };
 
@@ -95,6 +108,7 @@ const CreateClassModal = ({ open, onOpenChange, onClassCreated, createClass }: C
         grade_level: formData.gradeLevel,
         subject: formData.subjects.join(', '),
         school_year: new Date().getFullYear().toString(),
+        courses: formData.selectedCourses,
       });
 
       if (success) {
@@ -105,6 +119,7 @@ const CreateClassModal = ({ open, onOpenChange, onClassCreated, createClass }: C
           subjects: [],
           learningProfiles: [],
           studentCountEstimate: '',
+          selectedCourses: [],
         });
 
         onOpenChange(false);
@@ -123,7 +138,7 @@ const CreateClassModal = ({ open, onOpenChange, onClassCreated, createClass }: C
         <DialogHeader>
           <DialogTitle>Create New Class</DialogTitle>
           <DialogDescription>
-            Set up a new class with student learning profiles and subject focus.
+            Set up a new class with student learning profiles, subject focus, and select from available courses.
           </DialogDescription>
         </DialogHeader>
 
@@ -202,6 +217,38 @@ const CreateClassModal = ({ open, onOpenChange, onClassCreated, createClass }: C
                 </div>
               ))}
             </div>
+          </div>
+
+          {/* Available Courses */}
+          <div className="space-y-3">
+            <Label className="text-sm font-medium">Available Courses (Optional)</Label>
+            <p className="text-xs text-muted-foreground">
+              Select pre-built courses to include in your class. These will auto-populate lessons that you can customize.
+            </p>
+            {coursesLoading ? (
+              <div className="text-sm text-muted-foreground">Loading courses...</div>
+            ) : courses.length > 0 ? (
+              <div className="grid grid-cols-1 gap-3">
+                {courses.map((course) => (
+                  <div key={course.track} className="flex items-center space-x-2 p-3 border rounded-lg">
+                    <Checkbox
+                      id={`course-${course.track}`}
+                      checked={formData.selectedCourses.includes(course.track)}
+                      onCheckedChange={(checked) => handleCourseChange(course.track, checked as boolean)}
+                      disabled={loading}
+                    />
+                    <div className="flex-1">
+                      <Label htmlFor={`course-${course.track}`} className="text-sm font-medium">
+                        {course.track}
+                      </Label>
+                      <p className="text-xs text-muted-foreground">{course.description}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-sm text-muted-foreground">No courses available at this time.</div>
+            )}
           </div>
 
           {/* Student Count Estimate */}
