@@ -94,16 +94,17 @@ const Hero = () => {
           </div>
 
           {/* Login Options Dropdown */}
-          {!user && (
-            <div className="mb-16 animate-fade-in">
-              <div className="bg-white/90 backdrop-blur-md rounded-2xl p-6 shadow-xl border border-gray-200/50 max-w-md mx-auto">
-                <h3 className="text-lg font-semibold text-gray-800 mb-4">
-                  Ready to get started?
-                </h3>
-                <LoginDropdown />
-              </div>
+          <div className="mb-16 animate-fade-in">
+            <div className="bg-white/90 backdrop-blur-md rounded-2xl p-6 shadow-xl border border-gray-200/50 max-w-md mx-auto">
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">
+                {user ? `Welcome back, ${user.email}!` : 'Ready to get started?'}
+              </h3>
+              {user && (
+                <p className="text-sm text-gray-600 mb-4">You can still access different portals:</p>
+              )}
+              <LoginDropdown />
             </div>
-          )}
+          </div>
 
           {/* Enhanced Stats with icons */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto text-center mb-16">
