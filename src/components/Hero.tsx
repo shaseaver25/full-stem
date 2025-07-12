@@ -1,8 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Play, Users, Award, Globe, Star } from "lucide-react";
 import { Link } from "react-router-dom";
+import LoginDropdown from "@/components/LoginDropdown";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Hero = () => {
+  const { user } = useAuth();
   const scrollToTracks = () => {
     const tracksSection = document.getElementById('core-tracks');
     if (tracksSection) {
@@ -89,6 +92,18 @@ const Hero = () => {
               </Button>
             </Link>
           </div>
+
+          {/* Login Options Dropdown */}
+          {!user && (
+            <div className="mb-16 animate-fade-in">
+              <div className="bg-white/90 backdrop-blur-md rounded-2xl p-6 shadow-xl border border-gray-200/50 max-w-md mx-auto">
+                <h3 className="text-lg font-semibold text-gray-800 mb-4">
+                  Ready to get started?
+                </h3>
+                <LoginDropdown />
+              </div>
+            </div>
+          )}
 
           {/* Enhanced Stats with icons */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto text-center mb-16">
