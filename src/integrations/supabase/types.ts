@@ -726,6 +726,39 @@ export type Database = {
           },
         ]
       }
+      developer_settings: {
+        Row: {
+          created_at: string
+          developer_id: string
+          id: string
+          ip_restrictions: unknown[] | null
+          production_access: boolean | null
+          staging_access: boolean | null
+          two_factor_enabled: boolean | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          developer_id: string
+          id?: string
+          ip_restrictions?: unknown[] | null
+          production_access?: boolean | null
+          staging_access?: boolean | null
+          two_factor_enabled?: boolean | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          developer_id?: string
+          id?: string
+          ip_restrictions?: unknown[] | null
+          production_access?: boolean | null
+          staging_access?: boolean | null
+          two_factor_enabled?: boolean | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       direct_messages: {
         Row: {
           attachment_urls: string[] | null
@@ -918,6 +951,45 @@ export type Database = {
             referencedColumns: ["Lesson ID"]
           },
         ]
+      }
+      impersonation_logs: {
+        Row: {
+          actions_performed: Json | null
+          created_at: string
+          developer_id: string
+          id: string
+          impersonated_role: string | null
+          impersonated_user_id: string | null
+          ip_address: unknown | null
+          session_end: string | null
+          session_start: string
+          user_agent: string | null
+        }
+        Insert: {
+          actions_performed?: Json | null
+          created_at?: string
+          developer_id: string
+          id?: string
+          impersonated_role?: string | null
+          impersonated_user_id?: string | null
+          ip_address?: unknown | null
+          session_end?: string | null
+          session_start?: string
+          user_agent?: string | null
+        }
+        Update: {
+          actions_performed?: Json | null
+          created_at?: string
+          developer_id?: string
+          id?: string
+          impersonated_role?: string | null
+          impersonated_user_id?: string | null
+          ip_address?: unknown | null
+          session_end?: string | null
+          session_start?: string
+          user_agent?: string | null
+        }
+        Relationships: []
       }
       individual_activities: {
         Row: {
@@ -1944,6 +2016,10 @@ export type Database = {
           _user_id: string
           _role: Database["public"]["Enums"]["app_role"]
         }
+        Returns: boolean
+      }
+      is_developer: {
+        Args: { _user_id?: string }
         Returns: boolean
       }
     }

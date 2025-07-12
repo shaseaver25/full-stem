@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { ImpersonationProvider } from "@/contexts/ImpersonationContext";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import TrialPage from "./components/TrialPage";
@@ -28,16 +29,19 @@ import AnalyticsDashboard from "./pages/AnalyticsDashboard";
 import ContentManagementPage from "./pages/ContentManagementPage";
 import ParentPortalPage from "./pages/ParentPortalPage";
 import AdvancedAdminPage from "./pages/AdvancedAdminPage";
+import DeveloperDashboard from "./pages/DeveloperDashboard";
+import DeveloperRoute from "./components/developer/DeveloperRoute";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
+      <ImpersonationProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
@@ -59,6 +63,16 @@ const App = () => (
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
             <Route path="/admin/build-class" element={<BuildClassPage />} />
             <Route path="/admin/advanced" element={<AdvancedAdminPage />} />
+            
+            {/* Developer Routes */}
+            <Route 
+              path="/dev" 
+              element={
+                <DeveloperRoute>
+                  <DeveloperDashboard />
+                </DeveloperRoute>
+              } 
+            />
             
             {/* Teacher Routes */}
             <Route path="/teacher/auth" element={<TeacherAuth />} />
@@ -115,7 +129,8 @@ const App = () => (
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
-      </TooltipProvider>
+        </TooltipProvider>
+      </ImpersonationProvider>
     </AuthProvider>
   </QueryClientProvider>
 );

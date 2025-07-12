@@ -5,11 +5,14 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useImpersonation } from '@/contexts/ImpersonationContext';
 import NotificationBell from '@/components/NotificationBell';
-import { Menu } from 'lucide-react';
+import ImpersonationBanner from '@/components/developer/ImpersonationBanner';
+import { Menu, Code } from 'lucide-react';
 
 const Header = () => {
   const { user } = useAuth();
+  const { isDeveloper } = useImpersonation();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -57,6 +60,15 @@ const Header = () => {
             >
               Admin
             </Link>
+            {isDeveloper && (
+              <Link
+                to="/dev"
+                className="text-red-500 hover:text-red-700 px-3 py-2 rounded-md text-sm font-medium flex items-center gap-1"
+              >
+                <Code className="h-4 w-4" />
+                Developer
+              </Link>
+            )}
           </nav>
 
           <div className="flex items-center space-x-4">
@@ -109,6 +121,16 @@ const Header = () => {
                   >
                     Admin
                   </Link>
+                  {isDeveloper && (
+                    <Link
+                      to="/dev"
+                      className="text-red-500 hover:text-red-700 px-3 py-2 rounded-md text-base font-medium flex items-center gap-2"
+                      onClick={closeMobileMenu}
+                    >
+                      <Code className="h-4 w-4" />
+                      Developer
+                    </Link>
+                  )}
                   
                   {user ? (
                     <>
