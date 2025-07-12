@@ -9,6 +9,7 @@ import { Plus, BookOpen, Users, Calendar, Clock } from 'lucide-react';
 import { useTeacherProfile } from '@/hooks/useTeacherProfile';
 import { useClasses } from '@/hooks/useClasses';
 import { useClassApi } from '@/hooks/useClassApi';
+import Header from '@/components/Header';
 
 const TeacherDashboard = () => {
   const { profile } = useTeacherProfile();
@@ -31,8 +32,10 @@ const TeacherDashboard = () => {
   }
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="min-h-screen bg-gray-50">
+      <Header />
+      <div className="p-6 space-y-6">
+        <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Teacher Dashboard</h1>
           <p className="text-gray-600">Manage your classes and view available content</p>
@@ -126,6 +129,7 @@ const TeacherDashboard = () => {
           )}
         </TabsContent>
       </Tabs>
+      </div>
     </div>
   );
 };

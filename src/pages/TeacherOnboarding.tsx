@@ -12,6 +12,7 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { CheckCircle, GraduationCap } from 'lucide-react';
+import Header from '@/components/Header';
 
 const TeacherOnboarding = () => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -79,8 +80,9 @@ const TeacherOnboarding = () => {
   const progress = (currentStep / 3) * 100;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-      <div className="max-w-2xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+      <Header />
+      <div className="max-w-2xl mx-auto p-4">
         <Card className="shadow-xl">
           <CardHeader className="text-center">
             <div className="mx-auto w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center mb-4">
