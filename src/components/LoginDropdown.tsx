@@ -84,17 +84,60 @@ const LoginDropdown = () => {
         </Link>
 
         {isDeveloper && (
-          <Link to="/dev">
-            <DropdownMenuItem className="flex items-center gap-3 p-4 rounded-lg cursor-pointer hover:bg-red-50 transition-colors">
-              <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
-                <Code className="h-5 w-5 text-red-600" />
-              </div>
-              <div>
-                <div className="font-semibold text-gray-900">Developer</div>
-                <div className="text-sm text-gray-600">Internal tools & debug</div>
-              </div>
-            </DropdownMenuItem>
-          </Link>
+          <>
+            <DropdownMenuSeparator className="my-2" />
+            <div className="px-2 py-1">
+              <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Developer Access</div>
+            </div>
+            
+            <Link to="/dev">
+              <DropdownMenuItem className="flex items-center gap-3 p-4 rounded-lg cursor-pointer hover:bg-red-50 transition-colors">
+                <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                  <Code className="h-5 w-5 text-red-600" />
+                </div>
+                <div>
+                  <div className="font-semibold text-gray-900">Dev Dashboard</div>
+                  <div className="text-sm text-gray-600">Internal tools & debug</div>
+                </div>
+              </DropdownMenuItem>
+            </Link>
+
+            <Link to="/teacher/auth">
+              <DropdownMenuItem className="flex items-center gap-3 p-3 rounded-lg cursor-pointer hover:bg-blue-50 transition-colors">
+                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                  <GraduationCap className="h-4 w-4 text-blue-600" />
+                </div>
+                <div>
+                  <div className="font-medium text-gray-900">Dev → Teacher Portal</div>
+                  <div className="text-xs text-gray-500">Login as teacher</div>
+                </div>
+              </DropdownMenuItem>
+            </Link>
+
+            <Link to="/auth">
+              <DropdownMenuItem className="flex items-center gap-3 p-3 rounded-lg cursor-pointer hover:bg-purple-50 transition-colors">
+                <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                  <UserCheck className="h-4 w-4 text-purple-600" />
+                </div>
+                <div>
+                  <div className="font-medium text-gray-900">Dev → Student Access</div>
+                  <div className="text-xs text-gray-500">Login as student</div>
+                </div>
+              </DropdownMenuItem>
+            </Link>
+
+            <Link to="/admin/dashboard">
+              <DropdownMenuItem className="flex items-center gap-3 p-3 rounded-lg cursor-pointer hover:bg-orange-50 transition-colors">
+                <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
+                  <Shield className="h-4 w-4 text-orange-600" />
+                </div>
+                <div>
+                  <div className="font-medium text-gray-900">Dev → Admin Access</div>
+                  <div className="text-xs text-gray-500">Login as admin</div>
+                </div>
+              </DropdownMenuItem>
+            </Link>
+          </>
         )}
       </DropdownMenuContent>
     </DropdownMenu>
