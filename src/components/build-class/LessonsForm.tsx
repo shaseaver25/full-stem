@@ -1,15 +1,18 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Video, Trash2 } from 'lucide-react';
+import { Plus, Video, Trash2, Upload } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Lesson, Video as VideoType } from '@/types/buildClassTypes';
+import LessonPlanUploader from './LessonPlanUploader';
+import LessonPreview from './LessonPreview';
 
 interface LessonsFormProps {
   lessons: Lesson[];
@@ -32,10 +35,59 @@ const LessonsForm: React.FC<LessonsFormProps> = ({
   removeVideoFromLesson,
   updateLessonVideo
 }) => {
+  const [parsedLesson, setParsedLesson] = useState<any>(null);
+
+  const handleLessonParsed = (lesson: any) => {
+    setParsedLesson(lesson);
+  };
+
+  const handleConfirmParsedLesson = (lesson: any) => {
+    // Convert parsed lesson to our lesson format
+    const newLesson: Partial<Lesson> = {
+      title: lesson.title,
+      description: lesson.description,
+      objectives: lesson.objectives,
+      videos: lesson.videos || [],
+      instructions: lesson.instructions,
+      duration: lesson.duration,
+      desmosEnabled: lesson.desmosEnabled,
+      desmosType: lesson.desmosType,
+      materials: lesson.components
+        .filter((c: any) => c.type === 'resources')
+        .map((c: any) => c.content.text || c.content.html || '')
+        .filter((text: string) => text.trim())
+    };
+
+    setCurrentLesson(newLesson);
+    setParsedLesson(null);
+  };
+
+  const handleCancelParsed = () => {
+    setParsedLesson(null);
+  };
+
+  if (parsedLesson) {
+    return (
+      <LessonPreview
+        lesson={parsedLesson}
+        onConfirm={handleConfirmParsedLesson}
+        onCancel={handleCancelParsed}
+      />
+    );
+  }
+
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      {/* Add New Lesson */}
-      <Card>
+    <div className="space-y-6">
+      <Tabs defaultValue="manual" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="manual">Manual Entry</TabsTrigger>
+          <TabsTrigger value="upload">Smart Upload</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="manual" className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Add New Lesson */}
+            <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Plus className="h-5 w-5" />
@@ -222,10 +274,17 @@ const LessonsForm: React.FC<LessonsFormProps> = ({
             {lessons.length === 0 && (
               <p className="text-gray-500 text-center py-8">No lessons added yet</p>
             )}
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </TabsContent>
+    
+    <TabsContent value="upload" className="space-y-6">
+      <LessonPlanUploader onLessonParsed={handleLessonParsed} />
+    </TabsContent>
+  </Tabs>
+</div>
   );
 };
 
