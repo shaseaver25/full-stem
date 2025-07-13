@@ -12,31 +12,32 @@ serve(async (req) => {
   }
 
   try {
-    const formData = await req.formData();
-    const file = formData.get('file') as File;
+    const { file, fileName, mimeType } = await req.json();
 
-    if (!file) {
+    if (!file || !fileName || !mimeType) {
       return new Response(
-        JSON.stringify({ error: 'No file provided' }),
+        JSON.stringify({ error: 'Missing file data, fileName, or mimeType' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
+    // Decode base64 file
+    const fileBytes = Uint8Array.from(atob(file), c => c.charCodeAt(0));
+
     let extractedText = '';
 
-    if (file.type === 'text/plain') {
-      extractedText = await file.text();
-    } else if (file.type === 'application/pdf') {
+    if (mimeType === 'text/plain') {
+      const decoder = new TextDecoder('utf-8');
+      extractedText = decoder.decode(fileBytes);
+    } else if (mimeType === 'application/pdf') {
       // For PDF files, we'll use a simple approach
       // In a production environment, you might want to use a proper PDF parsing library
-      const arrayBuffer = await file.arrayBuffer();
-      const uint8Array = new Uint8Array(arrayBuffer);
       
       // Simple text extraction - this is very basic and may not work for all PDFs
       // In production, consider using a proper PDF library or external service
       try {
         const decoder = new TextDecoder('utf-8');
-        extractedText = decoder.decode(uint8Array);
+        extractedText = decoder.decode(fileBytes);
         
         // Clean up the extracted text
         extractedText = extractedText
@@ -63,7 +64,7 @@ serve(async (req) => {
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
-    } else if (file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+    } else if (mimeType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
       // For DOCX files, we'll provide a helpful message
       // In production, you would use a proper DOCX parsing library
       return new Response(
