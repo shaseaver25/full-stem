@@ -124,6 +124,7 @@ export const useTeacherProfileData = () => {
         const newProfile = await createInitialProfile(userId);
         setProfile(newProfile);
       } else {
+        console.log('Profile found:', data);
         setProfile(data);
       }
     } catch (error) {

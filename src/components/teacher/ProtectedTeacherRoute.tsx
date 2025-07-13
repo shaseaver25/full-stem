@@ -48,8 +48,9 @@ const ProtectedTeacherRoute: React.FC<ProtectedTeacherRouteProps> = ({
       console.log('On onboarding page but already completed, redirecting to dashboard');
       return <Navigate to="/teacher/dashboard" replace />;
     }
-    // Otherwise, allow access to onboarding (whether profile exists or not)
-    console.log('Allowing access to onboarding page');
+    // If no profile exists, allow onboarding to create one
+    // If profile exists but not completed, allow onboarding to continue
+    console.log('Allowing access to onboarding page', { profile: !!profile, completed: profile?.onboarding_completed });
     return <>{children}</>;
   }
 
