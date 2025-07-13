@@ -14,10 +14,13 @@ import AdaptiveLearningEngine from '@/components/adaptive/AdaptiveLearningEngine
 import SmartTranslationWidget from '@/components/translation/SmartTranslationWidget';
 import { RealTimeTranslationProvider } from '@/components/translation/RealTimeTranslationProvider';
 import MobileOptimizedLayout from '@/components/layout/MobileOptimizedLayout';
+import ModularLessonView from '@/components/lesson/ModularLessonView';
 import { useLessonPageLogic } from '@/hooks/useLessonPageLogic';
+import { useGlobalSetting } from '@/hooks/useGlobalSettings';
 
 const LessonPage = () => {
   const { lessonId } = useParams<{ lessonId: string }>();
+  const { data: layoutSetting } = useGlobalSetting('lesson_view_mode');
   
   const {
     user,
@@ -78,6 +81,30 @@ const LessonPage = () => {
   console.log('Show personalized view:', showPersonalizedView);
   console.log('Dynamic video URL:', videoUrl);
 
+  const layoutMode = layoutSetting?.setting_value || 'scroll';
+  const useModularLayout = layoutMode === 'modular';
+
+  // Modular layout
+  if (useModularLayout) {
+    return (
+      <RealTimeTranslationProvider>
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
+          <Header />
+          <MobileOptimizedLayout>
+            <div className="max-w-6xl mx-auto px-4 py-8">
+              <ModularLessonView 
+                lessonId={lessonId || ''} 
+                lessonTitle={lessonTitle}
+                fullLessonText={fullLessonText}
+              />
+            </div>
+          </MobileOptimizedLayout>
+        </div>
+      </RealTimeTranslationProvider>
+    );
+  }
+
+  // Traditional scroll layout
   return (
     <RealTimeTranslationProvider>
       <MobileOptimizedLayout>

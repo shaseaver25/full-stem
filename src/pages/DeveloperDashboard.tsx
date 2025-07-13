@@ -8,6 +8,8 @@ import UserImpersonation from '@/components/developer/UserImpersonation';
 import ImpersonationLogs from '@/components/developer/ImpersonationLogs';
 import ImpersonationBanner from '@/components/developer/ImpersonationBanner';
 import LessonTemplateManager from '@/components/admin/LessonTemplateManager';
+import LessonViewModeToggle from '@/components/admin/LessonViewModeToggle';
+import LessonComponentManager from '@/components/admin/LessonComponentManager';
 import { useAuth } from '@/contexts/AuthContext';
 
 const DeveloperDashboard = () => {
@@ -71,6 +73,8 @@ const DeveloperDashboard = () => {
           <TabsContent value="content" className="space-y-6">
             <div className="space-y-6">
               <LessonTemplateManager />
+              <LessonViewModeToggle />
+              <LessonComponentManager />
               
               <div className="grid md:grid-cols-2 gap-6">
 

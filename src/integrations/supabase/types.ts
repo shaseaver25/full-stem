@@ -816,6 +816,33 @@ export type Database = {
           },
         ]
       }
+      global_settings: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          setting_key: string
+          setting_value: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          setting_key: string
+          setting_value: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          setting_key?: string
+          setting_value?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       grade_categories: {
         Row: {
           color: string | null
@@ -1032,6 +1059,56 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "classes"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      lesson_components: {
+        Row: {
+          component_type: string
+          content: Json
+          created_at: string
+          enabled: boolean | null
+          id: string
+          language_code: string | null
+          lesson_id: number
+          order: number
+          read_aloud: boolean | null
+          reading_level: number | null
+          updated_at: string
+        }
+        Insert: {
+          component_type: string
+          content?: Json
+          created_at?: string
+          enabled?: boolean | null
+          id?: string
+          language_code?: string | null
+          lesson_id: number
+          order?: number
+          read_aloud?: boolean | null
+          reading_level?: number | null
+          updated_at?: string
+        }
+        Update: {
+          component_type?: string
+          content?: Json
+          created_at?: string
+          enabled?: boolean | null
+          id?: string
+          language_code?: string | null
+          lesson_id?: number
+          order?: number
+          read_aloud?: boolean | null
+          reading_level?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lesson_components_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "Lessons"
+            referencedColumns: ["Lesson ID"]
           },
         ]
       }
