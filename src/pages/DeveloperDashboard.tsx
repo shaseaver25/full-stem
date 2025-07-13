@@ -7,6 +7,7 @@ import Header from '@/components/Header';
 import UserImpersonation from '@/components/developer/UserImpersonation';
 import ImpersonationLogs from '@/components/developer/ImpersonationLogs';
 import ImpersonationBanner from '@/components/developer/ImpersonationBanner';
+import LessonTemplateManager from '@/components/admin/LessonTemplateManager';
 import { useAuth } from '@/contexts/AuthContext';
 
 const DeveloperDashboard = () => {
@@ -68,34 +69,10 @@ const DeveloperDashboard = () => {
           </TabsContent>
 
           <TabsContent value="content" className="space-y-6">
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <FileText className="h-5 w-5" />
-                    Course Management
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-gray-600 mb-4">
-                    Upload, edit, and manage curriculum content across all courses and modules.
-                  </p>
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span>Excel Course</span>
-                      <Badge variant="outline">Active</Badge>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span>Word Course</span>
-                      <Badge variant="outline">Active</Badge>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span>PowerPoint Course</span>
-                      <Badge variant="outline">Active</Badge>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+            <div className="space-y-6">
+              <LessonTemplateManager />
+              
+              <div className="grid md:grid-cols-2 gap-6">
 
               <Card>
                 <CardHeader>
@@ -135,6 +112,7 @@ const DeveloperDashboard = () => {
                   <Badge variant="secondary">Coming Soon</Badge>
                 </CardContent>
               </Card>
+              </div>
             </div>
           </TabsContent>
 
