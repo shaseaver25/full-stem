@@ -22,6 +22,8 @@ const TeacherOnboarding = () => {
     subjects: [] as string[],
     years_experience: 0,
   });
+  const [customSubject, setCustomSubject] = useState('');
+  const [showCustomSubject, setShowCustomSubject] = useState(false);
   const { saveProfile, saving } = useTeacherProfile();
   const navigate = useNavigate();
 
@@ -33,7 +35,7 @@ const TeacherOnboarding = () => {
   const subjectOptions = [
     'Mathematics', 'Science', 'Technology', 'Engineering', 
     'Physics', 'Chemistry', 'Biology', 'Computer Science',
-    'Environmental Science', 'Robotics', 'Data Science'
+    'Environmental Science', 'Robotics', 'Data Science', 'Other'
   ];
 
   const handleGradeLevelChange = (grade: string, checked: boolean) => {
@@ -46,12 +48,37 @@ const TeacherOnboarding = () => {
   };
 
   const handleSubjectChange = (subject: string, checked: boolean) => {
+    if (subject === 'Other') {
+      setShowCustomSubject(checked);
+      if (!checked) {
+        setCustomSubject('');
+        // Remove any custom subject from the subjects array
+        setFormData(prev => ({
+          ...prev,
+          subjects: prev.subjects.filter(s => !subjectOptions.includes(s) || s === 'Other')
+        }));
+      }
+    }
+    
     setFormData(prev => ({
       ...prev,
       subjects: checked 
         ? [...prev.subjects, subject]
         : prev.subjects.filter(s => s !== subject)
     }));
+  };
+
+  const handleCustomSubjectChange = (value: string) => {
+    setCustomSubject(value);
+    if (value.trim()) {
+      setFormData(prev => ({
+        ...prev,
+        subjects: [
+          ...prev.subjects.filter(s => subjectOptions.includes(s)),
+          value.trim()
+        ]
+      }));
+    }
   };
 
   const handleNext = () => {
@@ -177,15 +204,30 @@ const TeacherOnboarding = () => {
                         />
                         <Label htmlFor={subject} className="text-sm">{subject}</Label>
                       </div>
-                    ))}
-                  </div>
-                  {formData.subjects.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mt-4">
-                      {formData.subjects.map((subject) => (
-                        <Badge key={subject} variant="secondary">{subject}</Badge>
-                      ))}
-                    </div>
-                  )}
+                     ))}
+                   </div>
+                   
+                   {/* Custom subject input when "Other" is selected */}
+                   {showCustomSubject && (
+                     <div className="mt-4">
+                       <Label htmlFor="custom-subject">Please specify:</Label>
+                       <Input
+                         id="custom-subject"
+                         value={customSubject}
+                         onChange={(e) => handleCustomSubjectChange(e.target.value)}
+                         placeholder="Enter your subject"
+                         className="mt-2"
+                       />
+                     </div>
+                   )}
+                   
+                   {formData.subjects.length > 0 && (
+                     <div className="flex flex-wrap gap-2 mt-4">
+                       {formData.subjects.map((subject) => (
+                         <Badge key={subject} variant="secondary">{subject}</Badge>
+                       ))}
+                     </div>
+                   )}
                 </div>
               )}
             </CardContent>
