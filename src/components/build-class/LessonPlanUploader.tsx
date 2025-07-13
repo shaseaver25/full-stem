@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { Upload, Download, FileText, Loader2 } from 'lucide-react';
 import { useDropzone } from 'react-dropzone';
+import { supabase } from '@/integrations/supabase/client';
 
 interface LessonComponent {
   type: string;
@@ -50,20 +51,22 @@ const LessonPlanUploader: React.FC<LessonPlanUploaderProps> = ({ onLessonParsed 
       } else if (file.type === 'application/pdf' || 
                  file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
         // For PDF and DOCX, we'll need to extract text
-        const formData = new FormData();
-        formData.append('file', file);
+        const fileBytes = await file.arrayBuffer();
+        const base64File = btoa(String.fromCharCode(...new Uint8Array(fileBytes)));
         
-        const response = await fetch('/api/extract-text', {
-          method: 'POST',
-          body: formData,
+        const { data, error } = await supabase.functions.invoke('extract-text', {
+          body: { 
+            file: base64File,
+            fileName: file.name,
+            mimeType: file.type
+          }
         });
         
-        if (!response.ok) {
+        if (error) {
           throw new Error('Failed to extract text from file');
         }
         
-        const result = await response.json();
-        content = result.text;
+        content = data.text;
       }
 
       setTextContent(content);
@@ -93,19 +96,15 @@ const LessonPlanUploader: React.FC<LessonPlanUploaderProps> = ({ onLessonParsed 
   const parseWithGPT = async (content: string) => {
     setIsParsing(true);
     try {
-      const response = await fetch('/api/parse-lesson-plan', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ content }),
+      const { data, error } = await supabase.functions.invoke('parse-lesson-plan', {
+        body: { content }
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to parse lesson plan');
+      if (error) {
+        throw new Error(error.message || 'Failed to parse lesson plan');
       }
 
-      const parsedLesson: ParsedLesson = await response.json();
+      const parsedLesson: ParsedLesson = data;
       onLessonParsed(parsedLesson);
       
       toast({
