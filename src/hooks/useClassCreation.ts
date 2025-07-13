@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { ClassData, Lesson, Assignment, ClassroomActivity, IndividualActivity, Resource, Video } from '@/types/buildClassTypes';
+import { ClassData, Lesson, Assignment, ClassroomActivity, IndividualActivity, Resource, Video, LessonComponent } from '@/types/buildClassTypes';
 
 export const useClassCreation = () => {
   const [classData, setClassData] = useState<ClassData>({
@@ -22,7 +22,7 @@ export const useClassCreation = () => {
   const [individualActivities, setIndividualActivities] = useState<IndividualActivity[]>([]);
   const [resources, setResources] = useState<Resource[]>([]);
 
-  const [currentLesson, setCurrentLesson] = useState<Partial<Lesson>>({
+  const [currentLesson, setCurrentLesson] = useState<Partial<Lesson> & { components?: LessonComponent[] }>({
     title: '',
     description: '',
     objectives: [''],
@@ -30,7 +30,8 @@ export const useClassCreation = () => {
     materials: [''],
     instructions: '',
     duration: 60,
-    order: lessons.length + 1
+    order: lessons.length + 1,
+    components: [],
   });
 
   const [currentAssignment, setCurrentAssignment] = useState<Partial<Assignment>>({

@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { Lesson, Assignment, ClassroomActivity, IndividualActivity, Resource } from '@/types/buildClassTypes';
+import { Lesson, Assignment, ClassroomActivity, IndividualActivity, Resource, LessonComponent } from '@/types/buildClassTypes';
 
 export const useBuildClassActions = (
   lessons: Lesson[],
@@ -8,12 +8,12 @@ export const useBuildClassActions = (
   classroomActivities: ClassroomActivity[],
   individualActivities: IndividualActivity[],
   resources: Resource[],
-  currentLesson: Partial<Lesson>,
+  currentLesson: Partial<Lesson> & { components?: LessonComponent[] },
   currentAssignment: Partial<Assignment>,
   currentClassroomActivity: Partial<ClassroomActivity>,
   currentIndividualActivity: Partial<IndividualActivity>,
   currentResource: Partial<Resource>,
-  setCurrentLesson: React.Dispatch<React.SetStateAction<Partial<Lesson>>>,
+  setCurrentLesson: React.Dispatch<React.SetStateAction<Partial<Lesson> & { components?: LessonComponent[] }>>,
   setCurrentAssignment: React.Dispatch<React.SetStateAction<Partial<Assignment>>>,
   setCurrentClassroomActivity: React.Dispatch<React.SetStateAction<Partial<ClassroomActivity>>>,
   setCurrentIndividualActivity: React.Dispatch<React.SetStateAction<Partial<IndividualActivity>>>,
@@ -21,7 +21,7 @@ export const useBuildClassActions = (
 ) => {
   const addLesson = () => {
     if (currentLesson.title && currentLesson.description) {
-      const newLesson = {
+      const newLesson: Lesson = {
         id: Date.now().toString(),
         title: currentLesson.title!,
         description: currentLesson.description!,
@@ -30,7 +30,10 @@ export const useBuildClassActions = (
         materials: currentLesson.materials || [''],
         instructions: currentLesson.instructions || '',
         duration: currentLesson.duration || 60,
-        order: currentLesson.order || lessons.length + 1
+        order: currentLesson.order || lessons.length + 1,
+        desmosEnabled: currentLesson.desmosEnabled,
+        desmosType: currentLesson.desmosType,
+        components: currentLesson.components || [],
       };
       lessons.push(newLesson);
       setCurrentLesson({
@@ -41,7 +44,8 @@ export const useBuildClassActions = (
         materials: [''],
         instructions: '',
         duration: 60,
-        order: lessons.length + 2
+        order: lessons.length + 2,
+        components: [],
       });
     }
   };

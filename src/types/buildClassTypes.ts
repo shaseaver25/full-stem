@@ -5,6 +5,13 @@ export interface Video {
   title: string;
 }
 
+export interface LessonComponent {
+  id: string;
+  type: string;
+  content: any;
+  order: number;
+}
+
 export interface Lesson {
   id: string;
   title: string;
@@ -17,6 +24,7 @@ export interface Lesson {
   order: number;
   desmosEnabled?: boolean;
   desmosType?: 'calculator' | 'geometry';
+  components?: LessonComponent[];
 }
 
 export interface Assignment {
