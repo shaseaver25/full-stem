@@ -140,6 +140,15 @@ const LessonPlanUploader: React.FC<LessonPlanUploaderProps> = ({ onLessonParsed 
     const templateContent = `LESSON PLAN TEMPLATE
 ===================
 
+IMPORTANT: Replace ALL bracketed sections [like this] with your actual content. 
+Do NOT keep the brackets - remove them entirely and write your content in their place.
+
+Example:
+WRONG: Lesson Title: [My Amazing Math Lesson]
+RIGHT: Lesson Title: My Amazing Math Lesson
+
+---
+
 Lesson Title: [Enter your lesson title here]
 
 Grade Level: [e.g., 5th Grade, High School, etc.]
@@ -171,12 +180,13 @@ Graphing Tool Needed? [Yes/No]
 Desmos Tool Type (if yes): [Graphing Calculator / Geometry Tool]
 
 INSTRUCTIONS:
-1. Fill out each section above
-2. Save this document
-3. Upload it to TailorEDU's lesson builder
-4. Review the auto-generated components
-5. Make any needed adjustments
-6. Publish your lesson!`;
+1. Replace ALL bracketed sections with your actual content
+2. Remove the brackets entirely - they are just placeholders
+3. Save this document
+4. Upload it to TailorEDU's lesson builder
+5. Review the auto-generated components
+6. Make any needed adjustments
+7. Publish your lesson!`;
 
     const blob = new Blob([templateContent], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
