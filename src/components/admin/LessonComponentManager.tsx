@@ -95,6 +95,7 @@ const LessonComponentManager: React.FC = () => {
     { value: 'formativeCheck', label: '✅ Quick Check' },
     { value: 'rubric', label: '📊 Rubric' },
     { value: 'checklist', label: '☑️ Checklist' },
+    { value: 'codingEditor', label: '💻 Code Editor' },
   ];
 
   const handleCreateComponent = async () => {

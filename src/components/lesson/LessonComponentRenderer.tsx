@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { LessonComponent } from '@/hooks/useLessonComponents';
 import VideoSection from './VideoSection';
+import CodeIDE from './CodeIDE';
 
 interface LessonComponentRendererProps {
   component: LessonComponent;
@@ -165,6 +166,9 @@ const LessonComponentRenderer: React.FC<LessonComponentRendererProps> = ({ compo
             )}
           </div>
         );
+
+      case 'codingEditor':
+        return <CodeIDE content={content} />;
 
       default:
         return (
