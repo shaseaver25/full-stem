@@ -60,6 +60,12 @@ const Header = () => {
             >
               Admin
             </Link>
+            <Link
+              to="/admin/course-editor"
+              className="text-gray-500 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+            >
+              Course Editor
+            </Link>
             {isDeveloper && (
               <Link
                 to="/dev"
@@ -120,6 +126,13 @@ const Header = () => {
                     onClick={closeMobileMenu}
                   >
                     Admin
+                  </Link>
+                  <Link
+                    to="/admin/course-editor"
+                    className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-base font-medium"
+                    onClick={closeMobileMenu}
+                  >
+                    Course Editor
                   </Link>
                   {isDeveloper && (
                     <Link

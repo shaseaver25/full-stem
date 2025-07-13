@@ -29,6 +29,7 @@ import AnalyticsDashboard from "./pages/AnalyticsDashboard";
 import ContentManagementPage from "./pages/ContentManagementPage";
 import ParentPortalPage from "./pages/ParentPortalPage";
 import AdvancedAdminPage from "./pages/AdvancedAdminPage";
+import CourseEditorPage from "./pages/CourseEditorPage";
 import DeveloperDashboard from "./pages/DeveloperDashboard";
 import DeveloperRoute from "./components/developer/DeveloperRoute";
 
@@ -62,6 +63,7 @@ const App = () => (
             {/* Admin Routes */}
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
             <Route path="/admin/build-class" element={<BuildClassPage />} />
+            <Route path="/admin/course-editor" element={<CourseEditorPage />} />
             <Route path="/admin/advanced" element={<AdvancedAdminPage />} />
             
             {/* Developer Routes */}
