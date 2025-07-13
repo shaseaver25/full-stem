@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,12 +6,17 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Save, Trash2 } from 'lucide-react';
+import { Plus, Save, Search, BookOpen } from 'lucide-react';
 import { useCreateLessonComponents, useLessonComponents } from '@/hooks/useLessonComponents';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 const LessonComponentManager: React.FC = () => {
   const [selectedLessonId, setSelectedLessonId] = useState<string>('');
+  const [lessonSearchQuery, setLessonSearchQuery] = useState<string>('');
+  const [availableLessons, setAvailableLessons] = useState<any[]>([]);
+  const [searchMode, setSearchMode] = useState<'search' | 'manual'>('search');
+  const [isSearching, setIsSearching] = useState(false);
   const [newComponent, setNewComponent] = useState({
     component_type: '',
     content: '{}',
@@ -24,6 +29,60 @@ const LessonComponentManager: React.FC = () => {
   const { data: components = [] } = useLessonComponents(selectedLessonId);
   const createComponents = useCreateLessonComponents();
   const { toast } = useToast();
+
+  // Search for lessons by title
+  const searchLessons = async (query: string) => {
+    if (!query.trim()) {
+      setAvailableLessons([]);
+      return;
+    }
+
+    setIsSearching(true);
+    try {
+      const { data, error } = await supabase
+        .from('Lessons')
+        .select('Lesson ID, Title, Track, Description')
+        .ilike('Title', `%${query}%`)
+        .limit(10);
+
+      if (error) throw error;
+      setAvailableLessons(data || []);
+    } catch (error) {
+      console.error('Error searching lessons:', error);
+      toast({
+        title: 'Search Error',
+        description: 'Failed to search lessons',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  // Handle lesson search input
+  const handleLessonSearch = (query: string) => {
+    setLessonSearchQuery(query);
+    searchLessons(query);
+  };
+
+  // Select a lesson from search results
+  const selectLesson = (lesson: any) => {
+    setSelectedLessonId(lesson['Lesson ID'].toString());
+    setLessonSearchQuery(`${lesson.Title} (ID: ${lesson['Lesson ID']})`);
+    setAvailableLessons([]);
+  };
+
+  // Get selected lesson info for display
+  const selectedLessonInfo = useMemo(() => {
+    if (!selectedLessonId) return null;
+    
+    // Try to find from search results first
+    const fromSearch = availableLessons.find(l => l['Lesson ID'].toString() === selectedLessonId);
+    if (fromSearch) return fromSearch;
+    
+    // If manually entered, just show the ID
+    return { 'Lesson ID': selectedLessonId, Title: 'Manual Entry' };
+  }, [selectedLessonId, availableLessons]);
 
   const componentTypes = [
     { value: 'video', label: '🎥 Video' },
@@ -107,15 +166,87 @@ const LessonComponentManager: React.FC = () => {
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Lesson Selection */}
-          <div>
-            <Label htmlFor="lesson-id">Lesson ID</Label>
-            <Input
-              id="lesson-id"
-              type="number"
-              placeholder="Enter lesson ID (e.g., 1, 2, 3...)"
-              value={selectedLessonId}
-              onChange={(e) => setSelectedLessonId(e.target.value)}
-            />
+          <div className="space-y-4">
+            <div className="flex items-center gap-4">
+              <Label>Lesson Selection Method</Label>
+              <div className="flex gap-2">
+                <Button
+                  variant={searchMode === 'search' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setSearchMode('search')}
+                >
+                  <Search className="h-4 w-4 mr-2" />
+                  Search by Title
+                </Button>
+                <Button
+                  variant={searchMode === 'manual' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setSearchMode('manual')}
+                >
+                  <BookOpen className="h-4 w-4 mr-2" />
+                  Manual ID
+                </Button>
+              </div>
+            </div>
+
+            {searchMode === 'search' ? (
+              <div className="space-y-2">
+                <Label htmlFor="lesson-search">Search Lessons by Title</Label>
+                <div className="relative">
+                  <Input
+                    id="lesson-search"
+                    placeholder="Type lesson title to search..."
+                    value={lessonSearchQuery}
+                    onChange={(e) => handleLessonSearch(e.target.value)}
+                  />
+                  {isSearching && (
+                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                    </div>
+                  )}
+                </div>
+                
+                {/* Search Results */}
+                {availableLessons.length > 0 && (
+                  <div className="border rounded-md max-h-40 overflow-y-auto">
+                    {availableLessons.map((lesson) => (
+                      <div
+                        key={lesson['Lesson ID']}
+                        className="p-3 hover:bg-muted cursor-pointer border-b last:border-b-0"
+                        onClick={() => selectLesson(lesson)}
+                      >
+                        <div className="font-medium">{lesson.Title}</div>
+                        <div className="text-sm text-muted-foreground">
+                          ID: {lesson['Lesson ID']} • Track: {lesson.Track || 'N/A'}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div>
+                <Label htmlFor="lesson-id">Lesson ID</Label>
+                <Input
+                  id="lesson-id"
+                  type="number"
+                  placeholder="Enter lesson ID (e.g., 1, 2, 3...)"
+                  value={selectedLessonId}
+                  onChange={(e) => setSelectedLessonId(e.target.value)}
+                />
+              </div>
+            )}
+
+            {/* Selected Lesson Display */}
+            {selectedLessonInfo && (
+              <div className="p-3 bg-muted rounded-lg">
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline">Selected Lesson</Badge>
+                  <span className="font-medium">{selectedLessonInfo.Title}</span>
+                  <Badge variant="secondary">ID: {selectedLessonInfo['Lesson ID']}</Badge>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Component Creation Form */}
