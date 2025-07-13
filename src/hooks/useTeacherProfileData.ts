@@ -118,14 +118,32 @@ export const useTeacherProfileData = () => {
         return;
       }
 
-      // If no profile exists, create one
-      if (!data) {
-        console.log('No profile found, creating initial profile...');
-        const newProfile = await createInitialProfile(userId);
-        setProfile(newProfile);
-      } else {
+      // If profile exists, use it
+      if (data) {
         console.log('Profile found:', data);
         setProfile(data);
+      } else {
+        // If no profile exists, try to create one only if it doesn't already exist
+        console.log('No profile found, attempting to create initial profile...');
+        try {
+          const newProfile = await createInitialProfile(userId);
+          setProfile(newProfile);
+        } catch (createError: any) {
+          // If creation fails due to unique constraint (profile already exists), 
+          // try fetching again
+          if (createError?.code === '23505') {
+            console.log('Profile already exists, refetching...');
+            const { data: existingData } = await supabase
+              .from('teacher_profiles')
+              .select('*')
+              .eq('user_id', userId)
+              .maybeSingle();
+            setProfile(existingData);
+          } else {
+            console.error('Failed to create profile:', createError);
+            setProfile(null);
+          }
+        }
       }
     } catch (error) {
       console.error('Error fetching teacher profile:', error);
