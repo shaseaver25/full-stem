@@ -5,7 +5,9 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Volume2, Book, Globe } from 'lucide-react';
 import { useLessonComponents } from '@/hooks/useLessonComponents';
+import { useLessonData } from '@/hooks/useLessonData';
 import LessonComponentRenderer from './LessonComponentRenderer';
+import DesmosSection from './DesmosSection';
 import ReadAloudButton from '@/components/ReadAloudButton';
 
 interface ModularLessonViewProps {
@@ -20,6 +22,7 @@ const ModularLessonView: React.FC<ModularLessonViewProps> = ({
   fullLessonText
 }) => {
   const { data: components = [], isLoading } = useLessonComponents(lessonId);
+  const { lesson } = useLessonData(lessonId);
   const [activeTab, setActiveTab] = useState<string>('');
 
   // Set first component as active when components load
@@ -184,6 +187,11 @@ const ModularLessonView: React.FC<ModularLessonViewProps> = ({
           </TabsContent>
         ))}
       </Tabs>
+
+      {/* Desmos Tool Section */}
+      {lesson?.desmos_enabled && lesson?.desmos_type && (
+        <DesmosSection desmosType={lesson.desmos_type} />
+      )}
     </div>
   );
 };

@@ -1198,6 +1198,8 @@ export type Database = {
           content: Json | null
           created_at: string | null
           description: string | null
+          desmos_enabled: boolean | null
+          desmos_type: string | null
           duration: number | null
           id: string
           materials: string[] | null
@@ -1211,6 +1213,8 @@ export type Database = {
           content?: Json | null
           created_at?: string | null
           description?: string | null
+          desmos_enabled?: boolean | null
+          desmos_type?: string | null
           duration?: number | null
           id?: string
           materials?: string[] | null
@@ -1224,6 +1228,8 @@ export type Database = {
           content?: Json | null
           created_at?: string | null
           description?: string | null
+          desmos_enabled?: boolean | null
+          desmos_type?: string | null
           duration?: number | null
           id?: string
           materials?: string[] | null

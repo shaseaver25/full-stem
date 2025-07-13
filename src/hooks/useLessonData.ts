@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
 import { supabase } from '@/integrations/supabase/client';
 
-interface LessonData {
+export interface LessonData {
   'Lesson ID': number;
   Title: string | null;
   Description: string | null;
@@ -21,6 +21,8 @@ interface LessonData {
   'Source Doc URL': string | null;
   slug: string | null;
   video_url: string | null;
+  desmos_enabled: boolean | null;
+  desmos_type: 'calculator' | 'geometry' | null;
 }
 
 interface UserProgress {

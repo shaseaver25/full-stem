@@ -15,6 +15,7 @@ import SmartTranslationWidget from '@/components/translation/SmartTranslationWid
 import { RealTimeTranslationProvider } from '@/components/translation/RealTimeTranslationProvider';
 import MobileOptimizedLayout from '@/components/layout/MobileOptimizedLayout';
 import ModularLessonView from '@/components/lesson/ModularLessonView';
+import DesmosSection from '@/components/lesson/DesmosSection';
 import { useLessonPageLogic } from '@/hooks/useLessonPageLogic';
 import { useGlobalSetting } from '@/hooks/useGlobalSettings';
 
@@ -157,6 +158,11 @@ const LessonPage = () => {
 
             {/* Assignment Section */}
             <AssignmentSection lessonId={lessonId || ''} />
+
+            {/* Desmos Tool Section */}
+            {lesson.desmos_enabled && lesson.desmos_type && (
+              <DesmosSection desmosType={lesson.desmos_type} />
+            )}
 
             {/* Lesson Status and Navigation */}
             <LessonStatusNav

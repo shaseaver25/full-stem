@@ -15,6 +15,8 @@ export interface Lesson {
   instructions: string;
   duration: number;
   order: number;
+  desmosEnabled?: boolean;
+  desmosType?: 'calculator' | 'geometry';
 }
 
 export interface Assignment {

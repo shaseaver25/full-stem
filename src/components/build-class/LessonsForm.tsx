@@ -7,6 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Video, Trash2 } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Lesson, Video as VideoType } from '@/types/buildClassTypes';
 
 interface LessonsFormProps {
@@ -142,6 +144,42 @@ const LessonsForm: React.FC<LessonsFormProps> = ({
               placeholder="Detailed lesson instructions"
               rows={4}
             />
+          </div>
+
+          {/* Desmos Configuration */}
+          <div className="space-y-4 border-t pt-4">
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="desmos-enabled"
+                checked={currentLesson.desmosEnabled || false}
+                onCheckedChange={(checked) => 
+                  setCurrentLesson({...currentLesson, desmosEnabled: !!checked})
+                }
+              />
+              <Label htmlFor="desmos-enabled" className="text-sm font-medium">
+                Enable Desmos Tool for Students
+              </Label>
+            </div>
+            
+            {currentLesson.desmosEnabled && (
+              <div className="space-y-2">
+                <Label>Select Tool Type</Label>
+                <Select
+                  value={currentLesson.desmosType || 'calculator'}
+                  onValueChange={(value: 'calculator' | 'geometry') => 
+                    setCurrentLesson({...currentLesson, desmosType: value})
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select Desmos tool type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="calculator">Graphing Calculator</SelectItem>
+                    <SelectItem value="geometry">Geometry Tool</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
           </div>
 
           <Button onClick={addLesson} className="w-full">
