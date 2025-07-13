@@ -48,11 +48,11 @@ export const useUpdateGlobalSetting = () => {
     mutationFn: async ({ key, value }: { key: string; value: string }) => {
       const { data, error } = await supabase
         .from('global_settings')
-        .upsert({
-          setting_key: key,
+        .update({
           setting_value: value,
           updated_at: new Date().toISOString(),
         })
+        .eq('setting_key', key)
         .select();
       
       if (error) throw error;
