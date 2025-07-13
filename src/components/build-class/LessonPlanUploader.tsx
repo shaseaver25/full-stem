@@ -96,11 +96,16 @@ const LessonPlanUploader: React.FC<LessonPlanUploaderProps> = ({ onLessonParsed 
   const parseWithGPT = async (content: string) => {
     setIsParsing(true);
     try {
+      console.log('Parsing content:', content.substring(0, 200) + '...');
+      
       const { data, error } = await supabase.functions.invoke('parse-lesson-plan', {
         body: { content }
       });
 
+      console.log('Parse response:', { data, error });
+
       if (error) {
+        console.error('Parse error:', error);
         throw new Error(error.message || 'Failed to parse lesson plan');
       }
 
@@ -115,7 +120,7 @@ const LessonPlanUploader: React.FC<LessonPlanUploaderProps> = ({ onLessonParsed 
       console.error('Error parsing with GPT:', error);
       toast({
         title: 'Parsing Error',
-        description: 'Failed to parse the lesson plan. Please check the format and try again.',
+        description: `Failed to parse the lesson plan: ${error instanceof Error ? error.message : 'Unknown error'}`,
         variant: 'destructive',
       });
     } finally {
