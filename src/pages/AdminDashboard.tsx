@@ -1,6 +1,8 @@
 
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
 import Header from '@/components/Header';
 import AdminSiteOverview from '@/components/admin/AdminSiteOverview';
 import AdminClassManagement from '@/components/admin/AdminClassManagement';
@@ -14,6 +16,7 @@ import { ClassPublisher } from '@/components/admin/ClassPublisher';
 import ContentLibrary from '@/components/content/ContentLibrary';
 import UserRoleManagement from '@/components/admin/UserRoleManagement';
 import AdvancedAdminPanel from '@/components/admin/AdvancedAdminPanel';
+import { Plus } from 'lucide-react';
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
@@ -24,8 +27,18 @@ const AdminDashboard = () => {
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-          <p className="text-gray-600">Manage your educational platform</p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
+              <p className="text-gray-600">Manage your educational platform</p>
+            </div>
+            <Link to="/admin/build-class">
+              <Button>
+                <Plus className="h-4 w-4 mr-2" />
+                Build Class
+              </Button>
+            </Link>
+          </div>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">

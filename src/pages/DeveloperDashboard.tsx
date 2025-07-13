@@ -1,8 +1,10 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Code, Users, FileText, Settings, Shield, Database } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Code, Users, FileText, Settings, Shield, Database, Plus } from 'lucide-react';
 import Header from '@/components/Header';
 import UserImpersonation from '@/components/developer/UserImpersonation';
 import ImpersonationLogs from '@/components/developer/ImpersonationLogs';
@@ -22,19 +24,29 @@ const DeveloperDashboard = () => {
       
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
-          <div className="flex items-center gap-3 mb-2">
-            <Code className="h-8 w-8 text-blue-600" />
-            <h1 className="text-3xl font-bold">Developer Dashboard</h1>
-            <Badge variant="destructive" className="bg-red-600">
-              Internal Use Only
-            </Badge>
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="flex items-center gap-3 mb-2">
+                <Code className="h-8 w-8 text-blue-600" />
+                <h1 className="text-3xl font-bold">Developer Dashboard</h1>
+                <Badge variant="destructive" className="bg-red-600">
+                  Internal Use Only
+                </Badge>
+              </div>
+              <p className="text-gray-600">
+                Full STEM Development Team - Curriculum Management & User Debugging
+              </p>
+              <p className="text-sm text-gray-500">
+                Logged in as: {user?.email}
+              </p>
+            </div>
+            <Link to="/admin/build-class">
+              <Button>
+                <Plus className="h-4 w-4 mr-2" />
+                Build Class
+              </Button>
+            </Link>
           </div>
-          <p className="text-gray-600">
-            Full STEM Development Team - Curriculum Management & User Debugging
-          </p>
-          <p className="text-sm text-gray-500">
-            Logged in as: {user?.email}
-          </p>
         </div>
 
         <Tabs defaultValue="impersonation" className="space-y-6">
