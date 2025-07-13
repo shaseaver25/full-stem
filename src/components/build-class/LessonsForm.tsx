@@ -13,6 +13,7 @@ import { Separator } from '@/components/ui/separator';
 import { Lesson, Video as VideoType } from '@/types/buildClassTypes';
 import LessonPlanUploader from './LessonPlanUploader';
 import LessonPreview from './LessonPreview';
+import { useToast } from '@/hooks/use-toast';
 
 interface LessonComponent {
   id: string;
@@ -42,6 +43,7 @@ const LessonsForm: React.FC<LessonsFormProps> = ({
   removeVideoFromLesson,
   updateLessonVideo
 }) => {
+  const { toast } = useToast();
   const [parsedLesson, setParsedLesson] = useState<any>(null);
   const [newComponent, setNewComponent] = useState({
     type: '',
@@ -65,7 +67,17 @@ const LessonsForm: React.FC<LessonsFormProps> = ({
   ];
 
   const addComponentToLesson = () => {
-    if (!newComponent.type || !newComponent.content.trim()) return;
+    console.log('Adding component:', { type: newComponent.type, content: newComponent.content });
+    
+    if (!newComponent.type || !newComponent.content.trim()) {
+      console.error('Missing component data:', { type: newComponent.type, content: newComponent.content });
+      toast({
+        title: 'Missing Information',
+        description: 'Please select a component type and enter content',
+        variant: 'destructive',
+      });
+      return;
+    }
 
     const component: LessonComponent = {
       id: `${Date.now()}-${Math.random()}`,
@@ -74,12 +86,23 @@ const LessonsForm: React.FC<LessonsFormProps> = ({
       order: currentLesson.components?.length || 0,
     };
 
-    setCurrentLesson({
-      ...currentLesson,
-      components: [...(currentLesson.components || []), component],
+    console.log('Created component:', component);
+
+    setCurrentLesson(prevLesson => {
+      const updatedLesson = {
+        ...prevLesson,
+        components: [...(prevLesson.components || []), component],
+      };
+      console.log('Updated lesson with component:', updatedLesson);
+      return updatedLesson;
     });
 
     setNewComponent({ type: '', content: '', order: 0 });
+    
+    toast({
+      title: 'Component Added',
+      description: `${newComponent.type} component added to lesson`,
+    });
   };
 
   const removeComponentFromLesson = (componentId: string) => {
