@@ -1,0 +1,6 @@
+-- Insert sample lesson components for Excel lesson 1 to test the system
+INSERT INTO lesson_components (lesson_id, component_type, content, "order", reading_level, language_code, read_aloud, enabled) VALUES
+(1, 'instructions', '{"title": "Getting Started with Excel", "content": "Welcome to Excel! This lesson will teach you the basics of navigating Microsoft Excel and understanding its core concepts."}', 0, 5, 'en', true, true),
+(1, 'video', '{"title": "Excel Introduction Video", "url": "https://www.youtube.com/watch?v=rwbho0CgEAE", "description": "A beginner-friendly introduction to Excel"}', 1, null, 'en', false, true),
+(1, 'activity', '{"title": "Practice Exercise", "content": "Try opening Excel and creating your first spreadsheet. Enter some sample data in cells A1, A2, and A3."}', 2, 5, 'en', true, true),
+(1, 'formativeCheck', '{"title": "Quick Check", "questions": [{"question": "What is a cell in Excel?", "answer": "A cell is one box in the grid where you can enter data"}]}', 3, 5, 'en', true, true);

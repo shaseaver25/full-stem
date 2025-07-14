@@ -32,12 +32,19 @@ const AdminDashboard = () => {
               <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
               <p className="text-gray-600">Manage your educational platform</p>
             </div>
-            <Link to="/admin/build-class">
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                Build Class
-              </Button>
-            </Link>
+            <div className="flex gap-2">
+              <Link to="/admin/course-editor">
+                <Button variant="outline">
+                  Course Editor
+                </Button>
+              </Link>
+              <Link to="/admin/build-class">
+                <Button>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Build Class
+                </Button>
+              </Link>
+            </div>
           </div>
         </div>
 
