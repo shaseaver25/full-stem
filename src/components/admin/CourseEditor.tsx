@@ -245,16 +245,18 @@ const CourseEditor = () => {
                   </div>
                   <Button
                     variant={editingLesson === lesson['Lesson ID'] ? 'secondary' : 'outline'}
-                    onClick={() => 
-                      setEditingLesson(
-                        editingLesson === lesson['Lesson ID'] ? null : lesson['Lesson ID']
-                      )
-                    }
+                    onClick={() => {
+                      const newEditingLesson = editingLesson === lesson['Lesson ID'] ? null : lesson['Lesson ID'];
+                      console.log('Edit button clicked for lesson:', lesson['Lesson ID']);
+                      console.log('Current editing lesson:', editingLesson);
+                      console.log('Setting editing lesson to:', newEditingLesson);
+                      setEditingLesson(newEditingLesson);
+                    }}
                   >
                     {editingLesson === lesson['Lesson ID'] ? (
                       <>
                         <X className="h-4 w-4 mr-2" />
-                        Close
+                        Close Editor
                       </>
                     ) : (
                       <>
@@ -272,11 +274,17 @@ const CourseEditor = () => {
 
       {/* Component Editor */}
       {editingLesson && (
-        <Card>
+        <Card className="border-2 border-primary/20 bg-primary/5">
           <CardHeader>
-            <CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <Edit className="h-5 w-5 text-primary" />
               Lesson Components - {lessons?.find(l => l['Lesson ID'] === editingLesson)?.Title}
             </CardTitle>
+            <p className="text-sm text-muted-foreground">
+              {lessonComponents === undefined ? 'Loading components...' : 
+               lessonComponents?.length === 0 ? 'No components found. Add your first component below.' :
+               `Found ${lessonComponents.length} component(s)`}
+            </p>
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Existing Components */}
