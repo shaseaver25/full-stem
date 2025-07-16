@@ -76,37 +76,78 @@ export const EnhancedReadAloud: React.FC<EnhancedReadAloudProps> = ({
     }
   }, [text, tokenizeText]);
 
-  // Generate audio using Google Cloud TTS (mock implementation - would need backend)
+  // Generate audio using Web Speech API (enhanced fallback)
   const generateAudio = async (textToSpeak: string, voice: string, speed: number) => {
     setIsLoading(true);
     try {
-      // For now, using Web Speech API as fallback
-      // In production, this would call your backend endpoint that uses Google Cloud TTS
+      // Ensure speech synthesis is ready
+      if (!('speechSynthesis' in window)) {
+        throw new Error('Speech synthesis not supported in this browser');
+      }
+
+      // Wait for voices to load if they haven't already
+      let voices = speechSynthesis.getVoices();
+      if (voices.length === 0) {
+        await new Promise(resolve => {
+          speechSynthesis.onvoiceschanged = () => {
+            voices = speechSynthesis.getVoices();
+            resolve(voices);
+          };
+        });
+      }
+
+      // Stop any existing speech
+      speechSynthesis.cancel();
+
       const utterance = new SpeechSynthesisUtterance(textToSpeak);
       utterance.rate = speed;
       utterance.volume = 1;
+      utterance.pitch = 1;
       
-      // Try to find a similar voice
-      const voices = speechSynthesis.getVoices();
+      // Try to find the best available voice
       const preferredVoice = voices.find(v => 
-        v.name.includes('Google') || v.name.includes('Enhanced') || v.lang.startsWith('en-US')
-      );
+        v.name.toLowerCase().includes('google') ||
+        v.name.toLowerCase().includes('enhanced') ||
+        v.name.toLowerCase().includes('neural') ||
+        (v.lang.startsWith('en-US') && !v.localService)
+      ) || voices.find(v => v.lang.startsWith('en-US')) || voices[0];
+      
       if (preferredVoice) {
         utterance.voice = preferredVoice;
+        console.log('Using voice:', preferredVoice.name);
       }
 
       return new Promise<void>((resolve, reject) => {
-        utterance.onend = () => resolve();
-        utterance.onerror = () => reject(new Error('Speech synthesis failed'));
+        utterance.onstart = () => {
+          console.log('Speech started');
+          setIsPlaying(true);
+          setIsPaused(false);
+        };
+
+        utterance.onend = () => {
+          console.log('Speech ended');
+          setIsPlaying(false);
+          setIsPaused(false);
+          resolve();
+        };
+
+        utterance.onerror = (event) => {
+          console.error('Speech error:', event);
+          setIsPlaying(false);
+          setIsPaused(false);
+          reject(new Error('Speech synthesis failed'));
+        };
+
         speechSynthesis.speak(utterance);
       });
     } catch (error) {
       console.error('Audio generation failed:', error);
       toast({
         title: "Audio Generation Failed",
-        description: "Using fallback voice synthesis",
+        description: error instanceof Error ? error.message : "Please try again",
         variant: "destructive"
       });
+      throw error;
     } finally {
       setIsLoading(false);
     }
@@ -332,6 +373,20 @@ export const EnhancedReadAloud: React.FC<EnhancedReadAloudProps> = ({
 
           {/* Additional Actions */}
           <div className="flex items-center gap-2">
+            <Button
+              onClick={() => {
+                // Quick test to ensure speech works
+                const testUtterance = new SpeechSynthesisUtterance('Testing audio');
+                testUtterance.volume = 0.5;
+                testUtterance.rate = 1;
+                speechSynthesis.speak(testUtterance);
+              }}
+              variant="secondary"
+              size="sm"
+              className="flex items-center gap-2"
+            >
+              🔊 Test Audio
+            </Button>
             <Button
               onClick={downloadTranscript}
               variant="outline"
