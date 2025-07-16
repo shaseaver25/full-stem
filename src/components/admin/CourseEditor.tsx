@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Edit, Save, X, BookOpen, Video, FileText, Activity } from 'lucide-react';
+import { Plus, Edit, Save, X, BookOpen, Video, FileText, Activity, AlertCircle } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 interface Course {
@@ -40,6 +40,20 @@ const CourseEditor = () => {
     enabled: true,
   });
   const queryClient = useQueryClient();
+  const editorRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to editor when editing lesson changes
+  useEffect(() => {
+    if (editingLesson && editorRef.current) {
+      setTimeout(() => {
+        editorRef.current?.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'start',
+          inline: 'nearest'
+        });
+      }, 100);
+    }
+  }, [editingLesson]);
 
   // Fetch available tracks/courses
   const { data: tracks } = useQuery({
@@ -74,16 +88,21 @@ const CourseEditor = () => {
   });
 
   // Fetch lesson components for a specific lesson
-  const { data: lessonComponents } = useQuery({
+  const { data: lessonComponents, isLoading: componentsLoading, error: componentsError } = useQuery({
     queryKey: ['lesson-components', editingLesson],
     queryFn: async () => {
+      console.log('Fetching components for lesson ID:', editingLesson);
       const { data, error } = await supabase
         .from('lesson_components')
         .select('*')
         .eq('lesson_id', editingLesson)
         .order('order');
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching components:', error);
+        throw error;
+      }
+      console.log('Fetched components:', data);
       return data;
     },
     enabled: !!editingLesson,
@@ -299,12 +318,15 @@ const CourseEditor = () => {
                   </div>
                   <Button
                     variant={editingLesson === lesson['Lesson ID'] ? 'secondary' : 'outline'}
+                    size="lg"
+                    className={editingLesson === lesson['Lesson ID'] ? 'bg-primary text-primary-foreground' : ''}
                     onClick={() => {
                       const newEditingLesson = editingLesson === lesson['Lesson ID'] ? null : lesson['Lesson ID'];
                       console.log('Edit button clicked for lesson:', lesson['Lesson ID']);
                       console.log('Current editing lesson:', editingLesson);
                       console.log('Setting editing lesson to:', newEditingLesson);
                       setEditingLesson(newEditingLesson);
+                      setEditingComponent(null); // Clear any component being edited
                     }}
                   >
                     {editingLesson === lesson['Lesson ID'] ? (
@@ -328,17 +350,32 @@ const CourseEditor = () => {
 
       {/* Component Editor */}
       {editingLesson && (
-        <Card className="border-2 border-primary/20 bg-primary/5">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+        <Card ref={editorRef} className="border-2 border-primary bg-primary/5 shadow-lg">
+          <CardHeader className="bg-primary/10">
+            <CardTitle className="flex items-center gap-2 text-lg">
               <Edit className="h-5 w-5 text-primary" />
-              Lesson Components - {lessons?.find(l => l['Lesson ID'] === editingLesson)?.Title}
+              Editing: {lessons?.find(l => l['Lesson ID'] === editingLesson)?.Title}
             </CardTitle>
-            <p className="text-sm text-muted-foreground">
-              {lessonComponents === undefined ? 'Loading components...' : 
-               lessonComponents?.length === 0 ? 'No components found. Add your first component below.' :
-               `Found ${lessonComponents.length} component(s)`}
-            </p>
+            <div className="flex items-center gap-2">
+              {componentsLoading && (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-primary border-t-transparent"></div>
+                  Loading components...
+                </div>
+              )}
+              {componentsError && (
+                <div className="flex items-center gap-2 text-sm text-destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  Error loading components: {componentsError.message}
+                </div>
+              )}
+              {!componentsLoading && !componentsError && (
+                <p className="text-sm text-muted-foreground">
+                  {lessonComponents?.length === 0 ? 'No components found. Add your first component below.' :
+                   `Found ${lessonComponents?.length} component(s)`}
+                </p>
+              )}
+            </div>
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Existing Components */}
