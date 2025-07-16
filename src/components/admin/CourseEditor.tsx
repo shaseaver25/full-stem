@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Edit, Save, X, BookOpen, Video, FileText, Activity, AlertCircle } from 'lucide-react';
@@ -237,7 +238,11 @@ const CourseEditor = () => {
 
   const handleAddComponent = () => {
     console.log('Add component clicked, newComponent:', newComponent);
-    if (!newComponent.component_type || !newComponent.content) {
+    const hasContent = typeof newComponent.content === 'string' 
+      ? newComponent.content.trim() 
+      : newComponent.content?.content?.trim();
+    
+    if (!newComponent.component_type || !hasContent) {
       toast({
         title: 'Missing Information',
         description: 'Please select a component type and enter content.',
@@ -450,10 +455,16 @@ const CourseEditor = () => {
                     
                     {/* Component content preview */}
                     <div className="text-sm text-muted-foreground bg-muted/30 p-2 rounded">
-                      {typeof component.content === 'string' 
-                        ? component.content.slice(0, 100) + (component.content.length > 100 ? '...' : '')
-                        : JSON.stringify(component.content).slice(0, 100) + '...'
-                      }
+                      {(() => {
+                        if (typeof component.content === 'string') {
+                          return component.content.slice(0, 100) + (component.content.length > 100 ? '...' : '');
+                        }
+                        if (component.content && typeof component.content === 'object' && 'content' in component.content) {
+                          const content = component.content.content as string;
+                          return content.replace(/<[^>]*>/g, '').slice(0, 100) + '...';
+                        }
+                        return JSON.stringify(component.content).slice(0, 100) + '...';
+                      })()}
                     </div>
                   </div>
                 ))}
@@ -510,14 +521,14 @@ const CourseEditor = () => {
 
                 <div className="space-y-2">
                   <Label>Content</Label>
-                  <Textarea
-                    value={typeof editingComponent.content === 'string' ? editingComponent.content : JSON.stringify(editingComponent.content, null, 2)}
-                    onChange={(e) => {
-                      // Store as string while editing - will be parsed on save
-                      setEditingComponent(prev => ({ ...prev!, content: e.target.value }))
+                  <RichTextEditor
+                    value={typeof editingComponent.content === 'string' ? editingComponent.content : 
+                           (editingComponent.content?.content || JSON.stringify(editingComponent.content, null, 2))}
+                    onChange={(value) => {
+                      // Store HTML content in the content property
+                      setEditingComponent(prev => ({ ...prev!, content: { content: value } }))
                     }}
                     placeholder="Enter component content..."
-                    rows={6}
                   />
                 </div>
 
@@ -580,13 +591,12 @@ const CourseEditor = () => {
 
               <div className="space-y-2">
                 <Label>Content</Label>
-                <Textarea
-                  value={newComponent.content as string}
-                  onChange={(e) =>
-                    setNewComponent(prev => ({ ...prev, content: e.target.value }))
+                <RichTextEditor
+                  value={typeof newComponent.content === 'string' ? newComponent.content : ''}
+                  onChange={(value) =>
+                    setNewComponent(prev => ({ ...prev, content: { content: value } }))
                   }
                   placeholder="Enter component content..."
-                  rows={4}
                 />
               </div>
 
