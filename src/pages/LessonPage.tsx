@@ -6,6 +6,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import Header from '@/components/Header';
 import LessonHeader from '@/components/lesson/LessonHeader';
 import LessonControls from '@/components/lesson/LessonControls';
+import EnhancedLessonControls from '@/components/lesson/EnhancedLessonControls';
 import LessonContent from '@/components/lesson/LessonContent';
 import LessonStatusNav from '@/components/lesson/LessonStatusNav';
 import VideoSection from '@/components/lesson/VideoSection';
@@ -139,8 +140,8 @@ const LessonPage = () => {
               autoTranslate={false}
             />
 
-            {/* Lesson Controls */}
-            <LessonControls
+            {/* Enhanced Lesson Controls with Advanced Read Aloud */}
+            <EnhancedLessonControls
               showPersonalizedView={showPersonalizedView}
               onToggleLessonView={toggleLessonView}
               fullLessonText={fullLessonText}
