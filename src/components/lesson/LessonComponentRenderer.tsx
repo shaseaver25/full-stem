@@ -27,7 +27,7 @@ const LessonComponentRenderer: React.FC<LessonComponentRendererProps> = ({ compo
       case 'instructions':
         return (
           <div className="prose max-w-none">
-            <div dangerouslySetInnerHTML={{ __html: content.html || content.text || '' }} />
+            <div dangerouslySetInnerHTML={{ __html: content.content || content.html || content.text || '' }} />
           </div>
         );
 
