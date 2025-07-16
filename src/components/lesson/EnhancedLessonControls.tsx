@@ -19,7 +19,7 @@ const EnhancedLessonControls: React.FC<EnhancedLessonControlsProps> = ({
   fullLessonText,
   lessonId,
 }) => {
-  const [showEnhancedReadAloud, setShowEnhancedReadAloud] = useState(false);
+  const [showEnhancedReadAloud, setShowEnhancedReadAloud] = useState(true);
 
   return (
     <div className="space-y-6">
