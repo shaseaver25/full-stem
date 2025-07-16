@@ -179,6 +179,21 @@ const CourseEditor = () => {
         console.error('Database update error:', error);
         throw error;
       }
+      
+      if (!data || data.length === 0) {
+        console.error('No rows were updated. This might be due to RLS policies or the row not existing.');
+        console.error('Component ID:', component.id);
+        console.error('Attempting to update with:', {
+          component_type: component.component_type,
+          content: parsedContent,
+          order: component.order,
+          language_code: component.language_code,
+          read_aloud: component.read_aloud,
+          enabled: component.enabled,
+        });
+        throw new Error('Update failed: No rows were affected');
+      }
+      
       console.log('Update successful, returned data:', data);
       return data;
     },
