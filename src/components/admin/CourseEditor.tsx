@@ -150,11 +150,22 @@ const CourseEditor = () => {
   // Update lesson component mutation
   const updateComponentMutation = useMutation({
     mutationFn: async (component: LessonComponent) => {
+      // Parse content if it's a string, otherwise use as-is
+      let parsedContent = component.content;
+      if (typeof component.content === 'string') {
+        try {
+          parsedContent = JSON.parse(component.content);
+        } catch {
+          // If it's not valid JSON, wrap it in a content object
+          parsedContent = { content: component.content };
+        }
+      }
+
       const { data, error } = await supabase
         .from('lesson_components')
         .update({
           component_type: component.component_type,
-          content: component.content,
+          content: parsedContent,
           order: component.order,
           language_code: component.language_code,
           read_aloud: component.read_aloud,
@@ -480,16 +491,10 @@ const CourseEditor = () => {
                 <div className="space-y-2">
                   <Label>Content</Label>
                   <Textarea
-                    value={typeof editingComponent.content === 'string' ? editingComponent.content : JSON.stringify(editingComponent.content)}
+                    value={typeof editingComponent.content === 'string' ? editingComponent.content : JSON.stringify(editingComponent.content, null, 2)}
                     onChange={(e) => {
-                      try {
-                        // Try to parse as JSON first, fallback to string
-                        const parsed = JSON.parse(e.target.value);
-                        setEditingComponent(prev => ({ ...prev!, content: parsed }))
-                      } catch {
-                        // If not valid JSON, store as string in an object format expected by the component
-                        setEditingComponent(prev => ({ ...prev!, content: { content: e.target.value } }))
-                      }
+                      // Store as string while editing - will be parsed on save
+                      setEditingComponent(prev => ({ ...prev!, content: e.target.value }))
                     }}
                     placeholder="Enter component content..."
                     rows={6}
