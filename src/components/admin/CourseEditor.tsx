@@ -170,11 +170,16 @@ const CourseEditor = () => {
           language_code: component.language_code,
           read_aloud: component.read_aloud,
           enabled: component.enabled,
+          updated_at: new Date().toISOString(),
         })
         .eq('id', component.id)
         .select();
       
-      if (error) throw error;
+      if (error) {
+        console.error('Database update error:', error);
+        throw error;
+      }
+      console.log('Update successful, returned data:', data);
       return data;
     },
     onSuccess: () => {
