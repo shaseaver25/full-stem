@@ -481,9 +481,16 @@ const CourseEditor = () => {
                   <Label>Content</Label>
                   <Textarea
                     value={typeof editingComponent.content === 'string' ? editingComponent.content : JSON.stringify(editingComponent.content)}
-                    onChange={(e) =>
-                      setEditingComponent(prev => ({ ...prev!, content: e.target.value }))
-                    }
+                    onChange={(e) => {
+                      try {
+                        // Try to parse as JSON first, fallback to string
+                        const parsed = JSON.parse(e.target.value);
+                        setEditingComponent(prev => ({ ...prev!, content: parsed }))
+                      } catch {
+                        // If not valid JSON, store as string in an object format expected by the component
+                        setEditingComponent(prev => ({ ...prev!, content: { content: e.target.value } }))
+                      }
+                    }}
                     placeholder="Enter component content..."
                     rows={6}
                   />
