@@ -30,6 +30,7 @@ interface LessonComponent {
 const CourseEditor = () => {
   const [selectedTrack, setSelectedTrack] = useState<string>('');
   const [editingLesson, setEditingLesson] = useState<number | null>(null);
+  const [editingComponent, setEditingComponent] = useState<LessonComponent | null>(null);
   const [newComponent, setNewComponent] = useState<Partial<LessonComponent>>({
     component_type: '',
     content: '',
@@ -127,6 +128,43 @@ const CourseEditor = () => {
     },
   });
 
+  // Update lesson component mutation
+  const updateComponentMutation = useMutation({
+    mutationFn: async (component: LessonComponent) => {
+      const { data, error } = await supabase
+        .from('lesson_components')
+        .update({
+          component_type: component.component_type,
+          content: component.content,
+          order: component.order,
+          language_code: component.language_code,
+          read_aloud: component.read_aloud,
+          enabled: component.enabled,
+        })
+        .eq('id', component.id)
+        .select();
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['lesson-components', editingLesson] });
+      setEditingComponent(null);
+      toast({
+        title: 'Component Updated',
+        description: 'Lesson component has been updated successfully.',
+      });
+    },
+    onError: (error) => {
+      console.error('Error updating component:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to update lesson component.',
+        variant: 'destructive',
+      });
+    },
+  });
+
   // Delete lesson component mutation
   const deleteComponentMutation = useMutation({
     mutationFn: async (componentId: string) => {
@@ -139,6 +177,7 @@ const CourseEditor = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['lesson-components', editingLesson] });
+      setEditingComponent(null);
       toast({
         title: 'Component Deleted',
         description: 'Lesson component has been removed.',
@@ -294,28 +333,126 @@ const CourseEditor = () => {
                 {lessonComponents.map((component) => (
                   <div
                     key={component.id}
-                    className="flex items-center justify-between p-4 border rounded-lg"
+                    className="p-4 border rounded-lg space-y-3"
                   >
-                    <div className="flex items-center gap-3">
-                      {getComponentIcon(component.component_type)}
-                      <div>
-                        <h5 className="font-medium capitalize">
-                          {component.component_type}
-                        </h5>
-                        <p className="text-sm text-muted-foreground">
-                          Order: {component.order}
-                        </p>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        {getComponentIcon(component.component_type)}
+                        <div>
+                          <h5 className="font-medium capitalize">
+                            {component.component_type}
+                          </h5>
+                          <p className="text-sm text-muted-foreground">
+                            Order: {component.order}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setEditingComponent(component)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => deleteComponentMutation.mutate(component.id)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
                       </div>
                     </div>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => deleteComponentMutation.mutate(component.id)}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
+                    
+                    {/* Component content preview */}
+                    <div className="text-sm text-muted-foreground bg-muted/30 p-2 rounded">
+                      {typeof component.content === 'string' 
+                        ? component.content.slice(0, 100) + (component.content.length > 100 ? '...' : '')
+                        : JSON.stringify(component.content).slice(0, 100) + '...'
+                      }
+                    </div>
                   </div>
                 ))}
+              </div>
+            )}
+
+            {/* Edit Component Form */}
+            {editingComponent && (
+              <div className="space-y-4 p-4 border-2 border-orange-200 rounded-lg bg-orange-50/50">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-semibold">Edit Component</h4>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setEditingComponent(null)}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Component Type</Label>
+                    <Select
+                      value={editingComponent.component_type}
+                      onValueChange={(value) =>
+                        setEditingComponent(prev => ({ ...prev!, component_type: value }))
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {componentTypes.map((type) => (
+                          <SelectItem key={type.value} value={type.value}>
+                            {type.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Order</Label>
+                    <Input
+                      type="number"
+                      value={editingComponent.order}
+                      onChange={(e) =>
+                        setEditingComponent(prev => ({ ...prev!, order: parseInt(e.target.value) || 0 }))
+                      }
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Content</Label>
+                  <Textarea
+                    value={typeof editingComponent.content === 'string' ? editingComponent.content : JSON.stringify(editingComponent.content)}
+                    onChange={(e) =>
+                      setEditingComponent(prev => ({ ...prev!, content: e.target.value }))
+                    }
+                    placeholder="Enter component content..."
+                    rows={6}
+                  />
+                </div>
+
+                <div className="flex gap-2">
+                  <Button
+                    onClick={() => updateComponentMutation.mutate(editingComponent)}
+                    disabled={updateComponentMutation.isPending}
+                    className="flex-1"
+                  >
+                    <Save className="h-4 w-4 mr-2" />
+                    Save Changes
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => setEditingComponent(null)}
+                  >
+                    Cancel
+                  </Button>
+                </div>
               </div>
             )}
 
