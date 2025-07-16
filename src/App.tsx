@@ -30,6 +30,7 @@ import ContentManagementPage from "./pages/ContentManagementPage";
 import ParentPortalPage from "./pages/ParentPortalPage";
 import AdvancedAdminPage from "./pages/AdvancedAdminPage";
 import CourseEditorPage from "./pages/CourseEditorPage";
+import ComponentsPage from "./pages/ComponentsPage";
 import DeveloperDashboard from "./pages/DeveloperDashboard";
 import DeveloperRoute from "./components/developer/DeveloperRoute";
 
@@ -56,6 +57,9 @@ const App = () => (
             
             {/* Content Management */}
             <Route path="/content" element={<ContentManagementPage />} />
+            
+            {/* Components Showcase */}
+            <Route path="/components" element={<ComponentsPage />} />
             
             {/* Parent Portal */}
             <Route path="/parent" element={<ParentPortalPage />} />
