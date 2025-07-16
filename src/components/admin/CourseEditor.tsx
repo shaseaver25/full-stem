@@ -186,6 +186,7 @@ const CourseEditor = () => {
   });
 
   const handleAddComponent = () => {
+    console.log('Add component clicked, newComponent:', newComponent);
     if (!newComponent.component_type || !newComponent.content) {
       toast({
         title: 'Missing Information',
@@ -195,7 +196,21 @@ const CourseEditor = () => {
       return;
     }
 
+    console.log('Creating component with data:', newComponent);
     createComponentMutation.mutate(newComponent as Omit<LessonComponent, 'id'>);
+  };
+
+  const handleUpdateComponent = () => {
+    if (!editingComponent) return;
+    console.log('Update component clicked, editingComponent:', editingComponent);
+    updateComponentMutation.mutate(editingComponent);
+  };
+
+  const handleDeleteComponent = (componentId: string) => {
+    console.log('Delete component clicked, componentId:', componentId);
+    if (confirm('Are you sure you want to delete this component?')) {
+      deleteComponentMutation.mutate(componentId);
+    }
   };
 
   const getComponentIcon = (type: string) => {
@@ -358,7 +373,7 @@ const CourseEditor = () => {
                         <Button
                           variant="destructive"
                           size="sm"
-                          onClick={() => deleteComponentMutation.mutate(component.id)}
+                          onClick={() => handleDeleteComponent(component.id)}
                         >
                           <X className="h-4 w-4" />
                         </Button>
@@ -439,7 +454,7 @@ const CourseEditor = () => {
 
                 <div className="flex gap-2">
                   <Button
-                    onClick={() => updateComponentMutation.mutate(editingComponent)}
+                    onClick={handleUpdateComponent}
                     disabled={updateComponentMutation.isPending}
                     className="flex-1"
                   >
