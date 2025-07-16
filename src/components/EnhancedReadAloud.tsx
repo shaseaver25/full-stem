@@ -177,7 +177,11 @@ export const EnhancedReadAloud: React.FC<EnhancedReadAloudProps> = ({
   }, [wordTokens, text.length, playbackSpeed]);
 
   const handlePlay = async () => {
+    console.log('HandlePlay called, isPaused:', isPaused, 'isPlaying:', isPlaying);
+    
     if (isPaused) {
+      // Resume from pause
+      speechSynthesis.resume();
       setIsPaused(false);
       setIsPlaying(true);
       startWordTracking();
@@ -185,17 +189,26 @@ export const EnhancedReadAloud: React.FC<EnhancedReadAloudProps> = ({
     }
 
     try {
+      console.log('Starting new playback');
       setIsPlaying(true);
       setCurrentWordIndex(0);
       
+      // Start word tracking first
       if (autoHighlight) {
         startWordTracking();
       }
       
+      // Then start audio
       await generateAudio(text, selectedVoice, playbackSpeed);
+      
+      console.log('Playback completed');
     } catch (error) {
       console.error('Playback failed:', error);
       setIsPlaying(false);
+      setCurrentWordIndex(-1);
+      if (timeUpdateIntervalRef.current) {
+        clearInterval(timeUpdateIntervalRef.current);
+      }
       toast({
         title: "Playback Failed",
         description: "Please try again or check your internet connection",
