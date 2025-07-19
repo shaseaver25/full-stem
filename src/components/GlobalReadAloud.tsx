@@ -109,13 +109,16 @@ const GlobalReadAloud: React.FC<GlobalReadAloudProps> = ({ className = '' }) => 
     return () => observer.disconnect();
   }, [extractPageText]);
 
+  console.log('GlobalReadAloud: Rendering component. hasTextContent:', hasTextContent, 'pageText length:', pageText.length);
+
   // Don't render if there's no substantial text content
   if (!hasTextContent) {
+    console.log('GlobalReadAloud: Not rendering - no text content detected');
     return null;
   }
 
   return (
-    <div className={`fixed bottom-4 right-4 z-50 ${className}`}>
+    <div className={`fixed bottom-4 right-4 z-[9999] ${className}`}>
       {/* Floating trigger button when minimized */}
       {!isVisible && (
         <Button
