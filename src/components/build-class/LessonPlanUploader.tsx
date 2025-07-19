@@ -217,81 +217,84 @@ INSTRUCTIONS:
         description: 'Text lesson plan template has been downloaded to your computer.',
       });
     } else {
-      // Create a rich text file that opens well in Word
-      const wordTemplateContent = `TAILOREDU LESSON PLAN TEMPLATE
+      // Create a proper RTF file that Word can open with formatting
+      const rtfContent = `{\\rtf1\\ansi\\deff0 {\\fonttbl {\\f0 Times New Roman;}}
+\\f0\\fs24
+{\\b\\fs32 TAILOREDU LESSON PLAN TEMPLATE}\\par
+\\par
+{\\b Replace ALL bracketed sections [like this] with your actual content.}\\par
+{\\b Remove the brackets entirely and write your content in their place.}\\par
+\\par
+{\\b Example:}\\par
+{\\cf1 WRONG:} Lesson Title: [My Amazing Math Lesson]\\par
+{\\cf2 RIGHT:} Lesson Title: My Amazing Math Lesson\\par
+\\par
+\\line\\par
+\\par
+{\\b\\fs26 Lesson Title:} {\\i [Enter your lesson title here]}\\par
+\\par
+{\\b\\fs26 Grade Level:} {\\i [e.g., 5th Grade, High School, etc.]}\\par
+\\par
+{\\b\\fs26 Subject:} {\\i [e.g., Mathematics, Science, Technology, etc.]}\\par
+\\par
+{\\b\\fs26 Duration:} {\\i [e.g., 50 minutes, 90 minutes, etc.]}\\par
+\\par
+{\\b\\fs26 Video Link (Optional):} {\\i [YouTube or other video URL]}\\par
+\\par
+{\\b\\fs26 Learning Objectives:}\\par
+\\bullet {\\i [First learning objective]}\\par
+\\bullet {\\i [Second learning objective]}\\par
+\\bullet {\\i [Third learning objective]}\\par
+\\par
+{\\b\\fs26 Written Instructions:}\\par
+{\\i [Use full sentences, steps, or directions for students. Be specific about what students should do during the lesson.]}\\par
+\\par
+{\\b\\fs26 Assignment Instructions:}\\par
+{\\i [Include submission details and task. Describe what students need to complete and how to submit it.]}\\par
+\\par
+{\\b\\fs26 Discussion Prompt:}\\par
+{\\i [Add a question or topic for class discussion]}\\par
+\\par
+{\\b\\fs26 Reflection Question (Optional):}\\par
+{\\i [Add a question for students to reflect on their learning]}\\par
+\\par
+{\\b\\fs26 Rubric (Optional):}\\par
+{\\i [Paste rubric or describe criteria for grading]}\\par
+\\par
+{\\b\\fs26 Additional Resources:}\\par
+{\\i [List any additional materials, websites, or resources students might need]}\\par
+\\par
+{\\b\\fs26 Formative Check / Quiz:}\\par
+{\\i [Paste sample questions or quiz outline to check student understanding]}\\par
+\\par
+{\\b\\fs26 Graphing Tool Needed?} {\\i [Yes/No]}\\par
+{\\b\\fs26 Desmos Tool Type (if yes):} {\\i [Graphing Calculator / Geometry Tool]}\\par
+\\par
+\\line\\par
+\\par
+{\\b\\fs28 INSTRUCTIONS:}\\par
+1. Replace ALL bracketed sections with your actual content\\par
+2. Remove the brackets entirely - they are just placeholders\\par
+3. Save this document\\par
+4. Upload it to TailorEDU's lesson builder\\par
+5. Review the auto-generated components\\par
+6. Make any needed adjustments\\par
+7. Publish your lesson!\\par
+}`;
 
-Replace ALL bracketed sections [like this] with your actual content.
-Remove the brackets entirely and write your content in their place.
-
-Example:
-WRONG: Lesson Title: [My Amazing Math Lesson]
-RIGHT: Lesson Title: My Amazing Math Lesson
-
-────────────────────────────────────────────────────
-
-Lesson Title: [Enter your lesson title here]
-
-Grade Level: [e.g., 5th Grade, High School, etc.]
-
-Subject: [e.g., Mathematics, Science, Technology, etc.]
-
-Duration: [e.g., 50 minutes, 90 minutes, etc.]
-
-Video Link (Optional): [YouTube or other video URL]
-
-Learning Objectives:
-• [First learning objective]
-• [Second learning objective] 
-• [Third learning objective]
-
-Written Instructions:
-[Use full sentences, steps, or directions for students. Be specific about what students should do during the lesson.]
-
-Assignment Instructions:
-[Include submission details and task. Describe what students need to complete and how to submit it.]
-
-Discussion Prompt:
-[Add a question or topic for class discussion]
-
-Reflection Question (Optional):
-[Add a question for students to reflect on their learning]
-
-Rubric (Optional):
-[Paste rubric or describe criteria for grading]
-
-Additional Resources (links, PDFs, etc.):
-[List any additional materials, websites, or resources students might need]
-
-Formative Check / Quiz:
-[Paste sample questions or quiz outline to check student understanding]
-
-Graphing Tool Needed? [Yes/No]
-Desmos Tool Type (if yes): [Graphing Calculator / Geometry Tool]
-
-────────────────────────────────────────────────────
-
-INSTRUCTIONS:
-1. Replace ALL bracketed sections with your actual content
-2. Remove the brackets entirely - they are just placeholders
-3. Save this document
-4. Upload it to TailorEDU's lesson builder
-5. Review the auto-generated components
-6. Make any needed adjustments
-7. Publish your lesson!`;
-
-      const blob = new Blob([wordTemplateContent], { type: 'text/plain' });
+      const blob = new Blob([rtfContent], { type: 'application/rtf' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'TailorEDU_Lesson_Plan_Template.txt';
+      a.download = 'TailorEDU_Lesson_Plan_Template.rtf';
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
 
       toast({
-        title: 'Template Downloaded',
-        description: 'Lesson plan template downloaded. You can open this file in Word or any text editor.',
+        title: 'RTF Template Downloaded',
+        description: 'Rich Text Format template downloaded. This will open in Word with formatting preserved.',
       });
     }
   };
@@ -322,7 +325,7 @@ INSTRUCTIONS:
                 </Button>
                 <Button onClick={() => downloadTemplate('docx')} variant="outline" size="sm">
                   <Download className="h-4 w-4 mr-2" />
-                  Word (.docx)
+                  Rich Text (.rtf)
                 </Button>
               </div>
             </div>
