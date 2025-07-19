@@ -22,81 +22,38 @@ const GlobalReadAloud: React.FC<GlobalReadAloudProps> = ({ className = '' }) => 
     if (isLessonPage) {
       let extractedText = '';
       
-      console.log('GlobalReadAloud: Looking for Instructions on lesson page');
+      // Look for "Instructions" text anywhere in the page
+      const pageText = document.body.textContent || '';
+      const instructionsIndex = pageText.toLowerCase().indexOf('instructions');
       
-      // First, look for Instructions heading and extract content after it
-      const allHeadings = document.querySelectorAll('h1, h2, h3, h4, h5, h6, .text-xl, .text-lg, .font-semibold, .font-bold');
-      console.log('GlobalReadAloud: Found headings:', allHeadings.length);
-      
-      for (const heading of allHeadings) {
-        const headingText = heading.textContent?.trim().toLowerCase() || '';
-        console.log('GlobalReadAloud: Checking heading:', headingText);
+      if (instructionsIndex !== -1) {
+        // Extract a substantial amount of text after "instructions"
+        const textAfterInstructions = pageText.substring(instructionsIndex + 12); // 12 = length of "instructions"
         
-        if (headingText.includes('instructions')) {
-          console.log('GlobalReadAloud: Found Instructions heading!');
-          // Found the Instructions heading, now get content after it
-          let currentElement = heading.nextElementSibling;
-          
-          while (currentElement) {
-            // Skip navigation and control elements
-            const excludeClasses = ['nav', 'header', 'footer', 'button', 'control', 'menu', 'tabs-list'];
-            const hasExcludedClass = excludeClasses.some(cls => 
-              currentElement.className?.toLowerCase().includes(cls)
-            );
-            
-            if (!hasExcludedClass) {
-              const text = currentElement.textContent || '';
-              if (text.trim().length > 10) {
-                extractedText += text.trim() + ' ';
-              }
-            }
-            
-            currentElement = currentElement.nextElementSibling;
-          }
-          
-          if (extractedText.trim().length > 50) {
-            break;
-          }
+        // Clean up the text - remove excessive whitespace and take first 2000 characters
+        const cleanedText = textAfterInstructions
+          .replace(/\s+/g, ' ') // Replace multiple whitespace with single space
+          .trim()
+          .substring(0, 2000); // Limit length
+        
+        if (cleanedText.length > 100) {
+          extractedText = cleanedText;
         }
       }
       
-      // If no Instructions heading found, look in active tab panels for Instructions text
+      // Fallback: If no Instructions found, look for any substantial content in active tab
       if (!extractedText) {
-        console.log('GlobalReadAloud: No Instructions heading found, checking tab panels');
-        const tabPanels = document.querySelectorAll('[role="tabpanel"]');
-        console.log('GlobalReadAloud: Found tab panels:', tabPanels.length);
-        
-        for (const panel of tabPanels) {
-          const allText = panel.textContent || '';
-          const instructionsIndex = allText.toLowerCase().indexOf('instructions');
-          
-          if (instructionsIndex !== -1) {
-            console.log('GlobalReadAloud: Found Instructions text in tab panel');
-            // Extract text after "instructions"
-            const textAfterInstructions = allText.substring(instructionsIndex + 12); // 12 = length of "instructions"
-            if (textAfterInstructions.trim().length > 50) {
-              extractedText = textAfterInstructions.trim();
-              break;
-            }
-          }
-        }
-      }
-      
-      // If still no Instructions found, fall back to active tab content for debugging
-      if (!extractedText) {
-        console.log('GlobalReadAloud: No Instructions found, falling back to active tab content');
         const activeTabPanel = document.querySelector('[role="tabpanel"][data-state="active"]');
         if (activeTabPanel) {
           const text = activeTabPanel.textContent || '';
-          console.log('GlobalReadAloud: Active tab content length:', text.length);
-          if (text.trim().length > 100) {
-            extractedText = text.trim();
+          const cleanedText = text.replace(/\s+/g, ' ').trim();
+          if (cleanedText.length > 100) {
+            extractedText = cleanedText.substring(0, 2000);
           }
         }
       }
       
-      console.log('GlobalReadAloud: Final extracted text length:', extractedText.length);
-      return extractedText.trim();
+      return extractedText;
     }
     
     // Original logic for non-lesson pages
