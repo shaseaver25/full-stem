@@ -6,26 +6,31 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Function to create a basic DOCX file structure
-function createDocxTemplate(content: string): Uint8Array {
-  // This is a simplified DOCX generation
-  // In production, you would use a proper DOCX library
+// Function to create a proper RTF file that preserves formatting
+function createRtfTemplate(content: string): Uint8Array {
+  // RTF (Rich Text Format) is more reliable than trying to create DOCX without proper libraries
+  const rtfHeader = `{\\rtf1\\ansi\\deff0 {\\fonttbl {\\f0 Times New Roman;}}\\f0\\fs24 `;
+  const rtfFooter = `}`;
   
-  const xmlContent = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
-  <w:body>
-    ${content.split('\n').map(line => `
-    <w:p>
-      <w:r>
-        <w:t>${line.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</w:t>
-      </w:r>
-    </w:p>`).join('')}
-  </w:body>
-</w:document>`;
-
-  // Convert to bytes (simplified approach)
+  // Convert plain text content to RTF format with proper formatting
+  let rtfContent = content
+    // Escape RTF special characters
+    .replace(/\\/g, '\\\\')
+    .replace(/\{/g, '\\{')
+    .replace(/\}/g, '\\}')
+    // Convert formatting
+    .replace(/^TAILOREDU LESSON PLAN TEMPLATE$/gm, '{\\b\\fs28 TAILOREDU LESSON PLAN TEMPLATE}\\par\\par')
+    .replace(/^([A-Z][A-Z\s]+):$/gm, '{\\b $1:}\\par')
+    .replace(/^- (.+)$/gm, '\\bullet $1\\par')
+    .replace(/^\[(.+)\]$/gm, '{\\i [$1]}')
+    .replace(/\[([^\]]+)\]/g, '{\\i [$1]}')
+    // Convert line breaks
+    .replace(/\n/g, '\\par\n');
+  
+  const fullRtf = rtfHeader + rtfContent + rtfFooter;
+  
   const encoder = new TextEncoder();
-  return encoder.encode(xmlContent);
+  return encoder.encode(fullRtf);
 }
 
 serve(async (req) => {
@@ -110,17 +115,17 @@ For best results, be as detailed and specific as possible in each section.`;
       );
     }
 
-    // Generate the DOCX content
-    const docxBytes = createDocxTemplate(content);
+    // Generate the RTF content
+    const rtfBytes = createRtfTemplate(content);
     
     // Convert to base64 for transmission
-    const base64Content = btoa(String.fromCharCode(...docxBytes));
+    const base64Content = btoa(String.fromCharCode(...rtfBytes));
 
     return new Response(
       JSON.stringify({ 
         docxContent: base64Content,
-        fileName: 'TailorEDU_Lesson_Plan_Template.docx',
-        mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        fileName: 'TailorEDU_Lesson_Plan_Template.rtf',
+        mimeType: 'application/rtf'
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
