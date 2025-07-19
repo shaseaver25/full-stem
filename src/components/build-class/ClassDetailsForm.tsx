@@ -42,12 +42,12 @@ const ClassDetailsForm: React.FC<ClassDetailsFormProps> = ({ classData, onClassD
               <SelectTrigger>
                 <SelectValue placeholder="Select subject" />
               </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="excel">Excel</SelectItem>
-                <SelectItem value="data-science">Data Science</SelectItem>
-                <SelectItem value="programming">Programming</SelectItem>
-                <SelectItem value="business">Business</SelectItem>
-                <SelectItem value="math">Mathematics</SelectItem>
+              <SelectContent className="bg-white z-50">
+                <SelectItem value="science">Science</SelectItem>
+                <SelectItem value="math">Math</SelectItem>
+                <SelectItem value="workforce">Workforce</SelectItem>
+                <SelectItem value="technology">Technology</SelectItem>
+                <SelectItem value="engineering">Engineering</SelectItem>
               </SelectContent>
             </Select>
           </div>
