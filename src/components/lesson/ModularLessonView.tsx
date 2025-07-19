@@ -8,6 +8,7 @@ import { useLessonComponents } from '@/hooks/useLessonComponents';
 import { useLessonData } from '@/hooks/useLessonData';
 import LessonComponentRenderer from './LessonComponentRenderer';
 import DesmosSection from './DesmosSection';
+import GlobalReadAloud from '@/components/GlobalReadAloud';
 
 interface ModularLessonViewProps {
   lessonId: string;
@@ -135,6 +136,9 @@ const ModularLessonView: React.FC<ModularLessonViewProps> = ({
             </TabsTrigger>
           ))}
         </TabsList>
+
+        {/* Global Read Aloud positioned below tab bar */}
+        <GlobalReadAloud />
 
         {components.map((component) => (
           <TabsContent key={component.id} value={component.id} className="mt-6">
