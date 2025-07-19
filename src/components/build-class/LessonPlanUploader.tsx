@@ -217,42 +217,46 @@ INSTRUCTIONS:
         description: 'Text lesson plan template has been downloaded to your computer.',
       });
     } else {
-      // Download proper DOCX file
+      // Download RTF file that opens perfectly in Word
       try {
-        const response = await supabase.functions.invoke('generate-docx', {
-          body: {},
-          headers: { 'Content-Type': 'application/json' }
-        });
+        const response = await fetch(
+          'https://irxzpsvzlihqitlicoql.supabase.co/functions/v1/generate-docx',
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlyeHpwc3Z6bGlocWl0bGljb3FsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA1MTEyMjIsImV4cCI6MjA2NjA4NzIyMn0.929IMktVJDlCZbuQYl57ipod6V96P3PcDxrCoLwrqCw`,
+            },
+            body: JSON.stringify({}),
+          }
+        );
 
-        if (response.error) {
-          throw new Error('Failed to generate DOCX template');
+        if (!response.ok) {
+          throw new Error('Failed to generate template');
         }
 
-        // The response should be the actual file data
-        const docxData = response.data;
+        // Get the file as a blob
+        const blob = await response.blob();
         
-        // Create blob and download
-        const blob = new Blob([docxData], { 
-          type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' 
-        });
+        // Create download
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = 'TailorEDU_Lesson_Plan_Template.docx';
+        a.download = 'TailorEDU_Lesson_Plan_Template.rtf';
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
 
         toast({
-          title: 'DOCX Template Downloaded',
-          description: 'Microsoft Word lesson plan template has been downloaded. This file will open cleanly in Word with proper formatting.',
+          title: 'Word Template Downloaded',
+          description: 'RTF template downloaded. This file opens perfectly in Microsoft Word with all formatting preserved.',
         });
       } catch (error) {
-        console.error('Error downloading DOCX template:', error);
+        console.error('Error downloading template:', error);
         toast({
           title: 'Download Error',
-          description: 'Failed to download DOCX template. Please try the text version instead.',
+          description: 'Failed to download template. Please try the text version instead.',
           variant: 'destructive',
         });
       }
