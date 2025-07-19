@@ -106,6 +106,16 @@ const LessonPlanUploader: React.FC<LessonPlanUploaderProps> = ({ onLessonParsed 
 
       if (error) {
         console.error('Parse error:', error);
+        
+        // Handle specific error types from the edge function
+        if (error.message?.includes('Rate limit exceeded')) {
+          throw new Error('OpenAI rate limit exceeded. Please wait a moment and try again.');
+        }
+        
+        if (error.message?.includes('API key is invalid')) {
+          throw new Error('OpenAI API configuration issue. Please contact support.');
+        }
+        
         throw new Error(error.message || 'Failed to parse lesson plan');
       }
 

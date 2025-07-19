@@ -92,7 +92,26 @@ Return ONLY the JSON object, no additional text or markdown formatting.`;
     });
 
     if (!response.ok) {
-      throw new Error(`OpenAI API error: ${response.statusText}`);
+      const errorData = await response.json().catch(() => ({}));
+      
+      if (response.status === 429) {
+        return new Response(
+          JSON.stringify({ 
+            error: 'Rate limit exceeded. Please wait a moment and try again.',
+            retryAfter: response.headers.get('retry-after') || '60'
+          }),
+          { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      
+      if (response.status === 401) {
+        return new Response(
+          JSON.stringify({ error: 'OpenAI API key is invalid or missing' }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      
+      throw new Error(`OpenAI API error: ${response.statusText} - ${errorData.error?.message || 'Unknown error'}`);
     }
 
     const data = await response.json();
