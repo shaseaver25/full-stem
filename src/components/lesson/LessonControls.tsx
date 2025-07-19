@@ -2,7 +2,6 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import TouchFriendlyButton from '@/components/ui/TouchFriendlyButton';
-import ReadAloudToggler from '@/components/ReadAloudToggler';
 
 interface LessonControlsProps {
   showPersonalizedView: boolean;
@@ -29,10 +28,6 @@ const LessonControls: React.FC<LessonControlsProps> = ({
                 Listen to the entire lesson content including title, description, and main content.
               </p>
             </div>
-            <ReadAloudToggler
-              lessonText={fullLessonText}
-              lessonId={lessonId}
-            />
           </div>
         </CardContent>
       </Card>

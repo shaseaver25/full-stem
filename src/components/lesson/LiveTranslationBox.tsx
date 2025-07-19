@@ -7,7 +7,6 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Globe, Loader2, Languages, X } from 'lucide-react';
 import { useLiveTranslation } from '@/hooks/useLiveTranslation';
-import ReadAloudButton from '@/components/ReadAloudButton';
 
 interface LiveTranslationBoxProps {
   originalContent: string;
@@ -135,10 +134,6 @@ const LiveTranslationBox: React.FC<LiveTranslationBoxProps> = ({
                 Translated to {currentTargetLanguage}
               </Badge>
               <div className="flex items-center gap-2">
-                <ReadAloudButton 
-                  text={fullTranslatedText}
-                  className="flex-shrink-0"
-                />
                 <Button 
                   variant="outline" 
                   size="sm"

@@ -4,7 +4,6 @@ import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import Header from '@/components/Header';
 import EnhancedReadAloud from '@/components/EnhancedReadAloud';
-import ReadAloudButton from '@/components/ReadAloudButton';
 import HighlightedTextReader from '@/components/HighlightedTextReader';
 import { Sparkles, Volume2, Mic } from 'lucide-react';
 
@@ -68,24 +67,23 @@ const ComponentsPage = () => {
             </CardContent>
           </Card>
 
-          {/* Basic Read Aloud Button */}
-          <Card className="shadow-lg">
+          {/* Legacy Read Aloud Notice */}
+          <Card className="shadow-lg border-dashed">
             <CardHeader>
               <div className="flex items-center gap-3">
-                <Volume2 className="h-6 w-6 text-blue-600" />
-                <CardTitle className="text-2xl">Basic Read Aloud Button</CardTitle>
-                <Badge variant="outline">Legacy</Badge>
+                <Volume2 className="h-6 w-6 text-muted-foreground" />
+                <CardTitle className="text-2xl text-muted-foreground">Basic Read Aloud Button</CardTitle>
+                <Badge variant="outline">Removed</Badge>
               </div>
               <CardDescription>
-                Simple text-to-speech button using browser's built-in speech synthesis.
+                The basic read-aloud button has been replaced with the enhanced global version. Use the floating button in the top-right corner of any page for advanced text-to-speech features.
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                <div className="p-4 bg-muted/50 rounded-lg">
-                  <p className="mb-4">{shortText}</p>
-                  <ReadAloudButton text={shortText} />
-                </div>
+              <div className="p-4 bg-muted/30 rounded-lg text-center">
+                <p className="text-muted-foreground">
+                  This component has been removed in favor of the global Enhanced Read Aloud widget.
+                </p>
               </div>
             </CardContent>
           </Card>
@@ -123,7 +121,7 @@ const ComponentsPage = () => {
                       <th className="text-left p-3 font-semibold">Feature</th>
                       <th className="text-center p-3 font-semibold">Enhanced Read Aloud</th>
                       <th className="text-center p-3 font-semibold">Highlighted Reader</th>
-                      <th className="text-center p-3 font-semibold">Basic Button</th>
+                      <th className="text-center p-3 font-semibold text-muted-foreground">Basic Button (Removed)</th>
                     </tr>
                   </thead>
                   <tbody>

@@ -3,7 +3,6 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Globe, BookOpen } from 'lucide-react';
-import ReadAloudButton from '@/components/ReadAloudButton';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
 
 interface AdaptiveContentBoxProps {
@@ -21,7 +20,7 @@ const AdaptiveContentBox: React.FC<AdaptiveContentBoxProps> = ({
 }) => {
   const { preferences } = useUserPreferences();
   const enableTranslation = preferences?.['Enable Translation View'];
-  const enableReadAloud = preferences?.['Enable Read-Aloud'];
+  const enableReadAloud = false; // Removed - using global enhanced read aloud
   const userReadingLevel = preferences?.['Reading Level'] || 'Grade 5';
   const preferredLanguage = preferences?.['Preferred Language'];
 
@@ -53,12 +52,6 @@ const AdaptiveContentBox: React.FC<AdaptiveContentBoxProps> = ({
                 {translatedContent ? 'Translation Available' : 'Translation Enabled'}
               </Badge>
             )}
-            {enableReadAloud && (
-              <ReadAloudButton 
-                text={shouldShowTranslation ? fullTranslatedText : fullContentText}
-                className="flex-shrink-0"
-              />
-            )}
           </div>
         </div>
       </CardHeader>
@@ -69,12 +62,6 @@ const AdaptiveContentBox: React.FC<AdaptiveContentBoxProps> = ({
               <div className="flex items-center gap-2 flex-wrap">
                 <h3 className="font-semibold text-sm">English</h3>
                 <Badge variant="outline" className="text-xs">Original</Badge>
-                {enableReadAloud && (
-                  <ReadAloudButton 
-                    text={fullContentText}
-                    className="ml-auto"
-                  />
-                )}
               </div>
               <div className="prose prose-sm max-w-none bg-white p-4 rounded-lg border shadow-sm">
                 <p className="whitespace-pre-wrap leading-relaxed text-gray-800">
@@ -87,12 +74,6 @@ const AdaptiveContentBox: React.FC<AdaptiveContentBoxProps> = ({
                 <Globe className="h-4 w-4" />
                 <h3 className="font-semibold text-sm">{preferredLanguage}</h3>
                 <Badge variant="outline" className="text-xs">Translation</Badge>
-                {enableReadAloud && (
-                  <ReadAloudButton 
-                    text={fullTranslatedText}
-                    className="ml-auto"
-                  />
-                )}
               </div>
               <div className="prose prose-sm max-w-none bg-blue-50 p-4 rounded-lg border border-blue-200 shadow-sm">
                 <p className="whitespace-pre-wrap leading-relaxed text-gray-800">

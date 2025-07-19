@@ -4,7 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { BookOpen, Globe } from 'lucide-react';
 import AdaptiveContentBox from './AdaptiveContentBox';
-import ReadAloudButton from '@/components/ReadAloudButton';
 
 interface LessonContentProps {
   showPersonalizedView: boolean;
@@ -54,10 +53,6 @@ const LessonContent: React.FC<LessonContentProps> = ({
               </Badge>
             )}
           </div>
-          <ReadAloudButton 
-            text={liveTranslatedContent && liveTranslationLanguage ? fullTranslatedText : fullEnglishText}
-            className="flex-shrink-0"
-          />
         </CardTitle>
       </CardHeader>
       <CardContent>

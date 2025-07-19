@@ -4,7 +4,6 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Card } from '@/components/ui/card';
 import { Eye, EyeOff, Volume2, VolumeX, Sparkles } from 'lucide-react';
-import EnhancedReadAloud from '../EnhancedReadAloud';
 
 interface EnhancedLessonControlsProps {
   showPersonalizedView: boolean;
@@ -19,7 +18,7 @@ const EnhancedLessonControls: React.FC<EnhancedLessonControlsProps> = ({
   fullLessonText,
   lessonId,
 }) => {
-  const [showEnhancedReadAloud, setShowEnhancedReadAloud] = useState(true);
+  const [showEnhancedReadAloud, setShowEnhancedReadAloud] = useState(false); // Disabled - using global enhanced read aloud
 
   return (
     <div className="space-y-6">
@@ -77,30 +76,15 @@ const EnhancedLessonControls: React.FC<EnhancedLessonControlsProps> = ({
           </div>
           
           <Switch
-            checked={showEnhancedReadAloud}
-            onCheckedChange={setShowEnhancedReadAloud}
-            aria-label="Toggle enhanced read aloud"
+            checked={false}
+            disabled={true}
+            aria-label="Enhanced read aloud (now global)"
           />
         </div>
 
-        {showEnhancedReadAloud ? (
-          <EnhancedReadAloud
-            text={fullLessonText}
-            autoHighlight={true}
-            showControls={true}
-            theme="light"
-            className="border-0 p-0"
-          />
-        ) : (
-          <div className="text-sm text-muted-foreground p-4 text-center border border-dashed rounded-lg">
-            <VolumeX className="h-8 w-8 mx-auto mb-2 text-muted-foreground/50" />
-            Enable enhanced read aloud to access natural-sounding voice synthesis
-            with word-by-word highlighting and advanced controls.
-            <div className="mt-2 text-xs">
-              Features: Google WaveNet voices, adjustable speed, transcript download
-            </div>
-          </div>
-        )}
+        <div className="bg-muted/50 p-3 rounded-lg text-sm text-muted-foreground">
+          Enhanced Read Aloud is now available globally via the floating button in the top-right corner of any page.
+        </div>
       </Card>
     </div>
   );

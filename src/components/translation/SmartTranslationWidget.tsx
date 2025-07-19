@@ -17,7 +17,6 @@ import {
 } from 'lucide-react';
 import { useRealTimeTranslation } from './RealTimeTranslationProvider';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
-import ReadAloudButton from '@/components/ReadAloudButton';
 
 interface SmartTranslationWidgetProps {
   content: string;
@@ -218,10 +217,6 @@ const SmartTranslationWidget: React.FC<SmartTranslationWidgetProps> = ({
                 {selectedLangData?.name} Translation
               </CardTitle>
               <div className="flex items-center gap-2">
-                <ReadAloudButton
-                  text={translatedText}
-                  className="flex-shrink-0"
-                />
                 <Button
                   variant="outline"
                   size="sm"

@@ -8,7 +8,6 @@ import { useLessonComponents } from '@/hooks/useLessonComponents';
 import { useLessonData } from '@/hooks/useLessonData';
 import LessonComponentRenderer from './LessonComponentRenderer';
 import DesmosSection from './DesmosSection';
-import ReadAloudButton from '@/components/ReadAloudButton';
 
 interface ModularLessonViewProps {
   lessonId: string;
@@ -107,7 +106,6 @@ const ModularLessonView: React.FC<ModularLessonViewProps> = ({
           </p>
         </div>
         <div className="flex gap-2">
-          <ReadAloudButton text={fullLessonText} />
           <Button variant="outline" size="sm">
             <Globe className="h-4 w-4 mr-2" />
             Translate
@@ -171,12 +169,6 @@ const ModularLessonView: React.FC<ModularLessonViewProps> = ({
 
                   {/* Component-specific controls */}
                   <div className="flex gap-2">
-                    {component.read_aloud && (
-                      <ReadAloudButton 
-                        text={JSON.stringify(component.content)} 
-                        className="text-sm"
-                      />
-                    )}
                   </div>
                 </div>
 
