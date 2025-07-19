@@ -106,16 +106,19 @@ const ModularLessonView: React.FC<ModularLessonViewProps> = ({
 
   // Language options for translation
   const languageOptions = [
-    { value: 'es', label: 'Spanish' },
-    { value: 'fr', label: 'French' },
-    { value: 'de', label: 'German' },
-    { value: 'it', label: 'Italian' },
-    { value: 'pt', label: 'Portuguese' },
-    { value: 'ru', label: 'Russian' },
-    { value: 'ja', label: 'Japanese' },
-    { value: 'ko', label: 'Korean' },
-    { value: 'zh', label: 'Chinese' },
-    { value: 'ar', label: 'Arabic' },
+    { value: 'Spanish', label: 'Spanish' },
+    { value: 'Somali', label: 'Somali' },
+    { value: 'Hmong', label: 'Hmong' },
+    { value: 'Ojibwe', label: 'Ojibwe' },
+    { value: 'French', label: 'French' },
+    { value: 'German', label: 'German' },
+    { value: 'Italian', label: 'Italian' },
+    { value: 'Portuguese', label: 'Portuguese' },
+    { value: 'Russian', label: 'Russian' },
+    { value: 'Japanese', label: 'Japanese' },
+    { value: 'Korean', label: 'Korean' },
+    { value: 'Chinese (Simplified)', label: 'Chinese' },
+    { value: 'Arabic', label: 'Arabic' },
   ];
 
   // Handle translation

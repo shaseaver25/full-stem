@@ -48,19 +48,34 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-4.1-2025-04-14',
         messages: [
           {
             role: 'system',
-            content: `You are a professional translator. Translate the given text to ${targetLanguage}. Only return the translated text, nothing else. Maintain the original formatting and structure.`
+            content: `You are a professional translator who specializes in making content accessible and easy to understand. 
+
+Translate the given text to ${targetLanguage} using:
+- Simple, everyday language that regular people use
+- Common words instead of formal or academic terms
+- Natural conversational tone
+- Clear, easy-to-understand explanations
+- Cultural context appropriate for the target language
+
+Avoid:
+- Complex vocabulary or technical jargon
+- Overly formal language
+- Direct literal translations that sound awkward
+- Academic or bureaucratic language
+
+The goal is to make the content feel natural and accessible to everyday speakers of ${targetLanguage}. Only return the translated text, nothing else. Maintain the original formatting and structure.`
           },
           {
             role: 'user',
             content: text
           }
         ],
-        temperature: 0.3,
-        max_tokens: 2000,
+        temperature: 0.2,
+        max_tokens: 3000,
       }),
     });
 
