@@ -6,6 +6,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { LessonComponent } from '@/hooks/useLessonComponents';
 import VideoSection from './VideoSection';
 import CodeIDE from './CodeIDE';
+import AssignmentSection from '@/components/assignments/AssignmentSection';
 
 interface LessonComponentRendererProps {
   component: LessonComponent;
@@ -35,15 +36,14 @@ const LessonComponentRenderer: React.FC<LessonComponentRendererProps> = ({ compo
         return (
           <div className="space-y-4">
             <div className="prose max-w-none">
-              <h3>{content.title || 'Assignment'}</h3>
-              <p>{content.instructions || content.description || ''}</p>
+              <div dangerouslySetInnerHTML={{ __html: content.content || content.instructions || content.description || '' }} />
             </div>
             {content.dueDate && (
               <Badge variant="outline">Due: {content.dueDate}</Badge>
             )}
-            <Button className="w-full sm:w-auto">
-              Start Assignment
-            </Button>
+            <div className="mt-6">
+              <AssignmentSection lessonId={component.lesson_id?.toString() || ''} />
+            </div>
           </div>
         );
 
