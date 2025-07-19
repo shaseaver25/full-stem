@@ -217,85 +217,45 @@ INSTRUCTIONS:
         description: 'Text lesson plan template has been downloaded to your computer.',
       });
     } else {
-      // Create a proper RTF file that Word can open with formatting
-      const rtfContent = `{\\rtf1\\ansi\\deff0 {\\fonttbl {\\f0 Times New Roman;}}
-\\f0\\fs24
-{\\b\\fs32 TAILOREDU LESSON PLAN TEMPLATE}\\par
-\\par
-{\\b Replace ALL bracketed sections [like this] with your actual content.}\\par
-{\\b Remove the brackets entirely and write your content in their place.}\\par
-\\par
-{\\b Example:}\\par
-{\\cf1 WRONG:} Lesson Title: [My Amazing Math Lesson]\\par
-{\\cf2 RIGHT:} Lesson Title: My Amazing Math Lesson\\par
-\\par
-\\line\\par
-\\par
-{\\b\\fs26 Lesson Title:} {\\i [Enter your lesson title here]}\\par
-\\par
-{\\b\\fs26 Grade Level:} {\\i [e.g., 5th Grade, High School, etc.]}\\par
-\\par
-{\\b\\fs26 Subject:} {\\i [e.g., Mathematics, Science, Technology, etc.]}\\par
-\\par
-{\\b\\fs26 Duration:} {\\i [e.g., 50 minutes, 90 minutes, etc.]}\\par
-\\par
-{\\b\\fs26 Video Link (Optional):} {\\i [YouTube or other video URL]}\\par
-\\par
-{\\b\\fs26 Learning Objectives:}\\par
-\\bullet {\\i [First learning objective]}\\par
-\\bullet {\\i [Second learning objective]}\\par
-\\bullet {\\i [Third learning objective]}\\par
-\\par
-{\\b\\fs26 Written Instructions:}\\par
-{\\i [Use full sentences, steps, or directions for students. Be specific about what students should do during the lesson.]}\\par
-\\par
-{\\b\\fs26 Assignment Instructions:}\\par
-{\\i [Include submission details and task. Describe what students need to complete and how to submit it.]}\\par
-\\par
-{\\b\\fs26 Discussion Prompt:}\\par
-{\\i [Add a question or topic for class discussion]}\\par
-\\par
-{\\b\\fs26 Reflection Question (Optional):}\\par
-{\\i [Add a question for students to reflect on their learning]}\\par
-\\par
-{\\b\\fs26 Rubric (Optional):}\\par
-{\\i [Paste rubric or describe criteria for grading]}\\par
-\\par
-{\\b\\fs26 Additional Resources:}\\par
-{\\i [List any additional materials, websites, or resources students might need]}\\par
-\\par
-{\\b\\fs26 Formative Check / Quiz:}\\par
-{\\i [Paste sample questions or quiz outline to check student understanding]}\\par
-\\par
-{\\b\\fs26 Graphing Tool Needed?} {\\i [Yes/No]}\\par
-{\\b\\fs26 Desmos Tool Type (if yes):} {\\i [Graphing Calculator / Geometry Tool]}\\par
-\\par
-\\line\\par
-\\par
-{\\b\\fs28 INSTRUCTIONS:}\\par
-1. Replace ALL bracketed sections with your actual content\\par
-2. Remove the brackets entirely - they are just placeholders\\par
-3. Save this document\\par
-4. Upload it to TailorEDU's lesson builder\\par
-5. Review the auto-generated components\\par
-6. Make any needed adjustments\\par
-7. Publish your lesson!\\par
-}`;
+      // Download proper DOCX file
+      try {
+        const response = await supabase.functions.invoke('generate-docx', {
+          body: {},
+          headers: { 'Content-Type': 'application/json' }
+        });
 
-      const blob = new Blob([rtfContent], { type: 'application/rtf' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'TailorEDU_Lesson_Plan_Template.rtf';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+        if (response.error) {
+          throw new Error('Failed to generate DOCX template');
+        }
 
-      toast({
-        title: 'RTF Template Downloaded',
-        description: 'Rich Text Format template downloaded. This will open in Word with formatting preserved.',
-      });
+        // The response should be the actual file data
+        const docxData = response.data;
+        
+        // Create blob and download
+        const blob = new Blob([docxData], { 
+          type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' 
+        });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'TailorEDU_Lesson_Plan_Template.docx';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        toast({
+          title: 'DOCX Template Downloaded',
+          description: 'Microsoft Word lesson plan template has been downloaded. This file will open cleanly in Word with proper formatting.',
+        });
+      } catch (error) {
+        console.error('Error downloading DOCX template:', error);
+        toast({
+          title: 'Download Error',
+          description: 'Failed to download DOCX template. Please try the text version instead.',
+          variant: 'destructive',
+        });
+      }
     }
   };
 
@@ -325,7 +285,7 @@ INSTRUCTIONS:
                 </Button>
                 <Button onClick={() => downloadTemplate('docx')} variant="outline" size="sm">
                   <Download className="h-4 w-4 mr-2" />
-                  Rich Text (.rtf)
+                  Word (.docx)
                 </Button>
               </div>
             </div>
