@@ -14,65 +14,60 @@ const GlobalReadAloud: React.FC<GlobalReadAloudProps> = ({ className = '' }) => 
   const [pageText, setPageText] = useState('');
   const [hasTextContent, setHasTextContent] = useState(false);
 
-  // Extract text content from the current page, focusing on lesson components
+  // Extract text content from the current page, focusing on content after "Instructions" title
   const extractPageText = useCallback(() => {
-    // Check if we're on a lesson page and prioritize lesson component content
+    // Check if we're on a lesson page and look for content after Instructions
     const isLessonPage = window.location.pathname.includes('/lesson/');
     
     if (isLessonPage) {
-      // Target lesson component content specifically
-      const lessonSelectors = [
-        '[data-radix-scroll-area-content]', // Radix tabs content
-        '[role="tabpanel"]', // Tab panels
-        '.lesson-component-content',
-        '[data-state="active"]', // Active tab content
-        '.prose', // Rich text content
-        'p', // Paragraphs within lesson content
-      ];
-      
       let extractedText = '';
       
-      // Try to find active tab content first
-      const activeTabPanel = document.querySelector('[role="tabpanel"][data-state="active"]');
-      if (activeTabPanel) {
-        const text = activeTabPanel.textContent || '';
-        if (text.trim().length > 50) {
-          extractedText = text.trim();
-        }
-      }
+      // Look for Instructions heading and extract content after it
+      const instructionsHeadings = document.querySelectorAll('h1, h2, h3, h4, h5, h6, .text-xl, .text-lg, .font-semibold, .font-bold');
       
-      // If no active tab content found, look for any tab panels
-      if (!extractedText) {
-        const tabPanels = document.querySelectorAll('[role="tabpanel"]');
-        tabPanels.forEach(panel => {
-          const text = panel.textContent || '';
-          if (text.trim().length > 50) {
-            extractedText += text.trim() + ' ';
-          }
-        });
-      }
-      
-      // Fallback to lesson-specific selectors
-      if (extractedText.trim().length < 100) {
-        for (const selector of lessonSelectors) {
-          const elements = document.querySelectorAll(selector);
-          elements.forEach(element => {
+      for (const heading of instructionsHeadings) {
+        const headingText = heading.textContent?.trim().toLowerCase() || '';
+        if (headingText.includes('instructions')) {
+          // Found the Instructions heading, now get content after it
+          let currentElement = heading.nextElementSibling;
+          
+          while (currentElement) {
             // Skip navigation and control elements
             const excludeClasses = ['nav', 'header', 'footer', 'button', 'control', 'menu', 'tabs-list'];
             const hasExcludedClass = excludeClasses.some(cls => 
-              element.className.toLowerCase().includes(cls)
+              currentElement.className?.toLowerCase().includes(cls)
             );
             
             if (!hasExcludedClass) {
-              const text = element.textContent || '';
-              if (text.trim().length > 30) {
+              const text = currentElement.textContent || '';
+              if (text.trim().length > 10) {
                 extractedText += text.trim() + ' ';
               }
             }
-          });
+            
+            currentElement = currentElement.nextElementSibling;
+          }
           
-          if (extractedText.trim().length > 100) {
+          if (extractedText.trim().length > 50) {
             break;
+          }
+        }
+      }
+      
+      // If no Instructions heading found, look in active tab panels for Instructions
+      if (!extractedText) {
+        const tabPanels = document.querySelectorAll('[role="tabpanel"]');
+        for (const panel of tabPanels) {
+          const allText = panel.textContent || '';
+          const instructionsIndex = allText.toLowerCase().indexOf('instructions');
+          
+          if (instructionsIndex !== -1) {
+            // Extract text after "instructions"
+            const textAfterInstructions = allText.substring(instructionsIndex + 12); // 12 = length of "instructions"
+            if (textAfterInstructions.trim().length > 50) {
+              extractedText = textAfterInstructions.trim();
+              break;
+            }
           }
         }
       }
