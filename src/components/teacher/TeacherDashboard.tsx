@@ -186,12 +186,12 @@ const ClassCard: React.FC<ClassCardProps> = ({ classItem, showActions }) => {
 
         {showActions && (
           <div className="flex gap-2 pt-4">
-            <Link to={`/admin/build-class/${classItem.id}`} className="flex-1">
+            <Link to={`/build-class/${classItem.id}`} className="flex-1">
               <Button variant="outline" size="sm" className="w-full">
                 Edit
               </Button>
             </Link>
-            <Link to={`/admin/class/${classItem.id}`} className="flex-1">
+            <Link to={`/teacher/class/${classItem.id}`} className="flex-1">
               <Button size="sm" className="w-full">
                 Manage
               </Button>
