@@ -14,9 +14,73 @@ const GlobalReadAloud: React.FC<GlobalReadAloudProps> = ({ className = '' }) => 
   const [pageText, setPageText] = useState('');
   const [hasTextContent, setHasTextContent] = useState(false);
 
-  // Extract text content from the current page
+  // Extract text content from the current page, focusing on lesson components
   const extractPageText = useCallback(() => {
-    // Get main content areas, excluding navigation, headers, and UI elements
+    // Check if we're on a lesson page and prioritize lesson component content
+    const isLessonPage = window.location.pathname.includes('/lesson/');
+    
+    if (isLessonPage) {
+      // Target lesson component content specifically
+      const lessonSelectors = [
+        '[data-radix-scroll-area-content]', // Radix tabs content
+        '[role="tabpanel"]', // Tab panels
+        '.lesson-component-content',
+        '[data-state="active"]', // Active tab content
+        '.prose', // Rich text content
+        'p', // Paragraphs within lesson content
+      ];
+      
+      let extractedText = '';
+      
+      // Try to find active tab content first
+      const activeTabPanel = document.querySelector('[role="tabpanel"][data-state="active"]');
+      if (activeTabPanel) {
+        const text = activeTabPanel.textContent || '';
+        if (text.trim().length > 50) {
+          extractedText = text.trim();
+        }
+      }
+      
+      // If no active tab content found, look for any tab panels
+      if (!extractedText) {
+        const tabPanels = document.querySelectorAll('[role="tabpanel"]');
+        tabPanels.forEach(panel => {
+          const text = panel.textContent || '';
+          if (text.trim().length > 50) {
+            extractedText += text.trim() + ' ';
+          }
+        });
+      }
+      
+      // Fallback to lesson-specific selectors
+      if (extractedText.trim().length < 100) {
+        for (const selector of lessonSelectors) {
+          const elements = document.querySelectorAll(selector);
+          elements.forEach(element => {
+            // Skip navigation and control elements
+            const excludeClasses = ['nav', 'header', 'footer', 'button', 'control', 'menu', 'tabs-list'];
+            const hasExcludedClass = excludeClasses.some(cls => 
+              element.className.toLowerCase().includes(cls)
+            );
+            
+            if (!hasExcludedClass) {
+              const text = element.textContent || '';
+              if (text.trim().length > 30) {
+                extractedText += text.trim() + ' ';
+              }
+            }
+          });
+          
+          if (extractedText.trim().length > 100) {
+            break;
+          }
+        }
+      }
+      
+      return extractedText.trim();
+    }
+    
+    // Original logic for non-lesson pages
     const contentSelectors = [
       'main',
       '[role="main"]',
@@ -27,17 +91,14 @@ const GlobalReadAloud: React.FC<GlobalReadAloudProps> = ({ className = '' }) => 
       '[data-content]',
       '.prose',
       'p',
-      // Add more specific selectors for your app's content areas
     ];
 
     let extractedText = '';
 
-    // Try to find content in priority order
     for (const selector of contentSelectors) {
       const elements = document.querySelectorAll(selector);
       if (elements.length > 0) {
         elements.forEach(element => {
-          // Skip elements that are likely UI controls
           const excludeClasses = ['nav', 'header', 'footer', 'button', 'control', 'menu'];
           const hasExcludedClass = excludeClasses.some(cls => 
             element.className.toLowerCase().includes(cls)
@@ -45,37 +106,16 @@ const GlobalReadAloud: React.FC<GlobalReadAloudProps> = ({ className = '' }) => 
           
           if (!hasExcludedClass) {
             const text = element.textContent || '';
-            if (text.trim().length > 50) { // Only include substantial text
+            if (text.trim().length > 50) {
               extractedText += text.trim() + ' ';
             }
           }
         });
         
         if (extractedText.trim().length > 100) {
-          break; // Found substantial content
+          break;
         }
       }
-    }
-
-    // Fallback: get all visible text from body, but filter out common UI elements
-    if (extractedText.trim().length < 100) {
-      const bodyText = document.body.textContent || '';
-      const lines = bodyText.split('\n')
-        .map(line => line.trim())
-        .filter(line => {
-          // Filter out common UI text patterns
-          const uiPatterns = [
-            /^(login|sign in|sign up|menu|navigation|home|about|contact)$/i,
-            /^\d+$/, // Just numbers
-            /^[<>]+$/, // Just arrows
-            /^(©|copyright)/i,
-            /^(privacy|terms|policy)/i
-          ];
-          
-          return line.length > 20 && !uiPatterns.some(pattern => pattern.test(line));
-        });
-      
-      extractedText = lines.join(' ');
     }
 
     return extractedText.trim();
