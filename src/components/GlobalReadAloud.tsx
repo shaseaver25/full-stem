@@ -22,12 +22,18 @@ const GlobalReadAloud: React.FC<GlobalReadAloudProps> = ({ className = '' }) => 
     if (isLessonPage) {
       let extractedText = '';
       
-      // Look for Instructions heading and extract content after it
-      const instructionsHeadings = document.querySelectorAll('h1, h2, h3, h4, h5, h6, .text-xl, .text-lg, .font-semibold, .font-bold');
+      console.log('GlobalReadAloud: Looking for Instructions on lesson page');
       
-      for (const heading of instructionsHeadings) {
+      // First, look for Instructions heading and extract content after it
+      const allHeadings = document.querySelectorAll('h1, h2, h3, h4, h5, h6, .text-xl, .text-lg, .font-semibold, .font-bold');
+      console.log('GlobalReadAloud: Found headings:', allHeadings.length);
+      
+      for (const heading of allHeadings) {
         const headingText = heading.textContent?.trim().toLowerCase() || '';
+        console.log('GlobalReadAloud: Checking heading:', headingText);
+        
         if (headingText.includes('instructions')) {
+          console.log('GlobalReadAloud: Found Instructions heading!');
           // Found the Instructions heading, now get content after it
           let currentElement = heading.nextElementSibling;
           
@@ -54,14 +60,18 @@ const GlobalReadAloud: React.FC<GlobalReadAloudProps> = ({ className = '' }) => 
         }
       }
       
-      // If no Instructions heading found, look in active tab panels for Instructions
+      // If no Instructions heading found, look in active tab panels for Instructions text
       if (!extractedText) {
+        console.log('GlobalReadAloud: No Instructions heading found, checking tab panels');
         const tabPanels = document.querySelectorAll('[role="tabpanel"]');
+        console.log('GlobalReadAloud: Found tab panels:', tabPanels.length);
+        
         for (const panel of tabPanels) {
           const allText = panel.textContent || '';
           const instructionsIndex = allText.toLowerCase().indexOf('instructions');
           
           if (instructionsIndex !== -1) {
+            console.log('GlobalReadAloud: Found Instructions text in tab panel');
             // Extract text after "instructions"
             const textAfterInstructions = allText.substring(instructionsIndex + 12); // 12 = length of "instructions"
             if (textAfterInstructions.trim().length > 50) {
@@ -72,6 +82,20 @@ const GlobalReadAloud: React.FC<GlobalReadAloudProps> = ({ className = '' }) => 
         }
       }
       
+      // If still no Instructions found, fall back to active tab content for debugging
+      if (!extractedText) {
+        console.log('GlobalReadAloud: No Instructions found, falling back to active tab content');
+        const activeTabPanel = document.querySelector('[role="tabpanel"][data-state="active"]');
+        if (activeTabPanel) {
+          const text = activeTabPanel.textContent || '';
+          console.log('GlobalReadAloud: Active tab content length:', text.length);
+          if (text.trim().length > 100) {
+            extractedText = text.trim();
+          }
+        }
+      }
+      
+      console.log('GlobalReadAloud: Final extracted text length:', extractedText.length);
       return extractedText.trim();
     }
     
