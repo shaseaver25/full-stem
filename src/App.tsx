@@ -33,6 +33,7 @@ import CourseEditorPage from "./pages/CourseEditorPage";
 import ComponentsPage from "./pages/ComponentsPage";
 import DeveloperDashboard from "./pages/DeveloperDashboard";
 import DeveloperRoute from "./components/developer/DeveloperRoute";
+import GlobalReadAloud from "./components/GlobalReadAloud";
 
 const queryClient = new QueryClient();
 
@@ -44,6 +45,7 @@ const App = () => (
           <Toaster />
           <Sonner />
           <BrowserRouter>
+            <GlobalReadAloud />
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
