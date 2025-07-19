@@ -128,20 +128,37 @@ export const EnhancedReadAloud: React.FC<EnhancedReadAloudProps> = ({
       // Find the best available voice
       let selectedVoiceObj = null;
       
-      // Try to find a high-quality voice
-      selectedVoiceObj = voices.find(v => 
-        v.name.toLowerCase().includes('google') ||
-        v.name.toLowerCase().includes('enhanced') ||
-        v.name.toLowerCase().includes('neural') ||
-        v.name.toLowerCase().includes('premium')
-      );
+      console.log('All available voices:', voices.map(v => `${v.name} (${v.lang}) - Local: ${v.localService}`));
       
-      // Fallback to any English voice
+      // First priority: Try to find the specifically selected voice
+      if (voice && voice !== 'en-US-WaveNet-D') {
+        selectedVoiceObj = voices.find(v => v.name.includes(voice) || v.voiceURI.includes(voice));
+      }
+      
+      // Second priority: High-quality voices (Google, Enhanced, Neural, Premium)
+      if (!selectedVoiceObj) {
+        selectedVoiceObj = voices.find(v => 
+          v.name.toLowerCase().includes('google') ||
+          v.name.toLowerCase().includes('enhanced') ||
+          v.name.toLowerCase().includes('neural') ||
+          v.name.toLowerCase().includes('premium') ||
+          v.name.toLowerCase().includes('wavenet')
+        );
+      }
+      
+      // Third priority: Non-local English voices (usually higher quality)
+      if (!selectedVoiceObj) {
+        selectedVoiceObj = voices.find(v => 
+          v.lang.startsWith('en-') && !v.localService
+        );
+      }
+      
+      // Fourth priority: Any English voice
       if (!selectedVoiceObj) {
         selectedVoiceObj = voices.find(v => v.lang.startsWith('en-'));
       }
       
-      // Final fallback to first available voice
+      // Final fallback: First available voice
       if (!selectedVoiceObj && voices.length > 0) {
         selectedVoiceObj = voices[0];
       }
