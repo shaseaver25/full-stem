@@ -24,6 +24,9 @@ const GlobalReadAloud: React.FC<GlobalReadAloudProps> = ({ className = '' }) => 
       '.content',
       'article',
       '.text-content',
+      '[data-content]',
+      '.prose',
+      'p',
       // Add more specific selectors for your app's content areas
     ];
 
@@ -82,6 +85,8 @@ const GlobalReadAloud: React.FC<GlobalReadAloudProps> = ({ className = '' }) => 
   useEffect(() => {
     const updatePageText = () => {
       const text = extractPageText();
+      console.log('GlobalReadAloud: Extracted text length:', text.length);
+      console.log('GlobalReadAloud: Has text content:', text.length > 100);
       setPageText(text);
       setHasTextContent(text.length > 100);
     };
