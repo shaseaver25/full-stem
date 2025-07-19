@@ -22,37 +22,85 @@ const GlobalReadAloud: React.FC<GlobalReadAloudProps> = ({ className = '' }) => 
     if (isLessonPage) {
       let extractedText = '';
       
-      // Look for "Instructions" text anywhere in the page
-      const pageText = document.body.textContent || '';
-      const instructionsIndex = pageText.toLowerCase().indexOf('instructions');
+      // First, try to find the Instructions heading specifically
+      const allElements = document.querySelectorAll('*');
       
-      if (instructionsIndex !== -1) {
-        // Extract a substantial amount of text after "instructions"
-        const textAfterInstructions = pageText.substring(instructionsIndex + 12); // 12 = length of "instructions"
+      for (const element of allElements) {
+        const textContent = element.textContent?.trim() || '';
         
-        // Clean up the text - remove excessive whitespace and take first 2000 characters
-        const cleanedText = textAfterInstructions
-          .replace(/\s+/g, ' ') // Replace multiple whitespace with single space
-          .trim()
-          .substring(0, 2000); // Limit length
-        
-        if (cleanedText.length > 100) {
-          extractedText = cleanedText;
-        }
-      }
-      
-      // Fallback: If no Instructions found, look for any substantial content in active tab
-      if (!extractedText) {
-        const activeTabPanel = document.querySelector('[role="tabpanel"][data-state="active"]');
-        if (activeTabPanel) {
-          const text = activeTabPanel.textContent || '';
-          const cleanedText = text.replace(/\s+/g, ' ').trim();
-          if (cleanedText.length > 100) {
-            extractedText = cleanedText.substring(0, 2000);
+        // Look for an element that contains "Instructions" as its main content
+        if (textContent.toLowerCase() === 'instructions' || 
+            (textContent.toLowerCase().includes('instructions') && textContent.length < 50)) {
+          
+          console.log('Found Instructions element:', element);
+          
+          // Get the parent container that has the instructions content
+          let contentContainer = element.closest('[role="tabpanel"]') || 
+                                element.closest('.lesson-content') ||
+                                element.closest('div');
+          
+          if (contentContainer) {
+            const fullText = contentContainer.textContent || '';
+            const instructionsIndex = fullText.toLowerCase().indexOf('instructions');
+            
+            if (instructionsIndex !== -1) {
+              // Get text after "instructions" heading
+              let textAfterInstructions = fullText.substring(instructionsIndex + 12).trim();
+              
+              // Clean up the text - remove UI elements
+              textAfterInstructions = textAfterInstructions
+                .replace(/Enhanced Read Aloud.*?Download/g, '') // Remove read aloud controls
+                .replace(/🎥Video🎯Activity✅Quick Check/g, '') // Remove tab navigation
+                .replace(/Speed:\d+\.\dx/g, '') // Remove speed indicators
+                .replace(/Emma \(Female, Clear\)/g, '') // Remove voice selection
+                .replace(/🔊 Test Audio/g, '') // Remove test audio button
+                .replace(/Play|Pause|Stop|Download/g, '') // Remove control buttons
+                .replace(/\s+/g, ' ') // Replace multiple spaces with single space
+                .trim();
+              
+              if (textAfterInstructions.length > 100) {
+                extractedText = textAfterInstructions.substring(0, 2000);
+                break;
+              }
+            }
           }
         }
       }
       
+      // Fallback: Look for specific lesson content patterns
+      if (!extractedText) {
+        console.log('Fallback: Looking for lesson content patterns');
+        const activeTab = document.querySelector('[role="tabpanel"][data-state="active"]');
+        if (activeTab) {
+          const content = activeTab.textContent || '';
+          
+          // Look for common lesson patterns
+          const patterns = [
+            /STEP \d+:/i,
+            /Scenario:/i,
+            /Instructions[\s\S]*?(?=Check-in|$)/i,
+            /What You'll Need[\s\S]*?(?=Instructions|$)/i
+          ];
+          
+          for (const pattern of patterns) {
+            const match = content.match(pattern);
+            if (match) {
+              let cleanedContent = match[0]
+                .replace(/Enhanced Read Aloud.*?Download/g, '')
+                .replace(/🎥Video🎯Activity✅Quick Check/g, '')
+                .replace(/\s+/g, ' ')
+                .trim();
+              
+              if (cleanedContent.length > 100) {
+                extractedText = cleanedContent.substring(0, 2000);
+                break;
+              }
+            }
+          }
+        }
+      }
+      
+      console.log('Final extracted text preview:', extractedText.substring(0, 200));
       return extractedText;
     }
     
