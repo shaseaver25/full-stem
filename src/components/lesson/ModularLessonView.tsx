@@ -3,9 +3,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Volume2, Book, Globe } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Volume2, Book, Globe, Languages, Loader2 } from 'lucide-react';
 import { useLessonComponents } from '@/hooks/useLessonComponents';
 import { useLessonData } from '@/hooks/useLessonData';
+import { useLiveTranslation } from '@/hooks/useLiveTranslation';
+import { useToast } from '@/hooks/use-toast';
 import LessonComponentRenderer from './LessonComponentRenderer';
 import DesmosSection from './DesmosSection';
 import GlobalReadAloud from '@/components/GlobalReadAloud';
@@ -23,7 +26,12 @@ const ModularLessonView: React.FC<ModularLessonViewProps> = ({
 }) => {
   const { data: components = [], isLoading } = useLessonComponents(lessonId);
   const { lesson } = useLessonData(lessonId);
+  const { translateText, isTranslating } = useLiveTranslation();
+  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<string>('');
+  const [isTranslateMenuOpen, setIsTranslateMenuOpen] = useState(false);
+  const [translatedContent, setTranslatedContent] = useState<string | null>(null);
+  const [selectedLanguage, setSelectedLanguage] = useState<string>('');
 
   // Set first component as active when components load
   React.useEffect(() => {
@@ -96,6 +104,58 @@ const ModularLessonView: React.FC<ModularLessonViewProps> = ({
     }
   };
 
+  // Language options for translation
+  const languageOptions = [
+    { value: 'es', label: 'Spanish' },
+    { value: 'fr', label: 'French' },
+    { value: 'de', label: 'German' },
+    { value: 'it', label: 'Italian' },
+    { value: 'pt', label: 'Portuguese' },
+    { value: 'ru', label: 'Russian' },
+    { value: 'ja', label: 'Japanese' },
+    { value: 'ko', label: 'Korean' },
+    { value: 'zh', label: 'Chinese' },
+    { value: 'ar', label: 'Arabic' },
+  ];
+
+  // Handle translation
+  const handleTranslate = async (targetLanguage: string) => {
+    if (!fullLessonText) {
+      toast({
+        title: "No Content",
+        description: "No lesson content available to translate.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const result = await translateText({
+      text: fullLessonText,
+      targetLanguage: targetLanguage,
+      sourceLanguage: 'en'
+    });
+
+    if (result) {
+      setTranslatedContent(result);
+      setSelectedLanguage(targetLanguage);
+      setIsTranslateMenuOpen(false);
+      toast({
+        title: "Translation Complete",
+        description: `Lesson translated to ${languageOptions.find(l => l.value === targetLanguage)?.label}`,
+      });
+    }
+  };
+
+  // Clear translation
+  const clearTranslation = () => {
+    setTranslatedContent(null);
+    setSelectedLanguage('');
+    toast({
+      title: "Translation Cleared",
+      description: "Showing original lesson content.",
+    });
+  };
+
   return (
     <div className="space-y-6">
       {/* Header with global controls */}
@@ -107,10 +167,60 @@ const ModularLessonView: React.FC<ModularLessonViewProps> = ({
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm">
-            <Globe className="h-4 w-4 mr-2" />
-            Translate
-          </Button>
+          {/* Translation Controls */}
+          {!translatedContent ? (
+            <div className="relative">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => setIsTranslateMenuOpen(!isTranslateMenuOpen)}
+                disabled={isTranslating}
+              >
+                {isTranslating ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Globe className="h-4 w-4 mr-2" />
+                )}
+                Translate
+              </Button>
+              
+              {isTranslateMenuOpen && (
+                <div className="absolute top-full left-0 mt-2 z-50 bg-white border rounded-md shadow-lg p-2 min-w-[200px]">
+                  <p className="text-sm font-medium mb-2 text-gray-700">Select Language:</p>
+                  <div className="space-y-1">
+                    {languageOptions.map((lang) => (
+                      <Button
+                        key={lang.value}
+                        variant="ghost"
+                        size="sm"
+                        className="w-full justify-start text-left"
+                        onClick={() => handleTranslate(lang.value)}
+                        disabled={isTranslating}
+                      >
+                        <Languages className="h-4 w-4 mr-2" />
+                        {lang.label}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="flex gap-2">
+              <Badge variant="secondary" className="flex items-center gap-1">
+                <Globe className="h-3 w-3" />
+                {languageOptions.find(l => l.value === selectedLanguage)?.label}
+              </Badge>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={clearTranslation}
+              >
+                Clear Translation
+              </Button>
+            </div>
+          )}
+          
           <Button variant="outline" size="sm">
             <Book className="h-4 w-4 mr-2" />
             Reading Level
