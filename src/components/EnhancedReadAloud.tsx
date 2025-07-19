@@ -462,16 +462,23 @@ export const EnhancedReadAloud: React.FC<EnhancedReadAloudProps> = ({
           {/* Additional Actions */}
           <div className="flex items-center gap-2">
             <Button
-              onClick={() => {
-                // Quick test to ensure speech works
-                const testUtterance = new SpeechSynthesisUtterance('Testing audio');
-                testUtterance.volume = 0.5;
-                testUtterance.rate = 1;
-                speechSynthesis.speak(testUtterance);
+              onClick={async () => {
+                try {
+                  console.log('Testing audio...');
+                  await generateAudio('Audio test successful', selectedVoice, 1.0);
+                } catch (error) {
+                  console.error('Test audio failed:', error);
+                  toast({
+                    title: "Test Audio Failed",
+                    description: "The audio system may not be working properly",
+                    variant: "destructive"
+                  });
+                }
               }}
               variant="secondary"
               size="sm"
               className="flex items-center gap-2"
+              disabled={isLoading}
             >
               🔊 Test Audio
             </Button>
