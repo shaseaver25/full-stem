@@ -80,71 +80,146 @@ export const EnhancedReadAloud: React.FC<EnhancedReadAloudProps> = ({
   const generateAudio = async (textToSpeak: string, voice: string, speed: number) => {
     setIsLoading(true);
     try {
-      // Ensure speech synthesis is ready
+      // Check browser support
       if (!('speechSynthesis' in window)) {
-        throw new Error('Speech synthesis not supported in this browser');
+        throw new Error('Text-to-speech is not supported in this browser. Please try Chrome, Edge, or Safari.');
       }
 
-      // Wait for voices to load if they haven't already
-      let voices = speechSynthesis.getVoices();
+      // Check if speech synthesis is available and enabled
+      const synth = window.speechSynthesis;
+      if (!synth) {
+        throw new Error('Speech synthesis service is not available.');
+      }
+
+      // Cancel any existing speech
+      synth.cancel();
+
+      // Wait a moment for cancellation to complete
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      // Load voices if needed
+      let voices = synth.getVoices();
       if (voices.length === 0) {
+        console.log('Waiting for voices to load...');
         await new Promise(resolve => {
-          speechSynthesis.onvoiceschanged = () => {
-            voices = speechSynthesis.getVoices();
-            resolve(voices);
+          const loadVoices = () => {
+            voices = synth.getVoices();
+            if (voices.length > 0) {
+              synth.onvoiceschanged = null;
+              resolve(voices);
+            }
           };
+          synth.onvoiceschanged = loadVoices;
+          // Fallback timeout
+          setTimeout(() => {
+            synth.onvoiceschanged = null;
+            resolve(voices);
+          }, 3000);
         });
       }
 
-      // Stop any existing speech
-      speechSynthesis.cancel();
+      console.log('Available voices:', voices.length);
 
       const utterance = new SpeechSynthesisUtterance(textToSpeak);
-      utterance.rate = speed;
+      utterance.rate = Math.max(0.1, Math.min(2.0, speed)); // Clamp speed
       utterance.volume = 1;
       utterance.pitch = 1;
       
-      // Try to find the best available voice
-      const preferredVoice = voices.find(v => 
+      // Find the best available voice
+      let selectedVoiceObj = null;
+      
+      // Try to find a high-quality voice
+      selectedVoiceObj = voices.find(v => 
         v.name.toLowerCase().includes('google') ||
         v.name.toLowerCase().includes('enhanced') ||
         v.name.toLowerCase().includes('neural') ||
-        (v.lang.startsWith('en-US') && !v.localService)
-      ) || voices.find(v => v.lang.startsWith('en-US')) || voices[0];
+        v.name.toLowerCase().includes('premium')
+      );
       
-      if (preferredVoice) {
-        utterance.voice = preferredVoice;
-        console.log('Using voice:', preferredVoice.name);
+      // Fallback to any English voice
+      if (!selectedVoiceObj) {
+        selectedVoiceObj = voices.find(v => v.lang.startsWith('en-'));
+      }
+      
+      // Final fallback to first available voice
+      if (!selectedVoiceObj && voices.length > 0) {
+        selectedVoiceObj = voices[0];
+      }
+      
+      if (selectedVoiceObj) {
+        utterance.voice = selectedVoiceObj;
+        console.log('Using voice:', selectedVoiceObj.name, selectedVoiceObj.lang);
+      } else {
+        console.warn('No suitable voice found, using default');
       }
 
       return new Promise<void>((resolve, reject) => {
+        let hasStarted = false;
+        let hasEnded = false;
+
         utterance.onstart = () => {
-          console.log('Speech started');
+          console.log('Speech started successfully');
+          hasStarted = true;
           setIsPlaying(true);
           setIsPaused(false);
         };
 
         utterance.onend = () => {
-          console.log('Speech ended');
-          setIsPlaying(false);
-          setIsPaused(false);
-          resolve();
+          if (!hasEnded) {
+            console.log('Speech ended normally');
+            hasEnded = true;
+            setIsPlaying(false);
+            setIsPaused(false);
+            resolve();
+          }
         };
 
         utterance.onerror = (event) => {
-          console.error('Speech error:', event);
+          console.error('Speech error:', event.error, event);
+          hasEnded = true;
           setIsPlaying(false);
           setIsPaused(false);
-          reject(new Error('Speech synthesis failed'));
+          
+          let errorMessage = 'Speech synthesis failed';
+          if (event.error === 'network') {
+            errorMessage = 'Network error - please check your internet connection';
+          } else if (event.error === 'not-allowed') {
+            errorMessage = 'Audio permissions denied - please allow audio access';
+          } else if (event.error === 'canceled') {
+            errorMessage = 'Speech was canceled';
+          }
+          
+          reject(new Error(errorMessage));
         };
 
-        speechSynthesis.speak(utterance);
+        // Timeout fallback
+        const timeout = setTimeout(() => {
+          if (!hasStarted && !hasEnded) {
+            console.error('Speech synthesis timeout');
+            synth.cancel();
+            reject(new Error('Speech synthesis timed out - please try again'));
+          }
+        }, 5000);
+
+        utterance.onend = () => {
+          clearTimeout(timeout);
+          if (!hasEnded) {
+            hasEnded = true;
+            setIsPlaying(false);
+            setIsPaused(false);
+            resolve();
+          }
+        };
+
+        console.log('Starting speech synthesis...');
+        synth.speak(utterance);
       });
     } catch (error) {
       console.error('Audio generation failed:', error);
+      const errorMessage = error instanceof Error ? error.message : "Speech synthesis is not available";
       toast({
-        title: "Audio Generation Failed",
-        description: error instanceof Error ? error.message : "Please try again",
+        title: "Playback Failed",
+        description: errorMessage,
         variant: "destructive"
       });
       throw error;
