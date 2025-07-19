@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTeacherProfile } from '@/hooks/useTeacherProfile';
 import { Button } from '@/components/ui/button';
@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { CheckCircle, GraduationCap } from 'lucide-react';
+import { CheckCircle, GraduationCap, Loader2 } from 'lucide-react';
 import Header from '@/components/Header';
 
 const TeacherOnboarding = () => {
@@ -24,8 +24,15 @@ const TeacherOnboarding = () => {
   });
   const [customSubject, setCustomSubject] = useState('');
   const [showCustomSubject, setShowCustomSubject] = useState(false);
-  const { saveProfile, saving } = useTeacherProfile();
+  const { profile, loading, saveProfile, saving } = useTeacherProfile();
   const navigate = useNavigate();
+
+  // Check if onboarding is already completed and redirect
+  useEffect(() => {
+    if (!loading && profile?.onboarding_completed) {
+      navigate('/teacher/dashboard');
+    }
+  }, [profile, loading, navigate]);
 
   const gradeOptions = [
     'Pre-K', 'K', '1st', '2nd', '3rd', '4th', '5th', '6th', 
@@ -105,6 +112,18 @@ const TeacherOnboarding = () => {
   };
 
   const progress = (currentStep / 3) * 100;
+
+  // Show loading spinner while checking onboarding status
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
