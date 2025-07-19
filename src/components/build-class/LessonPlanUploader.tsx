@@ -217,47 +217,82 @@ INSTRUCTIONS:
         description: 'Text lesson plan template has been downloaded to your computer.',
       });
     } else {
-      // Download Word document template
-      try {
-        const { data, error } = await supabase.functions.invoke('generate-docx', {
-          body: { templateType: 'lesson-plan-template' }
-        });
+      // Create a rich text file that opens well in Word
+      const wordTemplateContent = `TAILOREDU LESSON PLAN TEMPLATE
 
-        if (error) {
-          throw new Error('Failed to generate Word template');
-        }
+Replace ALL bracketed sections [like this] with your actual content.
+Remove the brackets entirely and write your content in their place.
 
-        // Convert base64 to blob and download
-        const binaryString = atob(data.docxContent);
-        const bytes = new Uint8Array(binaryString.length);
-        for (let i = 0; i < binaryString.length; i++) {
-          bytes[i] = binaryString.charCodeAt(i);
-        }
+Example:
+WRONG: Lesson Title: [My Amazing Math Lesson]
+RIGHT: Lesson Title: My Amazing Math Lesson
 
-        const blob = new Blob([bytes], { 
-          type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' 
-        });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = data.fileName;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+────────────────────────────────────────────────────
 
-        toast({
-          title: 'Word Template Downloaded',
-          description: 'Word document lesson plan template has been downloaded to your computer.',
-        });
-      } catch (error) {
-        console.error('Error downloading Word template:', error);
-        toast({
-          title: 'Download Error',
-          description: 'Failed to download Word template. Please try the text version instead.',
-          variant: 'destructive',
-        });
-      }
+Lesson Title: [Enter your lesson title here]
+
+Grade Level: [e.g., 5th Grade, High School, etc.]
+
+Subject: [e.g., Mathematics, Science, Technology, etc.]
+
+Duration: [e.g., 50 minutes, 90 minutes, etc.]
+
+Video Link (Optional): [YouTube or other video URL]
+
+Learning Objectives:
+• [First learning objective]
+• [Second learning objective] 
+• [Third learning objective]
+
+Written Instructions:
+[Use full sentences, steps, or directions for students. Be specific about what students should do during the lesson.]
+
+Assignment Instructions:
+[Include submission details and task. Describe what students need to complete and how to submit it.]
+
+Discussion Prompt:
+[Add a question or topic for class discussion]
+
+Reflection Question (Optional):
+[Add a question for students to reflect on their learning]
+
+Rubric (Optional):
+[Paste rubric or describe criteria for grading]
+
+Additional Resources (links, PDFs, etc.):
+[List any additional materials, websites, or resources students might need]
+
+Formative Check / Quiz:
+[Paste sample questions or quiz outline to check student understanding]
+
+Graphing Tool Needed? [Yes/No]
+Desmos Tool Type (if yes): [Graphing Calculator / Geometry Tool]
+
+────────────────────────────────────────────────────
+
+INSTRUCTIONS:
+1. Replace ALL bracketed sections with your actual content
+2. Remove the brackets entirely - they are just placeholders
+3. Save this document
+4. Upload it to TailorEDU's lesson builder
+5. Review the auto-generated components
+6. Make any needed adjustments
+7. Publish your lesson!`;
+
+      const blob = new Blob([wordTemplateContent], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'TailorEDU_Lesson_Plan_Template.txt';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      toast({
+        title: 'Template Downloaded',
+        description: 'Lesson plan template downloaded. You can open this file in Word or any text editor.',
+      });
     }
   };
 
