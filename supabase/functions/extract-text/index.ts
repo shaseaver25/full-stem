@@ -9,58 +9,68 @@ const corsHeaders = {
 // Function to extract text from DOCX files
 async function extractDocxText(fileBytes: Uint8Array): Promise<string> {
   try {
-    // DOCX files are ZIP archives. We need to extract the document.xml file
-    // and parse the XML to extract text content
+    console.log('Starting DOCX extraction, file size:', fileBytes.length);
     
-    // Convert Uint8Array to ArrayBuffer for zip processing
-    const arrayBuffer = fileBytes.buffer.slice(fileBytes.byteOffset, fileBytes.byteOffset + fileBytes.byteLength);
-    
-    // For basic DOCX text extraction, we'll use a simple approach
-    // In production, you would use a proper DOCX parsing library
-    
-    // Try to find text content in the binary data
+    // Convert to string for pattern matching
     const decoder = new TextDecoder('utf-8', { ignoreBOM: true, fatal: false });
     let content = decoder.decode(fileBytes);
     
-    // Look for XML-like structures that contain text
-    // DOCX documents contain text in <w:t> tags
-    const textRegex = /<w:t[^>]*>([^<]*)<\/w:t>/g;
-    const matches = [];
-    let match;
+    // DOCX files contain text in various XML patterns
+    const extractedText = [];
     
-    while ((match = textRegex.exec(content)) !== null) {
+    // Primary pattern: <w:t> tags (most common)
+    const wtTagRegex = /<w:t[^>]*>([^<]+)<\/w:t>/g;
+    let match;
+    while ((match = wtTagRegex.exec(content)) !== null) {
       if (match[1] && match[1].trim()) {
-        matches.push(match[1].trim());
+        extractedText.push(match[1].trim());
       }
     }
     
-    if (matches.length > 0) {
-      return matches.join(' ').replace(/\s+/g, ' ').trim();
+    // Secondary pattern: Look for text between > and < that looks like readable content
+    const textContentRegex = />([A-Za-z0-9][^<>{]*[A-Za-z0-9])</g;
+    while ((match = textContentRegex.exec(content)) !== null) {
+      const text = match[1].trim();
+      if (text.length > 3 && /[A-Za-z]/.test(text) && !text.includes('xml') && !text.includes('rel=')) {
+        extractedText.push(text);
+      }
     }
     
-    // Fallback: try to extract any readable text
-    // Remove binary data and keep only printable characters
-    const cleanText = content
-      .replace(/[\x00-\x1F\x7F-\xFF]/g, ' ') // Remove non-printable characters
-      .replace(/[^\x20-\x7E\s]/g, ' ') // Keep only ASCII printable chars and whitespace
-      .replace(/\s+/g, ' ') // Normalize whitespace
+    console.log('Extracted text segments:', extractedText.length);
+    
+    if (extractedText.length > 0) {
+      const result = extractedText.join(' ').replace(/\s+/g, ' ').trim();
+      console.log('Final extracted text length:', result.length);
+      return result;
+    }
+    
+    // If XML parsing fails, try to extract readable text using different approach
+    console.log('XML patterns failed, trying fallback extraction');
+    
+    // Remove binary data more aggressively
+    let cleanText = content
+      // Remove null bytes and control characters
+      .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x9F]/g, ' ')
+      // Keep letters, numbers, spaces, and basic punctuation
+      .replace(/[^\x20-\x7E\u00A0-\u024F]/g, ' ')
+      // Normalize whitespace
+      .replace(/\s+/g, ' ')
       .trim();
     
-    // Look for common lesson plan keywords to validate extraction
-    const keywords = ['lesson', 'title', 'grade', 'objective', 'instruction', 'assignment'];
-    const hasKeywords = keywords.some(keyword => 
-      cleanText.toLowerCase().includes(keyword)
-    );
+    // Look for sequences of readable text
+    const readableSegments = cleanText.match(/[A-Za-z][A-Za-z0-9\s\.,;:!?\-'"()]{10,}/g);
     
-    if (cleanText.length > 50 && hasKeywords) {
-      return cleanText;
+    if (readableSegments && readableSegments.length > 0) {
+      const result = readableSegments.join(' ').replace(/\s+/g, ' ').trim();
+      console.log('Fallback extraction successful, length:', result.length);
+      return result;
     }
     
-    throw new Error('Unable to extract meaningful content from DOCX file');
+    throw new Error('Unable to extract readable content from DOCX file');
     
   } catch (error) {
     console.error('DOCX extraction error:', error);
-    throw new Error('Failed to extract text from DOCX file');
+    throw new Error(`Failed to extract text from DOCX file: ${error.message}`);
   }
 }
 
