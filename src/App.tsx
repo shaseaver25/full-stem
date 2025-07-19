@@ -33,6 +33,7 @@ import CourseEditorPage from "./pages/CourseEditorPage";
 import ComponentsPage from "./pages/ComponentsPage";
 import DeveloperDashboard from "./pages/DeveloperDashboard";
 import DeveloperRoute from "./components/developer/DeveloperRoute";
+import ClassManagementPage from "./pages/ClassManagementPage";
 import GlobalReadAloud from "./components/GlobalReadAloud";
 
 const queryClient = new QueryClient();
@@ -129,6 +130,22 @@ const App = () => (
               element={
                 <ProtectedTeacherRoute requireOnboarding={true}>
                   <AnalyticsDashboard />
+                </ProtectedTeacherRoute>
+              } 
+            />
+            <Route 
+              path="/teacher/class/:classId" 
+              element={
+                <ProtectedTeacherRoute requireOnboarding={true}>
+                  <ClassManagementPage />
+                </ProtectedTeacherRoute>
+              } 
+            />
+            <Route 
+              path="/build-class/:classId?" 
+              element={
+                <ProtectedTeacherRoute requireOnboarding={true}>
+                  <BuildClassPage />
                 </ProtectedTeacherRoute>
               } 
             />
