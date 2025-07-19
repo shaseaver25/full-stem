@@ -255,44 +255,95 @@ const ModularLessonView: React.FC<ModularLessonViewProps> = ({
 
         {components.map((component) => (
           <TabsContent key={component.id} value={component.id} className="mt-6">
-            <Card>
-              <CardContent className="p-6">
-                {/* Component Header */}
-                <div className="flex justify-between items-center mb-4">
-                  <div className="flex items-center gap-3">
-                    <span className="text-2xl">
-                      {getComponentIcon(component.component_type)}
-                    </span>
-                    <div>
-                      <h2 className="text-xl font-semibold">
-                        {getComponentDisplayName(component.component_type)}
-                      </h2>
-                      <div className="flex gap-2 mt-1">
-                        {component.language_code !== 'en' && (
-                          <Badge variant="secondary">{component.language_code.toUpperCase()}</Badge>
-                        )}
-                        {component.reading_level && (
-                          <Badge variant="outline">Grade {component.reading_level}</Badge>
-                        )}
-                        {component.read_aloud && (
-                          <Badge variant="outline">
-                            <Volume2 className="h-3 w-3 mr-1" />
-                            Audio
-                          </Badge>
-                        )}
+            {translatedContent ? (
+              // Side-by-side view when translation is available
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Original Content */}
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex justify-between items-center mb-4">
+                      <div className="flex items-center gap-3">
+                        <span className="text-2xl">
+                          {getComponentIcon(component.component_type)}
+                        </span>
+                        <div>
+                          <h2 className="text-xl font-semibold">
+                            {getComponentDisplayName(component.component_type)}
+                          </h2>
+                          <Badge variant="outline" className="mt-1">English</Badge>
+                        </div>
                       </div>
+                    </div>
+                    <LessonComponentRenderer component={component} />
+                  </CardContent>
+                </Card>
+
+                {/* Translated Content */}
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex justify-between items-center mb-4">
+                      <div className="flex items-center gap-3">
+                        <span className="text-2xl">
+                          {getComponentIcon(component.component_type)}
+                        </span>
+                        <div>
+                          <h2 className="text-xl font-semibold">
+                            {getComponentDisplayName(component.component_type)}
+                          </h2>
+                          <Badge variant="secondary" className="mt-1">
+                            <Globe className="h-3 w-3 mr-1" />
+                            {languageOptions.find(l => l.value === selectedLanguage)?.label}
+                          </Badge>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="prose max-w-none">
+                      <div dangerouslySetInnerHTML={{ __html: translatedContent }} />
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            ) : (
+              // Single view when no translation
+              <Card>
+                <CardContent className="p-6">
+                  {/* Component Header */}
+                  <div className="flex justify-between items-center mb-4">
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl">
+                        {getComponentIcon(component.component_type)}
+                      </span>
+                      <div>
+                        <h2 className="text-xl font-semibold">
+                          {getComponentDisplayName(component.component_type)}
+                        </h2>
+                        <div className="flex gap-2 mt-1">
+                          {component.language_code !== 'en' && (
+                            <Badge variant="secondary">{component.language_code.toUpperCase()}</Badge>
+                          )}
+                          {component.reading_level && (
+                            <Badge variant="outline">Grade {component.reading_level}</Badge>
+                          )}
+                          {component.read_aloud && (
+                            <Badge variant="outline">
+                              <Volume2 className="h-3 w-3 mr-1" />
+                              Audio
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Component-specific controls */}
+                    <div className="flex gap-2">
                     </div>
                   </div>
 
-                  {/* Component-specific controls */}
-                  <div className="flex gap-2">
-                  </div>
-                </div>
-
-                {/* Component Content */}
-                <LessonComponentRenderer component={component} />
-              </CardContent>
-            </Card>
+                  {/* Component Content */}
+                  <LessonComponentRenderer component={component} />
+                </CardContent>
+              </Card>
+            )}
           </TabsContent>
         ))}
       </Tabs>
