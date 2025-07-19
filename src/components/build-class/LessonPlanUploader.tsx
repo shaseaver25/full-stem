@@ -140,8 +140,9 @@ const LessonPlanUploader: React.FC<LessonPlanUploaderProps> = ({ onLessonParsed 
     await parseWithGPT(textContent);
   };
 
-  const downloadTemplate = () => {
-    const templateContent = `LESSON PLAN TEMPLATE
+  const downloadTemplate = async (format: 'txt' | 'docx' = 'txt') => {
+    if (format === 'txt') {
+      const templateContent = `TAILOREDU LESSON PLAN TEMPLATE
 ===================
 
 IMPORTANT: Replace ALL bracketed sections [like this] with your actual content. 
@@ -157,7 +158,16 @@ Lesson Title: [Enter your lesson title here]
 
 Grade Level: [e.g., 5th Grade, High School, etc.]
 
-Video Link: [YouTube or other video URL - optional]
+Subject: [e.g., Mathematics, Science, Technology, etc.]
+
+Duration: [e.g., 50 minutes, 90 minutes, etc.]
+
+Video Link (Optional): [YouTube or other video URL]
+
+Learning Objectives:
+- [First learning objective]
+- [Second learning objective]
+- [Third learning objective]
 
 Written Instructions:
 [Use full sentences, steps, or directions for students. Be specific about what students should do during the lesson.]
@@ -168,10 +178,10 @@ Assignment Instructions:
 Discussion Prompt:
 [Add a question or topic for class discussion]
 
-Reflection Question (optional):
+Reflection Question (Optional):
 [Add a question for students to reflect on their learning]
 
-Rubric (optional):
+Rubric (Optional):
 [Paste rubric or describe criteria for grading]
 
 Additional Resources (links, PDFs, etc.):
@@ -192,20 +202,63 @@ INSTRUCTIONS:
 6. Make any needed adjustments
 7. Publish your lesson!`;
 
-    const blob = new Blob([templateContent], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'TailorEDU_Lesson_Plan_Template.txt';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+      const blob = new Blob([templateContent], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'TailorEDU_Lesson_Plan_Template.txt';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
 
-    toast({
-      title: 'Template Downloaded',
-      description: 'Lesson plan template has been downloaded to your computer.',
-    });
+      toast({
+        title: 'Template Downloaded',
+        description: 'Text lesson plan template has been downloaded to your computer.',
+      });
+    } else {
+      // Download Word document template
+      try {
+        const { data, error } = await supabase.functions.invoke('generate-docx', {
+          body: { templateType: 'lesson-plan-template' }
+        });
+
+        if (error) {
+          throw new Error('Failed to generate Word template');
+        }
+
+        // Convert base64 to blob and download
+        const binaryString = atob(data.docxContent);
+        const bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+
+        const blob = new Blob([bytes], { 
+          type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' 
+        });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = data.fileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        toast({
+          title: 'Word Template Downloaded',
+          description: 'Word document lesson plan template has been downloaded to your computer.',
+        });
+      } catch (error) {
+        console.error('Error downloading Word template:', error);
+        toast({
+          title: 'Download Error',
+          description: 'Failed to download Word template. Please try the text version instead.',
+          variant: 'destructive',
+        });
+      }
+    }
   };
 
   return (
@@ -219,17 +272,25 @@ INSTRUCTIONS:
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Download Template */}
-          <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg">
-            <div>
-              <h3 className="font-medium">Need a template?</h3>
-              <p className="text-sm text-gray-600">
-                Download our standardized lesson plan template to get started.
-              </p>
+          <div className="p-4 bg-blue-50 rounded-lg">
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                <h3 className="font-medium">Need a template?</h3>
+                <p className="text-sm text-gray-600 mt-1">
+                  Download our standardized lesson plan template to get started.
+                </p>
+              </div>
+              <div className="flex gap-2 ml-4">
+                <Button onClick={() => downloadTemplate('txt')} variant="outline" size="sm">
+                  <Download className="h-4 w-4 mr-2" />
+                  Text (.txt)
+                </Button>
+                <Button onClick={() => downloadTemplate('docx')} variant="outline" size="sm">
+                  <Download className="h-4 w-4 mr-2" />
+                  Word (.docx)
+                </Button>
+              </div>
             </div>
-            <Button onClick={downloadTemplate} variant="outline">
-              <Download className="h-4 w-4 mr-2" />
-              Download Template
-            </Button>
           </div>
 
           {/* File Upload */}
