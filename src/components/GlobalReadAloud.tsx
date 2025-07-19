@@ -118,12 +118,12 @@ const GlobalReadAloud: React.FC<GlobalReadAloudProps> = ({ className = '' }) => 
   }
 
   return (
-    <div className={`fixed bottom-4 right-4 z-[9999] ${className}`}>
+    <div className={`fixed bottom-4 right-4 z-[9999] pointer-events-none ${className}`}>
       {/* Floating trigger button when minimized */}
       {!isVisible && (
         <Button
           onClick={() => setIsVisible(true)}
-          className="rounded-full w-14 h-14 shadow-xl bg-primary hover:bg-primary/90 border-2 border-white"
+          className="rounded-full w-14 h-14 shadow-xl bg-primary hover:bg-primary/90 border-2 border-white pointer-events-auto"
           size="sm"
         >
           <Volume2 className="h-6 w-6" />
@@ -132,7 +132,7 @@ const GlobalReadAloud: React.FC<GlobalReadAloudProps> = ({ className = '' }) => 
 
       {/* Read aloud panel when visible */}
       {isVisible && (
-        <Card className="w-[420px] max-w-[90vw] shadow-xl border-2">
+        <Card className="w-[420px] max-w-[90vw] shadow-xl border-2 pointer-events-auto">
           {/* Header with controls */}
           <div className="flex items-center justify-between p-3 border-b bg-primary/5">
             <div className="flex items-center gap-2">
@@ -163,7 +163,7 @@ const GlobalReadAloud: React.FC<GlobalReadAloudProps> = ({ className = '' }) => 
 
           {/* Content */}
           {!isMinimized && (
-            <div className="p-4">
+            <div className="p-4 max-h-96 overflow-y-auto">
               <EnhancedReadAloud
                 text={pageText}
                 autoHighlight={true}
