@@ -120,21 +120,21 @@ const GlobalReadAloud: React.FC<GlobalReadAloudProps> = ({ className = '' }) => 
       {!isVisible && (
         <Button
           onClick={() => setIsVisible(true)}
-          className="rounded-full w-12 h-12 shadow-lg bg-primary hover:bg-primary/90"
+          className="rounded-full w-14 h-14 shadow-xl bg-primary hover:bg-primary/90 border-2 border-white"
           size="sm"
         >
-          <Volume2 className="h-5 w-5" />
+          <Volume2 className="h-6 w-6" />
         </Button>
       )}
 
       {/* Read aloud panel when visible */}
       {isVisible && (
-        <Card className="w-96 max-w-[90vw] shadow-lg border">
+        <Card className="w-[420px] max-w-[90vw] shadow-xl border-2">
           {/* Header with controls */}
-          <div className="flex items-center justify-between p-3 border-b">
+          <div className="flex items-center justify-between p-3 border-b bg-primary/5">
             <div className="flex items-center gap-2">
-              <Volume2 className="h-4 w-4 text-primary" />
-              <span className="font-medium text-sm">Read Aloud</span>
+              <Volume2 className="h-5 w-5 text-primary" />
+              <span className="font-semibold text-base">Enhanced Read Aloud</span>
             </div>
             
             <div className="flex gap-1">
@@ -144,7 +144,7 @@ const GlobalReadAloud: React.FC<GlobalReadAloudProps> = ({ className = '' }) => 
                 onClick={() => setIsMinimized(!isMinimized)}
                 className="h-8 w-8 p-0"
               >
-                {isMinimized ? <Maximize2 className="h-3 w-3" /> : <Minimize2 className="h-3 w-3" />}
+                {isMinimized ? <Maximize2 className="h-4 w-4" /> : <Minimize2 className="h-4 w-4" />}
               </Button>
               
               <Button
@@ -153,14 +153,14 @@ const GlobalReadAloud: React.FC<GlobalReadAloudProps> = ({ className = '' }) => 
                 onClick={() => setIsVisible(false)}
                 className="h-8 w-8 p-0"
               >
-                <VolumeX className="h-3 w-3" />
+                <VolumeX className="h-4 w-4" />
               </Button>
             </div>
           </div>
 
           {/* Content */}
           {!isMinimized && (
-            <div className="p-3">
+            <div className="p-4">
               <EnhancedReadAloud
                 text={pageText}
                 autoHighlight={true}
