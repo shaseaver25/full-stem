@@ -186,11 +186,15 @@ const GlobalReadAloud: React.FC<GlobalReadAloudProps> = ({ className = '' }) => 
       {/* Floating trigger button when minimized */}
       {!isVisible && (
         <Button
-          onClick={() => setIsVisible(true)}
-          className="rounded-full w-14 h-14 shadow-xl bg-primary hover:bg-primary/90 border-2 border-white pointer-events-auto animate-fade-in"
+          onClick={() => {
+            console.log('GlobalReadAloud: Floating button clicked');
+            setIsVisible(true);
+          }}
+          className="rounded-full w-16 h-16 shadow-2xl bg-blue-600 hover:bg-blue-700 text-white border-4 border-white pointer-events-auto animate-pulse hover:animate-none transition-all duration-300 hover:scale-110"
           size="sm"
+          title="Click to open Enhanced Read Aloud"
         >
-          <Volume2 className="h-6 w-6" />
+          <Volume2 className="h-7 w-7" />
         </Button>
       )}
 

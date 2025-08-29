@@ -270,8 +270,12 @@ export const EnhancedReadAloud: React.FC<EnhancedReadAloudProps> = ({
 
   const handlePlay = async () => {
     console.log('HandlePlay called, isPaused:', isPaused, 'isPlaying:', isPlaying);
+    console.log('Text to speak length:', text.length);
+    console.log('Speech synthesis available:', 'speechSynthesis' in window);
+    console.log('Current speech synthesis speaking:', window.speechSynthesis?.speaking);
     
     if (isPaused) {
+      console.log('Resuming from pause');
       // Resume from pause
       speechSynthesis.resume();
       setIsPaused(false);
@@ -281,7 +285,20 @@ export const EnhancedReadAloud: React.FC<EnhancedReadAloudProps> = ({
     }
 
     try {
-      console.log('Starting new playback');
+      console.log('Starting new playbook with text:', text.substring(0, 100) + '...');
+      
+      // Check if text exists
+      if (!text || text.trim().length === 0) {
+        throw new Error('No text content available to read');
+      }
+
+      // Show immediate feedback
+      toast({
+        title: "Starting Audio",
+        description: "Initializing text-to-speech...",
+        duration: 2000,
+      });
+      
       setIsPlaying(true);
       setCurrentWordIndex(0);
       
@@ -293,18 +310,29 @@ export const EnhancedReadAloud: React.FC<EnhancedReadAloudProps> = ({
       // Then start audio
       await generateAudio(text, selectedVoice, playbackSpeed);
       
-      console.log('Playback completed');
+      console.log('Playback completed successfully');
+      
+      toast({
+        title: "Audio Complete",
+        description: "Finished reading the content",
+        duration: 2000,
+      });
     } catch (error) {
-      console.error('Playback failed:', error);
+      console.error('Playback failed with error:', error);
       setIsPlaying(false);
       setCurrentWordIndex(-1);
       if (timeUpdateIntervalRef.current) {
         clearInterval(timeUpdateIntervalRef.current);
       }
+      
+      const errorMessage = error instanceof Error ? error.message : 'Unknown playback error';
+      console.error('Error details:', errorMessage);
+      
       toast({
-        title: "Playback Failed",
-        description: "Please try again or check your internet connection",
-        variant: "destructive"
+        title: "Audio Failed",
+        description: errorMessage,
+        variant: "destructive",
+        duration: 5000,
       });
     }
   };
