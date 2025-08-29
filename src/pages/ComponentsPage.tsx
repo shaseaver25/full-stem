@@ -4,13 +4,10 @@ import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import Header from '@/components/Header';
 import EnhancedReadAloud from '@/components/EnhancedReadAloud';
-import HighlightedTextReader from '@/components/HighlightedTextReader';
 import { Sparkles, Volume2, Mic } from 'lucide-react';
 
 const ComponentsPage = () => {
   const sampleText = `Welcome to our enhanced reading experience! This is a demonstration of our advanced text-to-speech capabilities. The system uses cutting-edge AI voices to provide natural-sounding narration with real-time word highlighting. You can adjust the playback speed, choose different voices, and even download the transcript. This technology helps students of all reading levels engage with content more effectively. The highlighting feature helps track progress and improve reading comprehension. Try clicking the play button to experience this innovative learning tool in action!`;
-
-  const shortText = "This is a shorter sample text for the basic read-aloud button component.";
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
@@ -72,36 +69,19 @@ const ComponentsPage = () => {
             <CardHeader>
               <div className="flex items-center gap-3">
                 <Volume2 className="h-6 w-6 text-muted-foreground" />
-                <CardTitle className="text-2xl text-muted-foreground">Basic Read Aloud Button</CardTitle>
+                <CardTitle className="text-2xl text-muted-foreground">Basic Components</CardTitle>
                 <Badge variant="outline">Removed</Badge>
               </div>
               <CardDescription>
-                The basic read-aloud button has been replaced with the enhanced global version. Use the floating button in the top-right corner of any page for advanced text-to-speech features.
+                Basic audio components have been replaced with the enhanced global version. Use the floating button in the top-right corner of any page for advanced text-to-speech features.
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="p-4 bg-muted/30 rounded-lg text-center">
                 <p className="text-muted-foreground">
-                  This component has been removed in favor of the global Enhanced Read Aloud widget.
+                  Audio buttons under Instructions sections have been removed in favor of the global Enhanced Read Aloud widget.
                 </p>
               </div>
-            </CardContent>
-          </Card>
-
-          {/* Highlighted Text Reader */}
-          <Card className="shadow-lg">
-            <CardHeader>
-              <div className="flex items-center gap-3">
-                <Volume2 className="h-6 w-6 text-green-600" />
-                <CardTitle className="text-2xl">Highlighted Text Reader</CardTitle>
-                <Badge variant="secondary">Interactive</Badge>
-              </div>
-              <CardDescription>
-                Text reader with word-by-word highlighting and basic speech controls.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <HighlightedTextReader text={shortText} />
             </CardContent>
           </Card>
 

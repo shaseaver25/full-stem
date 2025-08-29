@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { LessonComponent } from '@/hooks/useLessonComponents';
+import { useUserPreferences } from '@/hooks/useUserPreferences';
 import VideoSection from './VideoSection';
 import CodeIDE from './CodeIDE';
 import AssignmentSection from '@/components/assignments/AssignmentSection';
@@ -14,6 +15,10 @@ interface LessonComponentRendererProps {
 
 const LessonComponentRenderer: React.FC<LessonComponentRendererProps> = ({ component }) => {
   const { component_type, content } = component;
+  const { preferences } = useUserPreferences();
+  
+  // Get the user's reading level, default to Grade 5
+  const userReadingLevel = preferences?.['Reading Level'] || 'Grade 5';
 
   const renderContent = () => {
     switch (component_type) {
@@ -27,8 +32,16 @@ const LessonComponentRenderer: React.FC<LessonComponentRendererProps> = ({ compo
 
       case 'instructions':
         return (
-          <div className="prose max-w-none">
-            <div dangerouslySetInnerHTML={{ __html: content.content || content.html || content.text || '' }} />
+          <div className="space-y-4">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold">Instructions</h2>
+              <Badge variant="outline" className="text-xs">
+                {userReadingLevel} Reading Level
+              </Badge>
+            </div>
+            <div className="prose max-w-none">
+              <div dangerouslySetInnerHTML={{ __html: content.content || content.html || content.text || '' }} />
+            </div>
           </div>
         );
 
