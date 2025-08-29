@@ -8,6 +8,7 @@ import { Volume2, Book, Globe, Languages, Loader2 } from 'lucide-react';
 import { useLessonComponents } from '@/hooks/useLessonComponents';
 import { useLessonData } from '@/hooks/useLessonData';
 import { useLiveTranslation } from '@/hooks/useLiveTranslation';
+import { useUserPreferences } from '@/hooks/useUserPreferences';
 import { useToast } from '@/hooks/use-toast';
 import LessonComponentRenderer from './LessonComponentRenderer';
 import DesmosSection from './DesmosSection';
@@ -27,11 +28,15 @@ const ModularLessonView: React.FC<ModularLessonViewProps> = ({
   const { data: components = [], isLoading } = useLessonComponents(lessonId);
   const { lesson } = useLessonData(lessonId);
   const { translateText, isTranslating } = useLiveTranslation();
+  const { preferences } = useUserPreferences();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<string>('');
   const [isTranslateMenuOpen, setIsTranslateMenuOpen] = useState(false);
   const [translatedContent, setTranslatedContent] = useState<string | null>(null);
   const [selectedLanguage, setSelectedLanguage] = useState<string>('');
+
+  // Get user's reading level preference
+  const userReadingLevel = preferences?.['Reading Level'] || 'Grade 5';
 
   // Set first component as active when components load
   React.useEffect(() => {
@@ -321,9 +326,7 @@ const ModularLessonView: React.FC<ModularLessonViewProps> = ({
                           {component.language_code !== 'en' && (
                             <Badge variant="secondary">{component.language_code.toUpperCase()}</Badge>
                           )}
-                          {component.reading_level && (
-                            <Badge variant="outline">Grade {component.reading_level}</Badge>
-                          )}
+                          <Badge variant="outline">{userReadingLevel} Reading Level</Badge>
                         </div>
                       </div>
                     </div>
