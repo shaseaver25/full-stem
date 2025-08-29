@@ -324,12 +324,6 @@ const ModularLessonView: React.FC<ModularLessonViewProps> = ({
                           {component.reading_level && (
                             <Badge variant="outline">Grade {component.reading_level}</Badge>
                           )}
-                          {component.read_aloud && (
-                            <Badge variant="outline">
-                              <Volume2 className="h-3 w-3 mr-1" />
-                              Audio
-                            </Badge>
-                          )}
                         </div>
                       </div>
                     </div>
