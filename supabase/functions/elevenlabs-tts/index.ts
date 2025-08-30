@@ -12,7 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    const { text, voice, language } = await req.json()
+    const { text, voice, language, voiceId, rate = 1.0 } = await req.json()
 
     if (!text) {
       throw new Error('Text is required')
@@ -24,11 +24,11 @@ serve(async (req) => {
     }
 
     // Use a natural voice - Sarah is great for educational content
-    const voiceId = voice || 'EXAVITQu4vr4xnSDxMaL' // Sarah voice ID
+    const selectedVoiceId = voiceId || voice || 'EXAVITQu4vr4xnSDxMaL' // Sarah voice ID
 
     console.log(`Generating speech for text: ${text.substring(0, 100)}...`)
 
-    const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+    const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${selectedVoiceId}`, {
       method: 'POST',
       headers: {
         'Accept': 'audio/mpeg',
@@ -45,6 +45,7 @@ serve(async (req) => {
           style: 0.0,
           use_speaker_boost: true,
         },
+        generation_config: { speed: rate },
       }),
     })
 
@@ -65,8 +66,23 @@ serve(async (req) => {
 
     console.log('Successfully generated speech audio')
 
+    // Try to parse vendor timings if they exist (placeholder; depends on vendor/model)
+    // const vendorTimings = await maybeFetchTimings(...);
+
+    // Provide tokenizer outputs so client can synthesize timings exactly to its measured duration.
+    const tokens = text.split(/(\s+)/).filter(t => t.trim().length > 0);
+    const weights = tokens.map(tok => {
+      const w = tok.replace(/[^\p{L}\p{N}]/gu, '').length;
+      return w || 1;
+    });
+
     return new Response(
-      JSON.stringify({ audioContent: base64Audio }),
+      JSON.stringify({
+        audioContent: base64Audio,
+        // wordTimings: vendorTimings ?? null,
+        tokens,
+        weights
+      }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
