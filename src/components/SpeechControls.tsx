@@ -8,10 +8,13 @@ interface SpeechControlsProps {
   isPaused: boolean;
   isLoading?: boolean;
   error?: string | null;
+  currentTime?: number;
+  duration?: number;
   onPlay: () => void;
   onPause: () => void;
   onResume: () => void;
   onStop: () => void;
+  onSeek?: (time: number) => void;
 }
 
 const SpeechControls: React.FC<SpeechControlsProps> = ({
@@ -19,10 +22,13 @@ const SpeechControls: React.FC<SpeechControlsProps> = ({
   isPaused,
   isLoading = false,
   error,
+  currentTime = 0,
+  duration = 0,
   onPlay,
   onPause,
   onResume,
   onStop,
+  onSeek,
 }) => {
   const handleClick = () => {
     console.log('Highlighted ReadAloud button clicked');
@@ -59,6 +65,17 @@ const SpeechControls: React.FC<SpeechControlsProps> = ({
     }
   };
 
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const time = Number(e.target.value);
+    onSeek?.(time);
+  };
+
   return (
     <div className="flex flex-col items-end gap-2">
       <div className="flex items-center gap-2">
@@ -84,6 +101,31 @@ const SpeechControls: React.FC<SpeechControlsProps> = ({
           </Button>
         )}
       </div>
+      
+      {/* Seekbar and time display */}
+      {duration > 0 && !isNaN(duration) && (
+        <div className="flex items-center gap-2 text-sm">
+          <span className="tabular-nums text-muted-foreground min-w-[40px] text-right">
+            {formatTime(currentTime)}
+          </span>
+          <input
+            type="range"
+            min={0}
+            max={duration}
+            step={0.05}
+            value={currentTime}
+            onChange={handleSeek}
+            className="w-32 h-1 bg-secondary rounded-lg appearance-none cursor-pointer slider"
+            style={{
+              background: `linear-gradient(to right, hsl(var(--primary)) 0%, hsl(var(--primary)) ${(currentTime / duration) * 100}%, hsl(var(--secondary)) ${(currentTime / duration) * 100}%, hsl(var(--secondary)) 100%)`
+            }}
+          />
+          <span className="tabular-nums text-muted-foreground min-w-[40px]">
+            {formatTime(duration)}
+          </span>
+        </div>
+      )}
+      
       {error && (
         <div className="text-sm text-red-600 bg-red-50 px-3 py-1 rounded border border-red-200 max-w-xs text-right">
           {error}

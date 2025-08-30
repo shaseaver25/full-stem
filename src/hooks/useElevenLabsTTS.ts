@@ -321,6 +321,20 @@ export const useElevenLabsTTS = (language?: string) => {
     syncCheckRef.current = { lastSyncCheck: 0, syncPoints: [] };
   }, []);
 
+  const seek = useCallback((targetTime: number) => {
+    if (!audioRef.current) return;
+    
+    // Clamp to valid range
+    const clampedTime = Math.max(0, Math.min(targetTime, audioRef.current.duration || 0));
+    
+    try {
+      audioRef.current.currentTime = clampedTime;
+      setCurrentTime(clampedTime);
+    } catch (error) {
+      console.warn('Seek failed:', error);
+    }
+  }, []);
+
   // Clean up on unmount
   useEffect(() => {
     return () => {
@@ -340,6 +354,7 @@ export const useElevenLabsTTS = (language?: string) => {
     pause,
     resume,
     stop,
+    seek,
     isPlaying,
     isPaused,
     isLoading,

@@ -34,6 +34,7 @@ const InlineReadAloud: React.FC<InlineReadAloudProps> = ({ text, className, lang
     pause: elevenLabsPause,
     resume: elevenLabsResume,
     stop: elevenLabsStop,
+    seek: elevenLabsSeek,
     isPlaying: elevenLabsPlaying,
     isPaused: elevenLabsPaused,
     isLoading: elevenLabsLoading,
@@ -71,6 +72,60 @@ const InlineReadAloud: React.FC<InlineReadAloudProps> = ({ text, className, lang
     }
   }, [currentWordIndex]);
 
+  // Keyboard shortcuts
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ignore if focus is in an input
+      const activeElement = document.activeElement as HTMLElement;
+      if (
+        activeElement && 
+        (activeElement.tagName === 'INPUT' || 
+         activeElement.tagName === 'TEXTAREA' || 
+         activeElement.tagName === 'SELECT' ||
+         activeElement.contentEditable === 'true')
+      ) {
+        return;
+      }
+
+      switch (e.code) {
+        case 'Space':
+          e.preventDefault();
+          if (isPlaying && !isPaused) {
+            handlePause();
+          } else if (isPaused) {
+            handleResume();
+          } else {
+            handlePlay();
+          }
+          break;
+        case 'ArrowRight':
+          e.preventDefault();
+          elevenLabsSeek(currentTime + 5);
+          break;
+        case 'ArrowLeft':
+          e.preventDefault();
+          elevenLabsSeek(currentTime - 5);
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isPlaying, isPaused, currentTime, elevenLabsSeek]);
+
+  // Click-to-seek handler
+  const handleContentClick = React.useCallback((e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+    const wordAttr = target.getAttribute('data-word');
+    
+    if (wordAttr !== null && wordTimings) {
+      const wordIndex = parseInt(wordAttr, 10);
+      if (!isNaN(wordIndex) && wordTimings[wordIndex]) {
+        elevenLabsSeek(wordTimings[wordIndex].start);
+      }
+    }
+  }, [wordTimings, elevenLabsSeek]);
+
   const handlePlay = async () => {
     await elevenLabsSpeak(cleanText);
   };
@@ -88,19 +143,23 @@ const InlineReadAloud: React.FC<InlineReadAloudProps> = ({ text, className, lang
           isPaused={isPaused}
           isLoading={elevenLabsLoading}
           error={error}
+          currentTime={currentTime}
+          duration={duration}
           onPlay={handlePlay}
           onPause={handlePause}
           onResume={handleResume}
           onStop={handleStop}
+          onSeek={elevenLabsSeek}
         />
       </div>
 
       {/* Content */}
       <div
         ref={contentRef}
-        className="prose max-w-none max-h-96 overflow-y-auto"
+        className="prose max-w-none max-h-96 overflow-y-auto cursor-pointer"
         aria-live="polite"
         aria-atomic="true"
+        onClick={handleContentClick}
         dangerouslySetInnerHTML={{ __html: sanitizedHTML }}
       />
     </div>
