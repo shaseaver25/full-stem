@@ -33,19 +33,28 @@ Deno.serve(async (req) => {
       })
     }
 
-    // Check if user has admin role
+    // Check if user has admin or teacher role for demo seeding
     const { data: userRole } = await supabase
       .from('user_roles')
       .select('role')
       .eq('user_id', user.id)
-      .eq('role', 'admin')
+      .in('role', ['admin', 'teacher'])
       .single()
 
+    // If no role in user_roles table, check if they have a teacher profile (fallback)
     if (!userRole) {
-      return new Response(JSON.stringify({ error: 'Admin access required' }), {
-        status: 403,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      })
+      const { data: teacherProfile } = await supabase
+        .from('teacher_profiles')
+        .select('id')
+        .eq('user_id', user.id)
+        .single()
+      
+      if (!teacherProfile) {
+        return new Response(JSON.stringify({ error: 'Admin or teacher access required for demo seeding' }), {
+          status: 403,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        })
+      }
     }
 
     const url = new URL(req.url)
