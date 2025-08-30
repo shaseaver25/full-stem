@@ -450,10 +450,16 @@ const ModularLessonView: React.FC<ModularLessonViewProps> = ({
                           </div>
                         </div>
                       </div>
+                    <div className="space-y-4">
+                      <div className="prose max-w-none">
+                        <div dangerouslySetInnerHTML={{ __html: translatedContent }} />
+                      </div>
                       <InlineReadAloud 
-                        text={formatTextContent(translatedContent)} 
+                        text={translatedContent} 
                         language={getLanguageCode(selectedLanguage)}
+                        className="mt-4"
                       />
+                    </div>
                     </CardContent>
                   </Card>
                 </div>
@@ -497,7 +503,13 @@ const ModularLessonView: React.FC<ModularLessonViewProps> = ({
                         </div>
                       </div>
                     </div>
-                    <LessonComponentRenderer component={tab.component} />
+                    <div className="space-y-4">
+                      <LessonComponentRenderer component={tab.component} />
+                      <InlineReadAloud 
+                        text={tab.component?.content || tab.component?.description || ''} 
+                        className="mt-4"
+                      />
+                    </div>
                   </CardContent>
                 </Card>
 
@@ -556,7 +568,13 @@ const ModularLessonView: React.FC<ModularLessonViewProps> = ({
                   </div>
 
                   {/* Component Content */}
-                  <LessonComponentRenderer component={tab.component} />
+                  <div className="space-y-4">
+                    <LessonComponentRenderer component={tab.component} />
+                    <InlineReadAloud 
+                      text={tab.component?.content || tab.component?.description || ''} 
+                      className="mt-4"
+                    />
+                  </div>
                 </CardContent>
               </Card>
             )}
