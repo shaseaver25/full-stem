@@ -1,11 +1,12 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Volume2, VolumeX, Pause, Play } from 'lucide-react';
+import { Volume2, VolumeX, Pause, Play, Loader2 } from 'lucide-react';
 
 interface SpeechControlsProps {
   isPlaying: boolean;
   isPaused: boolean;
+  isLoading?: boolean;
   onPlay: () => void;
   onPause: () => void;
   onResume: () => void;
@@ -15,6 +16,7 @@ interface SpeechControlsProps {
 const SpeechControls: React.FC<SpeechControlsProps> = ({
   isPlaying,
   isPaused,
+  isLoading = false,
   onPlay,
   onPause,
   onResume,
@@ -32,7 +34,9 @@ const SpeechControls: React.FC<SpeechControlsProps> = ({
   };
 
   const getIcon = () => {
-    if (isPlaying && !isPaused) {
+    if (isLoading) {
+      return <Loader2 className="h-4 w-4 animate-spin" />;
+    } else if (isPlaying && !isPaused) {
       return <Pause className="h-4 w-4" />;
     } else if (isPaused) {
       return <Play className="h-4 w-4" />;
@@ -42,7 +46,9 @@ const SpeechControls: React.FC<SpeechControlsProps> = ({
   };
 
   const getButtonText = () => {
-    if (isPlaying && !isPaused) {
+    if (isLoading) {
+      return 'Loading...';
+    } else if (isPlaying && !isPaused) {
       return 'Pause';
     } else if (isPaused) {
       return 'Resume';
@@ -57,6 +63,7 @@ const SpeechControls: React.FC<SpeechControlsProps> = ({
         variant="outline"
         size="sm"
         onClick={handleClick}
+        disabled={isLoading}
         className="flex items-center gap-2"
       >
         {getIcon()}

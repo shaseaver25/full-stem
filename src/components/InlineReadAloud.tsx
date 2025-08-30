@@ -2,6 +2,7 @@ import React from 'react';
 import SpeechControls from './SpeechControls';
 import WordHighlighter from './WordHighlighter';
 import { useHighlightedSpeech } from '@/hooks/useHighlightedSpeech';
+import { useElevenLabsTTS } from '@/hooks/useElevenLabsTTS';
 
 interface InlineReadAloudProps {
   text: string;
@@ -16,20 +17,53 @@ const InlineReadAloud: React.FC<InlineReadAloudProps> = ({ text, className }) =>
     return tempDiv.textContent || tempDiv.innerText || '';
   }, [text]);
 
+  // Use ElevenLabs for high-quality voice
   const {
-    isPlaying,
-    isPaused,
+    speak: elevenLabsSpeak,
+    pause: elevenLabsPause,
+    resume: elevenLabsResume,
+    stop: elevenLabsStop,
+    isPlaying: elevenLabsPlaying,
+    isPaused: elevenLabsPaused,
+    isLoading: elevenLabsLoading,
+  } = useElevenLabsTTS();
+
+  // Use browser TTS for word highlighting sync
+  const {
+    isPlaying: highlightPlaying,
+    isPaused: highlightPaused,
     currentWordIndex,
     textParts,
     wordPositions,
-    speak,
-    pause,
-    resume,
-    stop,
+    speak: highlightSpeak,
+    pause: highlightPause,
+    resume: highlightResume,
+    stop: highlightStop,
   } = useHighlightedSpeech(cleanText);
 
+  // Combine both systems
+  const isPlaying = elevenLabsPlaying || highlightPlaying;
+  const isPaused = elevenLabsPaused || highlightPaused;
+
   const handlePlay = () => {
-    speak();
+    // Start both: ElevenLabs for audio, browser TTS for highlighting
+    elevenLabsSpeak(cleanText);
+    highlightSpeak();
+  };
+
+  const handlePause = () => {
+    elevenLabsPause();
+    highlightPause();
+  };
+
+  const handleResume = () => {
+    elevenLabsResume();
+    highlightResume();
+  };
+
+  const handleStop = () => {
+    elevenLabsStop();
+    highlightStop();
   };
 
   return (
@@ -39,10 +73,11 @@ const InlineReadAloud: React.FC<InlineReadAloudProps> = ({ text, className }) =>
         <SpeechControls
           isPlaying={isPlaying}
           isPaused={isPaused}
+          isLoading={elevenLabsLoading}
           onPlay={handlePlay}
-          onPause={pause}
-          onResume={resume}
-          onStop={stop}
+          onPause={handlePause}
+          onResume={handleResume}
+          onStop={handleStop}
         />
       </div>
       
