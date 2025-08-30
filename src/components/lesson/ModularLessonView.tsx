@@ -207,6 +207,26 @@ const ModularLessonView: React.FC<ModularLessonViewProps> = ({
     { value: 'Arabic', label: 'Arabic' },
   ];
 
+  // Map language names to ElevenLabs language codes
+  const getLanguageCode = (languageName: string): string => {
+    const languageMap: { [key: string]: string } = {
+      'Spanish': 'es',
+      'Somali': 'so',
+      'Hmong': 'hmn',
+      'Ojibwe': 'oj',
+      'French': 'fr',
+      'German': 'de',
+      'Italian': 'it',
+      'Portuguese': 'pt',
+      'Russian': 'ru',
+      'Japanese': 'ja',
+      'Korean': 'ko',
+      'Chinese (Simplified)': 'zh',
+      'Arabic': 'ar',
+    };
+    return languageMap[languageName] || 'en';
+  };
+
   // Handle translation
   const handleTranslate = async (targetLanguage: string) => {
     if (!fullLessonText) {
@@ -388,25 +408,76 @@ const ModularLessonView: React.FC<ModularLessonViewProps> = ({
         {allTabs.map((tab) => (
           <TabsContent key={tab.id} value={tab.id} className="mt-6">
             {tab.type === 'main-content' ? (
-              // Main lesson content tab
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex justify-between items-center mb-4">
-                    <div className="flex items-center gap-3">
-                      <span className="text-2xl">
-                        {getComponentIcon(tab.type)}
-                      </span>
-                      <div>
-                        <h2 className="text-xl font-semibold">
-                          {lesson?.Title || 'Lesson Content'}
-                        </h2>
-                        <Badge variant="outline" className="mt-1">{userReadingLevel} Level</Badge>
+              translatedContent ? (
+                // Side-by-side view for main content when translated
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Original Content */}
+                  <Card>
+                    <CardContent className="p-6">
+                      <div className="flex justify-between items-center mb-4">
+                        <div className="flex items-center gap-3">
+                          <span className="text-2xl">
+                            {getComponentIcon(tab.type)}
+                          </span>
+                          <div>
+                            <h2 className="text-xl font-semibold">
+                              {lesson?.Title || 'Lesson Content'}
+                            </h2>
+                            <Badge variant="outline" className="mt-1">English</Badge>
+                          </div>
+                        </div>
+                      </div>
+                      <InlineReadAloud text={formatTextContent(tab.content || '')} />
+                    </CardContent>
+                  </Card>
+
+                  {/* Translated Content */}
+                  <Card>
+                    <CardContent className="p-6">
+                      <div className="flex justify-between items-center mb-4">
+                        <div className="flex items-center gap-3">
+                          <span className="text-2xl">
+                            {getComponentIcon(tab.type)}
+                          </span>
+                          <div>
+                            <h2 className="text-xl font-semibold">
+                              {lesson?.Title || 'Lesson Content'}
+                            </h2>
+                            <Badge variant="secondary" className="mt-1">
+                              <Globe className="h-3 w-3 mr-1" />
+                              {languageOptions.find(l => l.value === selectedLanguage)?.label}
+                            </Badge>
+                          </div>
+                        </div>
+                      </div>
+                      <InlineReadAloud 
+                        text={formatTextContent(translatedContent)} 
+                        language={getLanguageCode(selectedLanguage)}
+                      />
+                    </CardContent>
+                  </Card>
+                </div>
+              ) : (
+                // Single view for main content when not translated
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex justify-between items-center mb-4">
+                      <div className="flex items-center gap-3">
+                        <span className="text-2xl">
+                          {getComponentIcon(tab.type)}
+                        </span>
+                        <div>
+                          <h2 className="text-xl font-semibold">
+                            {lesson?.Title || 'Lesson Content'}
+                          </h2>
+                          <Badge variant="outline" className="mt-1">{userReadingLevel} Level</Badge>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  <InlineReadAloud text={formatTextContent(tab.content || '')} />
-                </CardContent>
-              </Card>
+                    <InlineReadAloud text={formatTextContent(tab.content || '')} />
+                  </CardContent>
+                </Card>
+              )
             ) : translatedContent ? (
               // Side-by-side view when translation is available (for components)
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -449,9 +520,10 @@ const ModularLessonView: React.FC<ModularLessonViewProps> = ({
                         </div>
                       </div>
                     </div>
-                    <div className="prose max-w-none">
-                      <div dangerouslySetInnerHTML={{ __html: translatedContent }} />
-                    </div>
+                    <InlineReadAloud 
+                      text={formatTextContent(translatedContent)} 
+                      language={getLanguageCode(selectedLanguage)}
+                    />
                   </CardContent>
                 </Card>
               </div>
