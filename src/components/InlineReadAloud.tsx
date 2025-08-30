@@ -1,7 +1,6 @@
 import React from 'react';
 import SpeechControls from './SpeechControls';
-import { useAudioSyncedHighlighting } from '@/hooks/useAudioSyncedHighlighting';
-import { useHTMLWordHighlighting } from '@/hooks/useHTMLWordHighlighting';
+import { useHTMLLineHighlighting } from '@/hooks/useHTMLLineHighlighting';
 import { useElevenLabsTTS } from '@/hooks/useElevenLabsTTS';
 
 interface InlineReadAloudProps {
@@ -35,19 +34,13 @@ const InlineReadAloud: React.FC<InlineReadAloudProps> = ({ text, className, lang
   const isPlaying = elevenLabsPlaying;
   const isPaused = elevenLabsPaused;
 
-  // Use audio-synced highlighting based on ElevenLabs playback time
-  const {
-    textParts,
-    wordPositions,
-    currentWordIndex,
-  } = useAudioSyncedHighlighting(cleanText, currentTime, duration, isPlaying);
-
-  // Get HTML with word highlighting applied
-  const highlightedHTML = useHTMLWordHighlighting(
+  // Get HTML with line highlighting applied
+  const highlightedHTML = useHTMLLineHighlighting(
     text,
     cleanText,
-    currentWordIndex,
-    wordPositions
+    currentTime,
+    duration,
+    isPlaying
   );
 
   const handlePlay = async () => {

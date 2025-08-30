@@ -1,6 +1,5 @@
 
 import React from 'react';
-import WordHighlighter from './WordHighlighter';
 import { useHighlightedSpeech } from '@/hooks/useHighlightedSpeech';
 
 interface HighlightedTextReaderProps {
@@ -9,19 +8,11 @@ interface HighlightedTextReaderProps {
 }
 
 const HighlightedTextReader: React.FC<HighlightedTextReaderProps> = ({ text, className }) => {
-  const {
-    currentWordIndex,
-    textParts,
-    wordPositions,
-  } = useHighlightedSpeech(text);
-
   return (
-    <div className={className}>      
-      <WordHighlighter
-        textParts={textParts}
-        wordPositions={wordPositions}
-        currentWordIndex={currentWordIndex}
-      />
+    <div className={className}>
+      <div className="prose max-w-none">
+        <div className="whitespace-pre-wrap leading-relaxed">{text}</div>
+      </div>
     </div>
   );
 };
