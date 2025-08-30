@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import SafeHtml from '@/components/ui/SafeHtml';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -156,11 +157,9 @@ const LessonPreview: React.FC<LessonPreviewProps> = ({ lesson: initialLesson, on
                   <p className="text-sm text-gray-600">{component.content.url}</p>
                 </div>
               ) : (
-                <div 
+                <SafeHtml 
+                  html={component.content.html || component.content.text || ''}
                   className="prose prose-sm max-w-none"
-                  dangerouslySetInnerHTML={{ 
-                    __html: component.content.html || component.content.text || ''
-                  }}
                 />
               )}
             </div>

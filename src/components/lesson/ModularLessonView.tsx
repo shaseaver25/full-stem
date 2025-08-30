@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import SafeHtml from '@/components/ui/SafeHtml';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -450,10 +451,11 @@ const ModularLessonView: React.FC<ModularLessonViewProps> = ({
                           </div>
                         </div>
                       </div>
-                    <div className="space-y-4">
-                      <div className="prose max-w-none">
-                        <div dangerouslySetInnerHTML={{ __html: translatedContent }} />
-                      </div>
+                     <div className="space-y-4">
+                       <SafeHtml 
+                         html={translatedContent} 
+                         className="prose max-w-none"
+                       />
                       <InlineReadAloud 
                         text={translatedContent} 
                         language={getLanguageCode(selectedLanguage)}
