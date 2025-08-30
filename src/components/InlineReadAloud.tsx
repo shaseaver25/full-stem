@@ -1,7 +1,7 @@
 import React from 'react';
 import DOMPurify from 'dompurify';
 import SpeechControls from './SpeechControls';
-import { useHTMLWordHighlightingTimed } from '@/hooks/useHTMLWordHighlightingTimed';
+import { useInPlaceWordHighlighter } from '@/hooks/useInPlaceWordHighlighter';
 import { useElevenLabsTTS } from '@/hooks/useElevenLabsTTS';
 
 interface InlineReadAloudProps {
@@ -46,18 +46,21 @@ const InlineReadAloud: React.FC<InlineReadAloudProps> = ({ text, className, lang
   const isPlaying = elevenLabsPlaying;
   const isPaused = elevenLabsPaused;
 
-  // Get HTML with word highlighting applied
-  const highlightedHTML = useHTMLWordHighlightingTimed(
-    sanitizedHTML,
-    wordTimings,
+  // Container ref for in-place highlighting
+  const contentRef = React.useRef<HTMLDivElement>(null);
+
+  // Use in-place word highlighter (no HTML rebuilds)
+  const { currentWordIndex } = useInPlaceWordHighlighter(
+    contentRef,
+    wordTimings ?? [],
     currentTime,
     isPlaying || isPaused // keep highlight while paused
   );
 
-  // Keep current line centered in view
-  const contentRef = React.useRef<HTMLDivElement>(null);
+  // Keep current highlighted word centered in view
   React.useEffect(() => {
-    if (!contentRef.current) return;
+    if (!contentRef.current || currentWordIndex === -1) return;
+    
     const el = contentRef.current.querySelector<HTMLElement>('[data-word-highlight="true"]');
     if (el) {
       // Avoid janky jumps if already in view
@@ -66,7 +69,7 @@ const InlineReadAloud: React.FC<InlineReadAloudProps> = ({ text, className, lang
       const inView = rect.top >= parent.top && rect.bottom <= parent.bottom;
       if (!inView) el.scrollIntoView({ block: 'center', behavior: 'smooth' });
     }
-  }, [highlightedHTML]);
+  }, [currentWordIndex]);
 
   const handlePlay = async () => {
     await elevenLabsSpeak(cleanText);
@@ -98,13 +101,8 @@ const InlineReadAloud: React.FC<InlineReadAloudProps> = ({ text, className, lang
         className="prose max-w-none max-h-96 overflow-y-auto"
         aria-live="polite"
         aria-atomic="true"
-      >
-        <div
-          dangerouslySetInnerHTML={{
-            __html: (isPlaying || isPaused) ? highlightedHTML : sanitizedHTML,
-          }}
-        />
-      </div>
+        dangerouslySetInnerHTML={{ __html: sanitizedHTML }}
+      />
     </div>
   );
 };

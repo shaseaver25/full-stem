@@ -1,6 +1,5 @@
 import { useMemo, useRef, useEffect } from 'react';
-
-export type WordTiming = { start: number; end: number; text: string; index: number };
+import type { WordTiming } from './useInPlaceWordHighlighter';
 
 export const useHTMLWordHighlightingTimed = (
   htmlContent: string,
