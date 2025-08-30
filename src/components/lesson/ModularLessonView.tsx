@@ -236,15 +236,15 @@ const ModularLessonView: React.FC<ModularLessonViewProps> = ({
               </Button>
               
               {isTranslateMenuOpen && (
-                <div className="absolute top-full left-0 mt-2 z-50 bg-white border rounded-md shadow-lg p-2 min-w-[200px]">
-                  <p className="text-sm font-medium mb-2 text-gray-700">Select Language:</p>
+                <div className="absolute top-full left-0 mt-2 z-50 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md shadow-lg p-2 min-w-[200px]">
+                  <p className="text-sm font-medium mb-2 text-gray-700 dark:text-gray-200">Select Language:</p>
                   <div className="space-y-1">
                     {languageOptions.map((lang) => (
                       <Button
                         key={lang.value}
                         variant="ghost"
                         size="sm"
-                        className="w-full justify-start text-left"
+                        className="w-full justify-start text-left hover:bg-gray-100 dark:hover:bg-gray-600"
                         onClick={() => handleTranslate(lang.value)}
                         disabled={isTranslating}
                       >
@@ -283,25 +283,25 @@ const ModularLessonView: React.FC<ModularLessonViewProps> = ({
               {userReadingLevel}
             </Button>
             
-            {isReadingLevelMenuOpen && (
-              <div className="absolute top-full right-0 mt-2 z-50 bg-white border rounded-md shadow-lg p-2 min-w-[150px]">
-                <p className="text-sm font-medium mb-2 text-gray-700">Reading Level:</p>
-                <div className="space-y-1">
-                  {readingLevelOptions.map((level) => (
-                    <Button
-                      key={level.value}
-                      variant={userReadingLevel === level.value ? "default" : "ghost"}
-                      size="sm"
-                      className="w-full justify-start text-left"
-                      onClick={() => handleReadingLevelChange(level.value)}
-                    >
-                      <Book className="h-4 w-4 mr-2" />
-                      {level.label}
-                    </Button>
-                  ))}
+              {isReadingLevelMenuOpen && (
+                <div className="absolute top-full right-0 mt-2 z-50 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md shadow-lg p-2 min-w-[150px]">
+                  <p className="text-sm font-medium mb-2 text-gray-700 dark:text-gray-200">Reading Level:</p>
+                  <div className="space-y-1">
+                    {readingLevelOptions.map((level) => (
+                      <Button
+                        key={level.value}
+                        variant={userReadingLevel === level.value ? "default" : "ghost"}
+                        size="sm"
+                        className="w-full justify-start text-left hover:bg-gray-100 dark:hover:bg-gray-600"
+                        onClick={() => handleReadingLevelChange(level.value)}
+                      >
+                        <Book className="h-4 w-4 mr-2" />
+                        {level.label}
+                      </Button>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
           </div>
         </div>
       </div>

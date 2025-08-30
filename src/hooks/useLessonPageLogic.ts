@@ -1,11 +1,13 @@
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useLessonData } from './useLessonData';
 import { useLessonProgressUpdate } from './useLessonProgressUpdate';
 import { useAuth } from '@/contexts/AuthContext';
+import { useUserPreferences } from './useUserPreferences';
 
 export const useLessonPageLogic = (lessonId: string) => {
   const { user } = useAuth();
+  const { preferences } = useUserPreferences();
   const [showPersonalizedView, setShowPersonalizedView] = useState(false);
   const [liveTranslatedContent, setLiveTranslatedContent] = useState<string | null>(null);
   const [liveTranslationLanguage, setLiveTranslationLanguage] = useState<string | null>(null);
@@ -50,8 +52,33 @@ export const useLessonPageLogic = (lessonId: string) => {
     date_completed: null
   } : null;
 
-  const content = getContentForReadingLevel();
-  const translatedContent = getTranslatedContent();
+  // Make content calculation reactive to preference changes
+  const content = useMemo(() => {
+    if (!lesson) return null;
+    
+    // Get reading level from user preferences, default to Grade 5
+    const userReadingLevel = preferences?.['Reading Level'] || 'Grade 5';
+    const readingLevelKey = `Text (${userReadingLevel})`;
+    
+    console.log('User reading level:', userReadingLevel);
+    console.log('Reading level key:', readingLevelKey);
+    
+    // Try to get content for the user's reading level
+    let selectedContent = lesson[readingLevelKey as keyof typeof lesson] as string | null;
+    
+    // Fallback to other reading levels if not available
+    if (!selectedContent) {
+      selectedContent = lesson['Text (Grade 5)'] || lesson['Text (Grade 3)'] || lesson['Text (Grade 8)'] || lesson['Text (High School)'] || lesson.Text;
+    }
+    
+    console.log('Selected content length:', selectedContent?.length || 0);
+    console.log('Selected content preview:', selectedContent?.substring(0, 100) + '...');
+    return selectedContent;
+  }, [lesson, preferences]);
+
+  const translatedContent = useMemo(() => {
+    return getTranslatedContent();
+  }, [getTranslatedContent, preferences]);
 
   // Get comprehensive lesson text for read-aloud functionality
   const lessonTitle = lesson?.Title || `Lesson ${lesson?.['Lesson ID'] || ''}`;
