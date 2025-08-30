@@ -1,6 +1,8 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useRef, useState, useCallback, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useUserPreferences } from './useUserPreferences';
+
+type SpeakOpts = { voiceId?: string; rate?: number };
 
 export const useElevenLabsTTS = (language?: string) => {
   const { preferences } = useUserPreferences();
@@ -13,8 +15,6 @@ export const useElevenLabsTTS = (language?: string) => {
   const [error, setError] = useState<string | null>(null);
   const timeUpdateIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const [wordTimings, setWordTimings] = useState<Array<{ start: number; end: number; text: string; index: number }> | null>(null);
-  const [pendingTokens, setPendingTokens] = useState<string[] | null>(null);
-  const [pendingWeights, setPendingWeights] = useState<number[] | null>(null);
 
   const isEnabled = true;
 
@@ -40,7 +40,8 @@ export const useElevenLabsTTS = (language?: string) => {
         body: { 
           text: text,
           voice: voiceId || 'EXAVITQu4vr4xnSDxMaL', // Default to Sarah
-          language: language // Pass language for multilingual support
+          language: language, // Pass language for multilingual support
+          rate: textSpeed === 'Slow' ? 0.8 : textSpeed === 'Fast' ? 1.3 : 1.0
         }
       });
 
@@ -49,11 +50,24 @@ export const useElevenLabsTTS = (language?: string) => {
         throw new Error('Failed to generate speech');
       }
 
-      if (!data?.audioContent) {
+      const { audioContent, wordTimings: serverTimings, tokens, weights } = data;
+
+      if (!audioContent) {
         throw new Error('No audio content received');
       }
 
-      const { audioContent, wordTimings: serverTimings, tokens, weights } = data;
+      // Always prepare a LOCAL fallback from the input text (so we don't depend on the server)
+      const localTokens: string[] =
+        (tokens && Array.isArray(tokens) && tokens.length > 0)
+          ? tokens
+          : text.split(/(\s+)/).filter(t => t.trim().length > 0);
+      const localWeights: number[] =
+        (weights && Array.isArray(weights) && weights.length === localTokens.length)
+          ? weights
+          : localTokens.map(tok => {
+              const w = tok.replace(/[^\p{L}\p{N}]/gu, '').length;
+              return w || 1;
+            });
 
       // Create audio element from base64
       const audioBlob = new Blob([
@@ -66,8 +80,6 @@ export const useElevenLabsTTS = (language?: string) => {
 
       // Reset timing states
       setWordTimings(null);
-      setPendingTokens(tokens ?? null);
-      setPendingWeights(weights ?? null);
 
       // Adjust playback rate based on user preference
       switch (textSpeed) {
@@ -98,18 +110,18 @@ export const useElevenLabsTTS = (language?: string) => {
         // Prefer precise server timings if provided
         if (serverTimings?.length) {
           setWordTimings(serverTimings);
-        } else if (audio.duration && pendingTokens && pendingWeights && pendingTokens.length === pendingWeights.length) {
-          // Synthesize timings using weights across the real audio duration
-          const total = pendingWeights.reduce((a, b) => a + b, 0) || 1;
-          let acc = 0;
-          const synthetic = pendingWeights.map((w, i) => {
-            const start = (acc / total) * audio.duration;
-            acc += w;
-            const end = (acc / total) * audio.duration;
-            return { start, end, text: pendingTokens![i], index: i };
-          });
-          setWordTimings(synthetic);
+          return;
         }
+        // Otherwise synthesize per-word timings across the REAL audio duration
+        const total = localWeights.reduce((a, b) => a + b, 0) || 1;
+        let acc = 0;
+        const synthetic = localWeights.map((w, i) => {
+          const start = (acc / total) * audio.duration;
+          acc += w;
+          const end = (acc / total) * audio.duration;
+          return { start, end, text: localTokens[i], index: i };
+        });
+        setWordTimings(synthetic);
       };
 
       audio.onplay = () => {
