@@ -8,6 +8,7 @@ import { useUserPreferences } from '@/hooks/useUserPreferences';
 import VideoSection from './VideoSection';
 import CodeIDE from './CodeIDE';
 import AssignmentSection from '@/components/assignments/AssignmentSection';
+import InlineReadAloud from '@/components/InlineReadAloud';
 
 interface LessonComponentRendererProps {
   component: LessonComponent;
@@ -31,6 +32,7 @@ const LessonComponentRenderer: React.FC<LessonComponentRendererProps> = ({ compo
         );
 
       case 'instructions':
+        const instructionText = content.content || content.html || content.text || '';
         return (
           <div className="space-y-4">
             <div className="flex items-center justify-between mb-4">
@@ -39,9 +41,7 @@ const LessonComponentRenderer: React.FC<LessonComponentRendererProps> = ({ compo
                 {userReadingLevel} Reading Level
               </Badge>
             </div>
-            <div className="prose max-w-none">
-              <div dangerouslySetInnerHTML={{ __html: content.content || content.html || content.text || '' }} />
-            </div>
+            <InlineReadAloud text={instructionText} />
           </div>
         );
 
