@@ -48,9 +48,10 @@ const LessonComponentRenderer: React.FC<LessonComponentRendererProps> = ({ compo
       case 'assignment':
         return (
           <div className="space-y-4">
-            <div className="prose max-w-none">
-              <div dangerouslySetInnerHTML={{ __html: content.content || content.instructions || content.description || '' }} />
-            </div>
+            <SafeHtml 
+              html={content.content || content.instructions || content.description || ''}
+              className="max-w-none"
+            />
             {content.dueDate && (
               <Badge variant="outline">Due: {content.dueDate}</Badge>
             )}

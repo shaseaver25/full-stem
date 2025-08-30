@@ -125,9 +125,9 @@ const AssignmentSection: React.FC<AssignmentSectionProps> = ({ lessonId }) => {
         {/* Instructions */}
         <div>
           <h3 className="text-lg font-semibold mb-3">Instructions</h3>
-          <div 
-            className="prose prose-sm max-w-none bg-gray-50 p-4 rounded-lg"
-            dangerouslySetInnerHTML={{ __html: assignment.instructions }}
+          <SafeHtml 
+            html={assignment.instructions}
+            className="bg-muted p-4 rounded-lg"
           />
         </div>
 
