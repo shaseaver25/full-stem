@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { BookOpen, Globe } from 'lucide-react';
 import AdaptiveContentBox from './AdaptiveContentBox';
+import InlineReadAloud from '@/components/InlineReadAloud';
 
 interface LessonContentProps {
   showPersonalizedView: boolean;
@@ -60,7 +61,8 @@ const LessonContent: React.FC<LessonContentProps> = ({
           {/* English content pane - always shown on left */}
           <div className="space-y-4">
             <div className="flex items-center gap-2 mb-3">
-              <h3 className="font-semibold text-base text-primary">English (Primary Instruction)</h3>
+              <h3 className="font-semibold text-lg text-primary">English (Primary Instruction)</h3>
+              <Badge variant="secondary">Original</Badge>
             </div>
             <div className="prose prose-sm max-w-none bg-background p-6 rounded-lg border shadow-sm min-h-[400px]">
               <div className="whitespace-pre-wrap leading-relaxed text-foreground">
@@ -73,6 +75,10 @@ const LessonContent: React.FC<LessonContentProps> = ({
               <span>•</span>
               <span>🎯 IEP/504 accommodations supported</span>
             </div>
+            {/* Read aloud integration */}
+            <div className="mt-4">
+              <InlineReadAloud text={lessonContent} />
+            </div>
           </div>
 
           {/* Translated content pane - only shown when translation is available */}
@@ -80,7 +86,8 @@ const LessonContent: React.FC<LessonContentProps> = ({
             <div className="space-y-4">
               <div className="flex items-center gap-2 mb-3">
                 <Globe className="h-4 w-4 text-blue-600" />
-                <h3 className="font-semibold text-base text-blue-600">{liveTranslationLanguage} (Language Support)</h3>
+                <h3 className="font-semibold text-lg text-blue-600">{liveTranslationLanguage} (Language Support)</h3>
+                <Badge variant="outline" className="border-blue-200 text-blue-600">Translation</Badge>
               </div>
               <div className="prose prose-sm max-w-none bg-blue-50 p-6 rounded-lg border border-blue-200 shadow-sm min-h-[400px]">
                 <div className="whitespace-pre-wrap leading-relaxed text-gray-800">
@@ -92,6 +99,10 @@ const LessonContent: React.FC<LessonContentProps> = ({
                 <span>🌍 English Learner Support</span>
                 <span>•</span>
                 <span>🗣️ Multilingual accessibility</span>
+              </div>
+              {/* Read aloud for translated content */}
+              <div className="mt-4">
+                <InlineReadAloud text={liveTranslatedContent} />
               </div>
             </div>
           )}
