@@ -1,6 +1,6 @@
 import React from 'react';
 import SpeechControls from './SpeechControls';
-import { useHTMLLineHighlighting } from '@/hooks/useHTMLLineHighlighting';
+import { useHTMLWordHighlighting } from '@/hooks/useHTMLWordHighlighting';
 import { useElevenLabsTTS } from '@/hooks/useElevenLabsTTS';
 
 interface InlineReadAloudProps {
@@ -34,10 +34,9 @@ const InlineReadAloud: React.FC<InlineReadAloudProps> = ({ text, className, lang
   const isPlaying = elevenLabsPlaying;
   const isPaused = elevenLabsPaused;
 
-  // Get HTML with line highlighting applied
-  const highlightedHTML = useHTMLLineHighlighting(
+  // Get HTML with word highlighting applied
+  const highlightedHTML = useHTMLWordHighlighting(
     text,
-    cleanText,
     currentTime,
     duration,
     isPlaying || isPaused // keep highlight while paused
@@ -47,7 +46,7 @@ const InlineReadAloud: React.FC<InlineReadAloudProps> = ({ text, className, lang
   const contentRef = React.useRef<HTMLDivElement>(null);
   React.useEffect(() => {
     if (!contentRef.current) return;
-    const el = contentRef.current.querySelector<HTMLElement>('[data-line-highlight="true"]');
+    const el = contentRef.current.querySelector<HTMLElement>('[data-word-highlight="true"]');
     if (el) {
       // Avoid janky jumps if already in view
       const rect = el.getBoundingClientRect();
