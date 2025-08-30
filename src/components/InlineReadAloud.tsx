@@ -31,16 +31,16 @@ const InlineReadAloud: React.FC<InlineReadAloudProps> = ({ text, className, lang
     duration,
   } = useElevenLabsTTS(language);
 
+  // Use only ElevenLabs state for controls
+  const isPlaying = elevenLabsPlaying;
+  const isPaused = elevenLabsPaused;
+
   // Use audio-synced highlighting based on ElevenLabs playback time
   const {
     textParts,
     wordPositions,
     currentWordIndex,
-  } = useAudioSyncedHighlighting(cleanText, currentTime, duration);
-
-  // Use only ElevenLabs state for controls
-  const isPlaying = elevenLabsPlaying;
-  const isPaused = elevenLabsPaused;
+  } = useAudioSyncedHighlighting(cleanText, currentTime, duration, isPlaying);
 
   const handlePlay = async () => {
     // Only use ElevenLabs for both audio and highlighting sync
