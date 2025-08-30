@@ -8,6 +8,7 @@ import { CheckCircle, Clock, AlertCircle } from 'lucide-react';
 import FileUpload from './FileUpload';
 import { useAssignments } from '@/hooks/useAssignments';
 import { useAuth } from '@/contexts/AuthContext';
+import SafeHtml from '@/components/ui/SafeHtml';
 
 interface AssignmentSectionProps {
   lessonId: string;
