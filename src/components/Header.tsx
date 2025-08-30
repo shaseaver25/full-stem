@@ -8,6 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useImpersonation } from '@/contexts/ImpersonationContext';
 import NotificationBell from '@/components/NotificationBell';
 import ImpersonationBanner from '@/components/developer/ImpersonationBanner';
+import DemoModeIndicator from '@/components/DemoModeIndicator';
 import { Menu, Code } from 'lucide-react';
 
 const Header = () => {
@@ -78,6 +79,7 @@ const Header = () => {
           </nav>
 
           <div className="flex items-center space-x-4">
+            <DemoModeIndicator variant="header" />
             {user ? (
               <>
                 <NotificationBell />
