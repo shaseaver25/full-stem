@@ -13,9 +13,9 @@ const WordHighlighter: React.FC<WordHighlighterProps> = ({
   currentWordIndex,
 }) => {
   return (
-    <div className="leading-relaxed">
+    <div className="leading-relaxed whitespace-pre-wrap">
       {textParts.map((part, index) => {
-        // Skip whitespace parts for highlighting logic
+        // Handle whitespace parts
         if (part.match(/^\s+$/)) {
           return <span key={index} className="invisible">{part}</span>;
         }
@@ -24,16 +24,16 @@ const WordHighlighter: React.FC<WordHighlighterProps> = ({
         const wordPositionIndex = wordPositions.indexOf(index);
         const isCurrentWord = wordPositionIndex === currentWordIndex;
         
+        if (!isCurrentWord) {
+          return <span key={index} className="invisible">{part}</span>;
+        }
+        
         return (
           <span
             key={index}
-            className={`${
-              isCurrentWord
-                ? 'bg-yellow-400/80 font-medium shadow-sm px-1 py-0.5 rounded-sm border-2 border-yellow-500/60'
-                : 'invisible'
-            } transition-all duration-200 inline-block`}
+            className="bg-yellow-400/90 text-gray-900 font-semibold px-1 py-0.5 rounded-sm shadow-sm border-2 border-yellow-500/80 transition-all duration-200"
           >
-            {isCurrentWord ? part : ''}
+            {part}
           </span>
         );
       })}

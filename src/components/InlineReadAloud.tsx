@@ -1,7 +1,7 @@
 import React from 'react';
 import SpeechControls from './SpeechControls';
-import WordHighlighter from './WordHighlighter';
 import { useAudioSyncedHighlighting } from '@/hooks/useAudioSyncedHighlighting';
+import { useHTMLWordHighlighting } from '@/hooks/useHTMLWordHighlighting';
 import { useElevenLabsTTS } from '@/hooks/useElevenLabsTTS';
 
 interface InlineReadAloudProps {
@@ -42,6 +42,14 @@ const InlineReadAloud: React.FC<InlineReadAloudProps> = ({ text, className, lang
     currentWordIndex,
   } = useAudioSyncedHighlighting(cleanText, currentTime, duration, isPlaying);
 
+  // Get HTML with word highlighting applied
+  const highlightedHTML = useHTMLWordHighlighting(
+    text,
+    cleanText,
+    currentWordIndex,
+    wordPositions
+  );
+
   const handlePlay = async () => {
     // Only use ElevenLabs for both audio and highlighting sync
     await elevenLabsSpeak(cleanText);
@@ -76,20 +84,9 @@ const InlineReadAloud: React.FC<InlineReadAloudProps> = ({ text, className, lang
       
       {/* Content with word highlighting */}
       <div className="prose max-w-none">
-        {isPlaying || isPaused ? (
-          <div className="relative">
-            {/* Show original formatted content */}
-            <div dangerouslySetInnerHTML={{ __html: text }} />
-            {/* Add a subtle reading indicator */}
-            <div className="absolute top-0 left-0 w-1 bg-blue-500 rounded-full transition-all duration-300 ease-out" 
-                 style={{
-                   height: currentWordIndex >= 0 ? `${((currentWordIndex + 1) / Math.max(wordPositions.length, 1)) * 100}%` : '0%'
-                 }}
-            />
-          </div>
-        ) : (
-          <div dangerouslySetInnerHTML={{ __html: text }} />
-        )}
+        <div dangerouslySetInnerHTML={{ 
+          __html: (isPlaying || isPaused) ? highlightedHTML : text 
+        }} />
       </div>
     </div>
   );
