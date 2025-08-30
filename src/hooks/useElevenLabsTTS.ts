@@ -81,16 +81,16 @@ export const useElevenLabsTTS = (language?: string) => {
       // Reset timing states
       setWordTimings(null);
 
-      // Adjust playback rate based on user preference (slightly slower for better highlighting sync)
+      // Adjust playback rate based on user preference (optimized for highlighting sync)
       switch (textSpeed) {
         case 'Slow':
-          audio.playbackRate = 0.7;
+          audio.playbackRate = 0.8;
           break;
         case 'Fast':
-          audio.playbackRate = 1.1;
+          audio.playbackRate = 1.2;
           break;
         default:
-          audio.playbackRate = 0.85; // Slightly slower than normal for better word sync
+          audio.playbackRate = 0.95; // Slightly slower than normal for better word sync
       }
 
       // Set up event listeners before playing
@@ -129,12 +129,12 @@ export const useElevenLabsTTS = (language?: string) => {
         setIsPlaying(true);
         setIsPaused(false);
         
-        // Start time tracking for word highlighting sync
-        timeUpdateIntervalRef.current = setInterval(() => {
-          if (audio && !audio.paused) {
-            setCurrentTime(audio.currentTime);
-          }
-        }, 100); // Update every 100ms for smooth highlighting
+         // Start time tracking for word highlighting sync
+         timeUpdateIntervalRef.current = setInterval(() => {
+           if (audio && !audio.paused) {
+             setCurrentTime(audio.currentTime);
+           }
+         }, 50); // Update every 50ms for smoother highlighting
       };
 
       audio.onpause = () => {
@@ -237,12 +237,12 @@ export const useElevenLabsTTS = (language?: string) => {
         });
       }
       
-      // Restart time tracking
-      timeUpdateIntervalRef.current = setInterval(() => {
-        if (audioRef.current && !audioRef.current.paused) {
-          setCurrentTime(audioRef.current.currentTime);
-        }
-      }, 100);
+       // Restart time tracking
+       timeUpdateIntervalRef.current = setInterval(() => {
+         if (audioRef.current && !audioRef.current.paused) {
+           setCurrentTime(audioRef.current.currentTime);
+         }
+       }, 50); // Update every 50ms for smoother highlighting
     }
   }, []);
 
