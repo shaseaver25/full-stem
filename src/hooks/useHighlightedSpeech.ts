@@ -29,22 +29,21 @@ export const useHighlightedSpeech = (text: string) => {
     }
   }, []);
 
-  const startWordHighlighting = useCallback((rate: number) => {
-    // Calculate timing based on speech rate
-    const baseWPM = 150; // More conservative base WPM
-    const adjustedWPM = baseWPM * rate;
+  const startWordHighlighting = useCallback((utterance: SpeechSynthesisUtterance) => {
+    let currentIndex = 0;
+    setCurrentWordIndex(0);
+
+    // Calculate timing based on speech rate - more conservative approach
+    const baseWPM = 120; // Slower base rate to better match speech synthesis
+    const adjustedWPM = baseWPM * utterance.rate;
     const msPerWord = (60 / adjustedWPM) * 1000;
 
     console.log(`Starting word highlighting with ${wordPositions.length} words at ${adjustedWPM} WPM, ${msPerWord}ms per word`);
 
-    let currentIndex = 0;
-    setCurrentWordIndex(0);
-
-    // Use interval instead of individual timeouts for more reliable timing
+    // Start highlighting immediately with first word
     intervalRef.current = setInterval(() => {
       if (currentIndex < wordPositions.length - 1) {
         currentIndex++;
-        console.log(`Highlighting word ${currentIndex}: "${textParts[wordPositions[currentIndex]]}"`);
         setCurrentWordIndex(currentIndex);
       } else {
         // Clear highlighting after the last word
@@ -58,7 +57,7 @@ export const useHighlightedSpeech = (text: string) => {
       }
     }, msPerWord);
 
-  }, [wordPositions, textParts]);
+  }, [wordPositions]);
 
   const speak = useCallback(() => {
     if (!text.trim()) return;
@@ -89,7 +88,7 @@ export const useHighlightedSpeech = (text: string) => {
       console.log('Highlighted speech started');
       setIsPlaying(true);
       setIsPaused(false);
-      startWordHighlighting(utterance.rate);
+      startWordHighlighting(utterance);
     };
 
     utterance.onend = () => {
@@ -131,9 +130,9 @@ export const useHighlightedSpeech = (text: string) => {
       window.speechSynthesis.resume();
       setIsPaused(false);
       // Resume word highlighting from current position
-      if (currentWordIndex >= 0 && currentWordIndex < wordPositions.length) {
-        const rate = utteranceRef.current?.rate || 1.0;
-        const baseWPM = 150;
+      if (currentWordIndex >= 0 && currentWordIndex < wordPositions.length && utteranceRef.current) {
+        const rate = utteranceRef.current.rate || 1.0;
+        const baseWPM = 120;
         const adjustedWPM = baseWPM * rate;
         const msPerWord = (60 / adjustedWPM) * 1000;
         

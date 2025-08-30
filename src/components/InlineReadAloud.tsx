@@ -9,6 +9,13 @@ interface InlineReadAloudProps {
 }
 
 const InlineReadAloud: React.FC<InlineReadAloudProps> = ({ text, className }) => {
+  // Extract clean text from HTML content first
+  const cleanText = React.useMemo(() => {
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = text;
+    return tempDiv.textContent || tempDiv.innerText || '';
+  }, [text]);
+
   const {
     isPlaying,
     isPaused,
@@ -19,19 +26,10 @@ const InlineReadAloud: React.FC<InlineReadAloudProps> = ({ text, className }) =>
     pause,
     resume,
     stop,
-  } = useHighlightedSpeech(text);
-
-  // Extract clean text from HTML content
-  const cleanText = React.useMemo(() => {
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = text;
-    return tempDiv.textContent || tempDiv.innerText || '';
-  }, [text]);
+  } = useHighlightedSpeech(cleanText);
 
   const handlePlay = () => {
-    if (cleanText.trim()) {
-      speak();
-    }
+    speak();
   };
 
   return (
@@ -51,11 +49,13 @@ const InlineReadAloud: React.FC<InlineReadAloudProps> = ({ text, className }) =>
       {/* Content with word highlighting */}
       <div className="prose max-w-none">
         {isPlaying || isPaused ? (
-          <WordHighlighter
-            textParts={textParts}
-            wordPositions={wordPositions}
-            currentWordIndex={currentWordIndex}
-          />
+          <div className="text-gray-800 leading-relaxed text-lg">
+            <WordHighlighter
+              textParts={textParts}
+              wordPositions={wordPositions}
+              currentWordIndex={currentWordIndex}
+            />
+          </div>
         ) : (
           <div dangerouslySetInnerHTML={{ __html: text }} />
         )}
