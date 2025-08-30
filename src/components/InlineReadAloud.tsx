@@ -1,6 +1,6 @@
 import React from 'react';
 import SpeechControls from './SpeechControls';
-import { useHTMLWordHighlighting } from '@/hooks/useHTMLWordHighlighting';
+import { useHTMLWordHighlightingTimed } from '@/hooks/useHTMLWordHighlightingTimed';
 import { useElevenLabsTTS } from '@/hooks/useElevenLabsTTS';
 
 interface InlineReadAloudProps {
@@ -29,16 +29,17 @@ const InlineReadAloud: React.FC<InlineReadAloudProps> = ({ text, className, lang
     currentTime,
     duration,
     error,
+    wordTimings
   } = useElevenLabsTTS(language);
 
   const isPlaying = elevenLabsPlaying;
   const isPaused = elevenLabsPaused;
 
   // Get HTML with word highlighting applied
-  const highlightedHTML = useHTMLWordHighlighting(
+  const highlightedHTML = useHTMLWordHighlightingTimed(
     text,
+    wordTimings,
     currentTime,
-    duration,
     isPlaying || isPaused // keep highlight while paused
   );
 
