@@ -27,15 +27,24 @@ const ModularLessonView: React.FC<ModularLessonViewProps> = ({
   const { data: components = [], isLoading } = useLessonComponents(lessonId);
   const { lesson } = useLessonData(lessonId);
   const { translateText, isTranslating } = useLiveTranslation();
-  const { preferences } = useUserPreferences();
+  const { preferences, savePreferences } = useUserPreferences();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<string>('');
   const [isTranslateMenuOpen, setIsTranslateMenuOpen] = useState(false);
+  const [isReadingLevelMenuOpen, setIsReadingLevelMenuOpen] = useState(false);
   const [translatedContent, setTranslatedContent] = useState<string | null>(null);
   const [selectedLanguage, setSelectedLanguage] = useState<string>('');
 
   // Get user's reading level preference
   const userReadingLevel = preferences?.['Reading Level'] || 'Grade 5';
+
+  // Reading level options
+  const readingLevelOptions = [
+    { value: 'Grade 3', label: 'Grade 3' },
+    { value: 'Grade 5', label: 'Grade 5' },
+    { value: 'Grade 8', label: 'Grade 8' },
+    { value: 'High School', label: 'High School' },
+  ];
 
   // Set first component as active when components load
   React.useEffect(() => {
@@ -43,6 +52,20 @@ const ModularLessonView: React.FC<ModularLessonViewProps> = ({
       setActiveTab(components[0].id);
     }
   }, [components, activeTab]);
+
+  // Close menus when clicking outside
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest('[data-dropdown]')) {
+        setIsTranslateMenuOpen(false);
+        setIsReadingLevelMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   if (isLoading) {
     return (
@@ -163,6 +186,27 @@ const ModularLessonView: React.FC<ModularLessonViewProps> = ({
     });
   };
 
+  // Handle reading level change
+  const handleReadingLevelChange = async (newLevel: string) => {
+    if (!savePreferences) return;
+
+    const success = await savePreferences({
+      'Preferred Language': preferences?.['Preferred Language'] || null,
+      'Enable Translation View': preferences?.['Enable Translation View'] || null,
+      'Enable Read-Aloud': preferences?.['Enable Read-Aloud'] || null,
+      'Reading Level': newLevel,
+      'Text Speed': preferences?.['Text Speed'] || null,
+    });
+
+    if (success) {
+      setIsReadingLevelMenuOpen(false);
+      toast({
+        title: "Reading Level Updated",
+        description: `Reading level changed to ${newLevel}`,
+      });
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header with global controls */}
@@ -176,7 +220,7 @@ const ModularLessonView: React.FC<ModularLessonViewProps> = ({
         <div className="flex gap-2">
           {/* Translation Controls */}
           {!translatedContent ? (
-            <div className="relative">
+            <div className="relative" data-dropdown>
               <Button 
                 variant="outline" 
                 size="sm"
@@ -228,10 +272,37 @@ const ModularLessonView: React.FC<ModularLessonViewProps> = ({
             </div>
           )}
           
-          <Button variant="outline" size="sm">
-            <Book className="h-4 w-4 mr-2" />
-            Reading Level
-          </Button>
+          {/* Reading Level Controls */}
+          <div className="relative" data-dropdown>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => setIsReadingLevelMenuOpen(!isReadingLevelMenuOpen)}
+            >
+              <Book className="h-4 w-4 mr-2" />
+              {userReadingLevel}
+            </Button>
+            
+            {isReadingLevelMenuOpen && (
+              <div className="absolute top-full right-0 mt-2 z-50 bg-white border rounded-md shadow-lg p-2 min-w-[150px]">
+                <p className="text-sm font-medium mb-2 text-gray-700">Reading Level:</p>
+                <div className="space-y-1">
+                  {readingLevelOptions.map((level) => (
+                    <Button
+                      key={level.value}
+                      variant={userReadingLevel === level.value ? "default" : "ghost"}
+                      size="sm"
+                      className="w-full justify-start text-left"
+                      onClick={() => handleReadingLevelChange(level.value)}
+                    >
+                      <Book className="h-4 w-4 mr-2" />
+                      {level.label}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
