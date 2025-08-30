@@ -12,6 +12,9 @@ export const useElevenLabsTTS = (language?: string) => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [error, setError] = useState<string | null>(null);
   const timeUpdateIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const [wordTimings, setWordTimings] = useState<Array<{ start: number; end: number; text: string; index: number }> | null>(null);
+  const [pendingTokens, setPendingTokens] = useState<string[] | null>(null);
+  const [pendingWeights, setPendingWeights] = useState<number[] | null>(null);
 
   const isEnabled = true;
 
@@ -50,14 +53,21 @@ export const useElevenLabsTTS = (language?: string) => {
         throw new Error('No audio content received');
       }
 
+      const { audioContent, wordTimings: serverTimings, tokens, weights } = data;
+
       // Create audio element from base64
       const audioBlob = new Blob([
-        Uint8Array.from(atob(data.audioContent), c => c.charCodeAt(0))
+        Uint8Array.from(atob(audioContent), c => c.charCodeAt(0))
       ], { type: 'audio/mpeg' });
       
       const audioUrl = URL.createObjectURL(audioBlob);
       const audio = new Audio(audioUrl);
       audioRef.current = audio;
+
+      // Reset timing states
+      setWordTimings(null);
+      setPendingTokens(tokens ?? null);
+      setPendingWeights(weights ?? null);
 
       // Adjust playback rate based on user preference
       switch (textSpeed) {
@@ -84,6 +94,22 @@ export const useElevenLabsTTS = (language?: string) => {
       audio.onloadedmetadata = () => {
         setDuration(audio.duration);
         console.log('Audio duration:', audio.duration);
+        
+        // Prefer precise server timings if provided
+        if (serverTimings?.length) {
+          setWordTimings(serverTimings);
+        } else if (audio.duration && pendingTokens && pendingWeights && pendingTokens.length === pendingWeights.length) {
+          // Synthesize timings using weights across the real audio duration
+          const total = pendingWeights.reduce((a, b) => a + b, 0) || 1;
+          let acc = 0;
+          const synthetic = pendingWeights.map((w, i) => {
+            const start = (acc / total) * audio.duration;
+            acc += w;
+            const end = (acc / total) * audio.duration;
+            return { start, end, text: pendingTokens![i], index: i };
+          });
+          setWordTimings(synthetic);
+        }
       };
 
       audio.onplay = () => {
@@ -248,5 +274,6 @@ export const useElevenLabsTTS = (language?: string) => {
     error,
     currentTime,
     duration,
+    wordTimings,
   };
 };
