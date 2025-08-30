@@ -11,6 +11,7 @@ import { useLiveTranslation } from '@/hooks/useLiveTranslation';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
 import { useToast } from '@/hooks/use-toast';
 import LessonComponentRenderer from './LessonComponentRenderer';
+import InlineReadAloud from '@/components/InlineReadAloud';
 import DesmosSection from './DesmosSection';
 
 interface ModularLessonViewProps {
@@ -25,7 +26,7 @@ const ModularLessonView: React.FC<ModularLessonViewProps> = ({
   fullLessonText
 }) => {
   const { data: components = [], isLoading } = useLessonComponents(lessonId);
-  const { lesson } = useLessonData(lessonId);
+  const { lesson, getContentForReadingLevel } = useLessonData(lessonId);
   const { translateText, isTranslating } = useLiveTranslation();
   const { preferences, savePreferences } = useUserPreferences();
   const { toast } = useToast();
@@ -37,6 +38,11 @@ const ModularLessonView: React.FC<ModularLessonViewProps> = ({
 
   // Get user's reading level preference
   const userReadingLevel = preferences?.['Reading Level'] || 'Grade 5';
+  
+  // Get main lesson content based on reading level
+  const mainLessonContent = React.useMemo(() => {
+    return getContentForReadingLevel();
+  }, [getContentForReadingLevel, preferences]);
 
   // Reading level options
   const readingLevelOptions = [
@@ -46,12 +52,39 @@ const ModularLessonView: React.FC<ModularLessonViewProps> = ({
     { value: 'High School', label: 'High School' },
   ];
 
-  // Set first component as active when components load
-  React.useEffect(() => {
-    if (components.length > 0 && !activeTab) {
-      setActiveTab(components[0].id);
+  // Combine main lesson content with lesson components
+  const allTabs = React.useMemo(() => {
+    const tabs = [];
+    
+    // Add main lesson content as first tab if it exists
+    if (mainLessonContent) {
+      tabs.push({
+        id: 'main-content',
+        type: 'main-content',
+        title: lesson?.Title || 'Lesson Content',
+        content: mainLessonContent
+      });
     }
-  }, [components, activeTab]);
+    
+    // Add lesson components
+    components.forEach(component => {
+      tabs.push({
+        id: component.id,
+        type: component.component_type,
+        title: getComponentDisplayName(component.component_type),
+        component
+      });
+    });
+    
+    return tabs;
+  }, [components, mainLessonContent, lesson]);
+
+  // Set first tab as active when tabs load
+  React.useEffect(() => {
+    if (allTabs.length > 0 && !activeTab) {
+      setActiveTab(allTabs[0].id);
+    }
+  }, [allTabs, activeTab]);
 
   // Close menus when clicking outside
   React.useEffect(() => {
@@ -75,16 +108,16 @@ const ModularLessonView: React.FC<ModularLessonViewProps> = ({
     );
   }
 
-  if (components.length === 0) {
+  if (allTabs.length === 0) {
     return (
       <Card>
         <CardContent className="p-8 text-center">
           <h3 className="text-lg font-semibold text-muted-foreground mb-2">
-            No Components Configured
+            No Content Available
           </h3>
           <p className="text-sm text-muted-foreground">
-            This lesson hasn't been configured with modular components yet. 
-            Contact your administrator to set up lesson components.
+            This lesson doesn't have any content or components configured yet. 
+            Contact your administrator to add lesson content.
           </p>
         </CardContent>
       </Card>
@@ -93,6 +126,7 @@ const ModularLessonView: React.FC<ModularLessonViewProps> = ({
 
   const getComponentIcon = (type: string) => {
     switch (type) {
+      case 'main-content': return '📖';
       case 'video': return '🎥';
       case 'instructions': return '📋';
       case 'assignment': return '📝';
@@ -113,6 +147,7 @@ const ModularLessonView: React.FC<ModularLessonViewProps> = ({
 
   const getComponentDisplayName = (type: string) => {
     switch (type) {
+      case 'main-content': return 'Lesson Content';
       case 'video': return 'Video';
       case 'instructions': return 'Instructions';
       case 'assignment': return 'Assignment';
@@ -214,7 +249,7 @@ const ModularLessonView: React.FC<ModularLessonViewProps> = ({
         <div>
           <h1 className="text-2xl font-bold">{lessonTitle}</h1>
           <p className="text-sm text-muted-foreground">
-            {components.length} components available
+            {allTabs.length} {allTabs.length === 1 ? 'section' : 'sections'} available
           </p>
         </div>
         <div className="flex gap-2">
@@ -309,27 +344,47 @@ const ModularLessonView: React.FC<ModularLessonViewProps> = ({
       {/* Tabbed Component View */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-1">
-          {components.map((component) => (
+          {allTabs.map((tab) => (
             <TabsTrigger
-              key={component.id}
-              value={component.id}
+              key={tab.id}
+              value={tab.id}
               className="flex items-center gap-2 text-xs sm:text-sm"
             >
               <span className="text-lg">
-                {getComponentIcon(component.component_type)}
+                {getComponentIcon(tab.type)}
               </span>
               <span className="truncate">
-                {getComponentDisplayName(component.component_type)}
+                {getComponentDisplayName(tab.type)}
               </span>
             </TabsTrigger>
           ))}
         </TabsList>
 
 
-        {components.map((component) => (
-          <TabsContent key={component.id} value={component.id} className="mt-6">
-            {translatedContent ? (
-              // Side-by-side view when translation is available
+        {allTabs.map((tab) => (
+          <TabsContent key={tab.id} value={tab.id} className="mt-6">
+            {tab.type === 'main-content' ? (
+              // Main lesson content tab
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex justify-between items-center mb-4">
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl">
+                        {getComponentIcon(tab.type)}
+                      </span>
+                      <div>
+                        <h2 className="text-xl font-semibold">
+                          {lesson?.Title || 'Lesson Content'}
+                        </h2>
+                        <Badge variant="outline" className="mt-1">{userReadingLevel} Level</Badge>
+                      </div>
+                    </div>
+                  </div>
+                  <InlineReadAloud text={tab.content || ''} />
+                </CardContent>
+              </Card>
+            ) : translatedContent ? (
+              // Side-by-side view when translation is available (for components)
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Original Content */}
                 <Card>
@@ -337,17 +392,17 @@ const ModularLessonView: React.FC<ModularLessonViewProps> = ({
                     <div className="flex justify-between items-center mb-4">
                       <div className="flex items-center gap-3">
                         <span className="text-2xl">
-                          {getComponentIcon(component.component_type)}
+                          {getComponentIcon(tab.type)}
                         </span>
                         <div>
                           <h2 className="text-xl font-semibold">
-                            {getComponentDisplayName(component.component_type)}
+                            {getComponentDisplayName(tab.type)}
                           </h2>
                           <Badge variant="outline" className="mt-1">English</Badge>
                         </div>
                       </div>
                     </div>
-                    <LessonComponentRenderer component={component} />
+                    <LessonComponentRenderer component={tab.component} />
                   </CardContent>
                 </Card>
 
@@ -357,11 +412,11 @@ const ModularLessonView: React.FC<ModularLessonViewProps> = ({
                     <div className="flex justify-between items-center mb-4">
                       <div className="flex items-center gap-3">
                         <span className="text-2xl">
-                          {getComponentIcon(component.component_type)}
+                          {getComponentIcon(tab.type)}
                         </span>
                         <div>
                           <h2 className="text-xl font-semibold">
-                            {getComponentDisplayName(component.component_type)}
+                            {getComponentDisplayName(tab.type)}
                           </h2>
                           <Badge variant="secondary" className="mt-1">
                             <Globe className="h-3 w-3 mr-1" />
@@ -377,22 +432,22 @@ const ModularLessonView: React.FC<ModularLessonViewProps> = ({
                 </Card>
               </div>
             ) : (
-              // Single view when no translation
+              // Single view when no translation (for components)
               <Card>
                 <CardContent className="p-6">
                   {/* Component Header */}
                   <div className="flex justify-between items-center mb-4">
                     <div className="flex items-center gap-3">
                       <span className="text-2xl">
-                        {getComponentIcon(component.component_type)}
+                        {getComponentIcon(tab.type)}
                       </span>
                       <div>
                         <h2 className="text-xl font-semibold">
-                          {getComponentDisplayName(component.component_type)}
+                          {getComponentDisplayName(tab.type)}
                         </h2>
                         <div className="flex gap-2 mt-1">
-                          {component.language_code !== 'en' && (
-                            <Badge variant="secondary">{component.language_code.toUpperCase()}</Badge>
+                          {tab.component?.language_code !== 'en' && (
+                            <Badge variant="secondary">{tab.component?.language_code?.toUpperCase()}</Badge>
                           )}
                           <Badge variant="outline">{userReadingLevel} Reading Level</Badge>
                         </div>
@@ -405,7 +460,7 @@ const ModularLessonView: React.FC<ModularLessonViewProps> = ({
                   </div>
 
                   {/* Component Content */}
-                  <LessonComponentRenderer component={component} />
+                  <LessonComponentRenderer component={tab.component} />
                 </CardContent>
               </Card>
             )}
