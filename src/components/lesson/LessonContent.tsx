@@ -77,7 +77,7 @@ const LessonContent: React.FC<LessonContentProps> = ({
             </div>
             {/* Read aloud integration */}
             <div className="mt-4">
-              <InlineReadAloud text={lessonContent} />
+              <InlineReadAloud text={lessonContent} language="en" />
             </div>
           </div>
 
@@ -102,7 +102,10 @@ const LessonContent: React.FC<LessonContentProps> = ({
               </div>
               {/* Read aloud for translated content */}
               <div className="mt-4">
-                <InlineReadAloud text={liveTranslatedContent} />
+                <InlineReadAloud 
+                  text={liveTranslatedContent} 
+                  language={liveTranslationLanguage?.toLowerCase() || 'auto'} 
+                />
               </div>
             </div>
           )}

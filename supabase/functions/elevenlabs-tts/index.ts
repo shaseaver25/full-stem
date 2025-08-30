@@ -12,7 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    const { text, voice } = await req.json()
+    const { text, voice, language } = await req.json()
 
     if (!text) {
       throw new Error('Text is required')
@@ -37,7 +37,8 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         text: text,
-        model_id: 'eleven_turbo_v2_5', // Fast, high-quality model
+        model_id: 'eleven_turbo_v2_5', // Fast, high-quality model with multilingual support
+        ...(language && { language: language }), // Add language if specified
         voice_settings: {
           stability: 0.5,
           similarity_boost: 0.8,

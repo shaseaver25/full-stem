@@ -7,9 +7,10 @@ import { useElevenLabsTTS } from '@/hooks/useElevenLabsTTS';
 interface InlineReadAloudProps {
   text: string;
   className?: string;
+  language?: string; // Language for TTS
 }
 
-const InlineReadAloud: React.FC<InlineReadAloudProps> = ({ text, className }) => {
+const InlineReadAloud: React.FC<InlineReadAloudProps> = ({ text, className, language }) => {
   // Extract clean text from HTML content first
   const cleanText = React.useMemo(() => {
     const tempDiv = document.createElement('div');
@@ -17,7 +18,7 @@ const InlineReadAloud: React.FC<InlineReadAloudProps> = ({ text, className }) =>
     return tempDiv.textContent || tempDiv.innerText || '';
   }, [text]);
 
-  // Use ElevenLabs for high-quality voice
+  // Use ElevenLabs for high-quality voice with language support
   const {
     speak: elevenLabsSpeak,
     pause: elevenLabsPause,
@@ -26,7 +27,7 @@ const InlineReadAloud: React.FC<InlineReadAloudProps> = ({ text, className }) =>
     isPlaying: elevenLabsPlaying,
     isPaused: elevenLabsPaused,
     isLoading: elevenLabsLoading,
-  } = useElevenLabsTTS();
+  } = useElevenLabsTTS(language);
 
   // Use browser TTS for word highlighting sync
   const {

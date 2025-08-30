@@ -2,7 +2,7 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useUserPreferences } from './useUserPreferences';
 
-export const useElevenLabsTTS = () => {
+export const useElevenLabsTTS = (language?: string) => {
   const { preferences } = useUserPreferences();
   const [isPlaying, setIsPlaying] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
@@ -33,7 +33,8 @@ export const useElevenLabsTTS = () => {
       const { data, error } = await supabase.functions.invoke('elevenlabs-tts', {
         body: { 
           text: text,
-          voice: voiceId || 'EXAVITQu4vr4xnSDxMaL' // Default to Sarah
+          voice: voiceId || 'EXAVITQu4vr4xnSDxMaL', // Default to Sarah
+          language: language // Pass language for multilingual support
         }
       });
 
