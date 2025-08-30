@@ -95,6 +95,29 @@ const ModularLessonView: React.FC<ModularLessonViewProps> = ({
     }
   };
 
+  // Format text content for proper display
+  const formatTextContent = (text: string) => {
+    if (!text) return '';
+    
+    return text
+      // Convert line breaks to HTML line breaks
+      .replace(/\r\n/g, '<br>')
+      .replace(/\n/g, '<br>')
+      // Convert double line breaks to paragraph breaks
+      .replace(/(<br>){2,}/g, '</p><p>')
+      // Wrap in paragraph tags
+      .replace(/^/, '<p>')
+      .replace(/$/, '</p>')
+      // Clean up empty paragraphs
+      .replace(/<p><\/p>/g, '')
+      // Convert emoji headers to proper headers
+      .replace(/^<p>([🔍💡🛠️🔢🚀📌].*?)<\/p>/gm, '<h3>$1</h3>')
+      // Make bold text
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      // Handle table-like content
+      .replace(/^<p>(Real-Life Scenario|How Excel Helps)<\/p>/gm, '<h4>$1</h4>');
+  };
+
   // Combine main lesson content with lesson components
   const allTabs = React.useMemo(() => {
     const tabs = [];
@@ -381,7 +404,7 @@ const ModularLessonView: React.FC<ModularLessonViewProps> = ({
                       </div>
                     </div>
                   </div>
-                  <InlineReadAloud text={tab.content || ''} />
+                  <InlineReadAloud text={formatTextContent(tab.content || '')} />
                 </CardContent>
               </Card>
             ) : translatedContent ? (
