@@ -1,7 +1,7 @@
 import React from 'react';
 import SpeechControls from './SpeechControls';
 import WordHighlighter from './WordHighlighter';
-import { useHighlightedSpeech } from '@/hooks/useHighlightedSpeech';
+import { useAudioSyncedHighlighting } from '@/hooks/useAudioSyncedHighlighting';
 import { useElevenLabsTTS } from '@/hooks/useElevenLabsTTS';
 
 interface InlineReadAloudProps {
@@ -27,45 +27,36 @@ const InlineReadAloud: React.FC<InlineReadAloudProps> = ({ text, className, lang
     isPlaying: elevenLabsPlaying,
     isPaused: elevenLabsPaused,
     isLoading: elevenLabsLoading,
+    currentTime,
+    duration,
   } = useElevenLabsTTS(language);
 
-  // Use browser TTS for word highlighting sync
+  // Use audio-synced highlighting based on ElevenLabs playback time
   const {
-    isPlaying: highlightPlaying,
-    isPaused: highlightPaused,
-    currentWordIndex,
     textParts,
     wordPositions,
-    speak: highlightSpeak,
-    pause: highlightPause,
-    resume: highlightResume,
-    stop: highlightStop,
-  } = useHighlightedSpeech(cleanText);
+    currentWordIndex,
+  } = useAudioSyncedHighlighting(cleanText, currentTime, duration);
 
-  // Combine both systems
-  const isPlaying = elevenLabsPlaying || highlightPlaying;
-  const isPaused = elevenLabsPaused || highlightPaused;
+  // Use only ElevenLabs state for controls
+  const isPlaying = elevenLabsPlaying;
+  const isPaused = elevenLabsPaused;
 
   const handlePlay = async () => {
-    // Start ElevenLabs for natural voice audio
+    // Only use ElevenLabs for both audio and highlighting sync
     await elevenLabsSpeak(cleanText);
-    // Start browser TTS silently for word highlighting only
-    highlightSpeak();
   };
 
   const handlePause = () => {
     elevenLabsPause();
-    highlightPause();
   };
 
   const handleResume = () => {
     elevenLabsResume();
-    highlightResume();
   };
 
   const handleStop = () => {
     elevenLabsStop();
-    highlightStop();
   };
 
   return (

@@ -7,8 +7,11 @@ export const useElevenLabsTTS = (language?: string) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const timeUpdateIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const isEnabled = true;
 
@@ -78,21 +81,42 @@ export const useElevenLabsTTS = (language?: string) => {
         setIsLoading(false);
       };
 
+      audio.onloadedmetadata = () => {
+        setDuration(audio.duration);
+        console.log('Audio duration:', audio.duration);
+      };
+
       audio.onplay = () => {
         console.log('Audio started playing');
         setIsPlaying(true);
         setIsPaused(false);
+        
+        // Start time tracking for word highlighting sync
+        timeUpdateIntervalRef.current = setInterval(() => {
+          if (audio && !audio.paused) {
+            setCurrentTime(audio.currentTime);
+          }
+        }, 100); // Update every 100ms for smooth highlighting
       };
 
       audio.onpause = () => {
         console.log('Audio paused');
         setIsPaused(true);
+        if (timeUpdateIntervalRef.current) {
+          clearInterval(timeUpdateIntervalRef.current);
+          timeUpdateIntervalRef.current = null;
+        }
       };
 
       audio.onended = () => {
         console.log('Audio ended');
         setIsPlaying(false);
         setIsPaused(false);
+        setCurrentTime(0);
+        if (timeUpdateIntervalRef.current) {
+          clearInterval(timeUpdateIntervalRef.current);
+          timeUpdateIntervalRef.current = null;
+        }
         URL.revokeObjectURL(audioUrl);
       };
 
@@ -132,6 +156,12 @@ export const useElevenLabsTTS = (language?: string) => {
   const resume = useCallback(() => {
     if (audioRef.current && audioRef.current.paused) {
       audioRef.current.play();
+      // Restart time tracking
+      timeUpdateIntervalRef.current = setInterval(() => {
+        if (audioRef.current && !audioRef.current.paused) {
+          setCurrentTime(audioRef.current.currentTime);
+        }
+      }, 100);
     }
   }, []);
 
@@ -141,6 +171,11 @@ export const useElevenLabsTTS = (language?: string) => {
       audioRef.current.currentTime = 0;
       setIsPlaying(false);
       setIsPaused(false);
+      setCurrentTime(0);
+    }
+    if (timeUpdateIntervalRef.current) {
+      clearInterval(timeUpdateIntervalRef.current);
+      timeUpdateIntervalRef.current = null;
     }
   }, []);
 
@@ -150,6 +185,10 @@ export const useElevenLabsTTS = (language?: string) => {
       if (audioRef.current) {
         audioRef.current.pause();
         audioRef.current = null;
+      }
+      if (timeUpdateIntervalRef.current) {
+        clearInterval(timeUpdateIntervalRef.current);
+        timeUpdateIntervalRef.current = null;
       }
     };
   }, []);
@@ -164,5 +203,7 @@ export const useElevenLabsTTS = (language?: string) => {
     isLoading,
     isEnabled,
     error,
+    currentTime,
+    duration,
   };
 };
