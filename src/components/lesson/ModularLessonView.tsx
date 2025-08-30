@@ -52,6 +52,49 @@ const ModularLessonView: React.FC<ModularLessonViewProps> = ({
     { value: 'High School', label: 'High School' },
   ];
 
+  // Helper functions (must be defined before useMemo that uses them)
+  const getComponentIcon = (type: string) => {
+    switch (type) {
+      case 'main-content': return '📖';
+      case 'video': return '🎥';
+      case 'instructions': return '📋';
+      case 'assignment': return '📝';
+      case 'activity': return '🎯';
+      case 'resources': return '📚';
+      case 'discussion': return '💬';
+      case 'reflection': return '🤔';
+      case 'formativeCheck': return '✅';
+      case 'rubric': return '📊';
+      case 'codingEditor': return '💻';
+      case 'aiAssistant': return '🤖';
+      case 'peerReview': return '👥';
+      case 'checklist': return '☑️';
+      case 'liveDemo': return '🎬';
+      default: return '📄';
+    }
+  };
+
+  const getComponentDisplayName = (type: string) => {
+    switch (type) {
+      case 'main-content': return 'Lesson Content';
+      case 'video': return 'Video';
+      case 'instructions': return 'Instructions';
+      case 'assignment': return 'Assignment';
+      case 'activity': return 'Activity';
+      case 'resources': return 'Resources';
+      case 'discussion': return 'Discussion';
+      case 'reflection': return 'Reflection';
+      case 'formativeCheck': return 'Quick Check';
+      case 'rubric': return 'Rubric';
+      case 'codingEditor': return 'Code Editor';
+      case 'aiAssistant': return 'AI Assistant';
+      case 'peerReview': return 'Peer Review';
+      case 'checklist': return 'Checklist';
+      case 'liveDemo': return 'Live Demo';
+      default: return type;
+    }
+  };
+
   // Combine main lesson content with lesson components
   const allTabs = React.useMemo(() => {
     const tabs = [];
@@ -123,48 +166,6 @@ const ModularLessonView: React.FC<ModularLessonViewProps> = ({
       </Card>
     );
   }
-
-  const getComponentIcon = (type: string) => {
-    switch (type) {
-      case 'main-content': return '📖';
-      case 'video': return '🎥';
-      case 'instructions': return '📋';
-      case 'assignment': return '📝';
-      case 'activity': return '🎯';
-      case 'resources': return '📚';
-      case 'discussion': return '💬';
-      case 'reflection': return '🤔';
-      case 'formativeCheck': return '✅';
-      case 'rubric': return '📊';
-      case 'codingEditor': return '💻';
-      case 'aiAssistant': return '🤖';
-      case 'peerReview': return '👥';
-      case 'checklist': return '☑️';
-      case 'liveDemo': return '🎬';
-      default: return '📄';
-    }
-  };
-
-  const getComponentDisplayName = (type: string) => {
-    switch (type) {
-      case 'main-content': return 'Lesson Content';
-      case 'video': return 'Video';
-      case 'instructions': return 'Instructions';
-      case 'assignment': return 'Assignment';
-      case 'activity': return 'Activity';
-      case 'resources': return 'Resources';
-      case 'discussion': return 'Discussion';
-      case 'reflection': return 'Reflection';
-      case 'formativeCheck': return 'Quick Check';
-      case 'rubric': return 'Rubric';
-      case 'codingEditor': return 'Code Editor';
-      case 'aiAssistant': return 'AI Assistant';
-      case 'peerReview': return 'Peer Review';
-      case 'checklist': return 'Checklist';
-      case 'liveDemo': return 'Live Demo';
-      default: return type;
-    }
-  };
 
   // Language options for translation
   const languageOptions = [
