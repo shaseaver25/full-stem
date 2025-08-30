@@ -3,31 +3,33 @@ import { corsHeaders } from '../_shared/cors.ts'
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+// ---- CORS helper (inlined to avoid import/export mismatches) ----
+function buildCors(req: Request, allowed: string[] = []) {
+  const origin = req.headers.get('Origin') ?? '*';
+  const okOrigin =
+    allowed.length > 0
+      ? (allowed.includes(origin) ? origin : '')
+      : '*';
 
-import { cors } from '../_shared/cors.ts'; // or paste your CORS helper here
+  const baseHeaders: Record<string, string> = {
+    Vary: 'Origin',
+    'Access-Control-Allow-Origin': okOrigin || '*',
+    'Access-Control-Allow-Headers': 'authorization, content-type',
+    'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
+    'Access-Control-Max-Age': '86400',
+  };
+
+  return {
+    headers: baseHeaders,
+    preflight(): Response {
+      return new Response(null, { status: 204, headers: baseHeaders });
+    },
+  };
+}
+// -----------------------------------------------------------------
 
 Deno.serve(async (req) => {
-  const { headers, preflight } = cors(req, (Deno.env.get('ALLOWED_ORIGINS') || '')
-    .split(',').map(s => s.trim()).filter(Boolean));
-
-  // 1) CORS preflight
-  if (req.method === 'OPTIONS') return preflight();
-
-  const url = new URL(req.url);
-  const action = url.searchParams.get('action') || 'status';
-
-  // 2) Public status endpoint (no auth)
-  if (req.method === 'GET' && action === 'status') {
-    const summary = await getDemoSummary(); // your counts per table
-    return new Response(JSON.stringify({ ok: true, ...summary }), {
-      status: 200,
-      headers: { ...headers, 'Content-Type': 'application/json' }
-    });
-  }
-
-  // 3) Everything below here requires auth (seed / wipe)
-  // ... your existing JWT + role checks, then seed/wipe handlers ...
-
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
