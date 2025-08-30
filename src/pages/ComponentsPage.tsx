@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import Header from '@/components/Header';
-import EnhancedReadAloud from '@/components/EnhancedReadAloud';
+import InlineReadAloud from '@/components/InlineReadAloud';
 import { Sparkles, Volume2, Mic } from 'lucide-react';
 
 const ComponentsPage = () => {
@@ -35,14 +35,14 @@ const ComponentsPage = () => {
                 </Badge>
               </div>
               <CardDescription>
-                Advanced text-to-speech with Google WaveNet voices, real-time word highlighting, and professional controls.
+                Integrated text-to-speech with ElevenLabs AI voices, real-time word highlighting, and synchronized playback controls.
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-muted-foreground">
                   <div className="flex items-center gap-2">
-                    ✨ Natural AI voices
+                    ✨ ElevenLabs AI voices
                   </div>
                   <div className="flex items-center gap-2">
                     🎯 Word-by-word highlighting
@@ -54,11 +54,8 @@ const ComponentsPage = () => {
                 
                 <Separator />
                 
-                <EnhancedReadAloud
+                <InlineReadAloud
                   text={sampleText}
-                  autoHighlight={true}
-                  showControls={true}
-                  theme="light"
                 />
               </div>
             </CardContent>
@@ -73,13 +70,13 @@ const ComponentsPage = () => {
                 <Badge variant="outline">Removed</Badge>
               </div>
               <CardDescription>
-                Basic audio components have been replaced with the enhanced global version. Use the floating button in the top-right corner of any page for advanced text-to-speech features.
+                Basic audio components have been replaced with the enhanced inline version. Each text section now has integrated read-aloud functionality with ElevenLabs AI voices.
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="p-4 bg-muted/30 rounded-lg text-center">
                 <p className="text-muted-foreground">
-                  Audio buttons under Instructions sections have been removed in favor of the global Enhanced Read Aloud widget.
+                  Audio buttons under Instructions sections now use ElevenLabs AI voices with synchronized word highlighting.
                 </p>
               </div>
             </CardContent>
@@ -107,7 +104,7 @@ const ComponentsPage = () => {
                   <tbody>
                     <tr className="border-b">
                       <td className="p-3">AI Voice Quality</td>
-                      <td className="text-center p-3">✅ Google WaveNet</td>
+                      <td className="text-center p-3">✅ ElevenLabs</td>
                       <td className="text-center p-3">⚠️ Browser Default</td>
                       <td className="text-center p-3">⚠️ Browser Default</td>
                     </tr>

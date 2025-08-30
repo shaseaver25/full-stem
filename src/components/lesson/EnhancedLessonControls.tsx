@@ -18,7 +18,7 @@ const EnhancedLessonControls: React.FC<EnhancedLessonControlsProps> = ({
   fullLessonText,
   lessonId,
 }) => {
-  const [showEnhancedReadAloud, setShowEnhancedReadAloud] = useState(false); // Disabled - using global enhanced read aloud
+  const [showEnhancedReadAloud, setShowEnhancedReadAloud] = useState(false); // Removed - now using InlineReadAloud with ElevenLabs
 
   return (
     <div className="space-y-6">
@@ -83,7 +83,7 @@ const EnhancedLessonControls: React.FC<EnhancedLessonControlsProps> = ({
         </div>
 
         <div className="bg-muted/50 p-3 rounded-lg text-sm text-muted-foreground">
-          Enhanced Read Aloud is now available globally via the floating button in the top-right corner of any page.
+          Enhanced Read Aloud is now integrated directly into lesson content sections with natural AI voices.
         </div>
       </Card>
     </div>
