@@ -4,8 +4,30 @@ import { corsHeaders } from '../_shared/cors.ts'
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 
+import { cors } from '../_shared/cors.ts'; // or paste your CORS helper here
+
 Deno.serve(async (req) => {
-  // Handle CORS preflight requests
+  const { headers, preflight } = cors(req, (Deno.env.get('ALLOWED_ORIGINS') || '')
+    .split(',').map(s => s.trim()).filter(Boolean));
+
+  // 1) CORS preflight
+  if (req.method === 'OPTIONS') return preflight();
+
+  const url = new URL(req.url);
+  const action = url.searchParams.get('action') || 'status';
+
+  // 2) Public status endpoint (no auth)
+  if (req.method === 'GET' && action === 'status') {
+    const summary = await getDemoSummary(); // your counts per table
+    return new Response(JSON.stringify({ ok: true, ...summary }), {
+      status: 200,
+      headers: { ...headers, 'Content-Type': 'application/json' }
+    });
+  }
+
+  // 3) Everything below here requires auth (seed / wipe)
+  // ... your existing JWT + role checks, then seed/wipe handlers ...
+
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
