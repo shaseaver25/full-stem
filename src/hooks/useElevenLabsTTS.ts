@@ -15,6 +15,7 @@ export const useElevenLabsTTS = (language?: string) => {
   const [error, setError] = useState<string | null>(null);
   const timeUpdateIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const [wordTimings, setWordTimings] = useState<Array<{ start: number; end: number; text: string; index: number }> | null>(null);
+  const syncCheckRef = useRef<{ lastSyncCheck: number; syncPoints: number[] }>({ lastSyncCheck: 0, syncPoints: [] });
 
   const isEnabled = true;
 
@@ -110,6 +111,11 @@ export const useElevenLabsTTS = (language?: string) => {
         // Prefer precise server timings if provided
         if (serverTimings?.length) {
           setWordTimings(serverTimings);
+          // Identify sync points (end of sentences/paragraphs)
+          syncCheckRef.current.syncPoints = serverTimings
+            .map((timing, i) => ({ ...timing, i }))
+            .filter(timing => /[.!?]$/.test(timing.text.trim()) || timing.text.includes('\n'))
+            .map(timing => timing.end);
           return;
         }
         // Otherwise synthesize per-word timings across the REAL audio duration
@@ -122,6 +128,11 @@ export const useElevenLabsTTS = (language?: string) => {
           return { start, end, text: localTokens[i], index: i };
         });
         setWordTimings(synthetic);
+        
+        // Identify sync points for synthetic timings
+        syncCheckRef.current.syncPoints = synthetic
+          .filter(timing => /[.!?]$/.test(timing.text.trim()) || timing.text.includes('\n'))
+          .map(timing => timing.end);
       };
 
       audio.onplay = () => {
@@ -129,10 +140,14 @@ export const useElevenLabsTTS = (language?: string) => {
         setIsPlaying(true);
         setIsPaused(false);
         
-         // Start time tracking for word highlighting sync
+         // Start time tracking for word highlighting sync with drift correction
          timeUpdateIntervalRef.current = setInterval(() => {
            if (audio && !audio.paused) {
-             setCurrentTime(audio.currentTime);
+             const currentAudioTime = audio.currentTime;
+             setCurrentTime(currentAudioTime);
+             
+             // Check for sync drift at natural pause points
+             checkSyncDrift(audio, currentAudioTime);
            }
          }, 50); // Update every 50ms for smoother highlighting
       };
@@ -217,6 +232,45 @@ export const useElevenLabsTTS = (language?: string) => {
     }
   }, [preferences]);
 
+  // Sync drift correction function
+  const checkSyncDrift = useCallback((audio: HTMLAudioElement, currentAudioTime: number) => {
+    if (!wordTimings || syncCheckRef.current.syncPoints.length === 0) return;
+    
+    // Find the nearest sync point that we just passed
+    const recentSyncPoint = syncCheckRef.current.syncPoints.find(
+      point => point > syncCheckRef.current.lastSyncCheck && currentAudioTime >= point
+    );
+    
+    if (!recentSyncPoint) return;
+    
+    // Find what word should be highlighted at this sync point
+    const expectedWordIndex = wordTimings.findIndex(
+      timing => Math.abs(timing.end - recentSyncPoint) < 0.1
+    );
+    
+    // Find what word is currently highlighted based on timing
+    const actualWordIndex = wordTimings.findIndex(
+      timing => currentAudioTime >= timing.start && currentAudioTime < timing.end
+    );
+    
+    // If there's a significant drift (more than 2 words), add a brief pause
+    const drift = Math.abs(expectedWordIndex - actualWordIndex);
+    if (drift > 2 && expectedWordIndex >= 0 && actualWordIndex >= 0) {
+      console.log(`Sync drift detected: ${drift} words. Pausing briefly to resync.`);
+      
+      // Pause for a brief moment (200ms) to let highlighting catch up
+      audio.pause();
+      setTimeout(() => {
+        if (audioRef.current === audio) {
+          audio.play().catch(console.error);
+        }
+      }, 200);
+    }
+    
+    // Update last sync check
+    syncCheckRef.current.lastSyncCheck = recentSyncPoint;
+  }, [wordTimings]);
+
   const pause = useCallback(() => {
     if (audioRef.current && !audioRef.current.paused) {
       audioRef.current.pause();
@@ -258,6 +312,8 @@ export const useElevenLabsTTS = (language?: string) => {
       clearInterval(timeUpdateIntervalRef.current);
       timeUpdateIntervalRef.current = null;
     }
+    // Reset sync tracking
+    syncCheckRef.current = { lastSyncCheck: 0, syncPoints: [] };
   }, []);
 
   // Clean up on unmount
