@@ -81,16 +81,16 @@ export const useElevenLabsTTS = (language?: string) => {
       // Reset timing states
       setWordTimings(null);
 
-      // Adjust playback rate based on user preference
+      // Adjust playback rate based on user preference (slightly slower for better highlighting sync)
       switch (textSpeed) {
         case 'Slow':
-          audio.playbackRate = 0.8;
+          audio.playbackRate = 0.7;
           break;
         case 'Fast':
-          audio.playbackRate = 1.3;
+          audio.playbackRate = 1.1;
           break;
         default:
-          audio.playbackRate = 1.0;
+          audio.playbackRate = 0.85; // Slightly slower than normal for better word sync
       }
 
       // Set up event listeners before playing
