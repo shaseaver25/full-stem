@@ -79,82 +79,94 @@ async function wipeDemoData(supabase: any) {
   const counts = { deleted: {} }
 
   try {
+    // Define demo UUIDs to delete
+    const teacherId = 'dddd0001-0000-0000-0000-000000000001'
+    const classId = 'demo_class_ai_ms'
+    
+    // Generate student and parent IDs for deletion
+    const studentIds = []
+    const parentIds = []
+    for (let i = 1; i <= 12; i++) {
+      studentIds.push(`dddd${String(i + 100).padStart(4, '0')}-0000-0000-0000-000000000001`)
+      parentIds.push(`dddd${String(i + 200).padStart(4, '0')}-0000-0000-0000-000000000001`)
+    }
+    
     // Delete in reverse dependency order to avoid foreign key conflicts
     
     // Delete submissions first
     const { error: submissionsError } = await supabase
       .from('assignment_submissions')
       .delete()
-      .like('user_id', 'demo_%')
+      .in('user_id', studentIds)
     if (submissionsError) console.error('Error deleting submissions:', submissionsError)
 
     // Delete grades
     const { error: gradesError } = await supabase
       .from('grades')
       .delete()
-      .like('student_id', 'demo_%')
+      .in('student_id', studentIds)
     if (gradesError) console.error('Error deleting grades:', gradesError)
 
     // Delete notifications
     const { error: notificationsError } = await supabase
       .from('notifications')  
       .delete()
-      .like('user_id', 'demo_%')
+      .in('user_id', [...studentIds, ...parentIds, teacherId])
     if (notificationsError) console.error('Error deleting notifications:', notificationsError)
 
     // Delete messages
     const { error: messagesError } = await supabase
       .from('class_messages')
       .delete()
-      .like('teacher_id', 'demo_%')
+      .eq('teacher_id', teacherId)
     if (messagesError) console.error('Error deleting class messages:', messagesError)
 
     const { error: parentMessagesError } = await supabase
       .from('parent_teacher_messages')
       .delete()
-      .like('teacher_id', 'demo_%')
+      .eq('teacher_id', teacherId)
     if (parentMessagesError) console.error('Error deleting parent messages:', parentMessagesError)
 
     // Delete published assignments
     const { error: pubAssignmentsError } = await supabase
       .from('published_assignments')
       .delete()
-      .like('class_id', 'demo_%')
+      .eq('class_id', classId)
     if (pubAssignmentsError) console.error('Error deleting published assignments:', pubAssignmentsError)
 
     // Delete students
     const { error: studentsError } = await supabase
       .from('students')
       .delete()
-      .like('id', 'demo_%')
+      .in('id', studentIds)
     if (studentsError) console.error('Error deleting students:', studentsError)
 
     // Delete classes
     const { error: classesError } = await supabase
       .from('classes')
       .delete()
-      .like('id', 'demo_%')
+      .eq('id', classId)
     if (classesError) console.error('Error deleting classes:', classesError)
 
     // Delete profiles
     const { error: profilesError } = await supabase
       .from('profiles')
       .delete()
-      .like('id', 'demo_%')
+      .in('id', [...studentIds, ...parentIds, teacherId])
     if (profilesError) console.error('Error deleting profiles:', profilesError)
 
     // Delete teacher profiles
     const { error: teacherProfilesError } = await supabase
       .from('teacher_profiles')
       .delete()
-      .like('user_id', 'demo_%')
+      .eq('user_id', teacherId)
     if (teacherProfilesError) console.error('Error deleting teacher profiles:', teacherProfilesError)
 
     // Delete parent profiles
     const { error: parentProfilesError } = await supabase
       .from('parent_profiles')
       .delete()
-      .like('user_id', 'demo_%')
+      .in('user_id', parentIds)
     if (parentProfilesError) console.error('Error deleting parent profiles:', parentProfilesError)
 
     console.log('Demo data wipe completed')
@@ -183,8 +195,8 @@ async function seedDemoData(supabase: any) {
     // First wipe existing demo data
     await wipeDemoData(supabase)
 
-    // Demo teacher profile
-    const teacherId = 'demo_teacher_rivera'
+    // Demo teacher profile - use proper UUID
+    const teacherId = 'dddd0001-0000-0000-0000-000000000001'
     const { error: teacherProfileError } = await supabase
       .from('profiles')
       .upsert({
@@ -262,8 +274,8 @@ async function seedDemoData(supabase: any) {
     // Create student and parent profiles
     for (let i = 0; i < studentData.length; i++) {
       const student = studentData[i]
-      const studentId = `demo_student_${String(i + 1).padStart(2, '0')}`
-      const parentId = `demo_parent_${String(i + 1).padStart(2, '0')}`
+      const studentId = `dddd${String(i + 101).padStart(4, '0')}-0000-0000-0000-000000000001`
+      const parentId = `dddd${String(i + 201).padStart(4, '0')}-0000-0000-0000-000000000001`
 
       // Student profile
       const { error: studentProfileError } = await supabase
@@ -325,7 +337,7 @@ async function seedDemoData(supabase: any) {
       const { error: relationshipError } = await supabase
         .from('student_parent_relationships')
         .upsert({
-          id: `demo_rel_${String(i + 1).padStart(2, '0')}`,
+          id: `dddd${String(i + 301).padStart(4, '0')}-0000-0000-0000-000000000001`,
           student_id: studentId,
           parent_id: parentId,
           relationship_type: 'parent',
@@ -412,7 +424,7 @@ async function seedDemoData(supabase: any) {
       const numSubmissions = Math.floor(studentData.length * submissionRates[assignmentIndex])
       
       for (let i = 0; i < numSubmissions; i++) {
-        const studentId = `demo_student_${String(i + 1).padStart(2, '0')}`
+        const studentId = `dddd${String(i + 101).padStart(4, '0')}-0000-0000-0000-000000000001`
         const submissionId = `demo_sub_${assignmentIndex + 1}_${String(i + 1).padStart(2, '0')}`
 
         // Create submission
@@ -517,8 +529,8 @@ async function seedDemoData(supabase: any) {
     // Create parent notifications for missing assignments (students who didn't submit assignment 1)
     const submittedStudents = Math.floor(studentData.length * 0.7)
     for (let i = submittedStudents; i < studentData.length; i++) {
-      const studentId = `demo_student_${String(i + 1).padStart(2, '0')}`
-      const parentId = `demo_parent_${String(i + 1).padStart(2, '0')}`
+      const studentId = `dddd${String(i + 101).padStart(4, '0')}-0000-0000-0000-000000000001`
+      const parentId = `dddd${String(i + 201).padStart(4, '0')}-0000-0000-0000-000000000001`
       const student = studentData[i]
 
       const dueDate = new Date()
@@ -556,7 +568,7 @@ async function seedDemoData(supabase: any) {
     for (let i = 0; i < 40; i++) {
       analyticsEvents.push({
         id: `demo_analytics_read_${i + 1}`,
-        user_id: `demo_student_${String((i % 12) + 1).padStart(2, '0')}`,
+        user_id: `dddd${String((i % 12) + 101).padStart(4, '0')}-0000-0000-0000-000000000001`,
         event_type: 'read_aloud_play',
         event_data: {
           assignment_id: 'demo_assignment_01',
@@ -571,7 +583,7 @@ async function seedDemoData(supabase: any) {
     for (let i = 0; i < 15; i++) {
       analyticsEvents.push({
         id: `demo_analytics_translate_${i + 1}`,
-        user_id: `demo_student_${String((i % 12) + 1).padStart(2, '0')}`,
+        user_id: `dddd${String((i % 12) + 101).padStart(4, '0')}-0000-0000-0000-000000000001`,
         event_type: 'translate_used',
         event_data: {
           from_language: 'spanish',
@@ -586,7 +598,7 @@ async function seedDemoData(supabase: any) {
     for (let i = 0; i < 18; i++) {
       analyticsEvents.push({
         id: `demo_analytics_parent_${i + 1}`,
-        user_id: `demo_parent_${String((i % 12) + 1).padStart(2, '0')}`,
+        user_id: `dddd${String((i % 12) + 201).padStart(4, '0')}-0000-0000-0000-000000000001`,
         event_type: 'parent_portal_opened',
         event_data: {
           session_duration: Math.floor(Math.random() * 300) + 60
