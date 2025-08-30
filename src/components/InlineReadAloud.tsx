@@ -77,11 +77,14 @@ const InlineReadAloud: React.FC<InlineReadAloudProps> = ({ text, className, lang
       {/* Content with word highlighting */}
       <div className="prose max-w-none">
         {isPlaying || isPaused ? (
-          <div className="text-gray-800 leading-relaxed text-lg">
-            <WordHighlighter
-              textParts={textParts}
-              wordPositions={wordPositions}
-              currentWordIndex={currentWordIndex}
+          <div className="relative">
+            {/* Show original formatted content */}
+            <div dangerouslySetInnerHTML={{ __html: text }} />
+            {/* Add a subtle reading indicator */}
+            <div className="absolute top-0 left-0 w-1 bg-blue-500 rounded-full transition-all duration-300 ease-out" 
+                 style={{
+                   height: currentWordIndex >= 0 ? `${((currentWordIndex + 1) / Math.max(wordPositions.length, 1)) * 100}%` : '0%'
+                 }}
             />
           </div>
         ) : (
