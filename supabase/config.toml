@@ -1,4 +1,6 @@
 project_id = "irxzpsvzlihqitlicoql"
 
+
+
 [functions.seed-demo-tenant]
-verify_jwt = true
+verify_jwt = false
