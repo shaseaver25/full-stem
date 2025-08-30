@@ -1,6 +1,7 @@
 import { useRef, useState, useCallback, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useUserPreferences } from './useUserPreferences';
+import { segmentWords, calculateWordWeight } from '@/utils/segment';
 
 type SpeakOpts = { voiceId?: string; rate?: number };
 
@@ -61,14 +62,11 @@ export const useElevenLabsTTS = (language?: string) => {
       const localTokens: string[] =
         (tokens && Array.isArray(tokens) && tokens.length > 0)
           ? tokens
-          : text.split(/(\s+)/).filter(t => t.trim().length > 0);
+          : segmentWords(text, language);
       const localWeights: number[] =
         (weights && Array.isArray(weights) && weights.length === localTokens.length)
           ? weights
-          : localTokens.map(tok => {
-              const w = tok.replace(/[^\p{L}\p{N}]/gu, '').length;
-              return w || 1;
-            });
+          : localTokens.map(token => calculateWordWeight(token));
 
       // Create audio element from base64
       const audioBlob = new Blob([

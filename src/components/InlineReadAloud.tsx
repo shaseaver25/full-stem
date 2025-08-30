@@ -3,6 +3,7 @@ import DOMPurify from 'dompurify';
 import SpeechControls from './SpeechControls';
 import { useInPlaceWordHighlighter } from '@/hooks/useInPlaceWordHighlighter';
 import { useElevenLabsTTS } from '@/hooks/useElevenLabsTTS';
+import { normalizeLanguageCode } from '@/utils/segment';
 
 interface InlineReadAloudProps {
   text: string;       // HTML string
@@ -11,6 +12,8 @@ interface InlineReadAloudProps {
 }
 
 const InlineReadAloud: React.FC<InlineReadAloudProps> = ({ text, className, language }) => {
+  // Normalize language code for consistent usage
+  const normalizedLanguage = normalizeLanguageCode(language);
   // Sanitize HTML input
   const sanitizedHTML = React.useMemo(() => {
     if (typeof window === 'undefined') return text;
@@ -42,7 +45,7 @@ const InlineReadAloud: React.FC<InlineReadAloudProps> = ({ text, className, lang
     duration,
     error,
     wordTimings
-  } = useElevenLabsTTS(language);
+  } = useElevenLabsTTS(normalizedLanguage);
 
   const isPlaying = elevenLabsPlaying;
   const isPaused = elevenLabsPaused;
@@ -55,7 +58,8 @@ const InlineReadAloud: React.FC<InlineReadAloudProps> = ({ text, className, lang
     contentRef,
     wordTimings ?? [],
     currentTime,
-    isPlaying || isPaused // keep highlight while paused
+    isPlaying || isPaused, // keep highlight while paused
+    normalizedLanguage
   );
 
   // Keep current highlighted word centered in view
@@ -159,6 +163,8 @@ const InlineReadAloud: React.FC<InlineReadAloudProps> = ({ text, className, lang
         className="prose max-w-none max-h-96 overflow-y-auto cursor-pointer"
         aria-live="polite"
         aria-atomic="true"
+        lang={normalizedLanguage}
+        dir="auto"
         onClick={handleContentClick}
         dangerouslySetInnerHTML={{ __html: sanitizedHTML }}
       />

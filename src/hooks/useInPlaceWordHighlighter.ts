@@ -1,4 +1,5 @@
 import { useEffect, useRef, useMemo } from 'react';
+import { segmentWords } from '@/utils/segment';
 
 export type WordTiming = { start: number; end: number; text: string; index: number };
 
@@ -6,7 +7,8 @@ export const useInPlaceWordHighlighter = (
   containerRef: React.RefObject<HTMLElement>,
   timings: WordTiming[],
   currentTime: number,
-  isActive: boolean
+  isActive: boolean,
+  language?: string
 ) => {
   const wrappedSpansRef = useRef<HTMLElement[]>([]);
   const lastHighlightedIndexRef = useRef<number>(-1);
@@ -31,8 +33,13 @@ export const useInPlaceWordHighlighter = (
         if (!text.trim()) return;
 
         const fragment = document.createDocumentFragment();
-        const parts = text.split(/(\s+)/); // Keep whitespace tokens
+        // Use international word segmentation
+        const words = segmentWords(text, language);
+        let wordIndex = 0;
 
+        // Split by words but preserve whitespace structure
+        const parts = text.split(/(\s+)/);
+        
         for (const part of parts) {
           if (!part) continue;
           
@@ -40,14 +47,21 @@ export const useInPlaceWordHighlighter = (
             // Preserve whitespace as-is
             fragment.appendChild(document.createTextNode(part));
           } else {
-            // Wrap non-whitespace in a span
-            const span = document.createElement('span');
-            span.textContent = part;
-            span.setAttribute('data-word', spans.length.toString());
-            span.className = 'readable-word';
-            span.style.transition = 'background-color 0.12s ease';
-            fragment.appendChild(span);
-            spans.push(span);
+            // Check if this part contains word content
+            const partWords = segmentWords(part, language);
+            if (partWords.length > 0) {
+              // Wrap the whole part in a span
+              const span = document.createElement('span');
+              span.textContent = part;
+              span.setAttribute('data-word', spans.length.toString());
+              span.className = 'readable-word';
+              span.style.transition = 'background-color 0.12s ease';
+              fragment.appendChild(span);
+              spans.push(span);
+            } else {
+              // No word content, keep as text
+              fragment.appendChild(document.createTextNode(part));
+            }
           }
         }
 
@@ -96,6 +110,7 @@ export const useInPlaceWordHighlighter = (
     if (prevIndex >= 0 && prevIndex < spans.length) {
       const prevSpan = spans[prevIndex];
       prevSpan.removeAttribute('data-word-highlight');
+      prevSpan.removeAttribute('aria-current');
       prevSpan.style.backgroundColor = '';
       prevSpan.style.borderRadius = '';
       prevSpan.style.padding = '';
@@ -105,6 +120,7 @@ export const useInPlaceWordHighlighter = (
     if (newIndex >= 0 && newIndex < spans.length) {
       const currentSpan = spans[newIndex];
       currentSpan.setAttribute('data-word-highlight', 'true');
+      currentSpan.setAttribute('aria-current', 'true');
       currentSpan.style.backgroundColor = 'rgba(59,130,246,0.35)';
       currentSpan.style.borderRadius = '3px';
       currentSpan.style.padding = '0 2px';
@@ -122,6 +138,7 @@ export const useInPlaceWordHighlighter = (
       if (isInitializedRef.current && wrappedSpansRef.current.length > 0) {
         wrappedSpansRef.current.forEach(span => {
           span.removeAttribute('data-word-highlight');
+          span.removeAttribute('aria-current');
           span.style.backgroundColor = '';
           span.style.borderRadius = '';
           span.style.padding = '';

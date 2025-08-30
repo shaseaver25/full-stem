@@ -68,7 +68,17 @@ const SpeechControls: React.FC<SpeechControlsProps> = ({
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
+    
+    // Use Intl.NumberFormat for locale-aware digits
+    try {
+      const formatter = new Intl.NumberFormat(undefined, { maximumFractionDigits: 0 });
+      const formattedMins = formatter.format(mins);
+      const formattedSecs = formatter.format(secs);
+      return `${formattedMins}:${formattedSecs.padStart(2, '0')}`;
+    } catch {
+      // Fallback for unsupported environments
+      return `${mins}:${secs.toString().padStart(2, '0')}`;
+    }
   };
 
   const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -76,15 +86,32 @@ const SpeechControls: React.FC<SpeechControlsProps> = ({
     onSeek?.(time);
   };
 
+  const getAriaLabel = () => {
+    if (isLoading) {
+      return 'Loading read aloud';
+    } else if (isPlaying && !isPaused) {
+      return 'Pause read aloud';
+    } else if (isPaused) {
+      return 'Resume read aloud';
+    } else {
+      return 'Play read aloud';
+    }
+  };
+
   return (
     <div className="flex flex-col items-end gap-2">
-      <div className="flex items-center gap-2">
+      <div 
+        className="flex items-center gap-2"
+        role="group" 
+        aria-label="Read aloud controls"
+      >
         <Button
           variant="outline"
           size="sm"
           onClick={handleClick}
           disabled={isLoading}
           className="flex items-center gap-2"
+          aria-label={getAriaLabel()}
         >
           {getIcon()}
           {getButtonText()}
@@ -94,8 +121,9 @@ const SpeechControls: React.FC<SpeechControlsProps> = ({
             variant="ghost"
             size="sm"
             onClick={onStop}
+            disabled={isLoading}
             className="p-2"
-            title="Stop reading"
+            aria-label="Stop read aloud"
           >
             <VolumeX className="h-4 w-4" />
           </Button>
@@ -116,6 +144,7 @@ const SpeechControls: React.FC<SpeechControlsProps> = ({
             value={currentTime}
             onChange={handleSeek}
             className="w-32 h-1 bg-secondary rounded-lg appearance-none cursor-pointer slider"
+            aria-label="Seek to position in audio"
             style={{
               background: `linear-gradient(to right, hsl(var(--primary)) 0%, hsl(var(--primary)) ${(currentTime / duration) * 100}%, hsl(var(--secondary)) ${(currentTime / duration) * 100}%, hsl(var(--secondary)) 100%)`
             }}
