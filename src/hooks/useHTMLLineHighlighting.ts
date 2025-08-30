@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useRef, useEffect } from 'react';
 
 export const useHTMLLineHighlighting = (
   htmlContent: string,
@@ -7,88 +7,65 @@ export const useHTMLLineHighlighting = (
   duration: number,
   isPlaying: boolean
 ) => {
-  const highlightedHTML = useMemo(() => {
-    if (!isPlaying || !duration || currentTime <= 0) return htmlContent;
+  const lastHighlightedIndex = useRef<number>(-1);
+  const textElements = useRef<HTMLElement[]>([]);
 
-    // Split clean text into words to calculate progress more granularly
-    const words = cleanText.split(/\s+/).filter(word => word.length > 0);
-    const totalWords = words.length;
-    
-    // Calculate which word we're currently on
-    const progress = currentTime / duration;
-    const currentWordIndex = Math.floor(progress * totalWords);
-    
-    if (currentWordIndex >= totalWords || currentWordIndex < 0) {
+  const highlightedHTML = useMemo(() => {
+    if (!isPlaying || !duration || currentTime <= 0) {
+      lastHighlightedIndex.current = -1;
       return htmlContent;
     }
 
-    // Get the current word being spoken
-    const currentWord = words[currentWordIndex];
-    if (!currentWord) return htmlContent;
-
+    // Calculate progress as a percentage
+    const progress = Math.min(currentTime / duration, 1);
+    
     // Create a temporary div to parse the HTML
     const tempDiv = document.createElement('div');
     tempDiv.innerHTML = htmlContent;
 
-    // Function to find and highlight the line containing the current word
-    const highlightCurrentLine = (node: Node): boolean => {
-      if (node.nodeType === Node.TEXT_NODE) {
-        const textContent = node.textContent || '';
-        
-        // Check if this text node contains the current word
-        const wordPattern = currentWord.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const regex = new RegExp(`\\b${wordPattern}\\b`, 'i');
-        
-        if (regex.test(textContent)) {
-          // Find the closest block-level parent or create a line wrapper
-          let lineElement = node.parentElement;
-          
-          // Look for a suitable parent element (p, div, span, etc.)
-          while (lineElement && lineElement !== tempDiv) {
-            if (lineElement.tagName && ['P', 'DIV', 'SPAN', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6'].includes(lineElement.tagName)) {
-              break;
-            }
-            lineElement = lineElement.parentElement;
-          }
-          
-          if (lineElement && lineElement !== tempDiv) {
-            // Clear any existing highlights first
-            const allElements = tempDiv.querySelectorAll('[data-line-highlight]');
-            allElements.forEach(el => {
-              el.removeAttribute('data-line-highlight');
-              const htmlEl = el as HTMLElement;
-              htmlEl.style.removeProperty('background-color');
-              htmlEl.style.removeProperty('border-left');
-              htmlEl.style.removeProperty('padding-left');
-              htmlEl.style.removeProperty('border-radius');
-              htmlEl.style.removeProperty('transition');
-            });
-            
-            // Add highlighting to current line
-            lineElement.setAttribute('data-line-highlight', 'true');
-            const htmlLineElement = lineElement as HTMLElement;
-            htmlLineElement.style.backgroundColor = 'rgba(59, 130, 246, 0.1)';
-            htmlLineElement.style.borderLeft = '4px solid rgb(59, 130, 246)';
-            htmlLineElement.style.paddingLeft = '12px';
-            htmlLineElement.style.borderRadius = '4px';
-            htmlLineElement.style.transition = 'all 0.3s ease';
-            return true;
-          }
-        }
-      } else {
-        // Recursively process child nodes
-        for (const child of Array.from(node.childNodes)) {
-          if (highlightCurrentLine(child)) {
-            return true; // Stop after first match
-          }
-        }
-      }
-      return false;
-    };
+    // Get all text-containing elements (paragraphs, headings, etc.)
+    const allElements = Array.from(tempDiv.querySelectorAll('p, div, h1, h2, h3, h4, h5, h6, span'))
+      .filter(el => el.textContent && el.textContent.trim().length > 0) as HTMLElement[];
 
-    highlightCurrentLine(tempDiv);
+    // Calculate which element should be highlighted based on progress
+    const targetIndex = Math.floor(progress * allElements.length);
+    
+    // Ensure we only move forward (prevent backward highlighting)
+    const currentIndex = Math.max(targetIndex, lastHighlightedIndex.current);
+    
+    // Clear all existing highlights
+    allElements.forEach(el => {
+      el.removeAttribute('data-line-highlight');
+      el.style.removeProperty('background-color');
+      el.style.removeProperty('border-left');
+      el.style.removeProperty('padding-left');
+      el.style.removeProperty('border-radius');
+      el.style.removeProperty('transition');
+    });
+    
+    // Highlight the current element
+    if (currentIndex >= 0 && currentIndex < allElements.length) {
+      const elementToHighlight = allElements[currentIndex];
+      elementToHighlight.setAttribute('data-line-highlight', 'true');
+      elementToHighlight.style.backgroundColor = 'rgba(59, 130, 246, 0.1)';
+      elementToHighlight.style.borderLeft = '4px solid rgb(59, 130, 246)';
+      elementToHighlight.style.paddingLeft = '12px';
+      elementToHighlight.style.borderRadius = '4px';
+      elementToHighlight.style.transition = 'all 0.3s ease';
+      
+      // Update the last highlighted index
+      lastHighlightedIndex.current = currentIndex;
+    }
+
     return tempDiv.innerHTML;
   }, [htmlContent, cleanText, currentTime, duration, isPlaying]);
+
+  // Reset when playback stops
+  useEffect(() => {
+    if (!isPlaying) {
+      lastHighlightedIndex.current = -1;
+    }
+  }, [isPlaying]);
 
   return highlightedHTML;
 };
