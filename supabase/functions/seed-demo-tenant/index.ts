@@ -81,7 +81,7 @@ async function wipeDemoData(supabase: any) {
   try {
     // Define demo UUIDs to delete
     const teacherId = 'dddd0001-0000-0000-0000-000000000001'
-    const classId = 'demo_class_ai_ms'
+    const classId = 'dddd0002-0000-0000-0000-000000000001'
     
     // Generate student and parent IDs for deletion
     const studentIds = []
@@ -228,7 +228,7 @@ async function seedDemoData(supabase: any) {
     counts.created['teachers'] = 1
 
     // Demo class
-    const classId = 'demo_class_ai_ms'
+    const classId = 'dddd0002-0000-0000-0000-000000000001'
     const { error: classError } = await supabase
       .from('classes')
       .upsert({
@@ -355,7 +355,7 @@ async function seedDemoData(supabase: any) {
     // Create assignments
     const assignments = [
       {
-        id: 'demo_assignment_01',
+        id: 'dddd0003-0000-0000-0000-000000000001',
         title: 'What is AI? (Reading + 3 questions)',
         instructions: `<h2>What is Artificial Intelligence?</h2>
 <p>Artificial Intelligence, or AI, is when computers are built to do tasks that usually need human thinking.</p>
@@ -366,7 +366,7 @@ async function seedDemoData(supabase: any) {
         due_days: 3
       },
       {
-        id: 'demo_assignment_02',
+        id: 'dddd0004-0000-0000-0000-000000000001',
         title: 'Ethics & Bias (Short Answer)',
         instructions: `<h2>AI Ethics & Bias</h2>
 <p>AI can accidentally learn bias if the data it studies is unfair.</p>
@@ -374,7 +374,7 @@ async function seedDemoData(supabase: any) {
         due_days: 5
       },
       {
-        id: 'demo_assignment_03',
+        id: 'dddd0005-0000-0000-0000-000000000001',
         title: 'Build a Classifier (No-Code)',
         instructions: `<h2>Build a Tiny Classifier</h2>
 <p>Use a no-code tool to train a model to tell apart two objects (e.g., apples vs. bananas).</p>
@@ -547,7 +547,7 @@ async function seedDemoData(supabase: any) {
           read: false,
           metadata: {
             student_id: studentId,
-            assignment_id: 'demo_assignment_01',
+            assignment_id: 'dddd0003-0000-0000-0000-000000000001',
             assignment_title: 'What is AI? (Reading + 3 questions)',
             due_date: dueDate.toISOString()
           },
@@ -571,7 +571,7 @@ async function seedDemoData(supabase: any) {
         user_id: `dddd${String((i % 12) + 101).padStart(4, '0')}-0000-0000-0000-000000000001`,
         event_type: 'read_aloud_play',
         event_data: {
-          assignment_id: 'demo_assignment_01',
+          assignment_id: 'dddd0003-0000-0000-0000-000000000001',
           duration_seconds: Math.floor(Math.random() * 120) + 30,
           content_type: 'assignment'
         },
@@ -588,7 +588,7 @@ async function seedDemoData(supabase: any) {
         event_data: {
           from_language: 'spanish',
           to_language: 'english',
-          assignment_id: 'demo_assignment_01'
+          assignment_id: 'dddd0003-0000-0000-0000-000000000001'
         },
         created_at: new Date(thirtyDaysAgo + Math.random() * (now - thirtyDaysAgo)).toISOString()
       })
