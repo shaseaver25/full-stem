@@ -1,4 +1,5 @@
 import React from 'react';
+import DOMPurify from 'dompurify';
 import SpeechControls from './SpeechControls';
 import { useHTMLWordHighlightingTimed } from '@/hooks/useHTMLWordHighlightingTimed';
 import { useElevenLabsTTS } from '@/hooks/useElevenLabsTTS';
@@ -10,12 +11,22 @@ interface InlineReadAloudProps {
 }
 
 const InlineReadAloud: React.FC<InlineReadAloudProps> = ({ text, className, language }) => {
-  // Extract clean text from HTML for TTS
-  const cleanText = React.useMemo(() => {
-    const temp = document.createElement('div');
-    temp.innerHTML = text;
-    return temp.textContent || temp.innerText || '';
+  // Sanitize HTML input
+  const sanitizedHTML = React.useMemo(() => {
+    if (typeof window === 'undefined') return text;
+    return DOMPurify.sanitize(text, { USE_PROFILES: { html: true } });
   }, [text]);
+
+  // Extract clean text from sanitized HTML for TTS
+  const cleanText = React.useMemo(() => {
+    if (typeof window === 'undefined') {
+      // Fallback for SSR - basic text extraction
+      return text.replace(/<[^>]*>/g, '');
+    }
+    const temp = document.createElement('div');
+    temp.innerHTML = sanitizedHTML;
+    return temp.textContent || temp.innerText || '';
+  }, [sanitizedHTML, text]);
 
   // ElevenLabs TTS hook
   const {
@@ -37,7 +48,7 @@ const InlineReadAloud: React.FC<InlineReadAloudProps> = ({ text, className, lang
 
   // Get HTML with word highlighting applied
   const highlightedHTML = useHTMLWordHighlightingTimed(
-    text,
+    sanitizedHTML,
     wordTimings,
     currentTime,
     isPlaying || isPaused // keep highlight while paused
@@ -90,7 +101,7 @@ const InlineReadAloud: React.FC<InlineReadAloudProps> = ({ text, className, lang
       >
         <div
           dangerouslySetInnerHTML={{
-            __html: (isPlaying || isPaused) ? highlightedHTML : text,
+            __html: (isPlaying || isPaused) ? highlightedHTML : sanitizedHTML,
           }}
         />
       </div>

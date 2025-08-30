@@ -9,9 +9,10 @@ export const useHTMLWordHighlightingTimed = (
   isActive: boolean
 ) => {
   const lastIdx = useRef<number>(-1);
+  const isBrowser = typeof window !== 'undefined' && typeof document !== 'undefined';
 
   const highlighted = useMemo(() => {
-    if (!htmlContent || !timings || !timings.length || !isActive) {
+    if (!htmlContent || !timings || !timings.length || !isActive || !isBrowser) {
       lastIdx.current = -1;
       return htmlContent;
     }

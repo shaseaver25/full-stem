@@ -8,9 +8,10 @@ export const useHTMLLineHighlighting = (
   isPlaying: boolean
 ) => {
   const lastIndexRef = useRef<number>(-1);
+  const isBrowser = typeof window !== 'undefined' && typeof document !== 'undefined';
 
   const highlightedHTML = useMemo(() => {
-    if (!htmlContent || !duration || (!isPlaying && currentTime <= 0)) {
+    if (!htmlContent || !duration || (!isPlaying && currentTime <= 0) || !isBrowser) {
       lastIndexRef.current = -1;
       return htmlContent;
     }

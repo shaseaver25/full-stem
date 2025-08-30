@@ -7,9 +7,10 @@ export const useHTMLWordHighlighting = (
   isActive: boolean
 ) => {
   const lastWordIndex = useRef<number>(-1);
+  const isBrowser = typeof window !== 'undefined' && typeof document !== 'undefined';
 
   const highlightedHTML = useMemo(() => {
-    if (!htmlContent || !duration || (!isActive && currentTime <= 0)) {
+    if (!htmlContent || !duration || (!isActive && currentTime <= 0) || !isBrowser) {
       lastWordIndex.current = -1;
       return htmlContent;
     }
