@@ -9,6 +9,7 @@ import VideoSection from './VideoSection';
 import CodeIDE from './CodeIDE';
 import AssignmentSection from '@/components/assignments/AssignmentSection';
 import InlineReadAloud from '@/components/InlineReadAloud';
+import SafeHtml from '@/components/ui/SafeHtml';
 
 interface LessonComponentRendererProps {
   component: LessonComponent;
