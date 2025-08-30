@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { seedDemoStatusUrl, seedDemoSeedUrl, seedDemoWipeUrl } from '@/integrations/supabase/functions';
 import { Database, Users, GraduationCap, FileText, MessageCircle, Bell, BarChart3, Trash2, Zap } from 'lucide-react';
 
 interface DemoDataCounts {
@@ -24,14 +25,47 @@ const DemoDataManagement = () => {
   const [dataCounts, setDataCounts] = useState<DemoDataCounts>({});
   const { toast } = useToast();
 
+  const handleCheckStatus = async () => {
+    try {
+      const r = await fetch(seedDemoStatusUrl, { method: 'GET' });
+      
+      toast({
+        title: "Status Check Complete",
+        description: `Status: ${r.status} ${r.statusText}`
+      });
+      
+      if (r.ok) {
+        const data = await r.json();
+        console.log('Status response:', data);
+      }
+    } catch (error) {
+      console.error('Error checking status:', error);
+      toast({
+        title: "Status Check Failed",
+        description: error.message || "Failed to check demo status",
+        variant: "destructive"
+      });
+    }
+  };
+
   const handleSeedData = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke('seed-demo-tenant', {
-        method: 'POST'
+      const jwt = (await supabase.auth.getSession())?.data.session?.access_token ?? '';
+      const r = await fetch(seedDemoSeedUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(jwt ? { Authorization: `Bearer ${jwt}` } : {})
+        },
+        body: JSON.stringify({ tenantId: 'demo_full_stem' })
       });
 
-      if (error) throw error;
+      if (!r.ok) {
+        throw new Error(`HTTP error! status: ${r.status}`);
+      }
+
+      const data = await r.json();
 
       setDataCounts(data.counts || {});
       setLastSeeded(data.timestamp);
@@ -59,12 +93,21 @@ const DemoDataManagement = () => {
 
     setLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke('seed-demo-tenant', {
+      const jwt = (await supabase.auth.getSession())?.data.session?.access_token ?? '';
+      const r = await fetch(seedDemoWipeUrl, {
         method: 'POST',
-        body: { action: 'wipe' }
+        headers: {
+          'Content-Type': 'application/json',
+          ...(jwt ? { Authorization: `Bearer ${jwt}` } : {})
+        },
+        body: JSON.stringify({ tenantId: 'demo_full_stem' })
       });
 
-      if (error) throw error;
+      if (!r.ok) {
+        throw new Error(`HTTP error! status: ${r.status}`);
+      }
+
+      const data = await r.json();
 
       setDataCounts({});
       setLastSeeded(null);
@@ -106,6 +149,17 @@ const DemoDataManagement = () => {
           Perfect for demonstrations and testing the Read-Aloud and Translate features.
         </AlertDescription>
       </Alert>
+
+      {/* Status Check Button */}
+      <div className="flex justify-center">
+        <Button 
+          onClick={handleCheckStatus}
+          variant="outline"
+          className="w-auto"
+        >
+          Check Demo Status
+        </Button>
+      </div>
 
       <div className="grid md:grid-cols-2 gap-6">
         <Card>
