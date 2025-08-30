@@ -131,12 +131,44 @@ export const useElevenLabsTTS = (language?: string) => {
 
       // Start playing
       try {
-        await audio.play();
-        console.log('ElevenLabs audio started successfully');
-      } catch (playError) {
+        // Ensure audio is ready before attempting to play
+        if (audio.readyState >= 2) { // HAVE_CURRENT_DATA
+          await audio.play();
+          console.log('ElevenLabs audio started successfully');
+        } else {
+          // Wait for audio to be ready
+          await new Promise((resolve, reject) => {
+            audio.oncanplaythrough = () => {
+              audio.oncanplaythrough = null;
+              resolve(void 0);
+            };
+            audio.onerror = () => {
+              audio.onerror = null;
+              reject(new Error('Audio failed to load'));
+            };
+            // Fallback timeout
+            setTimeout(() => {
+              reject(new Error('Audio load timeout'));
+            }, 10000);
+          });
+          
+          await audio.play();
+          console.log('ElevenLabs audio started successfully after loading');
+        }
+      } catch (playError: any) {
         console.error('Failed to start audio playback:', playError);
-        setError('Failed to start audio playback');
+        
+        if (playError.name === 'NotAllowedError') {
+          setError('Please click the button again to start audio playback');
+        } else if (playError.name === 'NotSupportedError') {
+          setError('Audio format not supported by your browser');
+        } else {
+          setError('Failed to start audio playback. Please try again.');
+        }
+        
         setIsLoading(false);
+        setIsPlaying(false);
+        setIsPaused(false);
       }
     } catch (error) {
       console.error('ElevenLabs TTS error:', error);
@@ -155,7 +187,18 @@ export const useElevenLabsTTS = (language?: string) => {
 
   const resume = useCallback(() => {
     if (audioRef.current && audioRef.current.paused) {
-      audioRef.current.play();
+      // Handle potential autoplay restrictions on resume
+      const playPromise = audioRef.current.play();
+      
+      if (playPromise !== undefined) {
+        playPromise.catch((error) => {
+          console.error('Resume play error:', error);
+          if (error.name === 'NotAllowedError') {
+            setError('Please click resume again to continue playback');
+          }
+        });
+      }
+      
       // Restart time tracking
       timeUpdateIntervalRef.current = setInterval(() => {
         if (audioRef.current && !audioRef.current.paused) {

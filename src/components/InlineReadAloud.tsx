@@ -28,6 +28,7 @@ const InlineReadAloud: React.FC<InlineReadAloudProps> = ({ text, className, lang
     isLoading: elevenLabsLoading,
     currentTime,
     duration,
+    error,
   } = useElevenLabsTTS(language);
 
   // Use only ElevenLabs state for controls
@@ -68,6 +69,7 @@ const InlineReadAloud: React.FC<InlineReadAloudProps> = ({ text, className, lang
           isPlaying={isPlaying}
           isPaused={isPaused}
           isLoading={elevenLabsLoading}
+          error={error}
           onPlay={handlePlay}
           onPause={handlePause}
           onResume={handleResume}

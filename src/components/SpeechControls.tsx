@@ -7,6 +7,7 @@ interface SpeechControlsProps {
   isPlaying: boolean;
   isPaused: boolean;
   isLoading?: boolean;
+  error?: string | null;
   onPlay: () => void;
   onPause: () => void;
   onResume: () => void;
@@ -17,6 +18,7 @@ const SpeechControls: React.FC<SpeechControlsProps> = ({
   isPlaying,
   isPaused,
   isLoading = false,
+  error,
   onPlay,
   onPause,
   onResume,
@@ -58,27 +60,34 @@ const SpeechControls: React.FC<SpeechControlsProps> = ({
   };
 
   return (
-    <div className="flex items-center gap-2">
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={handleClick}
-        disabled={isLoading}
-        className="flex items-center gap-2"
-      >
-        {getIcon()}
-        {getButtonText()}
-      </Button>
-      {(isPlaying || isPaused) && (
+    <div className="flex flex-col items-end gap-2">
+      <div className="flex items-center gap-2">
         <Button
-          variant="ghost"
+          variant="outline"
           size="sm"
-          onClick={onStop}
-          className="p-2"
-          title="Stop reading"
+          onClick={handleClick}
+          disabled={isLoading}
+          className="flex items-center gap-2"
         >
-          <VolumeX className="h-4 w-4" />
+          {getIcon()}
+          {getButtonText()}
         </Button>
+        {(isPlaying || isPaused) && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onStop}
+            className="p-2"
+            title="Stop reading"
+          >
+            <VolumeX className="h-4 w-4" />
+          </Button>
+        )}
+      </div>
+      {error && (
+        <div className="text-sm text-red-600 bg-red-50 px-3 py-1 rounded border border-red-200 max-w-xs text-right">
+          {error}
+        </div>
       )}
     </div>
   );
