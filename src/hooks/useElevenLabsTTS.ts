@@ -67,6 +67,7 @@ export const useElevenLabsTTS = () => {
           audio.playbackRate = 1.0;
       }
 
+      // Set up event listeners before playing
       audio.onloadstart = () => {
         console.log('Audio loading started');
       };
@@ -103,7 +104,15 @@ export const useElevenLabsTTS = () => {
         URL.revokeObjectURL(audioUrl);
       };
 
-      await audio.play();
+      // Start playing
+      try {
+        await audio.play();
+        console.log('ElevenLabs audio started successfully');
+      } catch (playError) {
+        console.error('Failed to start audio playback:', playError);
+        setError('Failed to start audio playback');
+        setIsLoading(false);
+      }
     } catch (error) {
       console.error('ElevenLabs TTS error:', error);
       setError(error instanceof Error ? error.message : 'Failed to generate speech');
