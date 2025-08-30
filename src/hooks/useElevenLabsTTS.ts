@@ -2,8 +2,10 @@ import { useRef, useState, useCallback, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useUserPreferences } from './useUserPreferences';
 import { segmentWords, calculateWordWeight } from '@/utils/segment';
+import { synthesizeTimings } from '@/utils/timing';
+import { WordTiming, TTSOptions } from '@/types/tts';
 
-type SpeakOpts = { voiceId?: string; rate?: number };
+type SpeakOpts = TTSOptions;
 
 export const useElevenLabsTTS = (language?: string) => {
   const { preferences } = useUserPreferences();
@@ -15,7 +17,7 @@ export const useElevenLabsTTS = (language?: string) => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [error, setError] = useState<string | null>(null);
   const timeUpdateIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  const [wordTimings, setWordTimings] = useState<Array<{ start: number; end: number; text: string; index: number }> | null>(null);
+  const [wordTimings, setWordTimings] = useState<WordTiming[] | null>(null);
   const syncCheckRef = useRef<{ lastSyncCheck: number; syncPoints: number[] }>({ lastSyncCheck: 0, syncPoints: [] });
 
   const isEnabled = true;
@@ -117,18 +119,11 @@ export const useElevenLabsTTS = (language?: string) => {
           return;
         }
         // Otherwise synthesize per-word timings across the REAL audio duration
-        const total = localWeights.reduce((a, b) => a + b, 0) || 1;
-        let acc = 0;
-        const synthetic = localWeights.map((w, i) => {
-          const start = (acc / total) * audio.duration;
-          acc += w;
-          const end = (acc / total) * audio.duration;
-          return { start, end, text: localTokens[i], index: i };
-        });
-        setWordTimings(synthetic);
+        const syntheticTimings = synthesizeTimings(localTokens, localWeights, audio.duration);
+        setWordTimings(syntheticTimings);
         
         // Identify sync points for synthetic timings
-        syncCheckRef.current.syncPoints = synthetic
+        syncCheckRef.current.syncPoints = syntheticTimings
           .filter(timing => /[.!?]$/.test(timing.text.trim()) || timing.text.includes('\n'))
           .map(timing => timing.end);
       };

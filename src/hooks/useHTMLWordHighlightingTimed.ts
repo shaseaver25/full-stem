@@ -1,5 +1,5 @@
 import { useMemo, useRef, useEffect } from 'react';
-import type { WordTiming } from './useInPlaceWordHighlighter';
+import { WordTiming } from '@/types/tts';
 
 export const useHTMLWordHighlightingTimed = (
   htmlContent: string,

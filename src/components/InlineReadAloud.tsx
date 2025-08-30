@@ -4,6 +4,8 @@ import SpeechControls from './SpeechControls';
 import { useInPlaceWordHighlighter } from '@/hooks/useInPlaceWordHighlighter';
 import { useElevenLabsTTS } from '@/hooks/useElevenLabsTTS';
 import { normalizeLanguageCode } from '@/utils/segment';
+import { ErrorBoundary } from './ui/ErrorBoundary';
+import TTSDebugHUD from './debug/TTSDebugHUD';
 
 interface InlineReadAloudProps {
   text: string;       // HTML string
@@ -138,37 +140,55 @@ const InlineReadAloud: React.FC<InlineReadAloudProps> = ({ text, className, lang
   const handleResume = () => elevenLabsResume();
   const handleStop = () => elevenLabsStop();
 
+  const speechState = {
+    isPlaying,
+    isPaused,
+    isLoading: elevenLabsLoading,
+    currentTime,
+    duration,
+    error
+  };
+
   return (
-    <div className={`space-y-4 ${className || ''}`}>
-      {/* Controls */}
-      <div className="flex justify-end">
-        <SpeechControls
-          isPlaying={isPlaying}
-          isPaused={isPaused}
-          isLoading={elevenLabsLoading}
-          error={error}
-          currentTime={currentTime}
-          duration={duration}
-          onPlay={handlePlay}
-          onPause={handlePause}
-          onResume={handleResume}
-          onStop={handleStop}
-          onSeek={elevenLabsSeek}
+    <ErrorBoundary>
+      <div className={`space-y-4 ${className || ''}`}>
+        <TTSDebugHUD 
+          speechState={speechState}
+          wordTimings={wordTimings}
+          currentWordIndex={currentWordIndex}
+          language={normalizedLanguage}
+        />
+        
+        {/* Controls */}
+        <div className="flex justify-end">
+          <SpeechControls
+            isPlaying={isPlaying}
+            isPaused={isPaused}
+            isLoading={elevenLabsLoading}
+            error={error}
+            currentTime={currentTime}
+            duration={duration}
+            onPlay={handlePlay}
+            onPause={handlePause}
+            onResume={handleResume}
+            onStop={handleStop}
+            onSeek={elevenLabsSeek}
+          />
+        </div>
+
+        {/* Content */}
+        <div
+          ref={contentRef}
+          className="prose max-w-none max-h-96 overflow-y-auto cursor-pointer"
+          aria-live="polite"
+          aria-atomic="true"
+          lang={normalizedLanguage}
+          dir="auto"
+          onClick={handleContentClick}
+          dangerouslySetInnerHTML={{ __html: sanitizedHTML }}
         />
       </div>
-
-      {/* Content */}
-      <div
-        ref={contentRef}
-        className="prose max-w-none max-h-96 overflow-y-auto cursor-pointer"
-        aria-live="polite"
-        aria-atomic="true"
-        lang={normalizedLanguage}
-        dir="auto"
-        onClick={handleContentClick}
-        dangerouslySetInnerHTML={{ __html: sanitizedHTML }}
-      />
-    </div>
+    </ErrorBoundary>
   );
 };
 

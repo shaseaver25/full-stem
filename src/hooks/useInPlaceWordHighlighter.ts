@@ -1,7 +1,6 @@
 import { useEffect, useRef, useMemo } from 'react';
 import { segmentWords } from '@/utils/segment';
-
-export type WordTiming = { start: number; end: number; text: string; index: number };
+import { WordTiming } from '@/types/tts';
 
 export const useInPlaceWordHighlighter = (
   containerRef: React.RefObject<HTMLElement>,
