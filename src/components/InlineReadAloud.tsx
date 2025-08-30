@@ -45,9 +45,10 @@ const InlineReadAloud: React.FC<InlineReadAloudProps> = ({ text, className }) =>
   const isPlaying = elevenLabsPlaying || highlightPlaying;
   const isPaused = elevenLabsPaused || highlightPaused;
 
-  const handlePlay = () => {
-    // Start both: ElevenLabs for audio, browser TTS for highlighting
-    elevenLabsSpeak(cleanText);
+  const handlePlay = async () => {
+    // Start ElevenLabs for natural voice audio
+    await elevenLabsSpeak(cleanText);
+    // Start browser TTS silently for word highlighting only
     highlightSpeak();
   };
 

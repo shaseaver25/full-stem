@@ -85,11 +85,14 @@ export const useHighlightedSpeech = (text: string) => {
     }
 
     utterance.onstart = () => {
-      console.log('Highlighted speech started');
+      console.log('Highlighted speech started (for timing only)');
       setIsPlaying(true);
       setIsPaused(false);
       startWordHighlighting(utterance);
     };
+
+    // Make browser TTS silent for highlighting only
+    utterance.volume = 0;
 
     utterance.onend = () => {
       console.log('Highlighted speech ended');
