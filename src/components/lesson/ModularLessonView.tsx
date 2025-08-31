@@ -474,12 +474,11 @@ const ModularLessonView: React.FC<ModularLessonViewProps> = ({
                         <span className="text-2xl">
                           {getComponentIcon(tab.type)}
                         </span>
-                        <div>
-                          <h2 className="text-xl font-semibold">
-                            {lesson?.Title || 'Lesson Content'}
-                          </h2>
-                          <Badge variant="outline" className="mt-1">{userReadingLevel} Level</Badge>
-                        </div>
+                         <div>
+                           <h2 className="text-xl font-semibold">
+                             {lesson?.Title || 'Lesson Content'}
+                           </h2>
+                         </div>
                       </div>
                     </div>
                     <InlineReadAloud text={formatTextContent(tab.content || '')} />
@@ -555,12 +554,11 @@ const ModularLessonView: React.FC<ModularLessonViewProps> = ({
                         <h2 className="text-xl font-semibold">
                           {getComponentDisplayName(tab.type)}
                         </h2>
-                        <div className="flex gap-2 mt-1">
-                          {tab.component?.language_code !== 'en' && (
-                            <Badge variant="secondary">{tab.component?.language_code?.toUpperCase()}</Badge>
-                          )}
-                          <Badge variant="outline">{userReadingLevel} Reading Level</Badge>
-                        </div>
+                         <div className="flex gap-2 mt-1">
+                           {tab.component?.language_code !== 'en' && (
+                             <Badge variant="secondary">{tab.component?.language_code?.toUpperCase()}</Badge>
+                           )}
+                         </div>
                       </div>
                     </div>
 

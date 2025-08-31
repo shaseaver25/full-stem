@@ -36,17 +36,12 @@ const LessonComponentRenderer: React.FC<LessonComponentRendererProps> = ({ compo
         const instructionText = content.content || content.html || content.text || '';
         return (
           <div className="space-y-4">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold">Instructions</h2>
-              <Badge variant="outline" className="text-xs">
-                {userReadingLevel} Reading Level
-              </Badge>
-            </div>
             <InlineReadAloud text={instructionText} />
           </div>
         );
 
       case 'assignment':
+        console.log('Rendering assignment component:', content);
         return (
           <div className="space-y-4">
             <SafeHtml 
