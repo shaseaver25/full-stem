@@ -360,7 +360,7 @@ const ModularLessonView: React.FC<ModularLessonViewProps> = ({
                onClick={() => setIsReadingLevelMenuOpen(!isReadingLevelMenuOpen)}
              >
                <Book className="h-4 w-4 mr-2" />
-               {userReadingLevel}
+               Make this easier to understand
              </Button>
              
                {isReadingLevelMenuOpen && (
