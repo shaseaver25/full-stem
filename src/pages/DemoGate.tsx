@@ -135,8 +135,8 @@ const DemoGate = () => {
       <div className="min-h-screen bg-gradient-to-br from-primary/5 to-secondary/5 flex items-center justify-center p-4">
         <Card className="w-full max-w-2xl">
           <CardHeader className="text-center">
-            <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
-              <Mail className="w-8 h-8 text-green-600" />
+            <div className="mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
+              <Mail className="w-8 h-8 text-primary" />
             </div>
             <CardTitle className="text-2xl">Check Your Email!</CardTitle>
             <CardDescription>
@@ -166,22 +166,22 @@ const DemoGate = () => {
 
             <div className="grid md:grid-cols-3 gap-4 pt-4">
               <div className="text-center">
-                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-2">
-                  <BookOpen className="w-6 h-6 text-blue-600" />
+                <div className="w-12 h-12 bg-accent rounded-lg flex items-center justify-center mx-auto mb-2">
+                  <BookOpen className="w-6 h-6 text-accent-foreground" />
                 </div>
                 <h4 className="font-semibold">AI Courses</h4>
                 <p className="text-sm text-muted-foreground">Pre-built courses with diverse content</p>
               </div>
               <div className="text-center">
-                <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mx-auto mb-2">
-                  <Users className="w-6 h-6 text-purple-600" />
+                <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mx-auto mb-2">
+                  <Users className="w-6 h-6 text-primary" />
                 </div>
                 <h4 className="font-semibold">Diverse Students</h4>
                 <p className="text-sm text-muted-foreground">24 fake students with varied needs</p>
               </div>
               <div className="text-center">
-                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-2">
-                  <BarChart3 className="w-6 h-6 text-green-600" />
+                <div className="w-12 h-12 bg-secondary rounded-lg flex items-center justify-center mx-auto mb-2">
+                  <BarChart3 className="w-6 h-6 text-secondary-foreground" />
                 </div>
                 <h4 className="font-semibold">Full Analytics</h4>
                 <p className="text-sm text-muted-foreground">Complete grade & progress tracking</p>
