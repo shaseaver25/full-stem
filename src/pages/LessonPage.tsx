@@ -1,25 +1,28 @@
 
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { useParams } from 'react-router-dom';
 import { AlertCircle, Loader2 } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import Header from '@/components/Header';
 import LessonHeader from '@/components/lesson/LessonHeader';
 import LessonControls from '@/components/lesson/LessonControls';
+import LessonSkeleton from '@/components/lesson/LessonSkeleton';
 import EnhancedLessonControls from '@/components/lesson/EnhancedLessonControls';
 import LessonContent from '@/components/lesson/LessonContent';
 import LessonStatusNav from '@/components/lesson/LessonStatusNav';
-import VideoSection from '@/components/lesson/VideoSection';
-import AssignmentSection from '@/components/assignments/AssignmentSection';
-import AdaptiveLearningEngine from '@/components/adaptive/AdaptiveLearningEngine';
-import SmartTranslationWidget from '@/components/translation/SmartTranslationWidget';
+import ReadAloudDemoGuide from '@/components/lesson/ReadAloudDemoGuide';
+import { useLessonPageLogicOptimized } from '@/hooks/useLessonPageLogicOptimized';
+import { useGlobalSetting } from '@/hooks/useGlobalSettings';
 import { RealTimeTranslationProvider } from '@/components/translation/RealTimeTranslationProvider';
 import MobileOptimizedLayout from '@/components/layout/MobileOptimizedLayout';
-import ModularLessonView from '@/components/lesson/ModularLessonView';
-import DesmosSection from '@/components/lesson/DesmosSection';
-import ReadAloudDemoGuide from '@/components/lesson/ReadAloudDemoGuide';
-import { useLessonPageLogic } from '@/hooks/useLessonPageLogic';
-import { useGlobalSetting } from '@/hooks/useGlobalSettings';
+
+// Lazy load heavy components
+const VideoSection = lazy(() => import('@/components/lesson/VideoSection'));
+const AssignmentSection = lazy(() => import('@/components/assignments/AssignmentSection'));
+const AdaptiveLearningEngine = lazy(() => import('@/components/adaptive/AdaptiveLearningEngine'));
+const SmartTranslationWidget = lazy(() => import('@/components/translation/SmartTranslationWidget'));
+const ModularLessonView = lazy(() => import('@/components/lesson/ModularLessonView'));
+const DesmosSection = lazy(() => import('@/components/lesson/DesmosSection'));
 
 const LessonPage = () => {
   const { lessonId } = useParams<{ lessonId: string }>();
@@ -29,7 +32,8 @@ const LessonPage = () => {
     user,
     lesson,
     userProgress,
-    loading,
+    essentialLoading,
+    secondaryLoading,
     error,
     showPersonalizedView,
     liveTranslatedContent,
@@ -43,9 +47,10 @@ const LessonPage = () => {
     handleMarkComplete,
     toggleLessonView,
     handleLiveTranslationComplete
-  } = useLessonPageLogic(lessonId || '');
+  } = useLessonPageLogicOptimized(lessonId || '');
 
-  if (loading) {
+  // Show progressive loading - core content first, then secondary features
+  if (essentialLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
         <Header />
@@ -87,7 +92,7 @@ const LessonPage = () => {
   const layoutMode = layoutSetting?.setting_value || 'scroll';
   const useModularLayout = layoutMode === 'modular';
 
-  // Modular layout
+  // Modular layout with lazy loading
   if (useModularLayout) {
     return (
       <RealTimeTranslationProvider>
@@ -95,11 +100,13 @@ const LessonPage = () => {
           <Header />
           <MobileOptimizedLayout>
             <div className="max-w-6xl mx-auto px-4 py-8">
-              <ModularLessonView 
-                lessonId={lessonId || ''} 
-                lessonTitle={lessonTitle}
-                fullLessonText={fullLessonText}
-              />
+              <Suspense fallback={<LessonSkeleton type="full" />}>
+                <ModularLessonView 
+                  lessonId={lessonId || ''} 
+                  lessonTitle={lessonTitle}
+                  fullLessonText={fullLessonText}
+                />
+              </Suspense>
             </div>
           </MobileOptimizedLayout>
         </div>
@@ -130,29 +137,7 @@ const LessonPage = () => {
               lessonId={lesson['Lesson ID'].toString()}
             />
 
-            {/* Video Section */}
-            <VideoSection 
-              videoUrl={videoUrl}
-              title={`${lessonTitle} - Video Tutorial`}
-            />
-
-            {/* Adaptive Learning Engine */}
-            {user && (
-              <AdaptiveLearningEngine 
-                userId={user.id} 
-                classId={undefined}
-              />
-            )}
-
-            {/* Smart Translation Widget */}
-            <SmartTranslationWidget
-              content={lessonContent}
-              contentId={lessonId}
-              showControls={true}
-              autoTranslate={false}
-            />
-
-            {/* Content Section */}
+            {/* Core Content Section - loads immediately */}
             <LessonContent
               showPersonalizedView={showPersonalizedView}
               lessonContent={lessonContent}
@@ -161,12 +146,44 @@ const LessonPage = () => {
               liveTranslationLanguage={liveTranslationLanguage}
             />
 
-            {/* Assignment Section */}
-            <AssignmentSection lessonId={lessonId || ''} />
+            {/* Video Section - lazy loaded */}
+            <Suspense fallback={<LessonSkeleton type="content" />}>
+              <VideoSection 
+                videoUrl={videoUrl}
+                title={`${lessonTitle} - Video Tutorial`}
+              />
+            </Suspense>
 
-            {/* Desmos Tool Section */}
+            {/* Smart Translation Widget - lazy loaded */}
+            <Suspense fallback={<LessonSkeleton type="content" />}>
+              <SmartTranslationWidget
+                content={lessonContent}
+                contentId={lessonId}
+                showControls={true}
+                autoTranslate={false}
+              />
+            </Suspense>
+
+            {/* Assignment Section - lazy loaded */}
+            <Suspense fallback={<LessonSkeleton type="assignment" />}>
+              <AssignmentSection lessonId={lessonId || ''} />
+            </Suspense>
+
+            {/* Adaptive Learning Engine - lazy loaded, only if secondary data is ready */}
+            {user && !secondaryLoading && (
+              <Suspense fallback={<LessonSkeleton type="adaptive" />}>
+                <AdaptiveLearningEngine 
+                  userId={user.id} 
+                  classId={undefined}
+                />
+              </Suspense>
+            )}
+
+            {/* Desmos Tool Section - lazy loaded */}
             {lesson.desmos_enabled && lesson.desmos_type && (
-              <DesmosSection desmosType={lesson.desmos_type} />
+              <Suspense fallback={<LessonSkeleton type="content" />}>
+                <DesmosSection desmosType={lesson.desmos_type} />
+              </Suspense>
             )}
 
             {/* Lesson Status and Navigation */}
