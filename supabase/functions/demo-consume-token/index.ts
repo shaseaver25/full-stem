@@ -52,7 +52,7 @@ serve(async (req) => {
         token,
         demo_tenant_id,
         expires_at,
-        consumed_at,
+        consumed,
         demo_tenants (
           id,
           status,
@@ -60,7 +60,7 @@ serve(async (req) => {
         )
       `)
       .eq('token', token)
-      .is('consumed_at', null)
+      .eq('consumed', false)
       .maybeSingle();
 
     if (tokenError || !tokenData) {
@@ -133,7 +133,7 @@ serve(async (req) => {
     // Mark token as consumed
     const { error: updateError } = await supabase
       .from('magic_tokens')
-      .update({ consumed_at: now.toISOString() })
+      .update({ consumed: true })
       .eq('id', tokenData.id);
 
     if (updateError) {
