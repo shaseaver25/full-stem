@@ -231,7 +231,8 @@ async function seedDemoData(ownerId: string) {
   console.log(`Creating class for teacher profile: ${teacherProfileId}`)
   
   const { data: existingClass } = await db.from('classes').select('id').eq('name',CLASS_NAME).eq('teacher_id',teacherProfileId).maybeSingle()
-  const classId = existingClass?.id ?? `demo_class_${crypto.randomUUID().slice(0,8)}`
+  // Generate a proper UUID for the class ID
+  const classId = existingClass?.id ?? crypto.randomUUID()
   
   const { error: classError } = await db.from('classes').upsert({
     id:classId, teacher_id:teacherProfileId, name:CLASS_NAME,
