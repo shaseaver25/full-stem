@@ -103,6 +103,12 @@ export const useTeacherProfileData = () => {
       return;
     }
 
+    // Prevent multiple simultaneous fetches
+    if (loading) {
+      console.log('Already loading, skipping fetch');
+      return;
+    }
+
     setLoading(true);
     
     try {

@@ -39,6 +39,7 @@ import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import ClassManagementPage from "./pages/ClassManagementPage";
 import DemoGate from "./pages/DemoGate";
 import DemoStart from "./pages/DemoStart";
+import DemoShowcase from "./pages/DemoShowcase";
 
 const queryClient = new QueryClient();
 
@@ -74,6 +75,9 @@ const App = () => (
             
             {/* Components Showcase */}
             <Route path="/components" element={<ComponentsPage />} />
+            
+            {/* Demo Showcase */}
+            <Route path="/demo-showcase" element={<DemoShowcase />} />
             
             {/* Parent Portal */}
             <Route path="/parent" element={<ParentPortalPage />} />

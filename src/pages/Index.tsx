@@ -20,6 +20,40 @@ const Index = () => {
       <Header />
       <Hero />
       
+      {/* Demo Showcase Section */}
+      <section className="py-12 bg-gradient-to-r from-purple-50 to-indigo-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <div className="bg-white rounded-2xl shadow-xl p-8 border border-purple-200">
+            <div className="flex justify-center mb-4">
+              <Badge className="bg-gradient-to-r from-purple-500 to-indigo-500 text-white px-4 py-2 text-sm font-medium">
+                🎯 Interactive Demo Available
+              </Badge>
+            </div>
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+              Experience the Full Platform
+            </h2>
+            <p className="text-lg text-gray-600 mb-6 max-w-2xl mx-auto">
+              Explore our comprehensive demo featuring AI-powered text-to-speech, interactive lessons, 
+              teacher dashboards, and student analytics. Perfect for demonstrations and trials.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link to="/demo-showcase">
+                <Button size="lg" className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white px-8 py-3">
+                  <GraduationCap className="w-5 h-5 mr-2" />
+                  View Full Demo
+                </Button>
+              </Link>
+              <Link to="/components">
+                <Button variant="outline" size="lg" className="px-8 py-3">
+                  Try AI Features
+                  <ArrowRight className="w-5 h-5 ml-2" />
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Teacher Portal Section */}
       <section className="py-16 bg-gradient-to-r from-indigo-50 to-blue-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
