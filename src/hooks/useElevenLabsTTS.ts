@@ -43,7 +43,7 @@ export const useElevenLabsTTS = (language?: string) => {
       const { data, error } = await supabase.functions.invoke('elevenlabs-tts', {
         body: { 
           text: text,
-          voice: voiceId || 'EXAVITQu4vr4xnSDxMaL', // Default to Sarah
+          voiceId: voiceId || 'EXAVITQu4vr4xnSDxMaL', // Default to Sarah - fixed parameter name
           language: language, // Pass language for multilingual support
           rate: textSpeed === 'Slow' ? 0.8 : textSpeed === 'Fast' ? 1.3 : 1.0
         }
@@ -51,6 +51,14 @@ export const useElevenLabsTTS = (language?: string) => {
 
       if (error) {
         console.error('Supabase function error:', error);
+        // Provide more detailed error messages
+        if (error.message?.includes('Failed to send a request')) {
+          throw new Error('Failed to connect to speech service. Please check your internet connection and try again.');
+        } else if (error.message?.includes('MISSING_SECRET')) {
+          throw new Error('Speech service is not properly configured. Please contact support.');
+        } else if (error.message?.includes('VENDOR_ERROR')) {
+          throw new Error('Speech generation service is temporarily unavailable. Please try again in a moment.');
+        }
         throw new Error(`Failed to generate speech: ${error.message || 'Unknown error'}`);
       }
 
