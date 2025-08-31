@@ -1,5 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { validateRequest, validateResponse } from './validator.ts';
+import { personalizeWithLLM } from './personalizeWithLLM.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -34,47 +36,6 @@ interface PersonalizeResponse {
   reading_level_estimate: string;
 }
 
-const personalizeWithLLM = async (request: PersonalizeRequest): Promise<PersonalizeResponse> => {
-  // For MVP, return a mock personalized version
-  const interests = request.student_profile.interests.slice(0, 3).join(", ");
-  
-  // Simple personalization: inject interests into the assignment
-  let personalizedText = request.base_assignment;
-  
-  // Add interest-based context
-  if (interests.includes("sports")) {
-    personalizedText = personalizedText.replace(
-      /example/gi, 
-      "sports example (like basketball scores or team statistics)"
-    );
-  }
-  
-  if (interests.includes("animals")) {
-    personalizedText = personalizedText.replace(
-      /data/gi,
-      "animal data (like pet surveys or zoo visitor counts)"
-    );
-  }
-
-  return {
-    personalized_text: personalizedText,
-    rationale: `Personalized based on student interests: ${interests}. Modified examples and context to relate to student's interests while maintaining the core learning objectives.`,
-    kept_keywords: request.constraints.must_keep_keywords,
-    changed_elements: ["context", "examples"],
-    reading_level_estimate: request.constraints.reading_level
-  };
-};
-
-const validateResponse = (response: PersonalizeResponse): boolean => {
-  return !!(
-    response.personalized_text &&
-    response.rationale &&
-    Array.isArray(response.kept_keywords) &&
-    Array.isArray(response.changed_elements) &&
-    response.reading_level_estimate
-  );
-};
-
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -91,19 +52,42 @@ serve(async (req) => {
 
     const requestData: PersonalizeRequest = await req.json();
 
-    // Basic validation
-    if (!requestData.base_assignment || !requestData.student_profile) {
-      return new Response(JSON.stringify({ error: 'Invalid request data' }), {
+    // Validate request
+    const requestValidation = validateRequest(requestData);
+    if (!requestValidation.isValid) {
+      return new Response(JSON.stringify({ 
+        error: 'validation_failed', 
+        issues: requestValidation.issues 
+      }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
+    // Generate personalized response
     const response = await personalizeWithLLM(requestData);
 
-    if (!validateResponse(response)) {
-      throw new Error('Invalid response from personalization engine');
+    // Validate response
+    const responseValidation = validateResponse(response, requestData);
+    if (!responseValidation.isValid) {
+      console.error('Response validation failed:', responseValidation.issues);
+      return new Response(JSON.stringify({ 
+        error: 'validation_failed', 
+        issues: responseValidation.issues 
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
+
+    // Log successful personalization for audit
+    console.log('Personalization successful:', {
+      student_id: requestData.student_profile.student_id,
+      interests: requestData.student_profile.interests,
+      changed_elements: response.changed_elements,
+      word_count: response.personalized_text.split(/\s+/).length,
+      timestamp: new Date().toISOString(),
+    });
 
     return new Response(JSON.stringify(response), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

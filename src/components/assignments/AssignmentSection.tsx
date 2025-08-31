@@ -101,12 +101,17 @@ const AssignmentSection: React.FC<AssignmentSectionProps> = ({ lessonId }) => {
   const handlePersonalize = () => {
     if (!assignment || !user) return;
 
+    // Graceful fallback interests if missing
+    const fallbackInterests = ['sports', 'animals', 'space'];
+    const userInterests = []; // In production, this would come from user profile/preferences
+    const interests = userInterests.length > 0 ? userInterests : fallbackInterests;
+
     // Mock student profile data - in production, this would come from user profile/preferences
     const personalizeRequest = {
       base_assignment: assignment.instructions,
       student_profile: {
         student_id: user.id,
-        interests: ['sports', 'animals', 'games'], // Mock interests - would come from user profile
+        interests: interests.slice(0, 5), // max 5 interests as per spec
         home_language: 'English',
         reading_level: 'Grade 4'
       },

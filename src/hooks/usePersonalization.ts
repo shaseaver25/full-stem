@@ -39,6 +39,17 @@ export const usePersonalization = () => {
   });
 
   const handleAccept = () => {
+    if (!personalizationResult || !originalText) return;
+    
+    // Console audit log as requested
+    console.log('Personalization audit:', {
+      assignment_id: 'current_assignment', // In real app, would be actual assignment ID
+      student_id: personalizationResult ? 'current_user' : null, // In real app, would be actual student ID
+      accepted: true,
+      changed_elements: personalizationResult.changed_elements,
+      timestamp: new Date().toISOString(),
+    });
+
     // For MVP, just log to console
     console.log('Personalized assignment accepted:', personalizationResult?.personalized_text);
     toast({
