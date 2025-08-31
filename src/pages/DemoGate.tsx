@@ -8,6 +8,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Copy, Mail, Sparkles, Users, BookOpen, BarChart3 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface DemoRequestForm {
   fullName: string;
@@ -49,8 +50,6 @@ const DemoGate = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    console.log('Form submitted, checking consent...');
-    
     if (!form.consent) {
       toast({
         title: "Consent Required",
@@ -60,44 +59,30 @@ const DemoGate = () => {
       return;
     }
 
-    console.log('Consent OK, setting loading state...');
     setIsLoading(true);
     
     try {
-      console.log('Making fetch request...');
-      const response = await fetch('https://irxzpsvzlihqitlicoql.supabase.co/functions/v1/demo-request-link', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      const { data, error } = await supabase.functions.invoke('demo-request-link', {
+        body: {
           fullName: form.fullName,
           workEmail: form.workEmail,
           role: form.role,
           schoolOrDistrict: form.schoolOrDistrict
-        })
+        }
       });
 
-      console.log('Fetch completed, response status:', response.status);
-
-      if (!response.ok) {
-        console.log('Response not ok:', response.status, response.statusText);
-        throw new Error('Failed to request demo link');
+      if (error) {
+        throw new Error(error.message || 'Failed to request demo link');
       }
 
-      console.log('Parsing JSON response...');
-      const data = await response.json();
-      console.log('Response data:', data);
+      if (!data || !data.previewUrl) {
+        throw new Error('Invalid response from demo service');
+      }
       
-      // Create a demo link using the current domain to avoid cross-domain issues
-      const currentOrigin = window.location.origin;
-      const demoLink = `${currentOrigin}/demo/start?token=${data.token}`;
-      
-      console.log('Setting preview URL and submitted state...');
-      setPreviewUrl(demoLink);
+      // Use the complete previewUrl from the response
+      setPreviewUrl(data.previewUrl);
       setIsSubmitted(true);
 
-      console.log('Showing success toast...');
       toast({
         title: "Demo Link Created!",
         description: `Check your email at ${form.workEmail} for your demo link. If you don't see it, use the link below.`
@@ -111,7 +96,6 @@ const DemoGate = () => {
         variant: "destructive"
       });
     } finally {
-      console.log('Setting loading to false...');
       setIsLoading(false);
     }
   };
