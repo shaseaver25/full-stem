@@ -60,16 +60,12 @@ const createOrFindDemoTenant = async (email: string) => {
 
   // Trigger demo data seeding (call existing seed-demo-tenant function)
   try {
-    const seedResponse = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/seed-demo-tenant?action=seed`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
-        'Content-Type': 'application/json'
-      }
+    const { data: seedResult, error: seedError } = await supabase.functions.invoke('seed-demo-tenant', {
+      body: { action: 'seed' }
     });
     
-    if (!seedResponse.ok) {
-      console.warn('Failed to seed demo data, but continuing with tenant creation');
+    if (seedError) {
+      console.warn('Failed to seed demo data:', seedError);
     }
   } catch (seedError) {
     console.warn('Error seeding demo data:', seedError);
@@ -118,8 +114,8 @@ const createDemoUser = async (requestBody: DemoRequestBody, demoTenantId: string
 };
 
 const sendDemoEmail = async (email: string, fullName: string, token: string) => {
-  const baseUrl = Deno.env.get('SUPABASE_URL')?.replace('/v1', '') || 'https://localhost:3000';
-  const demoUrl = `${baseUrl}/demo/start?token=${token}`;
+  const baseUrl = Deno.env.get('SUPABASE_URL')?.replace('https://', '').replace('.supabase.co', '') || 'localhost:3000';
+  const demoUrl = `https://${baseUrl}.lovable.app/demo/start?token=${token}`;
 
   // In a real implementation, you would integrate with your email service here
   // For now, we'll just log the email details
@@ -138,6 +134,8 @@ serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
+
+  console.log('Demo request link function called');
 
   try {
     if (req.method !== 'POST') {
