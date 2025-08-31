@@ -39,3 +39,6 @@ verify_jwt = false
 
 [functions.elevenlabs-tts]
 verify_jwt = true
+
+[functions.test-tts]
+verify_jwt = true

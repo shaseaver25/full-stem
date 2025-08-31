@@ -39,7 +39,20 @@ export const useElevenLabsTTS = (language?: string) => {
       // Get speech rate preference
       const textSpeed = preferences?.['Text Speed'] || 'Normal';
       
-      // Call our edge function
+      // First try the test function to verify connection
+      console.log('Testing edge function connection...');
+      const testResponse = await supabase.functions.invoke('test-tts', {
+        body: { test: true }
+      });
+      
+      if (testResponse.error) {
+        console.error('Test function failed:', testResponse.error);
+        throw new Error('Unable to connect to speech service');
+      }
+      
+      console.log('Test function success:', testResponse.data);
+      
+      // Call our main edge function
       const { data, error } = await supabase.functions.invoke('elevenlabs-tts', {
         body: { 
           text: text,
