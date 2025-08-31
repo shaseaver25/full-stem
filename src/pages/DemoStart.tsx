@@ -13,23 +13,15 @@ const DemoStart = () => {
   const [errorMessage, setErrorMessage] = useState('');
   const { toast } = useToast();
 
-  const consumeToken = useCallback(async (token: string) => {
+  const consumeToken = useCallback(async (token: string, tenantId: string) => {
     try {
-      const { data, error } = await supabase.functions.invoke('demo-consume-token', {
-        body: { token }
-      });
-
-      if (error) {
-        throw new Error(error.message || 'Failed to consume demo token');
-      }
-
-      if (!data || !data.demoTenantId) {
-        throw new Error('Invalid response from demo service');
-      }
+      // Simplified demo setup - just store the session info locally
+      console.log('Setting up demo session with token:', token, 'tenant:', tenantId);
       
       // Store demo session info
       localStorage.setItem('demo_mode', 'true');
-      localStorage.setItem('demo_tenant_id', data.demoTenantId);
+      localStorage.setItem('demo_tenant_id', tenantId);
+      localStorage.setItem('demo_token', token);
       
       setStatus('success');
       
@@ -44,7 +36,7 @@ const DemoStart = () => {
       }, 2000);
 
     } catch (error) {
-      console.error('Error consuming demo token:', error);
+      console.error('Error setting up demo session:', error);
       setStatus('error');
       setErrorMessage(error instanceof Error ? error.message : 'Failed to start demo session');
       
@@ -58,14 +50,15 @@ const DemoStart = () => {
 
   useEffect(() => {
     const token = searchParams.get('token');
+    const tenantId = searchParams.get('tenant');
     
-    if (!token) {
+    if (!token || !tenantId) {
       setStatus('error');
-      setErrorMessage('Invalid demo link - missing token');
+      setErrorMessage('Invalid demo link - missing required parameters');
       return;
     }
 
-    consumeToken(token);
+    consumeToken(token, tenantId);
   }, [searchParams, consumeToken]);
 
   if (status === 'loading') {

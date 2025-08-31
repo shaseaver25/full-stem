@@ -93,9 +93,12 @@ const DemoGate = () => {
         throw new Error('Invalid response from demo service');
       }
       
-      // Use the complete previewUrl from the response
-      console.log('Setting previewUrl:', data.previewUrl);
-      setPreviewUrl(data.previewUrl);
+      // Create a local demo URL for development 
+      const currentDomain = window.location.origin;
+      const localDemoUrl = `${currentDomain}/demo/start?token=${data.token}&tenant=${data.tenantId}`;
+      
+      console.log('Setting previewUrl:', localDemoUrl);
+      setPreviewUrl(localDemoUrl);
       console.log('Setting isSubmitted to true');
       setIsSubmitted(true);
 
