@@ -14,18 +14,14 @@ const DemoStart = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    console.log('DemoStart useEffect - URL params:', window.location.href);
     const token = searchParams.get('token');
-    console.log('Extracted token:', token);
     
     if (!token) {
-      console.log('No token found, setting error state');
       setStatus('error');
       setErrorMessage('Invalid demo link - missing token');
       return;
     }
 
-    console.log('Starting token consumption...');
     consumeToken(token);
   }, [searchParams]);
 

@@ -18,6 +18,7 @@ const supabase = createClient(
 serve(async (req) => {
   console.log('=== Demo Consume Token Function Start ===');
   console.log('Method:', req.method);
+  console.log('URL:', req.url);
 
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -27,8 +28,24 @@ serve(async (req) => {
 
   try {
     console.log('Parsing request body...');
-    const { token }: ConsumeTokenBody = await req.json();
+    const body = await req.text();
+    console.log('Raw body:', body);
     
+    let parsedBody;
+    try {
+      parsedBody = JSON.parse(body);
+    } catch (parseError) {
+      console.log('JSON parse error:', parseError);
+      return new Response(
+        JSON.stringify({ error: 'Invalid JSON in request body' }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+    
+    const { token } = parsedBody;
     console.log('Request parsed:', { token: token ? `${token.substring(0, 8)}...` : 'null' });
 
     if (!token) {
