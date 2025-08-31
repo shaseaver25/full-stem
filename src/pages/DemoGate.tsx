@@ -61,7 +61,7 @@ const DemoGate = () => {
     setIsLoading(true);
     
     try {
-      const response = await fetch('/functions/v1/demo-request-link', {
+      const response = await fetch('https://irxzpsvzlihqitlicoql.supabase.co/functions/v1/demo-request-link', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
