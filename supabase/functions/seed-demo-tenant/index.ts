@@ -9,7 +9,7 @@ const SERVICE_KEY  = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 const ANON_KEY     = Deno.env.get('SUPABASE_ANON_KEY')!
 
 // ── CONSTANTS ────────────────────────────────────────────────────────────────
-const TEACHER_EMAIL = 'teacher_rivera@demo.school'
+const TEACHER_EMAIL = 'demo@creatempls.org'
 const CLASS_NAME    = 'AI for Middle School Students (Grades 7–8)'
 const STUDENT_EMAIL = (i: number) => `student${String(i).padStart(2,'0')}@demo.school`
 const PARENT_EMAIL  = (i: number) => `parent${String(i).padStart(2,'0')}@demo.family`
@@ -55,7 +55,7 @@ async function ensureAuthUser(email: string, full_name: string, roles: string[] 
     }
     return found
   }
-  const password = `Demo${Math.random().toString(36).slice(2,10)}!A1`
+  const password = email === TEACHER_EMAIL ? 'GodisGood25!' : `Demo${Math.random().toString(36).slice(2,10)}!A1`
   const { data: created, error } = await client.auth.admin.createUser({
     email, password, email_confirm:true, user_metadata:{ name: full_name, roles }
   })
