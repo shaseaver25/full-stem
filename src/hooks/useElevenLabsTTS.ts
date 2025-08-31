@@ -51,12 +51,15 @@ export const useElevenLabsTTS = (language?: string) => {
 
       if (error) {
         console.error('Supabase function error:', error);
-        throw new Error('Failed to generate speech');
+        throw new Error(`Failed to generate speech: ${error.message || 'Unknown error'}`);
       }
 
-      const { audioContent, wordTimings: serverTimings, tokens, weights } = data;
+      console.log('ElevenLabs TTS response received:', { hasAudio: !!data?.audioBase64, dataKeys: Object.keys(data || {}) });
 
-      if (!audioContent) {
+      const { audioBase64, wordTimings: serverTimings, tokens, weights } = data;
+
+      if (!audioBase64) {
+        console.error('No audioBase64 in response:', data);
         throw new Error('No audio content received');
       }
 
@@ -72,7 +75,7 @@ export const useElevenLabsTTS = (language?: string) => {
 
       // Create audio element from base64
       const audioBlob = new Blob([
-        Uint8Array.from(atob(audioContent), c => c.charCodeAt(0))
+        Uint8Array.from(atob(audioBase64), c => c.charCodeAt(0))
       ], { type: 'audio/mpeg' });
       
       const audioUrl = URL.createObjectURL(audioBlob);
