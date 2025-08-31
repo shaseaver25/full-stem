@@ -38,7 +38,7 @@ const GradebookFilters = ({
                 <SelectValue placeholder="All assignments" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All assignments</SelectItem>
+                <SelectItem value="all">All assignments</SelectItem>
                 {uniqueAssignments.map(assignment => (
                   <SelectItem key={assignment} value={assignment}>
                     {assignment}

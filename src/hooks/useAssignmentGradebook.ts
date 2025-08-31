@@ -119,7 +119,7 @@ export const useAssignmentGradebook = () => {
 
   // Filter grades based on assignment and student filters
   const filteredGrades = grades.filter(grade => {
-    const matchesAssignment = assignmentFilter === '' || 
+    const matchesAssignment = assignmentFilter === '' || assignmentFilter === 'all' || 
       grade.assignment_title.toLowerCase().includes(assignmentFilter.toLowerCase());
     const matchesStudent = studentFilter === '' || 
       grade.student_name.toLowerCase().includes(studentFilter.toLowerCase());

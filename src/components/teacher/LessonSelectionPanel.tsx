@@ -101,7 +101,7 @@ export const LessonSelectionPanel = ({ classId }: LessonSelectionPanelProps) => 
       lesson.Title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       lesson.Description?.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const matchesTrack = !trackFilter || lesson.Track === trackFilter;
+    const matchesTrack = !trackFilter || trackFilter === 'all' || lesson.Track === trackFilter;
     
     return matchesSearch && matchesTrack;
   });
@@ -143,7 +143,7 @@ export const LessonSelectionPanel = ({ classId }: LessonSelectionPanelProps) => 
               <SelectValue placeholder="Filter by track" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Tracks</SelectItem>
+              <SelectItem value="all">All Tracks</SelectItem>
               {uniqueTracks.map(track => (
                 <SelectItem key={track} value={track}>{track}</SelectItem>
               ))}
