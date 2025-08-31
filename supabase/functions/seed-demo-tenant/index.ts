@@ -1,6 +1,6 @@
 // supabase/functions/seed-demo-tenant/index.ts
-// Deno Edge Function — Demo seeding + wiping + public status (CORS-safe)
-// NOTE: profiles.id FK -> auth.users.id, so we MUST create/fetch Auth users first.
+// Demo seeding + wiping + public status (CORS-safe)
+// IMPORTANT: The class is owned by the CALLER (the user who posts ?action=seed).
 
 import { createClient, type User } from 'https://esm.sh/@supabase/supabase-js@2'
 
@@ -10,20 +10,19 @@ const SERVICE_KEY  = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 const ANON_KEY     = Deno.env.get('SUPABASE_ANON_KEY')! // used only to decode caller JWT
 
 // ── CONSTANTS ────────────────────────────────────────────────────────────────
-const TEACHER_EMAIL = 'teacher_rivera@demo.school'
+const TEACHER_EMAIL = 'teacher_rivera@demo.school' // still created, but NOT the owner
 const CLASS_NAME    = 'AI for Middle School Students (Grades 7–8)'
 const STUDENT_EMAIL = (i: number) => `student${String(i).padStart(2,'0')}@demo.school`
 const PARENT_EMAIL  = (i: number) => `parent${String(i).padStart(2,'0')}@demo.family`
 const NUM_STUDENTS = 12
 
-// assignment "ids" are still deterministic, but they are plain PKs in your table
 const ASSIGNMENT_IDS = [
   'demo_assn_ai_intro',
   'demo_assn_ethics_bias',
   'demo_assn_classifier'
 ] as const
 
-// ── CORS (permissive for browser preflight) ──────────────────────────────────
+// ── CORS ─────────────────────────────────────────────────────────────────────
 function buildCors(req: Request) {
   const origin = req.headers.get('Origin') ?? '*'
   const reqHeaders = req.headers.get('Access-Control-Request-Headers') || 'authorization, content-type'
@@ -34,19 +33,12 @@ function buildCors(req: Request) {
     'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
     'Access-Control-Max-Age': '86400',
   }
-  return {
-    headers: base,
-    preflight(): Response {
-      return new Response(null, { status: 204, headers: base })
-    }
-  }
+  return { headers: base, preflight: () => new Response(null, { status: 204, headers: base }) }
 }
 
 // ── CLIENTS ──────────────────────────────────────────────────────────────────
 function svc() {
-  return createClient(SUPABASE_URL, SERVICE_KEY, {
-    auth: { autoRefreshToken: false, persistSession: false }
-  })
+  return createClient(SUPABASE_URL, SERVICE_KEY, { auth: { autoRefreshToken: false, persistSession: false } })
 }
 function authFromReq(req: Request) {
   const authHeader = req.headers.get('Authorization') || ''
@@ -56,15 +48,12 @@ function authFromReq(req: Request) {
   })
 }
 
-// ── HELPERS: Auth admin (create/fetch by email) ──────────────────────────────
+// ── HELPERS (Auth admin) ─────────────────────────────────────────────────────
 async function ensureAuthUser(email: string, full_name: string, roles: string[] = []) {
   const client = svc()
-
-  // list users (perPage large enough for tiny demo set)
   const { data: list } = await client.auth.admin.listUsers({ page: 1, perPage: 1000 })
   const found = list?.users?.find(u => u.email?.toLowerCase() === email.toLowerCase())
   if (found) {
-    // ensure metadata roles present
     const oldRoles = (found.user_metadata?.roles ?? []) as string[]
     const merged = Array.from(new Set([...(oldRoles || []), ...roles]))
     if (JSON.stringify(merged) !== JSON.stringify(oldRoles)) {
@@ -72,14 +61,9 @@ async function ensureAuthUser(email: string, full_name: string, roles: string[] 
     }
     return found
   }
-
-  // create user with confirmed email and a random password
   const password = `Demo${Math.random().toString(36).slice(2, 10)}!A1`
   const { data: created, error } = await client.auth.admin.createUser({
-    email,
-    password,
-    email_confirm: true,
-    user_metadata: { name: full_name, roles }
+    email, password, email_confirm: true, user_metadata: { name: full_name, roles }
   })
   if (error) throw new Error(`createUser(${email}): ${error.message}`)
   return created.user as User
@@ -87,19 +71,16 @@ async function ensureAuthUser(email: string, full_name: string, roles: string[] 
 
 const nowISO = () => new Date().toISOString()
 
-// ── AUTHZ (teacher or admin required for POST) ───────────────────────────────
+// ── AUTHZ (teacher/admin required for POST) ──────────────────────────────────
 async function requireTeacherOrAdmin(req: Request) {
   const auth = authFromReq(req)
   const { data: { user }, error } = await auth.auth.getUser()
-  if (error || !user) {
-    return { ok: false, status: 401, body: { code: 'UNAUTHENTICATED', message: 'Sign in required' } }
-  }
+  if (error || !user) return { ok: false, status: 401, body: { code: 'UNAUTHENTICATED', message: 'Sign in required' } }
 
   const rolesFromMeta = user?.user_metadata?.roles || user?.app_metadata?.roles || []
   const set = new Set(Array.isArray(rolesFromMeta) ? rolesFromMeta : [rolesFromMeta])
   if (set.has('admin') || set.has('teacher')) return { ok: true, user }
 
-  // fallback: teacher_profiles row
   const db = svc()
   const { data: teacherProfile } = await db.from('teacher_profiles').select('id').eq('user_id', user.id).maybeSingle()
   if (teacherProfile) return { ok: true, user }
@@ -110,131 +91,97 @@ async function requireTeacherOrAdmin(req: Request) {
 // ── STATUS (public) ──────────────────────────────────────────────────────────
 async function getDemoSummary() {
   const db = svc()
-
-  // count students by email domain
-  const { count: studentProfiles } = await db.from('profiles')
-    .select('*', { count: 'exact', head: true })
-    .like('email', '%@demo.school')
-
-  const { count: parentProfiles } = await db.from('profiles')
-    .select('*', { count: 'exact', head: true })
-    .like('email', '%@demo.family')
-
-  const { count: classes } = await db.from('classes')
-    .select('*', { count: 'exact', head: true })
-    .eq('name', CLASS_NAME)
-
+  const { count: studentProfiles } = await db.from('profiles').select('*', { count: 'exact', head: true }).like('email', '%@demo.school')
+  const { count: parentProfiles  } = await db.from('profiles').select('*', { count: 'exact', head: true }).like('email', '%@demo.family')
+  const { count: classes } = await db.from('classes').select('*', { count: 'exact', head: true }).eq('name', CLASS_NAME)
   const { data: classRow } = await db.from('classes').select('id').eq('name', CLASS_NAME).maybeSingle()
   const classId = classRow?.id
-
-  const { count: assignments } = await db.from('published_assignments')
-    .select('*', { count: 'exact', head: true })
-    .eq('class_id', classId ?? '__none__')
-
-  const { count: announcements } = await db.from('class_messages')
-    .select('*', { count: 'exact', head: true })
-    .eq('class_id', classId ?? '__none__')
-    .eq('message_type', 'announcement')
-
-  const { count: submissions } = await db.from('assignment_submissions')
-    .select('*', { count: 'exact', head: true })
-
-  const { count: notifications } = await db.from('notifications')
-    .select('*', { count: 'exact', head: true })
-    .like('user_id', '%') // quick count of all; we mainly show it's non-zero
-    .eq('type', 'missing_work')
-
+  const { count: assignments }   = await db.from('published_assignments').select('*', { count: 'exact', head: true }).eq('class_id', classId ?? '__none__')
+  const { count: announcements } = await db.from('class_messages').select('*', { count: 'exact', head: true }).eq('class_id', classId ?? '__none__').eq('message_type', 'announcement')
+  const { count: submissions }   = await db.from('assignment_submissions').select('*', { count: 'exact', head: true })
+  const { count: notifications } = await db.from('notifications').select('*', { count: 'exact', head: true }).eq('type', 'missing_work')
   return {
-    students: studentProfiles ?? 0,
-    parents: parentProfiles ?? 0,
-    classes: classes ?? 0,
-    assignments: assignments ?? 0,
-    announcements: announcements ?? 0,
-    submissions: submissions ?? 0,
-    notifications: notifications ?? 0,
+    students: studentProfiles ?? 0, parents: parentProfiles ?? 0, classes: classes ?? 0,
+    assignments: assignments ?? 0, announcements: announcements ?? 0,
+    submissions: submissions ?? 0, notifications: notifications ?? 0,
   }
 }
 
 // ── WIPE (by email domain + class name) ──────────────────────────────────────
 async function wipeDemoData() {
   const db = svc()
-
-  // pull IDs from profiles by email domain (works regardless of Auth-generated ids)
   const { data: studentProf } = await db.from('profiles').select('id').like('email', '%@demo.school')
   const { data: parentProf }  = await db.from('profiles').select('id').like('email', '%@demo.family')
   const studentIds = (studentProf ?? []).map(r => r.id)
-  const parentIds  = (parentProf ?? []).map(r => r.id)
-
+  const parentIds  = (parentProf  ?? []).map(r => r.id)
   const { data: classRow } = await db.from('classes').select('id, teacher_id').eq('name', CLASS_NAME).maybeSingle()
   const classId = classRow?.id
   const teacherId = classRow?.teacher_id
 
-  // delete in reverse dependency order
   if (studentIds.length) {
     await db.from('assignment_submissions').delete().in('user_id', studentIds)
     await db.from('grades').delete().in('student_id', studentIds)
   }
   if (parentIds.length || studentIds.length || teacherId) {
-    await db.from('notifications').delete().or([
-      parentIds.length ? `user_id.in.(${parentIds.join(',')})` : '',
-      studentIds.length ? `user_id.in.(${studentIds.join(',')})` : '',
-      teacherId ? `user_id.eq.${teacherId}` : '',
-    ].filter(Boolean).join(','))
-  }
-  if (teacherId) {
-    await db.from('class_messages').delete().eq('teacher_id', teacherId)
-    await db.from('parent_teacher_messages').delete().eq('teacher_id', teacherId)
-    await db.from('teacher_profiles').delete().eq('user_id', teacherId)
+    await db.from('notifications').delete().or(
+      [ parentIds.length ? `user_id.in.(${parentIds.join(',')})` : '',
+        studentIds.length ? `user_id.in.(${studentIds.join(',')})` : '',
+        teacherId ? `user_id.eq.${teacherId}` : '' ].filter(Boolean).join(',')
+    )
   }
   if (classId) {
+    await db.from('class_messages').delete().eq('class_id', classId)
     await db.from('published_assignments').delete().eq('class_id', classId)
     await db.from('classes').delete().eq('id', classId)
   }
-  if (studentIds.length) {
-    await db.from('students').delete().in('id', studentIds)
-  }
-  if (parentIds.length) {
-    await db.from('parent_profiles').delete().in('user_id', parentIds)
-  }
+  if (studentIds.length) await db.from('students').delete().in('id', studentIds)
+  if (parentIds.length)  await db.from('parent_profiles').delete().in('user_id', parentIds)
 
-  // finally, remove demo profiles (keeps auth users; that’s fine for idempotency)
+  // keep teacher_profiles for real users; we only remove demo teacher profile if it exists
+  await db.from('teacher_profiles').delete().eq('user_id',
+    (await db.auth.admin.listUsers({ page: 1, perPage: 1000 })).data?.users?.find(u => u.email === TEACHER_EMAIL)?.id ?? '__none__'
+  )
+
   const allDemoIds = [...studentIds, ...parentIds]
   if (teacherId) allDemoIds.push(teacherId)
-  if (allDemoIds.length) {
-    await db.from('profiles').delete().in('id', allDemoIds)
-  }
+  if (allDemoIds.length) await db.from('profiles').delete().in('id', allDemoIds)
 
   return { ok: true }
 }
 
-// ── SEED ─────────────────────────────────────────────────────────────────────
-async function seedDemoData() {
+// ── SEED (OWNER = caller) ────────────────────────────────────────────────────
+async function seedDemoData(ownerId: string) {
   const db = svc()
 
   // 0) wipe any previous demo rows
   await wipeDemoData()
 
-  // 1) create / fetch Auth users
-  const teacherUser = await ensureAuthUser(TEACHER_EMAIL, 'Ms. Rivera', ['teacher'])
+  // 1) create / fetch demo Auth users (for realistic data), but OWNER is the caller
+  const demoTeacher = await ensureAuthUser(TEACHER_EMAIL, 'Ms. Rivera', ['teacher'])
   const studentUsers: User[] = []
-  const parentUsers: User[] = []
-
+  const parentUsers:  User[] = []
   for (let i = 1; i <= NUM_STUDENTS; i++) {
     studentUsers.push(await ensureAuthUser(STUDENT_EMAIL(i), 'Student', ['student']))
     parentUsers.push(await ensureAuthUser(PARENT_EMAIL(i),  'Parent',  ['parent']))
   }
 
-  // 2) profiles for all users (IDs come from Auth)
-  // teacher
-  await db.from('profiles').upsert({
-    id: teacherUser.id,
-    email: TEACHER_EMAIL,
-    full_name: 'Ms. Rivera',
-    created_at: nowISO(),
-    updated_at: nowISO()
+  // Ensure the caller has a teacher profile; do NOT delete it on wipe
+  await db.from('teacher_profiles').upsert({
+    id: ownerId, user_id: ownerId, school_name: 'Full-STEM (Demo)', created_at: nowISO(), updated_at: nowISO()
   })
 
-  // students + parents + relationships
+  // 2) profiles for all users (IDs come from Auth)
+  // (a) Owner (you) — ensure profile row exists (if table uses FK to auth.users)
+  const { data: ownerProfile } = await db.from('profiles').select('id').eq('id', ownerId).maybeSingle()
+  if (!ownerProfile) {
+    // if your schema auto-creates profiles via trigger, this upsert is harmless
+    await db.from('profiles').upsert({ id: ownerId, full_name: 'Demo Teacher', created_at: nowISO(), updated_at: nowISO() })
+  }
+
+  // (b) Demo teacher profile (used as display content here and there, not the owner)
+  await db.from('profiles').upsert({ id: demoTeacher.id, email: TEACHER_EMAIL, full_name: 'Ms. Rivera', created_at: nowISO(), updated_at: nowISO() })
+
+  // (c) Students + Parents + Relationships
   const roster = [
     ['Aiden','Brooks','7th Grade','Grade Level'],
     ['Maya','Chen','8th Grade','Above Grade Level'],
@@ -255,67 +202,42 @@ async function seedDemoData() {
     const parent  = parentUsers[i]
     const [first, last, grade, reading] = roster[i]
 
-    // profiles
-    await db.from('profiles').upsert({
-      id: student.id,
-      email: STUDENT_EMAIL(i+1),
-      full_name: `${first} ${last}`,
-      created_at: nowISO(),
-      updated_at: nowISO()
-    })
-    await db.from('profiles').upsert({
-      id: parent.id,
-      email: PARENT_EMAIL(i+1),
-      full_name: `Parent of ${first} ${last}`,
-      created_at: nowISO(),
-      updated_at: nowISO()
-    })
+    await db.from('profiles').upsert({ id: student.id, email: STUDENT_EMAIL(i+1), full_name: `${first} ${last}`, created_at: nowISO(), updated_at: nowISO() })
+    await db.from('profiles').upsert({ id: parent.id,  email: PARENT_EMAIL(i+1),  full_name: `Parent of ${first} ${last}`, created_at: nowISO(), updated_at: nowISO() })
 
-    // student data
     await db.from('students').upsert({
       id: student.id,
-      first_name: first,
-      last_name: last,
-      grade_level: grade,
-      reading_level: reading,
+      first_name: first, last_name: last,
+      grade_level: grade, reading_level: reading,
       learning_style: ['Visual','Kinesthetic','Auditory'][i % 3],
       interests: [['Technology','Robotics'],['Art','Gaming'],['Science','Math']][i % 3],
       language_preference: 'English',
-      created_at: nowISO(),
-      updated_at: nowISO()
+      created_at: nowISO(), updated_at: nowISO()
     })
 
-    // parent data
     await db.from('parent_profiles').upsert({
-      id: parent.id,
-      user_id: parent.id,
-      first_name: 'Parent',
-      last_name: last,
+      id: parent.id, user_id: parent.id,
+      first_name: 'Parent', last_name: last,
       phone_number: `555-${String(Math.floor(Math.random()*900)+100)}-${String(Math.floor(Math.random()*9000)+1000)}`,
       preferred_contact_method: 'email',
-      created_at: nowISO(),
-      updated_at: nowISO()
+      created_at: nowISO(), updated_at: nowISO()
     })
 
-    // relationship
     await db.from('student_parent_relationships').upsert({
       id: `demo_rel_${String(i+1).padStart(2,'0')}`,
-      student_id: student.id,
-      parent_id: parent.id,
+      student_id: student.id, parent_id: parent.id,
       relationship_type: 'parent',
-      can_view_grades: true,
-      can_view_attendance: true,
-      can_receive_communications: true,
+      can_view_grades: true, can_view_attendance: true, can_receive_communications: true,
       created_at: nowISO()
     })
   }
 
-  // 3) class owned by teacher
-  const { data: existingClass } = await db.from('classes').select('id').eq('name', CLASS_NAME).maybeSingle()
+  // 3) Create/ensure class OWNED BY CALLER
+  const { data: existingClass } = await db.from('classes').select('id').eq('name', CLASS_NAME).eq('teacher_id', ownerId).maybeSingle()
   const classId = existingClass?.id ?? `demo_class_${crypto.randomUUID().slice(0,8)}`
   await db.from('classes').upsert({
     id: classId,
-    teacher_id: teacherUser.id,
+    teacher_id: ownerId,              // <— OWNER = YOU
     name: CLASS_NAME,
     grade_level: '7th-8th Grade',
     subject: 'Computer Science - AI',
@@ -326,15 +248,27 @@ async function seedDemoData() {
     schedule: 'MWF 2:00-3:00 PM',
     learning_objectives: 'AI basics, ethics, hands-on projects',
     prerequisites: 'Basic computer literacy',
-    published: true,
-    status: 'published',
+    published: true, status: 'published',
     max_students: 25,
-    published_at: nowISO(),
-    created_at: nowISO(),
-    updated_at: nowISO()
+    published_at: nowISO(), created_at: nowISO(), updated_at: nowISO()
   })
 
-  // 4) assignments
+  // 3b) Enroll students into the class — try "students.class_id"; if not present, fall back to "enrollments"
+  const ids = studentUsers.map(u => u.id)
+  const { error: e1 } = await db.from('students').update({ class_id: classId }).in('id', ids) // schema A
+  if (e1) {
+    // schema B (common): separate enrollments table
+    for (let i = 0; i < ids.length; i++) {
+      await db.from('enrollments').upsert({
+        id: `demo_enroll_${String(i+1).padStart(2,'0')}`,
+        class_id: classId,
+        student_id: ids[i],
+        created_at: nowISO()
+      })
+    }
+  }
+
+  // 4) Assignments (published_assignments)
   const bodies: Record<string, { title: string; html: string; days: number; }> = {
     [ASSIGNMENT_IDS[0]]: {
       title: 'What is AI? (Reading + 3 questions)',
@@ -361,36 +295,19 @@ async function seedDemoData() {
       days: 7
     }
   }
-
   for (const id of ASSIGNMENT_IDS) {
     const due = new Date(); due.setDate(due.getDate() + bodies[id].days)
     await db.from('published_assignments').upsert({
-      id,
-      class_assignment_id: id,
-      class_id: classId,
-      title: bodies[id].title,
-      instructions: bodies[id].html,
+      id, class_assignment_id: id, class_id: classId,
+      title: bodies[id].title, instructions: bodies[id].html,
       description: `Demo assignment: ${bodies[id].title}`,
-      due_date: due.toISOString(),
-      max_points: 100,
-      allow_text_response: true,
-      max_files: 3,
-      file_types_allowed: ['pdf','doc','docx','txt'],
-      published_at: nowISO(),
-      is_active: true,
-      created_at: nowISO(),
-      updated_at: nowISO()
+      due_date: due.toISOString(), max_points: 100,
+      allow_text_response: true, max_files: 3, file_types_allowed: ['pdf','doc','docx','txt'],
+      published_at: nowISO(), is_active: true, created_at: nowISO(), updated_at: nowISO()
     })
   }
 
-  // 5) submissions + grades
-  const submissionRates = [0.7, 0.4, 2/12]
-  const sampleAnswers = [
-    "AI examples include voice assistants, recommendation systems, and facial recognition. I've seen AI in my phone camera and on YouTube suggestions. AI can make mistakes because it learns from incomplete or biased data.",
-    "Train fairly with diverse, representative data. Test with varied examples and invite feedback to catch bias.",
-    "I used a no-code tool to classify apples vs. bananas. Clear, well-lit photos worked; blurry or occluded images confused the model."
-  ]
-  // ensure category
+  // 5) Submissions + Grades (graded_by = OWNER)
   let { data: cat } = await db.from('grade_categories').select('id').eq('name','Assignments').maybeSingle()
   if (!cat) {
     const { data: newCat } = await db.from('grade_categories')
@@ -398,86 +315,65 @@ async function seedDemoData() {
       .select('id').maybeSingle()
     cat = newCat || { id: 'demo_category_assignments' }
   }
-
+  const submissionRates = [0.7, 0.4, 2/12]
+  const sampleAnswers = [
+    "AI examples include voice assistants, recommendation systems, and facial recognition. I've seen AI in my phone camera and on YouTube suggestions. AI can make mistakes because it learns from incomplete or biased data.",
+    "Train fairly with diverse, representative data. Test with varied examples and invite feedback to catch bias.",
+    "I used a no-code tool to classify apples vs. bananas. Clear, well-lit photos worked; blurry or occluded images confused the model."
+  ]
   for (let a = 0; a < ASSIGNMENT_IDS.length; a++) {
     const assnId = ASSIGNMENT_IDS[a]
     const num = Math.floor(NUM_STUDENTS * submissionRates[a])
     for (let i = 0; i < num; i++) {
-      const studentId = (await ensureAuthUser(STUDENT_EMAIL(i+1), 'Student', ['student'])).id
+      const studentId = studentUsers[i].id
       await db.from('assignment_submissions').upsert({
         id: `demo_sub_${a+1}_${String(i+1).padStart(2,'0')}`,
-        assignment_id: assnId,
-        user_id: studentId,
-        text_response: sampleAnswers[a],
-        status: 'submitted',
+        assignment_id: assnId, user_id: studentId,
+        text_response: sampleAnswers[a], status: 'submitted',
         submitted_at: new Date(Date.now() - Math.random()*7*24*60*60*1000).toISOString(),
-        created_at: nowISO(),
-        updated_at: nowISO()
+        created_at: nowISO(), updated_at: nowISO()
       })
       const pts = Math.floor(Math.random()*31) + 70
       await db.from('grades').upsert({
         id: `demo_grade_${a+1}_${String(i+1).padStart(2,'0')}`,
-        student_id: studentId,
-        assignment_id: assnId,
-        category_id: cat?.id,
-        points_earned: pts,
-        points_possible: 100,
-        percentage: pts,
+        student_id: studentId, assignment_id: assnId, category_id: cat?.id,
+        points_earned: pts, points_possible: 100, percentage: pts,
         letter_grade: pts >= 90 ? 'A' : pts >= 80 ? 'B' : 'C',
-        graded_by: teacherUser.id,
+        graded_by: ownerId, // <— graded by YOU
         comments: pts >= 90 ? 'Excellent work!' : pts >= 80 ? 'Good job!' : 'Keep practicing!',
-        graded_at: nowISO(),
-        created_at: nowISO(),
-        updated_at: nowISO()
+        graded_at: nowISO(), created_at: nowISO(), updated_at: nowISO()
       })
     }
   }
 
-  // 6) announcements
+  // 6) Announcements (teacher_id = OWNER)
   const announcements = [
-    {
-      id: 'demo_msg_1',
-      title: 'Welcome to AI Class!',
-      content: "Please read Assignment #1 and click Play for Read-Aloud. Try Translate for the Spanish sample."
-    },
-    {
-      id: 'demo_msg_2',
-      title: 'Project Reminder',
-      content: 'Bring 2 objects to photograph for Assignment #3 (classifier project).'
-    }
+    { id: 'demo_msg_1', title: 'Welcome to AI Class!', content: "Please read Assignment #1 and click Play for Read-Aloud. Try Translate for the Spanish sample." },
+    { id: 'demo_msg_2', title: 'Project Reminder',    content: 'Bring 2 objects to photograph for Assignment #3 (classifier project).' }
   ]
   for (let i = 0; i < announcements.length; i++) {
     const a = announcements[i]
     await db.from('class_messages').upsert({
-      id: a.id,
-      class_id: (await db.from('classes').select('id').eq('name', CLASS_NAME).maybeSingle()).data?.id ?? 'demo_missing',
-      teacher_id: teacherUser.id,
-      title: a.title,
-      content: a.content,
-      message_type: 'announcement',
+      id: a.id, class_id: classId, teacher_id: ownerId, // <—
+      title: a.title, content: a.content, message_type: 'announcement',
       priority: i ? 'high' : 'normal',
       sent_at: new Date(Date.now() - (announcements.length - i) * 24*60*60*1000).toISOString(),
-      created_at: nowISO(),
-      updated_at: nowISO()
+      created_at: nowISO(), updated_at: nowISO()
     })
   }
 
-  // 7) parent notifications for missing assignment #1
+  // 7) Parent notifications for missing assignment #1
   const submitted = Math.floor(NUM_STUDENTS * 0.7)
   for (let i = submitted; i < NUM_STUDENTS; i++) {
-    const student = studentUsers[i]
-    const parent  = parentUsers[i]
+    const student = studentUsers[i], parent = parentUsers[i]
     const due = new Date(); due.setDate(due.getDate()+3)
     await db.from('notifications').upsert({
-      id: `demo_notif_${i+1}`,
-      user_id: parent.id,
+      id: `demo_notif_${i+1}`, user_id: parent.id,
       title: 'Missing Assignment Alert',
       message: `Your student has a missing assignment: 'What is AI? (Reading + 3 questions)'. Please submit by ${due.toLocaleDateString()}.`,
-      type: 'missing_work',
-      read: false,
+      type: 'missing_work', read: false,
       metadata: { student_id: student.id, assignment_id: ASSIGNMENT_IDS[0], assignment_title: 'What is AI? (Reading + 3 questions)', due_date: due.toISOString() },
-      created_at: nowISO(),
-      updated_at: nowISO()
+      created_at: nowISO(), updated_at: nowISO()
     })
   }
 
@@ -514,7 +410,7 @@ Deno.serve(async (req) => {
           status: 200, headers: { ...headers, 'Content-Type': 'application/json' }
         })
       } else {
-        await seedDemoData()
+        await seedDemoData(gate.user.id) // <— OWNER = caller
         return new Response(JSON.stringify({ ok: true, message: 'Demo data seeded' }), {
           status: 200, headers: { ...headers, 'Content-Type': 'application/json' }
         })
