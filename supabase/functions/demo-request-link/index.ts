@@ -28,118 +28,109 @@ const generateToken = () => {
   return result;
 };
 
-const createOrFindDemoTenant = async (email: string) => {
-  // Check for existing active tenant (within last 6 hours)
-  const sixHoursAgo = new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString();
+const createDemoTenant = async () => {
+  console.log('Creating new demo tenant');
   
-  const { data: existingTenants, error: queryError } = await supabase
-    .from('demo_tenants')
-    .select('*')
-    .eq('status', 'active')
-    .gte('created_at', sixHoursAgo)
-    .limit(1);
-
-  if (queryError) {
-    console.error('Error querying demo_tenants:', queryError);
-  }
-
-  if (existingTenants && existingTenants.length > 0) {
-    return existingTenants[0];
-  }
-
-  // Create new demo tenant
-  const { data: newTenant, error } = await supabase
-    .from('demo_tenants')
-    .insert({
-      seed_version: 'v1',
-      expires_at: new Date(Date.now() + 6 * 60 * 60 * 1000).toISOString(), // 6 hours
-      status: 'active'
-    })
-    .select()
-    .single();
-
-  if (error) {
-    throw new Error(`Failed to create demo tenant: ${error.message}`);
-  }
-
-  // Trigger demo data seeding (call existing seed-demo-tenant function)
   try {
-    const { data: seedResult, error: seedError } = await supabase.functions.invoke('seed-demo-tenant', {
-      body: { action: 'seed' }
-    });
-    
-    if (seedError) {
-      console.warn('Failed to seed demo data:', seedError);
-    }
-  } catch (seedError) {
-    console.warn('Error seeding demo data:', seedError);
-  }
+    const { data: newTenant, error } = await supabase
+      .from('demo_tenants')
+      .insert({
+        seed_version: 'v1',
+        expires_at: new Date(Date.now() + 6 * 60 * 60 * 1000).toISOString(), // 6 hours
+        status: 'active'
+      })
+      .select()
+      .single();
 
-  return newTenant;
+    if (error) {
+      console.error('Error creating demo tenant:', error);
+      throw new Error(`Failed to create demo tenant: ${error.message}`);
+    }
+
+    console.log('Demo tenant created:', newTenant.id);
+    return newTenant;
+  } catch (err) {
+    console.error('Exception in createDemoTenant:', err);
+    throw err;
+  }
 };
 
 const createMagicToken = async (email: string, demoTenantId: string) => {
   const token = generateToken();
   const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString(); // 1 hour
 
-  const { data, error } = await supabase
-    .from('magic_tokens')
-    .insert({
-      email,
-      demo_tenant_id: demoTenantId,
-      token,
-      expires_at: expiresAt,
-      consumed: false
-    })
-    .select()
-    .single();
+  console.log('Creating magic token for:', email);
 
-  if (error) {
-    throw new Error(`Failed to create magic token: ${error.message}`);
+  try {
+    const { data, error } = await supabase
+      .from('magic_tokens')
+      .insert({
+        email,
+        demo_tenant_id: demoTenantId,
+        token,
+        expires_at: expiresAt,
+        consumed: false
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error creating magic token:', error);
+      throw new Error(`Failed to create magic token: ${error.message}`);
+    }
+
+    console.log('Magic token created successfully');
+    return data;
+  } catch (err) {
+    console.error('Exception in createMagicToken:', err);
+    throw err;
   }
-
-  return data;
 };
 
 const createDemoUser = async (requestBody: DemoRequestBody, demoTenantId: string) => {
-  const { error } = await supabase
-    .from('demo_users')
-    .insert({
-      email: requestBody.workEmail,
-      full_name: requestBody.fullName,
-      role: requestBody.role,
-      school_or_district: requestBody.schoolOrDistrict,
-      demo_tenant_id: demoTenantId
-    });
+  try {
+    const { error } = await supabase
+      .from('demo_users')
+      .insert({
+        email: requestBody.workEmail,
+        full_name: requestBody.fullName,
+        role: requestBody.role,
+        school_or_district: requestBody.schoolOrDistrict,
+        demo_tenant_id: demoTenantId
+      });
 
-  if (error) {
-    console.warn('Failed to create demo user record:', error);
+    if (error) {
+      console.warn('Failed to create demo user record:', error);
+    } else {
+      console.log('Demo user record created successfully');
+    }
+  } catch (err) {
+    console.warn('Exception in createDemoUser:', err);
   }
 };
 
 const sendDemoEmail = async (email: string, fullName: string, token: string) => {
-  const baseUrl = Deno.env.get('SUPABASE_URL')?.replace('https://', '').replace('.supabase.co', '') || 'localhost:3000';
-  const demoUrl = `https://${baseUrl}.lovable.app/demo/start?token=${token}`;
+  // Extract project ID from Supabase URL for Lovable domain
+  const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
+  const projectId = supabaseUrl.match(/https:\/\/([^.]+)\.supabase\.co/)?.[1] || 'localhost';
+  const demoUrl = `https://${projectId}.lovable.app/demo/start?token=${token}`;
 
-  // In a real implementation, you would integrate with your email service here
-  // For now, we'll just log the email details
   console.log(`Demo email for ${email}:`, {
     to: email,
     subject: 'Your TailorEDU Demo Link',
     body: `Hi ${fullName},\n\nHere's your sandbox demo (valid for 60 minutes): ${demoUrl}\n\nThis sandbox uses synthetic data only and resets after your session.\n\n– TailorEDU Team`
   });
 
-  // Return the URL for development/preview purposes
   return demoUrl;
 };
 
 serve(async (req) => {
+  console.log('Demo request link function called, method:', req.method);
+  
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
-
-  console.log('Demo request link function called');
 
   try {
     if (req.method !== 'POST') {
@@ -149,10 +140,13 @@ serve(async (req) => {
       );
     }
 
+    console.log('Parsing request body');
     const requestBody: DemoRequestBody = await req.json();
+    console.log('Request body parsed:', { email: requestBody.workEmail, role: requestBody.role });
 
     // Validate required fields
     if (!requestBody.fullName || !requestBody.workEmail || !requestBody.role || !requestBody.schoolOrDistrict) {
+      console.error('Missing required fields');
       return new Response(
         JSON.stringify({ error: 'Missing required fields' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -162,6 +156,7 @@ serve(async (req) => {
     // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(requestBody.workEmail)) {
+      console.error('Invalid email format');
       return new Response(
         JSON.stringify({ error: 'Invalid email format' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -170,8 +165,8 @@ serve(async (req) => {
 
     console.log(`Processing demo request for: ${requestBody.workEmail}`);
 
-    // Create or find demo tenant
-    const demoTenant = await createOrFindDemoTenant(requestBody.workEmail);
+    // Create new demo tenant
+    const demoTenant = await createDemoTenant();
     console.log(`Using demo tenant: ${demoTenant.id}`);
 
     // Create magic token
@@ -181,7 +176,7 @@ serve(async (req) => {
     // Create demo user record
     await createDemoUser(requestBody, demoTenant.id);
 
-    // Send demo email (in development, return preview URL)
+    // Generate demo URL
     const previewUrl = await sendDemoEmail(requestBody.workEmail, requestBody.fullName, magicToken.token);
 
     // Log telemetry
@@ -194,9 +189,11 @@ serve(async (req) => {
     const response = {
       ok: true,
       message: 'Demo link sent successfully',
-      // In development, include preview URL
-      ...(Deno.env.get('ENVIRONMENT') === 'development' && { previewUrl })
+      // Include preview URL for development
+      previewUrl
     };
+
+    console.log('Demo request processed successfully');
 
     return new Response(
       JSON.stringify(response),
