@@ -49,6 +49,8 @@ const DemoGate = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    console.log('Form submitted, checking consent...');
+    
     if (!form.consent) {
       toast({
         title: "Consent Required",
@@ -58,9 +60,11 @@ const DemoGate = () => {
       return;
     }
 
+    console.log('Consent OK, setting loading state...');
     setIsLoading(true);
     
     try {
+      console.log('Making fetch request...');
       const response = await fetch('https://irxzpsvzlihqitlicoql.supabase.co/functions/v1/demo-request-link', {
         method: 'POST',
         headers: {
@@ -74,32 +78,40 @@ const DemoGate = () => {
         })
       });
 
+      console.log('Fetch completed, response status:', response.status);
+
       if (!response.ok) {
+        console.log('Response not ok:', response.status, response.statusText);
         throw new Error('Failed to request demo link');
       }
 
+      console.log('Parsing JSON response...');
       const data = await response.json();
+      console.log('Response data:', data);
       
       // Create a demo link using the current domain to avoid cross-domain issues
       const currentOrigin = window.location.origin;
       const demoLink = `${currentOrigin}/demo/start?token=${data.token}`;
       
+      console.log('Setting preview URL and submitted state...');
       setPreviewUrl(demoLink);
       setIsSubmitted(true);
 
+      console.log('Showing success toast...');
       toast({
         title: "Demo Link Created!",
         description: `Check your email at ${form.workEmail} for your demo link. If you don't see it, use the link below.`
       });
 
     } catch (error) {
-      console.error('Error requesting demo link:', error);
+      console.error('Error in handleSubmit:', error);
       toast({
         title: "Error",
         description: "Failed to send demo link. Please try again.",
         variant: "destructive"
       });
     } finally {
+      console.log('Setting loading to false...');
       setIsLoading(false);
     }
   };
