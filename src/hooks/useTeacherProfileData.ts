@@ -67,7 +67,8 @@ export interface TeacherProfile {
  */
 export const useTeacherProfileData = () => {
   const [profile, setProfile] = useState<TeacherProfile | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [isFetching, setIsFetching] = useState(false);
 
   const createInitialProfile = async (userId: string) => {
     try {
@@ -103,12 +104,13 @@ export const useTeacherProfileData = () => {
       return;
     }
 
-    // Prevent multiple simultaneous fetches
-    if (loading) {
-      console.log('Already loading, skipping fetch');
+    // Prevent multiple simultaneous fetches using isFetching flag
+    if (isFetching) {
+      console.log('Already fetching, skipping fetch');
       return;
     }
 
+    setIsFetching(true);
     setLoading(true);
     
     try {
@@ -129,6 +131,7 @@ export const useTeacherProfileData = () => {
           variant: "destructive",
         });
         setProfile(null);
+        setIsFetching(false);
         setLoading(false);
         return;
       }
@@ -137,7 +140,6 @@ export const useTeacherProfileData = () => {
       if (data) {
         console.log('Profile found:', data);
         setProfile(data);
-        setLoading(false);
         return;
       }
 
@@ -161,8 +163,9 @@ export const useTeacherProfileData = () => {
       });
       setProfile(null);
     } finally {
-      console.log('Setting loading to false');
+      console.log('Setting loading and fetching to false');
       setLoading(false);
+      setIsFetching(false);
     }
   };
 
