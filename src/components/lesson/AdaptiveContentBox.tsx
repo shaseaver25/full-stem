@@ -43,16 +43,13 @@ const AdaptiveContentBox: React.FC<AdaptiveContentBoxProps> = ({
             <BookOpen className="h-5 w-5" />
             Personalized Lesson Content
           </CardTitle>
-          <div className="flex items-center gap-2 flex-wrap">
-            <Badge variant="secondary" className="text-xs">
-              {userReadingLevel} Level
-            </Badge>
-            {enableTranslation && preferredLanguage && (
-              <Badge variant="outline" className="text-xs">
-                {translatedContent ? 'Translation Available' : 'Translation Enabled'}
-              </Badge>
-            )}
-          </div>
+           <div className="flex items-center gap-2 flex-wrap">
+             {enableTranslation && preferredLanguage && (
+               <Badge variant="outline" className="text-xs">
+                 {translatedContent ? 'Translation Available' : 'Translation Enabled'}
+               </Badge>
+             )}
+           </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
