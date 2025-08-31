@@ -159,6 +159,16 @@ const AssignmentSection: React.FC<AssignmentSectionProps> = ({ lessonId }) => {
   const isSubmitted = submission?.status === 'submitted';
   const hasContent = textResponse.trim() || uploadedFiles.length > 0 || fileUrls.length > 0;
 
+  // Debug logging
+  console.log('AssignmentSection debug:', {
+    assignmentExists: !!assignment,
+    isSubmitted,
+    userExists: !!user,
+    shouldShowButton: !isSubmitted && !!user,
+    assignmentId: assignment?.id,
+    submissionStatus: submission?.status
+  });
+
   return (
     <Card className="w-full">
       <CardHeader>
