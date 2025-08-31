@@ -95,17 +95,25 @@ export const useTeacherProfileData = () => {
   };
 
   const fetchProfile = async (userId: string) => {
+    console.log('fetchProfile called with userId:', userId);
+    
     if (!userId) {
+      console.log('No userId provided, setting loading false');
       setLoading(false);
       return;
     }
 
+    setLoading(true);
+    
     try {
+      console.log('Fetching teacher profile for user:', userId);
       const { data, error } = await supabase
         .from('teacher_profiles')
         .select('*')
         .eq('user_id', userId)
         .maybeSingle();
+
+      console.log('Profile fetch result:', { data, error });
 
       if (error && error.code !== 'PGRST116') {
         console.error('Error fetching teacher profile:', error);
@@ -114,6 +122,7 @@ export const useTeacherProfileData = () => {
           description: "Failed to load teacher profile.",
           variant: "destructive",
         });
+        setProfile(null);
         setLoading(false);
         return;
       }
@@ -122,37 +131,31 @@ export const useTeacherProfileData = () => {
       if (data) {
         console.log('Profile found:', data);
         setProfile(data);
-      } else {
-        // If no profile exists, try to create one only if it doesn't already exist
-        console.log('No profile found, attempting to create initial profile...');
-        try {
-          const newProfile = await createInitialProfile(userId);
-          setProfile(newProfile);
-        } catch (createError: any) {
-          // If creation fails due to unique constraint (profile already exists), 
-          // try fetching again
-          if (createError?.code === '23505') {
-            console.log('Profile already exists, refetching...');
-            const { data: existingData } = await supabase
-              .from('teacher_profiles')
-              .select('*')
-              .eq('user_id', userId)
-              .maybeSingle();
-            setProfile(existingData);
-          } else {
-            console.error('Failed to create profile:', createError);
-            setProfile(null);
-          }
-        }
+        setLoading(false);
+        return;
       }
+
+      // If no profile exists, try to create one
+      console.log('No profile found, attempting to create initial profile...');
+      const newProfile = await createInitialProfile(userId);
+      if (newProfile) {
+        console.log('New profile created:', newProfile);
+        setProfile(newProfile);
+      } else {
+        console.log('Failed to create profile, setting null');
+        setProfile(null);
+      }
+      
     } catch (error) {
-      console.error('Error fetching teacher profile:', error);
+      console.error('Error in fetchProfile:', error);
       toast({
         title: "Error",
         description: "Failed to load teacher profile.",
         variant: "destructive",
       });
+      setProfile(null);
     } finally {
+      console.log('Setting loading to false');
       setLoading(false);
     }
   };
