@@ -17,6 +17,8 @@ interface AssignmentSectionProps {
 }
 
 const AssignmentSection: React.FC<AssignmentSectionProps> = ({ lessonId }) => {
+  console.log('AssignmentSection rendering with lessonId:', lessonId);
+  
   const { user } = useAuth();
   const {
     assignments,
@@ -31,6 +33,13 @@ const AssignmentSection: React.FC<AssignmentSectionProps> = ({ lessonId }) => {
     isSubmitting,
     uploadFile,
   } = useAssignments(lessonId);
+  
+  console.log('AssignmentSection data:', {
+    assignments,
+    submissions,
+    isLoading,
+    userExists: !!user
+  });
   
   const {
     personalizeAssignment,
