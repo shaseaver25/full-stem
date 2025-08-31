@@ -298,91 +298,59 @@ const ModularLessonView: React.FC<ModularLessonViewProps> = ({
           </p>
         </div>
         <div className="flex gap-2">
-          {/* Translation Controls */}
-          {!translatedContent ? (
-            <div className="relative" data-dropdown>
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => setIsTranslateMenuOpen(!isTranslateMenuOpen)}
-                disabled={isTranslating}
-              >
-                {isTranslating ? (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                ) : (
-                  <Globe className="h-4 w-4 mr-2" />
-                )}
-                Translate
-              </Button>
-              
-              {isTranslateMenuOpen && (
-                <div className="absolute top-full left-0 mt-2 z-50 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md shadow-lg p-2 min-w-[200px]">
-                  <p className="text-sm font-medium mb-2 text-gray-700 dark:text-gray-200">Select Language:</p>
-                  <div className="space-y-1">
-                    {languageOptions.map((lang) => (
-                      <Button
-                        key={lang.value}
-                        variant="ghost"
-                        size="sm"
-                        className="w-full justify-start text-left hover:bg-gray-100 dark:hover:bg-gray-600"
-                        onClick={() => handleTranslate(lang.value)}
-                        disabled={isTranslating}
-                      >
-                        <Languages className="h-4 w-4 mr-2" />
-                        {lang.label}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="flex gap-2">
-              <Badge variant="secondary" className="flex items-center gap-1">
-                <Globe className="h-3 w-3" />
-                {languageOptions.find(l => l.value === selectedLanguage)?.label}
-              </Badge>
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={clearTranslation}
-              >
-                Clear Translation
-              </Button>
-            </div>
-          )}
-          
-          {/* Reading Level Controls */}
-          <div className="relative" data-dropdown>
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => setIsReadingLevelMenuOpen(!isReadingLevelMenuOpen)}
-            >
-              <Book className="h-4 w-4 mr-2" />
-              {userReadingLevel}
-            </Button>
-            
-              {isReadingLevelMenuOpen && (
-                <div className="absolute top-full right-0 mt-2 z-50 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md shadow-lg p-2 min-w-[150px]">
-                  <p className="text-sm font-medium mb-2 text-gray-700 dark:text-gray-200">Reading Level:</p>
-                  <div className="space-y-1">
-                    {readingLevelOptions.map((level) => (
-                      <Button
-                        key={level.value}
-                        variant={userReadingLevel === level.value ? "default" : "ghost"}
-                        size="sm"
-                        className="w-full justify-start text-left hover:bg-gray-100 dark:hover:bg-gray-600"
-                        onClick={() => handleReadingLevelChange(level.value)}
-                      >
-                        <Book className="h-4 w-4 mr-2" />
-                        {level.label}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-              )}
-          </div>
+           {/* Translation Controls */}
+           {!translatedContent ? (
+             <div className="relative" data-dropdown>
+               <Button 
+                 variant="outline" 
+                 size="sm"
+                 onClick={() => setIsTranslateMenuOpen(!isTranslateMenuOpen)}
+                 disabled={isTranslating}
+               >
+                 {isTranslating ? (
+                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                 ) : (
+                   <Globe className="h-4 w-4 mr-2" />
+                 )}
+                 Translate
+               </Button>
+               
+               {isTranslateMenuOpen && (
+                 <div className="absolute top-full left-0 mt-2 z-50 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md shadow-lg p-2 min-w-[200px]">
+                   <p className="text-sm font-medium mb-2 text-gray-700 dark:text-gray-200">Select Language:</p>
+                   <div className="space-y-1">
+                     {languageOptions.map((lang) => (
+                       <Button
+                         key={lang.value}
+                         variant="ghost"
+                         size="sm"
+                         className="w-full justify-start text-left hover:bg-gray-100 dark:hover:bg-gray-600"
+                         onClick={() => handleTranslate(lang.value)}
+                         disabled={isTranslating}
+                       >
+                         <Languages className="h-4 w-4 mr-2" />
+                         {lang.label}
+                       </Button>
+                     ))}
+                   </div>
+                 </div>
+               )}
+             </div>
+           ) : (
+             <div className="flex gap-2">
+               <Badge variant="secondary" className="flex items-center gap-1">
+                 <Globe className="h-3 w-3" />
+                 {languageOptions.find(l => l.value === selectedLanguage)?.label}
+               </Badge>
+               <Button 
+                 variant="outline" 
+                 size="sm"
+                 onClick={clearTranslation}
+               >
+                 Clear Translation
+               </Button>
+             </div>
+           )}
         </div>
       </div>
 
