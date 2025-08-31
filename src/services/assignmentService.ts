@@ -3,12 +3,19 @@ import { supabase } from '@/integrations/supabase/client';
 import { Assignment, AssignmentSubmission } from '@/types/assignmentTypes';
 
 export const fetchAssignments = async (lessonId: string): Promise<Assignment[]> => {
+  console.log('Fetching assignments for lesson:', lessonId);
+  
   const { data, error } = await supabase
     .from('assignments')
     .select('*')
     .eq('lesson_id', parseInt(lessonId));
 
-  if (error) throw error;
+  console.log('Assignment query result:', { data, error, lessonId: parseInt(lessonId) });
+  
+  if (error) {
+    console.error('Assignment fetch error:', error);
+    throw error;
+  }
   return data || [];
 };
 

@@ -118,6 +118,14 @@ const LessonPage = () => {
           />
 
           <div className="space-y-8">
+            {/* Enhanced Lesson Controls with Advanced Read Aloud */}
+            <EnhancedLessonControls
+              showPersonalizedView={showPersonalizedView}
+              onToggleLessonView={toggleLessonView}
+              fullLessonText={fullLessonText}
+              lessonId={lesson['Lesson ID'].toString()}
+            />
+
             {/* Video Section */}
             <VideoSection 
               videoUrl={videoUrl}
@@ -138,14 +146,6 @@ const LessonPage = () => {
               contentId={lessonId}
               showControls={true}
               autoTranslate={false}
-            />
-
-            {/* Enhanced Lesson Controls with Advanced Read Aloud */}
-            <EnhancedLessonControls
-              showPersonalizedView={showPersonalizedView}
-              onToggleLessonView={toggleLessonView}
-              fullLessonText={fullLessonText}
-              lessonId={lesson['Lesson ID'].toString()}
             />
 
             {/* Content Section */}
