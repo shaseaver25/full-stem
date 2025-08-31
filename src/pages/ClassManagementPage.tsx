@@ -1,7 +1,9 @@
 
 import React, { useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft } from 'lucide-react';
 import { ClassOverviewHeader } from '@/components/teacher/ClassOverviewHeader';
 import { LessonSelectionPanel } from '@/components/teacher/LessonSelectionPanel';
 import { AssignmentSelectionPanel } from '@/components/teacher/AssignmentSelectionPanel';
@@ -17,6 +19,22 @@ const ClassManagementPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Header Ribbon */}
+      <div className="bg-white border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center">
+              <Link to="/teacher/dashboard" className="flex items-center text-gray-600 hover:text-gray-800 mr-4">
+                <ArrowLeft className="w-4 h-4 mr-1" />
+                <span className="text-sm font-medium">Back to Dashboard</span>
+              </Link>
+              <div className="h-6 w-px bg-gray-300 mr-4" />
+              <h1 className="text-lg font-semibold text-gray-900">Class Management</h1>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div className="container mx-auto px-4 py-6">
         <ClassOverviewHeader classId={classId} />
         
