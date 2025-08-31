@@ -44,27 +44,29 @@ serve(async (req) => {
 
     console.log('Looking up token in database...');
     
-    // Find the token and check if it's valid
+    // First find the token
     const { data: tokenData, error: tokenError } = await supabase
       .from('magic_tokens')
-      .select(`
-        id,
-        token,
-        demo_tenant_id,
-        expires_at,
-        consumed,
-        demo_tenants (
-          id,
-          status,
-          expires_at
-        )
-      `)
+      .select('id, token, demo_tenant_id, expires_at, consumed')
       .eq('token', token)
       .eq('consumed', false)
       .maybeSingle();
 
-    if (tokenError || !tokenData) {
-      console.log('Token not found or error:', tokenError);
+    console.log('Token lookup result:', { tokenData, tokenError });
+
+    if (tokenError) {
+      console.log('Database error:', tokenError);
+      return new Response(
+        JSON.stringify({ error: 'Database error', details: tokenError.message }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
+    if (!tokenData) {
+      console.log('Token not found or already consumed');
       return new Response(
         JSON.stringify({ error: 'Invalid or expired token' }),
         { 
@@ -95,9 +97,27 @@ serve(async (req) => {
       );
     }
 
-    // Check if demo tenant exists and is active
-    const demoTenant = tokenData.demo_tenants;
-    if (!demoTenant || demoTenant.status !== 'active') {
+    // Now get the demo tenant
+    const { data: demoTenant, error: tenantError } = await supabase
+      .from('demo_tenants')
+      .select('id, status, expires_at')
+      .eq('id', tokenData.demo_tenant_id)
+      .single();
+
+    console.log('Demo tenant lookup result:', { demoTenant, tenantError });
+
+    if (tenantError || !demoTenant) {
+      console.log('Demo tenant not found:', tenantError);
+      return new Response(
+        JSON.stringify({ error: 'Demo session not found' }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
+    if (demoTenant.status !== 'active') {
       console.log('Demo tenant not active:', demoTenant);
       return new Response(
         JSON.stringify({ error: 'Demo session is no longer available' }),
