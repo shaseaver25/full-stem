@@ -27,6 +27,11 @@ const ModularLessonView: React.FC<ModularLessonViewProps> = ({
   fullLessonText
 }) => {
   const { data: components = [], isLoading } = useLessonComponents(lessonId);
+  
+  // Debug logging for lesson components
+  console.log('ModularLessonView - lessonId:', lessonId);
+  console.log('ModularLessonView - components:', components);
+  console.log('ModularLessonView - isLoading:', isLoading);
   const { lesson, getContentForReadingLevel } = useLessonData(lessonId);
   const { translateText, isTranslating } = useLiveTranslation();
   const { preferences, savePreferences } = useUserPreferences();
