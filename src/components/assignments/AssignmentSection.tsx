@@ -175,7 +175,13 @@ const AssignmentSection: React.FC<AssignmentSectionProps> = ({ lessonId }) => {
     userExists: !!user,
     shouldShowButton: !isSubmitted && !!user,
     assignmentId: assignment?.id,
-    submissionStatus: submission?.status
+    submissionStatus: submission?.status,
+    userEmail: user?.email || 'no email'
+  });
+  
+  console.log('Auth debug:', {
+    hasSession: !!user,
+    userId: user?.id || 'no id'
   });
 
   return (

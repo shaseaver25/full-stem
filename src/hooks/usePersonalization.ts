@@ -11,11 +11,16 @@ export const usePersonalization = () => {
   const { toast } = useToast();
 
   const personalizeAssignment = async (request: PersonalizeRequest): Promise<PersonalizeResponse> => {
+    console.log('Making personalization request:', request);
+    
     const { data, error } = await supabase.functions.invoke('personalize-assignment', {
       body: request,
     });
 
+    console.log('Personalization response:', { data, error });
+
     if (error) {
+      console.error('Personalization error:', error);
       throw new Error(error.message);
     }
 
