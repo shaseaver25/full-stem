@@ -94,7 +94,9 @@ const DemoGate = () => {
       }
       
       // Use the complete previewUrl from the response
+      console.log('Setting previewUrl:', data.previewUrl);
       setPreviewUrl(data.previewUrl);
+      console.log('Setting isSubmitted to true');
       setIsSubmitted(true);
 
       toast({
@@ -125,6 +127,7 @@ const DemoGate = () => {
   };
 
   if (isSubmitted) {
+    console.log('Rendering submitted state, previewUrl:', previewUrl);
     return (
       <div className="min-h-screen bg-gradient-to-br from-primary/5 to-secondary/5 flex items-center justify-center p-4">
         <Card className="w-full max-w-2xl">
