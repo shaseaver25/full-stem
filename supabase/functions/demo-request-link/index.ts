@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { Resend } from "npm:resend@2.0.0";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -18,6 +19,8 @@ const supabase = createClient(
   Deno.env.get('SUPABASE_URL') ?? '',
   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
 );
+
+const resend = new Resend(Deno.env.get('RESEND_API_KEY'));
 
 const generateToken = () => {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -161,10 +164,62 @@ serve(async (req) => {
 
     console.log('Demo URL generated:', demoUrl);
 
-    // For now, just return success without sending email
+    // Send email with demo link
+    console.log('Sending email to:', requestBody.workEmail);
+    
+    try {
+      const emailResponse = await resend.emails.send({
+        from: "TailorEDU Demo <demo@resend.dev>",
+        to: [requestBody.workEmail],
+        subject: "Your TailorEDU Demo Link - Ready Now!",
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <h1 style="color: #2563eb; text-align: center;">Welcome to TailorEDU Demo!</h1>
+            
+            <p>Hi ${requestBody.fullName},</p>
+            
+            <p>Thank you for your interest in TailorEDU! Your personalized demo environment is ready.</p>
+            
+            <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0; text-align: center;">
+              <h2 style="margin-top: 0; color: #374151;">🚀 Your Demo Link (Valid for 60 minutes)</h2>
+              <a href="${demoUrl}" style="display: inline-block; background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">Access Your Demo</a>
+              <p style="margin: 10px 0 0 0; font-size: 12px; color: #6b7280;">Or copy this link: ${demoUrl}</p>
+            </div>
+            
+            <h3 style="color: #374151;">What's Included:</h3>
+            <ul style="color: #6b7280;">
+              <li>✨ AI-powered curriculum for middle school students</li>
+              <li>📚 Sample lessons with read-aloud and translation features</li>
+              <li>👥 Diverse student personas to explore differentiated learning</li>
+              <li>📊 Teacher dashboard with analytics and progress tracking</li>
+            </ul>
+            
+            <div style="background-color: #fef3c7; padding: 15px; border-radius: 6px; border-left: 4px solid #f59e0b; margin: 20px 0;">
+              <p style="margin: 0; color: #92400e;"><strong>Note:</strong> This sandbox uses synthetic data and resets after your session for privacy.</p>
+            </div>
+            
+            <p style="color: #6b7280;">Questions? Reply to this email or visit our website to schedule a live demonstration.</p>
+            
+            <p>Best regards,<br>
+            <strong>The TailorEDU Team</strong></p>
+          </div>
+        `,
+      });
+
+      if (emailResponse.error) {
+        console.error('Email send error:', emailResponse.error);
+        throw emailResponse.error;
+      }
+
+      console.log('Email sent successfully:', emailResponse.data?.id);
+    } catch (emailError) {
+      console.error('Failed to send email:', emailError);
+      // Don't fail the whole request, still return the demo URL
+    }
+
     const response = {
       ok: true,
-      message: 'Demo link created successfully!',
+      message: 'Demo link sent to your email!',
       previewUrl: demoUrl,
       token: token.substring(0, 8) + '...',
       tenantId: newTenant.id
