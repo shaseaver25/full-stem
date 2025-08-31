@@ -30,7 +30,6 @@ const DemoGate = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [isTransitioning, setIsTransitioning] = useState(false);
   const { toast } = useToast();
 
   if (!DEMO_MODE) {
@@ -59,61 +58,50 @@ const DemoGate = () => {
       return;
     }
 
-      setIsLoading(true);
-      setIsTransitioning(false);
-      
-      // Add a small delay to prevent flashing
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      try {
-        const response = await fetch('https://irxzpsvzlihqitlicoql.supabase.co/functions/v1/demo-request-link', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            fullName: form.fullName,
-            workEmail: form.workEmail,
-            role: form.role,
-            schoolOrDistrict: form.schoolOrDistrict
-          })
-        });
+    setIsLoading(true);
+    
+    try {
+      const response = await fetch('https://irxzpsvzlihqitlicoql.supabase.co/functions/v1/demo-request-link', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          fullName: form.fullName,
+          workEmail: form.workEmail,
+          role: form.role,
+          schoolOrDistrict: form.schoolOrDistrict
+        })
+      });
 
-        if (!response.ok) {
-          throw new Error('Failed to request demo link');
-        }
-
-        const data = await response.json();
-        
-        // Create a demo link using the current domain to avoid cross-domain issues
-        const currentOrigin = window.location.origin;
-        const demoLink = `${currentOrigin}/demo/start?token=${data.token}`;
-        
-        // Set transitioning state first, then update other states
-        setIsTransitioning(true);
-        setPreviewUrl(demoLink);
-        
-        // Wait a moment before showing success state
-        await new Promise(resolve => setTimeout(resolve, 300));
-        
-        setIsSubmitted(true);
-
-        toast({
-          title: "Demo Link Created!",
-          description: `Check your email at ${form.workEmail} for your demo link. If you don't see it, use the link below.`
-        });
-
-      } catch (error) {
-        console.error('Error requesting demo link:', error);
-        toast({
-          title: "Error",
-          description: "Failed to send demo link. Please try again.",
-          variant: "destructive"
-        });
-      } finally {
-        setIsLoading(false);
-        setIsTransitioning(false);
+      if (!response.ok) {
+        throw new Error('Failed to request demo link');
       }
+
+      const data = await response.json();
+      
+      // Create a demo link using the current domain to avoid cross-domain issues
+      const currentOrigin = window.location.origin;
+      const demoLink = `${currentOrigin}/demo/start?token=${data.token}`;
+      
+      setPreviewUrl(demoLink);
+      setIsSubmitted(true);
+
+      toast({
+        title: "Demo Link Created!",
+        description: `Check your email at ${form.workEmail} for your demo link. If you don't see it, use the link below.`
+      });
+
+    } catch (error) {
+      console.error('Error requesting demo link:', error);
+      toast({
+        title: "Error",
+        description: "Failed to send demo link. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const copyPreviewLink = () => {
@@ -128,7 +116,7 @@ const DemoGate = () => {
 
   if (isSubmitted) {
     return (
-      <div className={`min-h-screen bg-gradient-to-br from-primary/5 to-secondary/5 flex items-center justify-center p-4 transition-opacity duration-300 ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}>
+      <div className="min-h-screen bg-gradient-to-br from-primary/5 to-secondary/5 flex items-center justify-center p-4">
         <Card className="w-full max-w-2xl">
           <CardHeader className="text-center">
             <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
