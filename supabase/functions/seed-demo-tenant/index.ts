@@ -221,13 +221,19 @@ async function seedDemoData(ownerId: string) {
     })
   }
 
-  // class OWNED BY CALLER (the teacher profile)
-  const { data: teacherProfile } = await db.from('teacher_profiles').select('id').eq('user_id', ownerId).maybeSingle()
-  const teacherProfileId = teacherProfile?.id || ownerId
+  // class OWNED BY CALLER (using their teacher profile)
+  const { data: ownerTeacherProfile } = await db.from('teacher_profiles').select('id').eq('user_id', ownerId).maybeSingle()
+  if (!ownerTeacherProfile) {
+    throw new Error(`No teacher profile found for user ${ownerId}`)
+  }
+  const teacherProfileId = ownerTeacherProfile.id
+  
+  console.log(`Creating class for teacher profile: ${teacherProfileId}`)
   
   const { data: existingClass } = await db.from('classes').select('id').eq('name',CLASS_NAME).eq('teacher_id',teacherProfileId).maybeSingle()
   const classId = existingClass?.id ?? `demo_class_${crypto.randomUUID().slice(0,8)}`
-  await db.from('classes').upsert({
+  
+  const { error: classError } = await db.from('classes').upsert({
     id:classId, teacher_id:teacherProfileId, name:CLASS_NAME,
     grade_level:'7th-8th Grade', subject:'Computer Science - AI', school_year:'2024-2025',
     description:'Intro to AI concepts for middle school', duration:'1 Semester', instructor:'Demo Teacher',
@@ -235,6 +241,13 @@ async function seedDemoData(ownerId: string) {
     published:true, status:'published', max_students:25, published_at:nowISO(),
     created_at:nowISO(), updated_at:nowISO()
   })
+  
+  if (classError) {
+    console.error('Error creating class:', classError)
+    throw new Error(`Failed to create class: ${classError.message}`)
+  }
+  
+  console.log(`Created/updated class: ${classId}`)
 
   // enroll: try schema A (students.class_id); else schema B (enrollments)
   const ids = studentUsers.map(u => u.id)
