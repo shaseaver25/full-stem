@@ -47,6 +47,7 @@ const AssignmentSection: React.FC<AssignmentSectionProps> = ({ lessonId }) => {
     isModalOpen,
     personalizationResult,
     originalText,
+    acceptedText,
     handleAccept,
     handleReset,
     closeModal,
@@ -199,6 +200,7 @@ const AssignmentSection: React.FC<AssignmentSectionProps> = ({ lessonId }) => {
             <h3 className="text-lg font-semibold">Instructions</h3>
             {!isSubmitted && user && (
               <Button
+                data-testid="btn-personalize"
                 variant="outline"
                 size="sm"
                 onClick={handlePersonalize}
@@ -220,7 +222,7 @@ const AssignmentSection: React.FC<AssignmentSectionProps> = ({ lessonId }) => {
             )}
           </div>
           <SafeHtml 
-            html={assignment.instructions}
+            html={acceptedText || assignment.instructions}
             className="bg-muted p-4 rounded-lg"
           />
         </div>
@@ -353,8 +355,8 @@ const AssignmentSection: React.FC<AssignmentSectionProps> = ({ lessonId }) => {
           <PersonalizeDiffModal
             open={isModalOpen}
             onClose={closeModal}
-            originalText={originalText}
-            personalizedText={personalizationResult.personalized_text}
+            originalHtml={originalText}
+            personalizedHtml={personalizationResult.personalized_text}
             rationale={personalizationResult.rationale}
             changedElements={personalizationResult.changed_elements}
             onAccept={handleAccept}

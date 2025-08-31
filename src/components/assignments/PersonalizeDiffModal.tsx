@@ -4,12 +4,13 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Check, RotateCcw, Edit } from 'lucide-react';
+import { diffHtml } from '@/utils/diffHtml';
 
 interface PersonalizeDiffModalProps {
   open: boolean;
   onClose: () => void;
-  originalText: string;
-  personalizedText: string;
+  originalHtml: string;
+  personalizedHtml: string;
   rationale: string;
   changedElements: string[];
   onAccept: () => void;
@@ -19,45 +20,28 @@ interface PersonalizeDiffModalProps {
 export const PersonalizeDiffModal: React.FC<PersonalizeDiffModalProps> = ({
   open,
   onClose,
-  originalText,
-  personalizedText,
+  originalHtml,
+  personalizedHtml,
   rationale,
   changedElements,
   onAccept,
   onReset,
 }) => {
-  // Simple diff highlighting - in production, you'd want a more sophisticated diff algorithm
-  const renderDiff = (original: string, personalized: string) => {
-    const originalWords = original.split(' ');
-    const personalizedWords = personalized.split(' ');
-    
+  const diff = diffHtml(originalHtml, personalizedHtml);
+  
+  const renderDiff = () => {
     return (
       <div className="grid grid-cols-2 gap-4 h-64 overflow-y-auto">
         <div className="space-y-2">
           <h4 className="font-semibold text-sm text-muted-foreground">Original</h4>
-          <div className="p-3 bg-muted/50 rounded-md text-sm">
-            {originalWords.map((word, index) => (
-              <span key={index} className="mr-1">
-                {word}
-              </span>
-            ))}
+          <div className="p-3 bg-muted/50 rounded-md text-sm prose prose-sm max-w-none">
+            <div dangerouslySetInnerHTML={{ __html: originalHtml }} />
           </div>
         </div>
         <div className="space-y-2">
           <h4 className="font-semibold text-sm text-muted-foreground">Personalized</h4>
-          <div className="p-3 bg-primary/5 rounded-md text-sm">
-            {personalizedWords.map((word, index) => {
-              const isChanged = !originalWords.includes(word) || 
-                               (originalWords[index] && originalWords[index] !== word);
-              return (
-                <span 
-                  key={index} 
-                  className={`mr-1 ${isChanged ? 'bg-primary/20 px-1 rounded' : ''}`}
-                >
-                  {word}
-                </span>
-              );
-            })}
+          <div className="p-3 bg-primary/5 rounded-md text-sm prose prose-sm max-w-none">
+            <div dangerouslySetInnerHTML={{ __html: personalizedHtml }} />
           </div>
         </div>
       </div>
@@ -85,7 +69,7 @@ export const PersonalizeDiffModal: React.FC<PersonalizeDiffModalProps> = ({
           <Separator />
 
           {/* Diff Preview */}
-          {renderDiff(originalText, personalizedText)}
+          {renderDiff()}
 
           <Separator />
 

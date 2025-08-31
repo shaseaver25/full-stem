@@ -8,6 +8,7 @@ export const usePersonalization = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [personalizationResult, setPersonalizationResult] = useState<PersonalizeResponse | null>(null);
   const [originalText, setOriginalText] = useState('');
+  const [acceptedText, setAcceptedText] = useState<string | null>(null);
   const { toast } = useToast();
 
   const personalizeAssignment = async (request: PersonalizeRequest): Promise<PersonalizeResponse> => {
@@ -55,8 +56,9 @@ export const usePersonalization = () => {
       timestamp: new Date().toISOString(),
     });
 
-    // For MVP, just log to console
-    console.log('Personalized assignment accepted:', personalizationResult?.personalized_text);
+    // Accept the personalized text
+    setAcceptedText(personalizationResult.personalized_text);
+    
     toast({
       title: "Personalization Applied",
       description: "Assignment has been personalized based on student interests.",
@@ -66,9 +68,14 @@ export const usePersonalization = () => {
   };
 
   const handleReset = () => {
+    setAcceptedText(null);
     setIsModalOpen(false);
     setPersonalizationResult(null);
     setOriginalText('');
+    toast({
+      title: "Reset to Original",
+      description: "Assignment instructions have been reset to original.",
+    });
   };
 
   const closeModal = () => {
@@ -81,6 +88,7 @@ export const usePersonalization = () => {
     isModalOpen,
     personalizationResult,
     originalText,
+    acceptedText,
     handleAccept,
     handleReset,
     closeModal,
