@@ -1,7 +1,7 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { useTeacherProfile } from '@/hooks/useTeacherProfile';
+import { useTeacherProfileSimplified } from '@/hooks/useTeacherProfileSimplified';
 
 interface ProtectedTeacherRouteProps {
   children: React.ReactNode;
@@ -13,7 +13,7 @@ const ProtectedTeacherRoute: React.FC<ProtectedTeacherRouteProps> = ({
   requireOnboarding = false 
 }) => {
   const { user, loading: authLoading } = useAuth();
-  const { profile, loading: profileLoading } = useTeacherProfile();
+  const { profile, loading: profileLoading } = useTeacherProfileSimplified();
 
   console.log('ProtectedTeacherRoute Debug:', {
     user: !!user,
