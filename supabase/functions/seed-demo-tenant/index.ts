@@ -71,14 +71,14 @@ async function requireTeacherOrAdmin(req: Request) {
   // Check roles via user_roles; fallback to teacher_profiles existence
   const db = serviceDB()
 
-  const { data: roleRow, error: roleErr } = await db
+  const { data: roleRow } = await db
     .from('user_roles')
     .select('role')
     .eq('user_id', user.id)
     .in('role', ['admin', 'teacher'])
     .maybeSingle()
 
-  if (!roleErr && roleRow) return { ok: true, user }
+  if (roleRow) return { ok: true, user }
 
   const { data: teacherProfile } = await db
     .from('teacher_profiles')
@@ -94,78 +94,90 @@ async function requireTeacherOrAdmin(req: Request) {
 // --- Status (public) --------------------------------------------------------
 async function getDemoSummary() {
   const db = serviceDB()
-  const result: Record<string, number> = {}
+  const out: Record<string, number> = {}
 
   // classes
-  { const { count } = await db.from('classes')
+  {
+    const { count } = await db.from('classes')
       .select('*', { count: 'exact', head: true })
       .eq('id', CLASS_ID)
-    result.classes = count ?? 0
+    out.classes = count ?? 0
   }
   // students
-  { const { count } = await db.from('students')
+  {
+    const { count } = await db.from('students')
       .select('*', { count: 'exact', head: true })
       .in('id', STUDENT_IDS)
-    result.students = count ?? 0
+    out.students = count ?? 0
   }
-  // parents (profiles table may contain many roles; count parent_profiles)
-  { const { count } = await db.from('parent_profiles')
+  // parents
+  {
+    const { count } = await db.from('parent_profiles')
       .select('*', { count: 'exact', head: true })
       .in('user_id', PARENT_IDS)
-    result.parents = count ?? 0
+    out.parents = count ?? 0
   }
   // assignments
-  { const { count } = await db.from('published_assignments')
+  {
+    const { count } = await db.from('published_assignments')
       .select('*', { count: 'exact', head: true })
       .in('id', ASSIGNMENTS)
-    result.assignments = count ?? 0
+    out.assignments = count ?? 0
   }
   // submissions
-  { const { count } = await db.from('assignment_submissions')
+  {
+    const { count } = await db.from('assignment_submissions')
       .select('*', { count: 'exact', head: true })
       .in('assignment_id', ASSIGNMENTS)
-    result.submissions = count ?? 0
+    out.submissions = count ?? 0
   }
   // announcements
-  { const { count } = await db.from('class_messages')
+  {
+    const { count } = await db.from('class_messages')
       .select('*', { count: 'exact', head: true })
       .eq('class_id', CLASS_ID)
       .eq('message_type', 'announcement')
-    result.announcements = count ?? 0
+    out.announcements = count ?? 0
   }
   // notifications
-  { const { count } = await db.from('notifications')
+  {
+    const { count } = await db.from('notifications')
       .select('*', { count: 'exact', head: true })
       .in('user_id', PARENT_IDS)
       .eq('type', 'missing_work')
-    result.notifications = count ?? 0
+    out.notifications = count ?? 0
   }
-  return result
+  return out
+}
+
+// --- Utility: exec and log (awaits every query; no .catch on thenables) -----
+async function exec(dbCall: any, label: string) {
+  try {
+    const { error } = await dbCall
+    if (error) console.log(`${label} error:`, error)
+  } catch (e) {
+    console.log(`${label} exception:`, e)
+  }
 }
 
 // --- Wipe -------------------------------------------------------------------
 async function wipeDemoData(db: ReturnType<typeof serviceDB>) {
-  // Delete in reverse dependency order
-  const safe = <T>(p: Promise<T>) => p.catch((e) => ({ error: e } as any))
-
-  await safe(db.from('assignment_submissions').delete().in('user_id', STUDENT_IDS))
-  await safe(db.from('grades').delete().in('student_id', STUDENT_IDS))
-  await safe(db.from('notifications').delete().in('user_id', [...STUDENT_IDS, ...PARENT_IDS, TEACHER_ID]))
-  await safe(db.from('class_messages').delete().eq('teacher_id', TEACHER_ID))
-  await safe(db.from('parent_teacher_messages').delete().eq('teacher_id', TEACHER_ID))
-  await safe(db.from('published_assignments').delete().in('id', ASSIGNMENTS))
-  await safe(db.from('students').delete().in('id', STUDENT_IDS))
-  await safe(db.from('classes').delete().eq('id', CLASS_ID))
-  await safe(db.from('parent_profiles').delete().in('user_id', PARENT_IDS))
-  await safe(db.from('teacher_profiles').delete().eq('user_id', TEACHER_ID))
-  await safe(db.from('profiles').delete().in('id', [...STUDENT_IDS, ...PARENT_IDS, TEACHER_ID]))
-
+  await exec(db.from('assignment_submissions').delete().in('user_id', STUDENT_IDS), 'delete submissions')
+  await exec(db.from('grades').delete().in('student_id', STUDENT_IDS), 'delete grades')
+  await exec(db.from('notifications').delete().in('user_id', [...STUDENT_IDS, ...PARENT_IDS, TEACHER_ID]), 'delete notifications')
+  await exec(db.from('class_messages').delete().eq('teacher_id', TEACHER_ID), 'delete class_messages')
+  await exec(db.from('parent_teacher_messages').delete().eq('teacher_id', TEACHER_ID), 'delete parent_teacher_messages')
+  await exec(db.from('published_assignments').delete().in('id', ASSIGNMENTS), 'delete published_assignments')
+  await exec(db.from('students').delete().in('id', STUDENT_IDS), 'delete students')
+  await exec(db.from('classes').delete().eq('id', CLASS_ID), 'delete classes')
+  await exec(db.from('parent_profiles').delete().in('user_id', PARENT_IDS), 'delete parent_profiles')
+  await exec(db.from('teacher_profiles').delete().eq('user_id', TEACHER_ID), 'delete teacher_profiles')
+  await exec(db.from('profiles').delete().in('id', [...STUDENT_IDS, ...PARENT_IDS, TEACHER_ID]), 'delete profiles')
   return { ok: true }
 }
 
 // --- Seed -------------------------------------------------------------------
 async function seedDemoData(db: ReturnType<typeof serviceDB>) {
-  // wipe first for idempotency
   await wipeDemoData(db)
 
   const nowISO = () => new Date().toISOString()
@@ -349,15 +361,18 @@ async function seedDemoData(db: ReturnType<typeof serviceDB>) {
       const studentId = STUDENT_IDS[i]
       const subId = `demo_sub_${a+1}_${String(i+1).padStart(2,'0')}`
 
-      await db.from('assignment_submissions').upsert({
-        id: subId,
-        assignment_id: assnId,
-        user_id: studentId,
-        text_response: sampleAnswers[a],
-        status: 'submitted',
-        submitted_at: new Date(Date.now() - Math.random()*7*24*60*60*1000).toISOString(),
-        created_at: nowISO(), updated_at: nowISO()
-      })
+      {
+        const { error } = await db.from('assignment_submissions').upsert({
+          id: subId,
+          assignment_id: assnId,
+          user_id: studentId,
+          text_response: sampleAnswers[a],
+          status: 'submitted',
+          submitted_at: new Date(Date.now() - Math.random()*7*24*60*60*1000).toISOString(),
+          created_at: nowISO(), updated_at: nowISO()
+        })
+        if (error) throw new Error(`Submission: ${error.message}`)
+      }
 
       // Ensure a grade category exists
       let { data: cat } = await db.from('grade_categories')
@@ -371,7 +386,7 @@ async function seedDemoData(db: ReturnType<typeof serviceDB>) {
       }
 
       const pts = Math.floor(Math.random()*31) + 70 // 70-100
-      await db.from('grades').upsert({
+      const { error: gErr } = await db.from('grades').upsert({
         id: `demo_grade_${a+1}_${String(i+1).padStart(2,'0')}`,
         student_id: studentId,
         assignment_id: assnId,
@@ -384,6 +399,7 @@ async function seedDemoData(db: ReturnType<typeof serviceDB>) {
         comments: pts >= 90 ? 'Excellent work!' : pts >= 80 ? 'Good job!' : 'Keep practicing!',
         graded_at: nowISO(), created_at: nowISO(), updated_at: nowISO()
       })
+      if (gErr) console.log('Grade upsert warning:', gErr) // non-fatal
     }
   }
 
@@ -402,7 +418,7 @@ async function seedDemoData(db: ReturnType<typeof serviceDB>) {
   ]
   for (let i = 0; i < announcements.length; i++) {
     const a = announcements[i]
-    await db.from('class_messages').upsert({
+    const { error } = await db.from('class_messages').upsert({
       id: a.id, class_id: CLASS_ID, teacher_id: TEACHER_ID,
       title: a.title, content: a.content,
       message_type: 'announcement',
@@ -410,6 +426,7 @@ async function seedDemoData(db: ReturnType<typeof serviceDB>) {
       sent_at: new Date(Date.now() - (announcements.length - i) * 24*60*60*1000).toISOString(),
       created_at: nowISO(), updated_at: nowISO()
     })
+    if (error) throw new Error(`Announcement ${i+1}: ${error.message}`)
   }
 
   // Parent notifications for missing assignment #1
@@ -418,7 +435,7 @@ async function seedDemoData(db: ReturnType<typeof serviceDB>) {
     const studentId = STUDENT_IDS[i]
     const parentId  = PARENT_IDS[i]
     const due = new Date(); due.setDate(due.getDate()+3)
-    await db.from('notifications').upsert({
+    const { error } = await db.from('notifications').upsert({
       id: `demo_notif_${i+1}`,
       user_id: parentId,
       title: 'Missing Assignment Alert',
@@ -428,10 +445,8 @@ async function seedDemoData(db: ReturnType<typeof serviceDB>) {
       metadata: { student_id: studentId, assignment_id: ASSIGNMENTS[0], assignment_title: 'What is AI? (Reading + 3 questions)', due_date: due.toISOString() },
       created_at: nowISO(), updated_at: nowISO()
     })
+    if (error) console.log('Notification warning:', error) // non-fatal
   }
-
-  // (Optional) Analytics seed — keep lightweight / non-blocking
-  // If you have a specific analytics table, insert there. Otherwise skip silently.
 
   return { ok: true }
 }
