@@ -5,7 +5,9 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { SuperAdminProvider } from "@/contexts/SuperAdminContext";
 import { ImpersonationProvider } from "@/contexts/ImpersonationContext";
+import { SuperAdminBanner, SuperAdminWatermark } from "@/components/admin/SuperAdminBanner";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import TrialPage from "./components/TrialPage";
@@ -33,6 +35,7 @@ import CourseEditorPage from "./pages/CourseEditorPage";
 import ComponentsPage from "./pages/ComponentsPage";
 import DeveloperDashboard from "./pages/DeveloperDashboard";
 import DeveloperRoute from "./components/developer/DeveloperRoute";
+import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import ClassManagementPage from "./pages/ClassManagementPage";
 import DemoGate from "./pages/DemoGate";
 import DemoStart from "./pages/DemoStart";
@@ -42,12 +45,15 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
-      <ImpersonationProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Routes>
+      <SuperAdminProvider>
+        <ImpersonationProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <div className="min-h-screen bg-background">
+                <SuperAdminBanner />
+                <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/trial" element={<TrialPage />} />
@@ -77,6 +83,9 @@ const App = () => (
             <Route path="/admin/build-class" element={<BuildClassPage />} />
             <Route path="/admin/course-editor" element={<CourseEditorPage />} />
             <Route path="/admin/advanced" element={<AdvancedAdminPage />} />
+            
+            {/* Super Admin Route */}
+            <Route path="/super-admin" element={<SuperAdminDashboard />} />
             
             {/* Developer Routes */}
             <Route 
@@ -158,11 +167,14 @@ const App = () => (
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
-        </BrowserRouter>
-        </TooltipProvider>
-      </ImpersonationProvider>
-    </AuthProvider>
-  </QueryClientProvider>
+          <SuperAdminWatermark />
+        </div>
+      </BrowserRouter>
+      </TooltipProvider>
+    </ImpersonationProvider>
+  </SuperAdminProvider>
+</AuthProvider>
+</QueryClientProvider>
 );
 
 export default App;

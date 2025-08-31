@@ -7,6 +7,7 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
+  isSuperAdmin: boolean;
   signUp: (email: string, password: string, fullName: string) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
@@ -26,23 +27,54 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
 
   useEffect(() => {
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
         console.log('Auth state changed:', event, session?.user?.email);
         setSession(session);
         setUser(session?.user ?? null);
+        
+        // Check super admin status when user changes
+        if (session?.user) {
+          try {
+            const { data } = await supabase.rpc('is_super_admin', {
+              _user_id: session.user.id
+            });
+            setIsSuperAdmin(data || false);
+          } catch (error) {
+            console.error('Error checking super admin status:', error);
+            setIsSuperAdmin(false);
+          }
+        } else {
+          setIsSuperAdmin(false);
+        }
+        
         setLoading(false);
       }
     );
 
     // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       console.log('Initial session:', session?.user?.email);
       setSession(session);
       setUser(session?.user ?? null);
+      
+      // Check super admin status for initial session
+      if (session?.user) {
+        try {
+          const { data } = await supabase.rpc('is_super_admin', {
+            _user_id: session.user.id
+          });
+          setIsSuperAdmin(data || false);
+        } catch (error) {
+          console.error('Error checking super admin status:', error);
+          setIsSuperAdmin(false);
+        }
+      }
+      
       setLoading(false);
     });
 
@@ -101,6 +133,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     user,
     session,
     loading,
+    isSuperAdmin,
     signUp,
     signIn,
     signOut
