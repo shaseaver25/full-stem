@@ -34,6 +34,8 @@ import ComponentsPage from "./pages/ComponentsPage";
 import DeveloperDashboard from "./pages/DeveloperDashboard";
 import DeveloperRoute from "./components/developer/DeveloperRoute";
 import ClassManagementPage from "./pages/ClassManagementPage";
+import DemoGate from "./pages/DemoGate";
+import DemoStart from "./pages/DemoStart";
 
 const queryClient = new QueryClient();
 
@@ -49,6 +51,11 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/trial" element={<TrialPage />} />
+            
+            {/* Demo Routes */}
+            <Route path="/demo" element={<DemoGate />} />
+            <Route path="/demo/start" element={<DemoStart />} />
+            <Route path="/demo/home" element={<Index />} />
             <Route path="/course/excel" element={<ExcelCourse />} />
             <Route path="/course/word" element={<WordCourse />} />
             <Route path="/course/powerpoint" element={<PowerPointCourse />} />

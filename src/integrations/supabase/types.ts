@@ -726,6 +726,68 @@ export type Database = {
           },
         ]
       }
+      demo_tenants: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          seed_version: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          seed_version?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          seed_version?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
+      demo_users: {
+        Row: {
+          created_at: string
+          demo_tenant_id: string
+          email: string
+          full_name: string
+          id: string
+          role: string
+          school_or_district: string
+        }
+        Insert: {
+          created_at?: string
+          demo_tenant_id: string
+          email: string
+          full_name: string
+          id?: string
+          role: string
+          school_or_district: string
+        }
+        Update: {
+          created_at?: string
+          demo_tenant_id?: string
+          email?: string
+          full_name?: string
+          id?: string
+          role?: string
+          school_or_district?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "demo_users_demo_tenant_id_fkey"
+            columns: ["demo_tenant_id"]
+            isOneToOne: false
+            referencedRelation: "demo_tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       developer_settings: {
         Row: {
           created_at: string
@@ -1298,6 +1360,44 @@ export type Database = {
           video_url?: string | null
         }
         Relationships: []
+      }
+      magic_tokens: {
+        Row: {
+          consumed: boolean
+          created_at: string
+          demo_tenant_id: string
+          email: string
+          expires_at: string
+          id: string
+          token: string
+        }
+        Insert: {
+          consumed?: boolean
+          created_at?: string
+          demo_tenant_id: string
+          email: string
+          expires_at?: string
+          id?: string
+          token: string
+        }
+        Update: {
+          consumed?: boolean
+          created_at?: string
+          demo_tenant_id?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "magic_tokens_demo_tenant_id_fkey"
+            columns: ["demo_tenant_id"]
+            isOneToOne: false
+            referencedRelation: "demo_tenants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       message_recipients: {
         Row: {

@@ -3,6 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Database, Info } from 'lucide-react';
 import { useDemoMode } from '@/hooks/useDemoMode';
+import DemoBanner from './DemoBanner';
 
 interface DemoModeIndicatorProps {
   className?: string;
@@ -36,6 +37,13 @@ const DemoModeIndicator: React.FC<DemoModeIndicatorProps> = ({
 
     case 'banner':
     default:
+      // Check if this is a self-serve demo session
+      const hasDemoTenantId = localStorage.getItem('demo_tenant_id');
+      if (hasDemoTenantId) {
+        return <DemoBanner variant="banner" />;
+      }
+      
+      // Legacy admin demo mode
       return (
         <Alert className={`bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200 ${className}`}>
           <Info className="h-4 w-4 text-blue-600" />

@@ -21,10 +21,12 @@ export const useDemoMode = () => {
       const hasDemo = demoProfiles && demoProfiles.length > 0;
       setDemoDataExists(hasDemo);
       
-      // Check if we're in demo mode (could be set by URL param or localStorage)
+      // Check if we're in demo mode (URL param, localStorage, or self-serve demo session)
       const urlParams = new URLSearchParams(window.location.search);
+      const hasDemoTenantId = !!localStorage.getItem('demo_tenant_id');
       const isDemo = urlParams.get('demo') === 'true' || 
                      localStorage.getItem('demo_mode') === 'true' ||
+                     hasDemoTenantId ||
                      hasDemo;
       
       setIsDemoMode(isDemo);
@@ -45,6 +47,7 @@ export const useDemoMode = () => {
 
   const disableDemoMode = () => {
     localStorage.removeItem('demo_mode');
+    localStorage.removeItem('demo_tenant_id');
     setIsDemoMode(false);
   };
 
