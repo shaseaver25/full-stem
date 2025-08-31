@@ -86,8 +86,8 @@ const DemoGate = () => {
       }
 
       toast({
-        title: "Demo Link Sent!",
-        description: "Check your email for your personalized demo access link."
+        title: "Demo Link Created!",
+        description: `Check your email at ${form.workEmail} for your demo link. If you don't see it, use the link below.`
       });
 
     } catch (error) {
