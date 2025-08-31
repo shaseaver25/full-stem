@@ -10,7 +10,7 @@ import HowItWorks from "@/components/HowItWorks";
 import CoreTracks from "@/components/CoreTracks";
 import Testimonials from "@/components/Testimonials";
 import Footer from "@/components/Footer";
-import { GraduationCap, Users, BookOpen, ArrowRight } from "lucide-react";
+import { GraduationCap, Users, BookOpen, ArrowRight, Volume2 } from "lucide-react";
 
 const Index = () => {
   const { user } = useAuth();
@@ -33,18 +33,24 @@ const Index = () => {
               Experience the Full Platform
             </h2>
             <p className="text-lg text-gray-600 mb-6 max-w-2xl mx-auto">
-              Explore our comprehensive demo featuring AI-powered text-to-speech, interactive lessons, 
-              teacher dashboards, and student analytics. Perfect for demonstrations and trials.
+              Try our AI-powered read-aloud with natural voices, word highlighting, and click-to-seek functionality. 
+              Experience interactive lessons, translation features, and comprehensive platform capabilities.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link to="/demo-showcase">
+              <Link to="/lesson/961aaf3e-4e1a-4617-87b7-8fd56ec8848f">
                 <Button size="lg" className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white px-8 py-3">
+                  <Volume2 className="w-5 h-5 mr-2" />
+                  Try Read-Aloud Demo
+                </Button>
+              </Link>
+              <Link to="/demo-showcase">
+                <Button variant="outline" size="lg" className="px-8 py-3">
                   <GraduationCap className="w-5 h-5 mr-2" />
-                  View Full Demo
+                  View Full Platform
                 </Button>
               </Link>
               <Link to="/components">
-                <Button variant="outline" size="lg" className="px-8 py-3">
+                <Button variant="ghost" size="lg" className="px-8 py-3">
                   Try AI Features
                   <ArrowRight className="w-5 h-5 ml-2" />
                 </Button>

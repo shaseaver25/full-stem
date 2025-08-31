@@ -17,6 +17,7 @@ import { RealTimeTranslationProvider } from '@/components/translation/RealTimeTr
 import MobileOptimizedLayout from '@/components/layout/MobileOptimizedLayout';
 import ModularLessonView from '@/components/lesson/ModularLessonView';
 import DesmosSection from '@/components/lesson/DesmosSection';
+import ReadAloudDemoGuide from '@/components/lesson/ReadAloudDemoGuide';
 import { useLessonPageLogic } from '@/hooks/useLessonPageLogic';
 import { useGlobalSetting } from '@/hooks/useGlobalSettings';
 
@@ -111,6 +112,9 @@ const LessonPage = () => {
     <RealTimeTranslationProvider>
       <MobileOptimizedLayout>
         <div className="max-w-5xl mx-auto px-4 py-8">
+          {/* Demo Guide */}
+          <ReadAloudDemoGuide />
+
           {/* Header Section */}
           <LessonHeader 
             lessonTitle={lessonTitle}

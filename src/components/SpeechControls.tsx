@@ -110,7 +110,7 @@ const SpeechControls: React.FC<SpeechControlsProps> = ({
           size="sm"
           onClick={handleClick}
           disabled={isLoading}
-          className="flex items-center gap-2"
+          className="flex items-center gap-2 bg-blue-50 hover:bg-blue-100 border-blue-200 text-blue-700 font-medium shadow-sm"
           aria-label={getAriaLabel()}
         >
           {getIcon()}
