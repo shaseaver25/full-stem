@@ -4,9 +4,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { CheckCircle, Clock, AlertCircle } from 'lucide-react';
+import { CheckCircle, Clock, AlertCircle, Sparkles } from 'lucide-react';
 import FileUpload from './FileUpload';
+import { PersonalizeDiffModal } from './PersonalizeDiffModal';
 import { useAssignments } from '@/hooks/useAssignments';
+import { usePersonalization } from '@/hooks/usePersonalization';
 import { useAuth } from '@/contexts/AuthContext';
 import SafeHtml from '@/components/ui/SafeHtml';
 
@@ -29,6 +31,17 @@ const AssignmentSection: React.FC<AssignmentSectionProps> = ({ lessonId }) => {
     isSubmitting,
     uploadFile,
   } = useAssignments(lessonId);
+  
+  const {
+    personalizeAssignment,
+    isPersonalizing,
+    isModalOpen,
+    personalizationResult,
+    originalText,
+    handleAccept,
+    handleReset,
+    closeModal,
+  } = usePersonalization();
 
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [fileUrls, setFileUrls] = useState<string[]>([]);
@@ -85,6 +98,33 @@ const AssignmentSection: React.FC<AssignmentSectionProps> = ({ lessonId }) => {
     setUploadError(null);
   };
 
+  const handlePersonalize = () => {
+    if (!assignment || !user) return;
+
+    // Mock student profile data - in production, this would come from user profile/preferences
+    const personalizeRequest = {
+      base_assignment: assignment.instructions,
+      student_profile: {
+        student_id: user.id,
+        interests: ['sports', 'animals', 'games'], // Mock interests - would come from user profile
+        home_language: 'English',
+        reading_level: 'Grade 4'
+      },
+      constraints: {
+        must_keep_keywords: [],
+        reading_level: 'Grade 4',
+        language_pref: 'English',
+        max_length_words: 180,
+        edit_permissions: {
+          allow_numbers: false,
+          allow_rubric_edits: false
+        }
+      }
+    };
+
+    personalizeAssignment(personalizeRequest);
+  };
+
   if (isLoading) {
     return (
       <Card className="w-full">
@@ -125,7 +165,30 @@ const AssignmentSection: React.FC<AssignmentSectionProps> = ({ lessonId }) => {
       <CardContent className="space-y-6">
         {/* Instructions */}
         <div>
-          <h3 className="text-lg font-semibold mb-3">Instructions</h3>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-lg font-semibold">Instructions</h3>
+            {!isSubmitted && user && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handlePersonalize}
+                disabled={isPersonalizing}
+                className="text-primary border-primary hover:bg-primary/10"
+              >
+                {isPersonalizing ? (
+                  <div className="flex items-center">
+                    <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-primary mr-2"></div>
+                    Personalizing...
+                  </div>
+                ) : (
+                  <>
+                    <Sparkles className="w-4 h-4 mr-2" />
+                    Personalize with my interests
+                  </>
+                )}
+              </Button>
+            )}
+          </div>
           <SafeHtml 
             html={assignment.instructions}
             className="bg-muted p-4 rounded-lg"
@@ -253,6 +316,20 @@ const AssignmentSection: React.FC<AssignmentSectionProps> = ({ lessonId }) => {
               </div>
             )}
           </div>
+        )}
+
+        {/* Personalization Modal */}
+        {personalizationResult && (
+          <PersonalizeDiffModal
+            open={isModalOpen}
+            onClose={closeModal}
+            originalText={originalText}
+            personalizedText={personalizationResult.personalized_text}
+            rationale={personalizationResult.rationale}
+            changedElements={personalizationResult.changed_elements}
+            onAccept={handleAccept}
+            onReset={handleReset}
+          />
         )}
       </CardContent>
     </Card>
