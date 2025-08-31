@@ -3,14 +3,12 @@
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
-// --- Env --------------------------------------------------------------------
+// ── ENV ──────────────────────────────────────────────────────────────────────
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
-const SERVICE_KEY   = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-const ANON_KEY      = Deno.env.get('SUPABASE_ANON_KEY')!  // used only to decode JWT
-const ALLOWED_ORIGINS = (Deno.env.get('ALLOWED_ORIGINS') || '')
-  .split(',').map(s => s.trim()).filter(Boolean)
+const SERVICE_KEY  = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+const ANON_KEY     = Deno.env.get('SUPABASE_ANON_KEY')! // only to decode caller JWT
 
-// --- Constants (demo IDs) ---------------------------------------------------
+// ── DEMO IDS ─────────────────────────────────────────────────────────────────
 const TEACHER_ID = 'dddd0001-0000-0000-0000-000000000001'
 const CLASS_ID   = 'dddd0002-0000-0000-0000-000000000001'
 const ASSIGNMENTS = [
@@ -25,14 +23,14 @@ const PARENT_IDS = Array.from({ length: 12 }, (_, i) =>
   `dddd${String(i + 201).padStart(4, '0')}-0000-0000-0000-000000000001`
 )
 
-// --- CORS helper (inlined) --------------------------------------------------
-function buildCors(req: Request, allowed: string[] = []) {
+// ── CORS (permissive for browser preflight) ──────────────────────────────────
+function buildCors(req: Request) {
   const origin = req.headers.get('Origin') ?? '*'
-  const okOrigin = allowed.length ? (allowed.includes(origin) ? origin : '') : '*'
+  const reqHeaders = req.headers.get('Access-Control-Request-Headers') || 'authorization, content-type'
   const base: Record<string, string> = {
-    Vary: 'Origin',
-    'Access-Control-Allow-Origin': okOrigin || '*',
-    'Access-Control-Allow-Headers': 'authorization, content-type',
+    'Vary': 'Origin, Access-Control-Request-Headers',
+    'Access-Control-Allow-Origin': origin,          // echo caller origin
+    'Access-Control-Allow-Headers': reqHeaders,     // mirror requested headers
     'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
     'Access-Control-Max-Age': '86400',
   }
@@ -44,15 +42,15 @@ function buildCors(req: Request, allowed: string[] = []) {
   }
 }
 
-// --- Clients ----------------------------------------------------------------
+// ── CLIENTS ──────────────────────────────────────────────────────────────────
 function serviceDB() {
-  // Service role client for DB mutations (RLS bypass)
+  // Service role client for DB mutations (RLS bypass). NEVER expose to browser.
   return createClient(SUPABASE_URL, SERVICE_KEY, {
     auth: { autoRefreshToken: false, persistSession: false }
   })
 }
 function authClientFromReq(req: Request) {
-  // Anon client that uses the caller's Authorization header to decode JWT
+  // Anon client that uses caller's Authorization header to decode JWT
   const authHeader = req.headers.get('Authorization') || ''
   return createClient(SUPABASE_URL, ANON_KEY, {
     global: { headers: { Authorization: authHeader } },
@@ -60,7 +58,7 @@ function authClientFromReq(req: Request) {
   })
 }
 
-// --- Auth helpers -----------------------------------------------------------
+// ── AUTH HELPERS ─────────────────────────────────────────────────────────────
 async function requireTeacherOrAdmin(req: Request) {
   const auth = authClientFromReq(req)
   const { data: { user }, error } = await auth.auth.getUser()
@@ -68,9 +66,9 @@ async function requireTeacherOrAdmin(req: Request) {
     return { ok: false, status: 401, body: { code: 'UNAUTHENTICATED', message: 'Sign in required' } }
   }
 
-  // Check roles via user_roles; fallback to teacher_profiles existence
   const db = serviceDB()
 
+  // Prefer explicit role table
   const { data: roleRow } = await db
     .from('user_roles')
     .select('role')
@@ -80,6 +78,7 @@ async function requireTeacherOrAdmin(req: Request) {
 
   if (roleRow) return { ok: true, user }
 
+  // Fallback: teacher profile existence
   const { data: teacherProfile } = await db
     .from('teacher_profiles')
     .select('id')
@@ -91,57 +90,50 @@ async function requireTeacherOrAdmin(req: Request) {
   return { ok: false, status: 403, body: { code: 'FORBIDDEN', message: 'Admin or teacher access required' } }
 }
 
-// --- Status (public) --------------------------------------------------------
+// ── STATUS (PUBLIC) ──────────────────────────────────────────────────────────
 async function getDemoSummary() {
   const db = serviceDB()
   const out: Record<string, number> = {}
 
   // classes
-  {
-    const { count } = await db.from('classes')
+  { const { count } = await db.from('classes')
       .select('*', { count: 'exact', head: true })
       .eq('id', CLASS_ID)
     out.classes = count ?? 0
   }
   // students
-  {
-    const { count } = await db.from('students')
+  { const { count } = await db.from('students')
       .select('*', { count: 'exact', head: true })
       .in('id', STUDENT_IDS)
     out.students = count ?? 0
   }
   // parents
-  {
-    const { count } = await db.from('parent_profiles')
+  { const { count } = await db.from('parent_profiles')
       .select('*', { count: 'exact', head: true })
       .in('user_id', PARENT_IDS)
     out.parents = count ?? 0
   }
   // assignments
-  {
-    const { count } = await db.from('published_assignments')
+  { const { count } = await db.from('published_assignments')
       .select('*', { count: 'exact', head: true })
       .in('id', ASSIGNMENTS)
     out.assignments = count ?? 0
   }
   // submissions
-  {
-    const { count } = await db.from('assignment_submissions')
+  { const { count } = await db.from('assignment_submissions')
       .select('*', { count: 'exact', head: true })
       .in('assignment_id', ASSIGNMENTS)
     out.submissions = count ?? 0
   }
   // announcements
-  {
-    const { count } = await db.from('class_messages')
+  { const { count } = await db.from('class_messages')
       .select('*', { count: 'exact', head: true })
       .eq('class_id', CLASS_ID)
       .eq('message_type', 'announcement')
     out.announcements = count ?? 0
   }
   // notifications
-  {
-    const { count } = await db.from('notifications')
+  { const { count } = await db.from('notifications')
       .select('*', { count: 'exact', head: true })
       .in('user_id', PARENT_IDS)
       .eq('type', 'missing_work')
@@ -150,7 +142,7 @@ async function getDemoSummary() {
   return out
 }
 
-// --- Utility: exec and log (awaits every query; no .catch on thenables) -----
+// ── UTIL: await + log (no .catch on thenables) ───────────────────────────────
 async function exec(dbCall: any, label: string) {
   try {
     const { error } = await dbCall
@@ -160,7 +152,7 @@ async function exec(dbCall: any, label: string) {
   }
 }
 
-// --- Wipe -------------------------------------------------------------------
+// ── WIPE ─────────────────────────────────────────────────────────────────────
 async function wipeDemoData(db: ReturnType<typeof serviceDB>) {
   await exec(db.from('assignment_submissions').delete().in('user_id', STUDENT_IDS), 'delete submissions')
   await exec(db.from('grades').delete().in('student_id', STUDENT_IDS), 'delete grades')
@@ -176,13 +168,13 @@ async function wipeDemoData(db: ReturnType<typeof serviceDB>) {
   return { ok: true }
 }
 
-// --- Seed -------------------------------------------------------------------
+// ── SEED ─────────────────────────────────────────────────────────────────────
 async function seedDemoData(db: ReturnType<typeof serviceDB>) {
   await wipeDemoData(db)
 
   const nowISO = () => new Date().toISOString()
 
-  // Teacher profile
+  // Teacher
   {
     const { error: e1 } = await db.from('profiles').upsert({
       id: TEACHER_ID, email: 'teacher_rivera@demo.school', full_name: 'Ms. Rivera',
@@ -346,7 +338,7 @@ async function seedDemoData(db: ReturnType<typeof serviceDB>) {
     if (error) throw new Error(`Assignment ${id}: ${error.message}`)
   }
 
-  // Submissions + grades
+  // Submissions + Grades
   const submissionRates = [0.7, 0.4, 2/12] // ~70%, 40%, ~17%
   const sampleAnswers = [
     "AI examples include voice assistants, recommendation systems, and facial recognition. I've seen AI in my phone camera and on YouTube suggestions. AI can make mistakes because it learns from incomplete or biased data.",
@@ -377,7 +369,6 @@ async function seedDemoData(db: ReturnType<typeof serviceDB>) {
       // Ensure a grade category exists
       let { data: cat } = await db.from('grade_categories')
         .select('id').eq('name','Assignments').maybeSingle()
-
       if (!cat) {
         const { data: newCat } = await db.from('grade_categories')
           .insert({ id: 'demo_category_assignments', name:'Assignments', weight:100, color:'#3B82F6' })
@@ -451,18 +442,17 @@ async function seedDemoData(db: ReturnType<typeof serviceDB>) {
   return { ok: true }
 }
 
-// --- HTTP server ------------------------------------------------------------
+// ── SERVER ───────────────────────────────────────────────────────────────────
 Deno.serve(async (req) => {
-  const { headers, preflight } = buildCors(req, ALLOWED_ORIGINS)
+  const { headers, preflight } = buildCors(req)
   try {
-    // 1) Preflight
+    // CORS preflight
     if (req.method === 'OPTIONS') return preflight()
 
-    // 2) Route
     const url = new URL(req.url)
     const action = (url.searchParams.get('action') || 'status').toLowerCase()
 
-    // 3) Public status
+    // Public status
     if (req.method === 'GET' && action === 'status') {
       const summary = await getDemoSummary()
       return new Response(JSON.stringify({ ok: true, ...summary }), {
@@ -470,7 +460,7 @@ Deno.serve(async (req) => {
       })
     }
 
-    // 4) Auth-required: seed / wipe
+    // Auth-required: seed/wipe
     if (req.method === 'POST' && (action === 'seed' || action === 'wipe')) {
       const gate = await requireTeacherOrAdmin(req)
       if (!('ok' in gate) || !gate.ok) {
@@ -493,7 +483,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    // 5) Method not allowed / bad route
+    // Fallback
     return new Response(JSON.stringify({ code: 'BAD_REQUEST', message: 'Use GET ?action=status or POST ?action=seed|wipe' }), {
       status: 400, headers: { ...headers, 'Content-Type': 'application/json' }
     })
