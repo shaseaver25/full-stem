@@ -32,22 +32,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         console.log('Auth state changed:', event, session?.user?.email);
         setSession(session);
         setUser(session?.user ?? null);
         
-        // Check super admin status when user changes
+        // Defer async operations to avoid deadlocks
         if (session?.user) {
-          try {
-            const { data } = await supabase.rpc('is_super_admin', {
-              _user_id: session.user.id
-            });
-            setIsSuperAdmin(data || false);
-          } catch (error) {
-            console.error('Error checking super admin status:', error);
-            setIsSuperAdmin(false);
-          }
+          setTimeout(async () => {
+            try {
+              const { data } = await supabase.rpc('is_super_admin', {
+                _user_id: session.user.id
+              });
+              setIsSuperAdmin(data || false);
+            } catch (error) {
+              console.error('Error checking super admin status:', error);
+              setIsSuperAdmin(false);
+            }
+          }, 0);
         } else {
           setIsSuperAdmin(false);
         }
@@ -57,22 +59,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     );
 
     // Get initial session
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
       console.log('Initial session:', session?.user?.email);
       setSession(session);
       setUser(session?.user ?? null);
       
-      // Check super admin status for initial session
+      // Defer super admin check for initial session
       if (session?.user) {
-        try {
-          const { data } = await supabase.rpc('is_super_admin', {
-            _user_id: session.user.id
-          });
-          setIsSuperAdmin(data || false);
-        } catch (error) {
-          console.error('Error checking super admin status:', error);
-          setIsSuperAdmin(false);
-        }
+        setTimeout(async () => {
+          try {
+            const { data } = await supabase.rpc('is_super_admin', {
+              _user_id: session.user.id
+            });
+            setIsSuperAdmin(data || false);
+          } catch (error) {
+            console.error('Error checking super admin status:', error);
+            setIsSuperAdmin(false);
+          }
+        }, 0);
       }
       
       setLoading(false);

@@ -6,23 +6,31 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plus, BookOpen, Users, Calendar, Clock } from 'lucide-react';
-import { useTeacherProfile } from '@/hooks/useTeacherProfile';
+import { useTeacherProfileSimplified } from '@/hooks/useTeacherProfileSimplified';
 import { useClasses } from '@/hooks/useClasses';
 import { useClassApi } from '@/hooks/useClassApi';
 import Header from '@/components/Header';
 
 const TeacherDashboard = () => {
-  const { profile } = useTeacherProfile();
+  const { profile, loading: profileLoading } = useTeacherProfileSimplified();
   const { classes: myClasses, loading: loadingMyClasses } = useClasses(false);
   const { useClasses: usePublishedClasses } = useClassApi();
   const { data: publishedClasses, isLoading: loadingPublished } = usePublishedClasses(true);
+
+  if (profileLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   if (!profile) {
     return (
       <div className="p-6">
         <div className="text-center">
           <h2 className="text-xl font-semibold mb-2">Welcome to TailorEDU</h2>
-          <p className="text-gray-600 mb-4">Please complete your profile setup to get started.</p>
+          <p className="text-muted-foreground mb-4">Please complete your profile setup to get started.</p>
           <Link to="/teacher/onboarding">
             <Button>Complete Setup</Button>
           </Link>
