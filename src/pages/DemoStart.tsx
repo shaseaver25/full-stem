@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, AlertTriangle, CheckCircle } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 const DemoStart = () => {
   const [searchParams] = useSearchParams();
@@ -26,20 +27,17 @@ const DemoStart = () => {
 
   const consumeToken = async (token: string) => {
     try {
-      const response = await fetch('/functions/v1/demo-consume-token', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ token })
+      const { data, error } = await supabase.functions.invoke('demo-consume-token', {
+        body: { token }
       });
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+      if (error) {
+        throw new Error(error.message || 'Failed to consume demo token');
       }
 
-      const data = await response.json();
+      if (!data || !data.demoTenantId) {
+        throw new Error('Invalid response from demo service');
+      }
       
       // Store demo session info
       localStorage.setItem('demo_mode', 'true');
@@ -54,7 +52,7 @@ const DemoStart = () => {
 
       // Redirect to demo home after a brief success message
       setTimeout(() => {
-        navigate('/demo/home');
+        navigate('/');
       }, 2000);
 
     } catch (error) {
