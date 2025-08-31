@@ -2,14 +2,16 @@ import { useState, useMemo } from 'react';
 import { useLessonDataOptimized } from './useLessonDataOptimized';
 import { useLessonProgressUpdate } from './useLessonProgressUpdate';
 import { useAuth } from '@/contexts/AuthContext';
-import { useUserPreferences } from './useUserPreferences';
+import { useUserPreferencesOptimized } from './useUserPreferencesOptimized';
 
 export const useLessonPageLogicOptimized = (lessonId: string) => {
   const { user } = useAuth();
-  const { preferences } = useUserPreferences();
+  const { preferences } = useUserPreferencesOptimized();
   const [showPersonalizedView, setShowPersonalizedView] = useState(false);
   const [liveTranslatedContent, setLiveTranslatedContent] = useState<string | null>(null);
   const [liveTranslationLanguage, setLiveTranslationLanguage] = useState<string | null>(null);
+
+  console.log('useLessonPageLogicOptimized: Starting with lessonId:', lessonId);
 
   const { 
     lesson, 
@@ -22,6 +24,14 @@ export const useLessonPageLogicOptimized = (lessonId: string) => {
   } = useLessonDataOptimized(lessonId);
   
   const { markLessonComplete, updating } = useLessonProgressUpdate();
+
+  console.log('useLessonPageLogicOptimized: Hook data', {
+    hasLesson: !!lesson,
+    lessonTitle: lesson?.Title,
+    essentialLoading,
+    secondaryLoading,
+    error: error?.message
+  });
 
   const handleMarkComplete = async () => {
     if (lesson) {
@@ -72,13 +82,22 @@ export const useLessonPageLogicOptimized = (lessonId: string) => {
     return getTranslatedContent();
   }, [getTranslatedContent, preferences]);
 
-  // Essential lesson info that loads first
-  const lessonTitle = lesson?.Title || `Lesson ${lesson?.['Lesson ID'] || ''}`;
+  // Essential lesson info that loads first - independent of user preferences
+  const lessonTitle = lesson?.Title || `Lesson ${lesson?.['Lesson ID'] || lessonId}`;
   const lessonDescription = lesson?.Description || '';
-  const lessonContent = content || lesson?.Text || lesson?.['Text (Grade 5)'] || lesson?.['Text (Grade 3)'] || lesson?.['Text (Grade 8)'] || 'No content available for this lesson.';
+  
+  // Base content - always available even without preferences
+  const baseContent = lesson?.Text || lesson?.['Text (Grade 5)'] || lesson?.['Text (Grade 3)'] || lesson?.['Text (Grade 8)'] || lesson?.['Text (High School)'];
+  const lessonContent = content || baseContent || 'No content available for this lesson.';
   
   // Combine all text content for comprehensive read-aloud
   const fullLessonText = `${lessonTitle}. ${lessonDescription ? lessonDescription + '. ' : ''}${lessonContent}`;
+
+  console.log('useLessonPageLogicOptimized: Content prepared', {
+    lessonTitle,
+    hasContent: !!lessonContent,
+    contentLength: lessonContent?.length || 0
+  });
 
   return {
     user,

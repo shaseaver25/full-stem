@@ -56,9 +56,12 @@ const LessonPage = () => {
         <Header />
         <div className="max-w-4xl mx-auto px-4 py-8">
           <div className="flex items-center justify-center min-h-[400px]">
-            <div className="flex items-center gap-3">
-              <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
-              <span className="text-lg">Loading lesson...</span>
+            <div className="flex flex-col items-center gap-4">
+              <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+              <div className="text-center">
+                <div className="text-lg font-medium">Loading lesson content...</div>
+                <div className="text-sm text-gray-500 mt-1">Lesson ID: {lessonId}</div>
+              </div>
             </div>
           </div>
         </div>
@@ -69,6 +72,13 @@ const LessonPage = () => {
   if (error || !lesson) {
     const errorMessage = error instanceof Error ? error.message : String(error || 'Lesson not found. Please check the lesson ID and try again.');
     
+    console.error('LessonPage error:', {
+      error,
+      lessonId,
+      hasLesson: !!lesson,
+      errorType: typeof error
+    });
+    
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
         <Header />
@@ -76,7 +86,10 @@ const LessonPage = () => {
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
-              {errorMessage}
+              <div className="space-y-2">
+                <div>{errorMessage}</div>
+                <div className="text-sm opacity-75">Lesson ID: {lessonId}</div>
+              </div>
             </AlertDescription>
           </Alert>
         </div>
@@ -84,10 +97,15 @@ const LessonPage = () => {
     );
   }
 
-  console.log('Lesson data:', lesson);
-  console.log('Full lesson text for read-aloud:', fullLessonText.substring(0, 200) + '...');
-  console.log('Show personalized view:', showPersonalizedView);
-  console.log('Dynamic video URL:', videoUrl);
+  console.log('LessonPage: Rendering with data:', {
+    lessonId,
+    hasLesson: !!lesson,
+    lessonTitle,
+    essentialLoading,
+    secondaryLoading,
+    videoUrl,
+    layoutMode: layoutSetting?.setting_value || 'scroll'
+  });
 
   const layoutMode = layoutSetting?.setting_value || 'scroll';
   const useModularLayout = layoutMode === 'modular';

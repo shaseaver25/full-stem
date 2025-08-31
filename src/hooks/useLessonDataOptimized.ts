@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
@@ -44,60 +44,90 @@ export const useLessonDataOptimized = (lessonId: string): LessonDataOptimized =>
   const { user } = useAuth();
   const { preferences } = useUserPreferences();
 
-  // Core lesson data - loads first
+  console.log('useLessonDataOptimized: Starting with lessonId:', lessonId);
+
+  // Core lesson data - loads COMPLETELY INDEPENDENTLY
   const { 
     data: lesson, 
     error, 
     isLoading: essentialLoading 
   } = useQuery({
-    queryKey: ['lesson-core', lessonId],
+    queryKey: ['lesson-independent', lessonId],
     queryFn: async (): Promise<LessonData | null> => {
-      if (!lessonId) return null;
-
-      const { data, error } = await supabase
-        .from('Lessons')
-        .select('*')
-        .eq('Lesson ID', parseInt(lessonId))
-        .single();
-
-      if (error) {
-        console.error('Error fetching lesson:', error);
-        throw error;
+      console.log('Fetching lesson data for ID:', lessonId);
+      
+      if (!lessonId || lessonId === 'undefined') {
+        console.warn('Invalid lessonId:', lessonId);
+        return null;
       }
 
-      return data as LessonData;
+      try {
+        const { data, error } = await supabase
+          .from('Lessons')
+          .select('*')
+          .eq('Lesson ID', parseInt(lessonId))
+          .maybeSingle();
+
+        if (error) {
+          console.error('Error fetching lesson:', error);
+          throw error;
+        }
+
+        console.log('Lesson data fetched successfully:', data?.Title);
+        return data as LessonData;
+      } catch (err) {
+        console.error('Exception in lesson fetch:', err);
+        throw err;
+      }
     },
-    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+    staleTime: 10 * 60 * 1000, // Cache for 10 minutes - lessons rarely change
+    gcTime: 30 * 60 * 1000, // Keep in cache for 30 minutes
+    retry: 3,
+    retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 
-  // User progress - loads after core lesson
+  // User progress - loads INDEPENDENTLY and ASYNCHRONOUSLY
   const { 
     data: userProgress,
     isLoading: progressLoading
   } = useQuery({
-    queryKey: ['userProgress-optimized', lessonId, user?.id],
+    queryKey: ['userProgress-independent', lessonId, user?.id],
     queryFn: async (): Promise<UserProgress | null> => {
-      if (!lessonId || !user?.id) return null;
-
-      const { data: newData } = await supabase
-        .from('user_progress')
-        .select('*')
-        .eq('lesson_id', parseInt(lessonId))
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      if (newData) {
-        return {
-          'Lesson ID': newData.lesson_id,
-          'User ID': newData.user_id,
-          Completed: newData.status === 'Completed'
-        } as UserProgress;
+      console.log('Fetching user progress for lessonId:', lessonId, 'userId:', user?.id);
+      
+      if (!lessonId || !user?.id || lessonId === 'undefined') {
+        console.log('Skipping user progress fetch - missing data');
+        return null;
       }
 
-      return null;
+      try {
+        const { data: newData } = await supabase
+          .from('user_progress')
+          .select('*')
+          .eq('lesson_id', parseInt(lessonId))
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        console.log('User progress fetched:', newData ? 'Found' : 'Not found');
+
+        if (newData) {
+          return {
+            'Lesson ID': newData.lesson_id,
+            'User ID': newData.user_id,
+            Completed: newData.status === 'Completed'
+          } as UserProgress;
+        }
+
+        return null;
+      } catch (err) {
+        console.error('Error fetching user progress:', err);
+        // Don't throw - user progress is optional
+        return null;
+      }
     },
-    enabled: !!user?.id && !!lesson,
-    staleTime: 2 * 60 * 1000, // Cache for 2 minutes
+    enabled: !!user?.id && !!lessonId && lessonId !== 'undefined',
+    staleTime: 1 * 60 * 1000, // Cache for 1 minute
+    retry: 1, // Only retry once for user data
   });
 
   const secondaryLoading = progressLoading;
@@ -106,11 +136,13 @@ export const useLessonDataOptimized = (lessonId: string): LessonDataOptimized =>
     return () => {
       if (!lesson) return null;
       
+      // Use preferences if available, otherwise default to Grade 5
       const userReadingLevel = preferences?.['Reading Level'] || 'Grade 5';
       const readingLevelKey = `Text (${userReadingLevel})` as keyof LessonData;
       
       let content = lesson[readingLevelKey] as string | null;
       
+      // Fallback hierarchy - always show something
       if (!content) {
         content = lesson['Text (Grade 5)'] || lesson['Text (Grade 3)'] || lesson['Text (Grade 8)'] || lesson['Text (High School)'] || lesson.Text;
       }
@@ -121,6 +153,7 @@ export const useLessonDataOptimized = (lessonId: string): LessonDataOptimized =>
 
   const getTranslatedContent = useMemo(() => {
     return () => {
+      // Return null if no lesson OR no preferred language
       if (!lesson || !preferences?.['Preferred Language']) return null;
       
       const translatedContent = lesson['Translated Content'];
@@ -150,11 +183,19 @@ export const useLessonDataOptimized = (lessonId: string): LessonDataOptimized =>
     };
   }, [lesson, preferences]);
 
+  console.log('useLessonDataOptimized: Returning state', {
+    hasLesson: !!lesson,
+    lessonTitle: lesson?.Title,
+    essentialLoading,
+    progressLoading,
+    error: error?.message
+  });
+
   return {
     lesson,
     userProgress,
     essentialLoading,
-    secondaryLoading,
+    secondaryLoading: progressLoading,
     error,
     getContentForReadingLevel,
     getTranslatedContent,
