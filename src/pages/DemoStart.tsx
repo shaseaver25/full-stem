@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -13,45 +13,24 @@ const DemoStart = () => {
   const [errorMessage, setErrorMessage] = useState('');
   const { toast } = useToast();
 
-  useEffect(() => {
-    const token = searchParams.get('token');
-    
-    if (!token) {
-      setStatus('error');
-      setErrorMessage('Invalid demo link - missing token');
-      return;
-    }
-
-    consumeToken(token);
-  }, [searchParams]);
-
-  const consumeToken = async (token: string) => {
+  const consumeToken = useCallback(async (token: string) => {
     try {
-      console.log('About to call supabase.functions.invoke with token:', token);
-      
       const { data, error } = await supabase.functions.invoke('demo-consume-token', {
         body: { token }
       });
 
-      console.log('Supabase function response:', { data, error });
-
       if (error) {
-        console.log('Supabase function error:', error);
         throw new Error(error.message || 'Failed to consume demo token');
       }
 
       if (!data || !data.demoTenantId) {
-        console.log('Invalid data structure:', data);
         throw new Error('Invalid response from demo service');
       }
-      
-      console.log('Success! Demo tenant ID:', data.demoTenantId);
       
       // Store demo session info
       localStorage.setItem('demo_mode', 'true');
       localStorage.setItem('demo_tenant_id', data.demoTenantId);
       
-      console.log('Setting status to success and redirecting...');
       setStatus('success');
       
       toast({
@@ -61,7 +40,6 @@ const DemoStart = () => {
 
       // Redirect to demo home after a brief success message
       setTimeout(() => {
-        console.log('Navigating to home page...');
         navigate('/');
       }, 2000);
 
@@ -76,7 +54,19 @@ const DemoStart = () => {
         variant: "destructive"
       });
     }
-  };
+  }, [navigate, toast]);
+
+  useEffect(() => {
+    const token = searchParams.get('token');
+    
+    if (!token) {
+      setStatus('error');
+      setErrorMessage('Invalid demo link - missing token');
+      return;
+    }
+
+    consumeToken(token);
+  }, [searchParams, consumeToken]);
 
   if (status === 'loading') {
     return (
