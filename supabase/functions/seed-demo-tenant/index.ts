@@ -162,7 +162,7 @@ async function seedDemoData(ownerId: string) {
   await wipeDemoData()
 
   // 1) demo auth users
-  const demoTeacher = await ensureAuthUser(TEACHER_EMAIL,'Ms. Rivera',['teacher'])
+  const demoTeacher = await ensureAuthUser(TEACHER_EMAIL,'Demo Teacher',['teacher'])
   const studentUsers: User[] = []
   const parentUsers:  User[] = []
   for (let i=1;i<=NUM_STUDENTS;i++) {
@@ -178,7 +178,7 @@ async function seedDemoData(ownerId: string) {
   if (!ownerProfile) await db.from('profiles').upsert({ id: ownerId, full_name:'Demo Teacher', created_at:nowISO(), updated_at:nowISO() })
 
   // demo teacher profile (not owner)
-  await db.from('profiles').upsert({ id: demoTeacher.id, email: TEACHER_EMAIL, full_name:'Ms. Rivera', created_at:nowISO(), updated_at:nowISO() })
+  await db.from('profiles').upsert({ id: demoTeacher.id, email: TEACHER_EMAIL, full_name:'Demo Teacher', created_at:nowISO(), updated_at:nowISO() })
 
   // students / parents / relationships
   const roster = [
@@ -221,13 +221,13 @@ async function seedDemoData(ownerId: string) {
     })
   }
 
-  // class OWNED BY CALLER
-  const { data: existingClass } = await db.from('classes').select('id').eq('name',CLASS_NAME).eq('teacher_id',ownerId).maybeSingle()
+  // class OWNED BY DEMO TEACHER
+  const { data: existingClass } = await db.from('classes').select('id').eq('name',CLASS_NAME).eq('teacher_id',demoTeacher.id).maybeSingle()
   const classId = existingClass?.id ?? `demo_class_${crypto.randomUUID().slice(0,8)}`
   await db.from('classes').upsert({
-    id:classId, teacher_id:ownerId, name:CLASS_NAME,
+    id:classId, teacher_id:demoTeacher.id, name:CLASS_NAME,
     grade_level:'7th-8th Grade', subject:'Computer Science - AI', school_year:'2024-2025',
-    description:'Intro to AI concepts for middle school', duration:'1 Semester', instructor:'Ms. Rivera',
+    description:'Intro to AI concepts for middle school', duration:'1 Semester', instructor:'Demo Teacher',
     schedule:'MWF 2:00-3:00 PM', learning_objectives:'AI basics, ethics, hands-on projects', prerequisites:'Basic computer literacy',
     published:true, status:'published', max_students:25, published_at:nowISO(),
     created_at:nowISO(), updated_at:nowISO()
@@ -299,7 +299,7 @@ async function seedDemoData(ownerId: string) {
         id:`demo_grade_${a+1}_${String(i+1).padStart(2,'0')}`, student_id:studentId, assignment_id:assnId, category_id:cat?.id,
         points_earned:pts, points_possible:100, percentage:pts,
         letter_grade: pts>=90?'A':pts>=80?'B':'C',
-        graded_by: ownerId, comments: pts>=90?'Excellent work!':pts>=80?'Good job!':'Keep practicing!',
+        graded_by: demoTeacher.id, comments: pts>=90?'Excellent work!':pts>=80?'Good job!':'Keep practicing!',
         graded_at:nowISO(), created_at:nowISO(), updated_at:nowISO()
       })
     }
@@ -313,7 +313,7 @@ async function seedDemoData(ownerId: string) {
   for (let i=0;i<announcements.length;i++) {
     const a = announcements[i]
     await db.from('class_messages').upsert({
-      id:a.id, class_id:classId, teacher_id:ownerId, title:a.title, content:a.content,
+      id:a.id, class_id:classId, teacher_id:demoTeacher.id, title:a.title, content:a.content,
       message_type:'announcement', priority:i?'high':'normal',
       sent_at:new Date(Date.now()-(announcements.length-i)*24*60*60*1000).toISOString(),
       created_at:nowISO(), updated_at:nowISO()
