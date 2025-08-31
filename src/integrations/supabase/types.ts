@@ -202,6 +202,48 @@ export type Database = {
           },
         ]
       }
+      audit_logs: {
+        Row: {
+          action: string
+          actor_role: string
+          actor_user_id: string
+          created_at: string
+          id: string
+          ip_address: unknown | null
+          payload_hash: string | null
+          reason: string | null
+          resource: string
+          tenant_id: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          action: string
+          actor_role: string
+          actor_user_id: string
+          created_at?: string
+          id?: string
+          ip_address?: unknown | null
+          payload_hash?: string | null
+          reason?: string | null
+          resource: string
+          tenant_id?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          action?: string
+          actor_role?: string
+          actor_user_id?: string
+          created_at?: string
+          id?: string
+          ip_address?: unknown | null
+          payload_hash?: string | null
+          reason?: string | null
+          resource?: string
+          tenant_id?: string | null
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       backup_logs: {
         Row: {
           backup_type: string
@@ -1982,6 +2024,45 @@ export type Database = {
           },
         ]
       }
+      super_admin_sessions: {
+        Row: {
+          created_at: string
+          id: string
+          ip_address: unknown | null
+          reason: string | null
+          updated_at: string
+          user_id: string
+          view_as_role: string | null
+          view_as_tenant_id: string | null
+          write_override_enabled: boolean | null
+          write_override_expires_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          ip_address?: unknown | null
+          reason?: string | null
+          updated_at?: string
+          user_id: string
+          view_as_role?: string | null
+          view_as_tenant_id?: string | null
+          write_override_enabled?: boolean | null
+          write_override_expires_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          ip_address?: unknown | null
+          reason?: string | null
+          updated_at?: string
+          user_id?: string
+          view_as_role?: string | null
+          view_as_tenant_id?: string | null
+          write_override_enabled?: boolean | null
+          write_override_expires_at?: string | null
+        }
+        Relationships: []
+      }
       support_sessions: {
         Row: {
           completed_at: string | null
@@ -2202,6 +2283,10 @@ export type Database = {
         Returns: boolean
       }
       is_developer: {
+        Args: { _user_id?: string }
+        Returns: boolean
+      }
+      is_super_admin: {
         Args: { _user_id?: string }
         Returns: boolean
       }
