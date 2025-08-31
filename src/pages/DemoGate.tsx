@@ -80,10 +80,12 @@ const DemoGate = () => {
 
       const data = await response.json();
       
+      // Create a demo link using the current domain to avoid cross-domain issues
+      const currentOrigin = window.location.origin;
+      const demoLink = `${currentOrigin}/demo/start?token=${data.token}`;
+      
       setIsSubmitted(true);
-      if (data.previewUrl) {
-        setPreviewUrl(data.previewUrl);
-      }
+      setPreviewUrl(demoLink);
 
       toast({
         title: "Demo Link Created!",
