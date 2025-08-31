@@ -29,15 +29,19 @@ const generateToken = () => {
 };
 
 const createOrFindDemoTenant = async (email: string) => {
-  // Check for existing active tenant for this email (within last 6 hours)
+  // Check for existing active tenant (within last 6 hours)
   const sixHoursAgo = new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString();
   
-  const { data: existingTenants } = await supabase
+  const { data: existingTenants, error: queryError } = await supabase
     .from('demo_tenants')
     .select('*')
     .eq('status', 'active')
     .gte('created_at', sixHoursAgo)
     .limit(1);
+
+  if (queryError) {
+    console.error('Error querying demo_tenants:', queryError);
+  }
 
   if (existingTenants && existingTenants.length > 0) {
     return existingTenants[0];
