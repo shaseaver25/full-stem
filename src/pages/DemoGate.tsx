@@ -62,18 +62,32 @@ const DemoGate = () => {
     setIsLoading(true);
     
     try {
-      const { data, error } = await supabase.functions.invoke('demo-request-link', {
-        body: {
+      console.log('Making POST request to demo-request-link...');
+      const response = await fetch('https://irxzpsvzlihqitlicoql.functions.supabase.co/demo-request-link', {
+        method: 'POST',
+        headers: {
+          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlyeHpwc3Z6bGlocWl0bGljb3FsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA1MTEyMjIsImV4cCI6MjA2NjA4NzIyMn0.929IMktVJDlCZbuQYl57ipod6V96P3PcDxrCoLwrqCw',
+          'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlyeHpwc3Z6bGlocWl0bGljb3FsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA1MTEyMjIsImV4cCI6MjA2NjA4NzIyMn0.929IMktVJDlCZbuQYl57ipod6V96P3PcDxrCoLwrqCw',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
           fullName: form.fullName,
           workEmail: form.workEmail,
           role: form.role,
           schoolOrDistrict: form.schoolOrDistrict
-        }
+        })
       });
 
-      if (error) {
-        throw new Error(error.message || 'Failed to request demo link');
+      console.log('Response received, status:', response.status);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Request failed:', response.status, errorText);
+        throw new Error(`Request failed with status ${response.status}`);
       }
+
+      const data = await response.json();
+      console.log('Response data:', data);
 
       if (!data || !data.previewUrl) {
         throw new Error('Invalid response from demo service');
