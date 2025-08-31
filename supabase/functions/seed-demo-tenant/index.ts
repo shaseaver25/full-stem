@@ -14,7 +14,8 @@ const CLASS_NAME    = 'AI for Middle School Students (Grades 7–8)'
 const STUDENT_EMAIL = (i: number) => `student${String(i).padStart(2,'0')}@demo.school`
 const PARENT_EMAIL  = (i: number) => `parent${String(i).padStart(2,'0')}@demo.family`
 const NUM_STUDENTS = 12
-const ASSIGNMENT_IDS = ['demo_assn_ai_intro','demo_assn_ethics_bias','demo_assn_classifier'] as const
+// Generate proper UUIDs for assignments
+const generateAssignmentIds = () => [crypto.randomUUID(), crypto.randomUUID(), crypto.randomUUID()]
 
 // ── CORS ─────────────────────────────────────────────────────────────────────
 function buildCors(req: Request) {
@@ -215,7 +216,7 @@ async function seedDemoData(ownerId: string) {
       created_at:nowISO(), updated_at:nowISO()
     })
     await db.from('student_parent_relationships').upsert({
-      id:`demo_rel_${String(i+1).padStart(2,'0')}`, student_id:s.id, parent_id:p.id,
+      id: crypto.randomUUID(), student_id:s.id, parent_id:p.id,
       relationship_type:'parent', can_view_grades:true, can_view_attendance:true, can_receive_communications:true,
       created_at:nowISO()
     })
@@ -255,30 +256,33 @@ async function seedDemoData(ownerId: string) {
   const { error: eA } = await db.from('students').update({ class_id: classId }).in('id', ids)
   if (eA) {
     for (let i=0;i<ids.length;i++) {
-      await db.from('enrollments').upsert({ id:`demo_enroll_${String(i+1).padStart(2,'0')}`, class_id:classId, student_id:ids[i], created_at:nowISO() })
+      await db.from('enrollments').upsert({ id: crypto.randomUUID(), class_id:classId, student_id:ids[i], created_at:nowISO() })
     }
   }
 
   // assignments
-  const bodies: Record<string,{title:string;html:string;days:number;}> = {
-    [ASSIGNMENT_IDS[0]]:{ title:'What is AI? (Reading + 3 questions)', html:`<h2>What is Artificial Intelligence?</h2>
+  const ASSIGNMENT_IDS = generateAssignmentIds()
+  const bodies: Array<{title:string;html:string;days:number;}> = [
+    { title:'What is AI? (Reading + 3 questions)', html:`<h2>What is Artificial Intelligence?</h2>
 <p>Artificial Intelligence, or AI, is when computers are built to do tasks that usually need human thinking.</p>
 <p>For example, recognizing a face in a photo or suggesting the next word in a sentence.</p>
 <p><strong>Quick check:</strong> 1) Name one AI example. 2) Where have you seen AI? 3) Why can AI make mistakes?</p>
 <hr/>
 <p><em>Spanish sample:</em> La inteligencia artificial ayuda a las computadoras a aprender patrones y tomar decisiones más rápido.</p>`, days:3 },
-    [ASSIGNMENT_IDS[1]]:{ title:'Ethics & Bias (Short Answer)', html:`<h2>AI Ethics & Bias</h2>
+    { title:'Ethics & Bias (Short Answer)', html:`<h2>AI Ethics & Bias</h2>
 <p>AI can accidentally learn bias if the data it studies is unfair.</p>
 <p>Explain a fair way to train an AI model for a school project.</p>`, days:5 },
-    [ASSIGNMENT_IDS[2]]:{ title:'Build a Classifier (No-Code)', html:`<h2>Build a Tiny Classifier</h2>
+    { title:'Build a Classifier (No-Code)', html:`<h2>Build a Tiny Classifier</h2>
 <p>Use a no-code tool to train a model to tell apart two objects (e.g., apples vs. bananas).</p>
 <p>Upload 5 examples of each, then share a one-paragraph reflection on what worked and what didn't.</p>`, days:7 },
-  }
-  for (const id of ASSIGNMENT_IDS) {
-    const due = new Date(); due.setDate(due.getDate()+bodies[id].days)
+  ]
+  for (let i = 0; i < ASSIGNMENT_IDS.length; i++) {
+    const id = ASSIGNMENT_IDS[i]
+    const body = bodies[i]
+    const due = new Date(); due.setDate(due.getDate()+body.days)
     await db.from('published_assignments').upsert({
       id, class_assignment_id:id, class_id:classId,
-      title:bodies[id].title, instructions:bodies[id].html, description:`Demo assignment: ${bodies[id].title}`,
+      title:body.title, instructions:body.html, description:`Demo assignment: ${body.title}`,
       due_date:due.toISOString(), max_points:100, allow_text_response:true, max_files:3, file_types_allowed:['pdf','doc','docx','txt'],
       published_at:nowISO(), is_active:true, created_at:nowISO(), updated_at:nowISO()
     })
@@ -287,10 +291,11 @@ async function seedDemoData(ownerId: string) {
   // grades scaffolding
   let { data: cat } = await db.from('grade_categories').select('id').eq('name','Assignments').maybeSingle()
   if (!cat) {
+    const categoryId = crypto.randomUUID()
     const { data: newCat } = await db.from('grade_categories')
-      .insert({ id:'demo_category_assignments', name:'Assignments', weight:100, color:'#3B82F6' })
+      .insert({ id: categoryId, name:'Assignments', weight:100, color:'#3B82F6' })
       .select('id').maybeSingle()
-    cat = newCat || { id:'demo_category_assignments' }
+    cat = newCat || { id: categoryId }
   }
 
   // submissions + grades
@@ -306,14 +311,14 @@ async function seedDemoData(ownerId: string) {
     for (let i=0;i<num;i++) {
       const studentId = ids[i]
       await db.from('assignment_submissions').upsert({
-        id:`demo_sub_${a+1}_${String(i+1).padStart(2,'0')}`, assignment_id:assnId, user_id:studentId,
+        id: crypto.randomUUID(), assignment_id:assnId, user_id:studentId,
         text_response:sampleAnswers[a], status:'submitted',
         submitted_at:new Date(Date.now()-Math.random()*7*24*60*60*1000).toISOString(),
         created_at:nowISO(), updated_at:nowISO()
       })
       const pts = Math.floor(Math.random()*31)+70
       await db.from('grades').upsert({
-        id:`demo_grade_${a+1}_${String(i+1).padStart(2,'0')}`, student_id:studentId, assignment_id:assnId, category_id:cat?.id,
+        id: crypto.randomUUID(), student_id:studentId, assignment_id:assnId, category_id:cat?.id,
         points_earned:pts, points_possible:100, percentage:pts,
         letter_grade: pts>=90?'A':pts>=80?'B':'C',
         graded_by: teacherProfileId, comments: pts>=90?'Excellent work!':pts>=80?'Good job!':'Keep practicing!',
@@ -324,13 +329,13 @@ async function seedDemoData(ownerId: string) {
 
   // announcements
   const announcements = [
-    { id:'demo_msg_1', title:'Welcome to AI Class!', content:"Please read Assignment #1 and click Play for Read-Aloud. Try Translate for the Spanish sample." },
-    { id:'demo_msg_2', title:'Project Reminder',    content:'Bring 2 objects to photograph for Assignment #3 (classifier project).' }
+    { title:'Welcome to AI Class!', content:"Please read Assignment #1 and click Play for Read-Aloud. Try Translate for the Spanish sample." },
+    { title:'Project Reminder',    content:'Bring 2 objects to photograph for Assignment #3 (classifier project).' }
   ]
   for (let i=0;i<announcements.length;i++) {
     const a = announcements[i]
     await db.from('class_messages').upsert({
-      id:a.id, class_id:classId, teacher_id:teacherProfileId, title:a.title, content:a.content,
+      id: crypto.randomUUID(), class_id:classId, teacher_id:teacherProfileId, title:a.title, content:a.content,
       message_type:'announcement', priority:i?'high':'normal',
       sent_at:new Date(Date.now()-(announcements.length-i)*24*60*60*1000).toISOString(),
       created_at:nowISO(), updated_at:nowISO()
@@ -343,7 +348,7 @@ async function seedDemoData(ownerId: string) {
     const stId = ids[i], parentId = parentUsers[i].id
     const due = new Date(); due.setDate(due.getDate()+3)
     await db.from('notifications').upsert({
-      id:`demo_notif_${i+1}`, user_id:parentId, title:'Missing Assignment Alert',
+      id: crypto.randomUUID(), user_id:parentId, title:'Missing Assignment Alert',
       message:`Your student has a missing assignment: 'What is AI? (Reading + 3 questions)'. Please submit by ${due.toLocaleDateString()}.`,
       type:'missing_work', read:false,
       metadata:{ student_id:stId, assignment_id:ASSIGNMENT_IDS[0], assignment_title:'What is AI? (Reading + 3 questions)', due_date:due.toISOString() },
