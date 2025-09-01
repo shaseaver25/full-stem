@@ -78,24 +78,28 @@ const BuildClassPage = () => {
   // Load existing class data into form when editing
   useEffect(() => {
     if (existingClassData && classId) {
-      const { class: classInfo, lessons: existingLessons } = existingClassData;
+      // Safely extract class info with proper null checking
+      const classInfo = existingClassData.class;
       
-      // Update class data
-      handleClassDataChange('title', classInfo.title);
-      handleClassDataChange('description', classInfo.description || '');
-      handleClassDataChange('gradeLevel', classInfo.grade_level || '');
-      handleClassDataChange('subject', classInfo.subject || '');
-      handleClassDataChange('duration', classInfo.duration || '');
-      handleClassDataChange('instructor', classInfo.instructor || '');
-      handleClassDataChange('schedule', classInfo.schedule || '');
-      handleClassDataChange('learningObjectives', classInfo.learning_objectives || '');
-      handleClassDataChange('prerequisites', classInfo.prerequisites || '');
-      handleClassDataChange('maxStudents', classInfo.max_students || 25);
+      // Only proceed if classInfo exists and has the required properties
+      if (classInfo) {
+        // Update class data using ApiClass properties
+        handleClassDataChange('title', classInfo.title || '');
+        handleClassDataChange('description', classInfo.description || '');
+        handleClassDataChange('gradeLevel', classInfo.grade_level || '');
+        handleClassDataChange('subject', classInfo.subject || '');
+        handleClassDataChange('duration', classInfo.duration || '');
+        handleClassDataChange('instructor', classInfo.instructor || '');
+        handleClassDataChange('schedule', classInfo.schedule || '');
+        handleClassDataChange('learningObjectives', classInfo.learning_objectives || '');
+        handleClassDataChange('prerequisites', classInfo.prerequisites || '');
+        handleClassDataChange('maxStudents', classInfo.max_students || 25);
+      }
       
       // TODO: Load lessons and activities data
       // This would require updating the useClassCreation hook to accept initial data
     }
-  }, [existingClassData, classId]);
+  }, [existingClassData, classId, handleClassDataChange]);
 
   const handleSaveClass = async () => {
     if (!classData.title.trim()) {
