@@ -95,9 +95,9 @@ const AICourseBuilderPage = () => {
     // Create new class using mutation
     createClass(classDataToSave);
     
-    // Navigate after a small delay to allow the toast to show
+    // Navigate to teacher dashboard to see the created course
     setTimeout(() => {
-      navigate('/admin/build-class');
+      navigate('/teacher/dashboard');
     }, 1500);
   };
 
