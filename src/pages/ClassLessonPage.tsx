@@ -2,15 +2,16 @@ import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { AlertCircle, BookOpen, Clock, Users, ArrowLeft, Play } from 'lucide-react';
+import { AlertCircle, BookOpen, Clock, Users, ArrowLeft, Play, GraduationCap } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Header from '@/components/Header';
 import { Link } from 'react-router-dom';
 import InlineReadAloud from '@/components/InlineReadAloud';
+import TeacherLessonView from '@/components/lesson/TeacherLessonView';
 
 // Type definitions for the lesson content
 interface LessonContent {
@@ -111,7 +112,7 @@ const ClassLessonPage = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
       <Header />
-      <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className="max-w-6xl mx-auto px-4 py-8">
         {/* Navigation */}
         <div className="mb-6">
           <Link to={`/teacher/class/${lesson.class_id}`} className="flex items-center text-blue-600 hover:text-blue-800 mb-4">
@@ -120,35 +121,49 @@ const ClassLessonPage = () => {
           </Link>
         </div>
 
-        {/* Lesson Header */}
-        <Card className="mb-6">
-          <CardHeader>
-            <div className="flex items-start justify-between">
-              <div>
-                <CardTitle className="text-2xl font-bold text-gray-900 mb-2">
-                  {lesson.title}
-                </CardTitle>
-                <div className="flex gap-2 mb-3">
-                  <Badge variant="secondary">
-                    <Clock className="h-3 w-3 mr-1" />
-                    {lesson.duration} minutes
-                  </Badge>
-                  <Badge variant="outline">{classInfo?.grade_level}</Badge>
-                  <Badge variant="outline">{classInfo?.subject}</Badge>
-                  {typedActivities && typedActivities.length > 0 && (
-                    <Badge variant="outline">
-                      <Users className="h-3 w-3 mr-1" />
-                      {typedActivities.length} activities
-                    </Badge>
-                  )}
-                </div>
-                {lesson.description && (
-                  <p className="text-gray-600 leading-relaxed">{lesson.description}</p>
-                )}
-              </div>
-            </div>
-          </CardHeader>
-        </Card>
+        <Tabs defaultValue="student" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 max-w-md mx-auto mb-6">
+            <TabsTrigger value="student" className="flex items-center gap-2">
+              <BookOpen className="h-4 w-4" />
+              Student View
+            </TabsTrigger>
+            <TabsTrigger value="teacher" className="flex items-center gap-2">
+              <GraduationCap className="h-4 w-4" />
+              Teacher View
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="student">
+            <div className="max-w-4xl mx-auto space-y-6">
+              {/* Lesson Header */}
+              <Card className="mb-6">
+                <CardHeader>
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <CardTitle className="text-2xl font-bold text-gray-900 mb-2">
+                        {lesson.title}
+                      </CardTitle>
+                      <div className="flex gap-2 mb-3">
+                        <Badge variant="secondary">
+                          <Clock className="h-3 w-3 mr-1" />
+                          {lesson.duration} minutes
+                        </Badge>
+                        <Badge variant="outline">{classInfo?.grade_level}</Badge>
+                        <Badge variant="outline">{classInfo?.subject}</Badge>
+                        {typedActivities && typedActivities.length > 0 && (
+                          <Badge variant="outline">
+                            <Users className="h-3 w-3 mr-1" />
+                            {typedActivities.length} activities
+                          </Badge>
+                        )}
+                      </div>
+                      {lesson.description && (
+                        <p className="text-gray-600 leading-relaxed">{lesson.description}</p>
+                      )}
+                    </div>
+                  </div>
+                </CardHeader>
+              </Card>
 
         {/* Learning Objectives */}
         {lesson.objectives && lesson.objectives.length > 0 && (
@@ -297,28 +312,40 @@ const ClassLessonPage = () => {
           </Card>
         )}
 
-        {/* Videos */}
-        {lessonContent?.videos && lessonContent.videos.length > 0 && (
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle>Videos</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {lessonContent.videos.map((video, index) => (
-                  <div key={index} className="border rounded-lg p-4">
-                    <h4 className="font-semibold mb-2">{video.title || `Video ${index + 1}`}</h4>
-                    {video.url && (
-                      <div className="aspect-video bg-gray-100 rounded flex items-center justify-center">
-                        <p className="text-gray-500">Video: {video.url}</p>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
+              {/* Videos */}
+              {lessonContent?.videos && lessonContent.videos.length > 0 && (
+                <Card className="mb-6">
+                  <CardHeader>
+                    <CardTitle>Videos</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {lessonContent.videos.map((video, index) => (
+                        <div key={index} className="border rounded-lg p-4">
+                          <h4 className="font-semibold mb-2">{video.title || `Video ${index + 1}`}</h4>
+                          {video.url && (
+                            <div className="aspect-video bg-gray-100 rounded flex items-center justify-center">
+                              <p className="text-gray-500">Video: {video.url}</p>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="teacher">
+            <TeacherLessonView 
+              lesson={lesson}
+              activities={typedActivities}
+              assignments={[]}
+              resources={[]}
+            />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
