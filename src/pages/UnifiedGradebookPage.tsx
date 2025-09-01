@@ -1,9 +1,9 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, GraduationCap } from 'lucide-react';
-import UnifiedGradebook from '@/components/teacher/UnifiedGradebook';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
-const UnifiedGradebookPage = () => {
+const UnifiedGradebookPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -23,7 +23,17 @@ const UnifiedGradebookPage = () => {
       </header>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <UnifiedGradebook />
+        <Card>
+          <CardHeader>
+            <CardTitle>Unified Gradebook</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p>Gradebook is loading...</p>
+            <p className="text-sm text-muted-foreground mt-2">
+              This is a temporary placeholder. The full gradebook functionality will load once all components are properly connected.
+            </p>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
