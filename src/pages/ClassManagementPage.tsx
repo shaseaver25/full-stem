@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { ClassOverviewHeader } from '@/components/teacher/ClassOverviewHeader';
 import { LessonSelectionPanel } from '@/components/teacher/LessonSelectionPanel';
+import { ClassLessonsPanel } from '@/components/teacher/ClassLessonsPanel';
 import { AssignmentSelectionPanel } from '@/components/teacher/AssignmentSelectionPanel';
 import { StudentPreview } from '@/components/teacher/StudentPreview';
 
@@ -46,7 +47,7 @@ const ClassManagementPage = () => {
           </TabsList>
           
           <TabsContent value="lessons" className="mt-6">
-            <LessonSelectionPanel classId={classId} />
+            <ClassLessonsPanel classId={classId} />
           </TabsContent>
           
           <TabsContent value="assignments" className="mt-6">
