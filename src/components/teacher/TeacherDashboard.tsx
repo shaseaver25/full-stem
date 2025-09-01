@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, BookOpen, Users, Calendar, Clock } from 'lucide-react';
+import { Plus, BookOpen, Users, Calendar, Clock, GraduationCap } from 'lucide-react';
 import { useTeacherProfileSimplified } from '@/hooks/useTeacherProfileSimplified';
 import { useClasses } from '@/hooks/useClasses';
 import { useClassApi } from '@/hooks/useClassApi';
@@ -48,12 +48,20 @@ const TeacherDashboard = () => {
           <h1 className="text-2xl font-bold">Teacher Dashboard</h1>
           <p className="text-gray-600">Manage your classes and view available content</p>
         </div>
-        <Link to="/admin/build-class">
-          <Button>
-            <Plus className="h-4 w-4 mr-2" />
-            Create New Class
-          </Button>
-        </Link>
+        <div className="flex gap-2">
+          <Link to="/teacher/gradebook">
+            <Button variant="outline">
+              <GraduationCap className="h-4 w-4 mr-2" />
+              Gradebook
+            </Button>
+          </Link>
+          <Link to="/admin/build-class">
+            <Button>
+              <Plus className="h-4 w-4 mr-2" />
+              Create New Class
+            </Button>
+          </Link>
+        </div>
       </div>
 
       <Tabs defaultValue="my-classes" className="space-y-6">

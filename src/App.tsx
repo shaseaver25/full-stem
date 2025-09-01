@@ -23,6 +23,7 @@ import TeacherAuth from "./pages/TeacherAuth";
 import TeacherOnboarding from "./pages/TeacherOnboarding";
 import TeacherDashboard from "./components/teacher/TeacherDashboard";
 import ProtectedTeacherRoute from "./components/teacher/ProtectedTeacherRoute";
+import UnifiedGradebookPage from "./pages/UnifiedGradebookPage";
 import GradebookPage from "./pages/GradebookPage";
 import AssignmentSubmissionsPage from "./pages/AssignmentSubmissionsPage";
 import AssignmentGradebookPage from "./pages/AssignmentGradebookPage";
@@ -132,7 +133,15 @@ const App: React.FC = () => {
               path="/teacher/gradebook" 
               element={
                 <ProtectedTeacherRoute requireOnboarding={true}>
-                  <GradebookPage />
+                  <UnifiedGradebookPage />
+                </ProtectedTeacherRoute>
+              } 
+            />
+            <Route 
+              path="/teacher/assignment-gradebook" 
+              element={
+                <ProtectedTeacherRoute requireOnboarding={true}>
+                  <UnifiedGradebookPage />
                 </ProtectedTeacherRoute>
               } 
             />
@@ -141,14 +150,6 @@ const App: React.FC = () => {
               element={
                 <ProtectedTeacherRoute requireOnboarding={true}>
                   <AssignmentSubmissionsPage />
-                </ProtectedTeacherRoute>
-              } 
-            />
-            <Route 
-              path="/teacher/assignment-gradebook" 
-              element={
-                <ProtectedTeacherRoute requireOnboarding={true}>
-                  <AssignmentGradebookPage />
                 </ProtectedTeacherRoute>
               } 
             />
