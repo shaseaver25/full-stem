@@ -110,8 +110,8 @@ export const ClassLessonsPanel = ({ classId }: ClassLessonsPanelProps) => {
                   )}
                 </div>
                 
-                <div className="flex flex-col gap-2 ml-4">
-                  <Link to={`/lesson/${lesson.id}`}>
+                  <div className="flex flex-col gap-2 ml-4">
+                  <Link to={`/class-lesson/${lesson.id}`}>
                     <Button variant="outline" size="sm" className="flex items-center gap-1">
                       <Eye className="h-4 w-4" />
                       Preview

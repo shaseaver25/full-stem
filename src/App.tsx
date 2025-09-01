@@ -37,6 +37,7 @@ import DeveloperDashboard from "./pages/DeveloperDashboard";
 import DeveloperRoute from "./components/developer/DeveloperRoute";
 import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import ClassManagementPage from "./pages/ClassManagementPage";
+import ClassLessonPage from "./pages/ClassLessonPage";
 import AICourseBuilderPage from "./pages/AICourseBuilderPage";
 import DemoGate from "./pages/DemoGate";
 import DemoStart from "./pages/DemoStart";
@@ -158,6 +159,14 @@ const App = () => (
               element={
                 <ProtectedTeacherRoute requireOnboarding={true}>
                   <ClassManagementPage />
+                </ProtectedTeacherRoute>
+              } 
+            />
+            <Route 
+              path="/class-lesson/:lessonId" 
+              element={
+                <ProtectedTeacherRoute requireOnboarding={true}>
+                  <ClassLessonPage />
                 </ProtectedTeacherRoute>
               } 
             />
