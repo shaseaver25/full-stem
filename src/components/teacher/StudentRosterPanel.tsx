@@ -8,8 +8,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Users, Plus, Copy, Edit, Trash2, UserPlus } from 'lucide-react';
-import { useStudentManagement, Student, CreateStudentData } from '@/hooks/useStudentManagement';
+import { Users, Plus, Edit, Trash2, UserPlus } from 'lucide-react';
+import { DemoStudentCard } from './DemoStudentCard';
+import { useStudentManagement, Student, CreateStudentData, DemoStudent } from '@/hooks/useStudentManagement';
 import { useForm } from 'react-hook-form';
 
 interface StudentRosterPanelProps {
@@ -21,11 +22,11 @@ interface StudentFormData extends CreateStudentData {}
 export const StudentRosterPanel: React.FC<StudentRosterPanelProps> = ({ classId }) => {
   const {
     students,
-    demoClasses,
+    demoStudents,
     loading,
     fetchStudents,
-    fetchDemoClasses,
-    copyStudentsFromDemoClass,
+    fetchDemoStudents,
+    addSelectedDemoStudents,
     addStudent,
     updateStudent,
     deleteStudent
@@ -33,12 +34,13 @@ export const StudentRosterPanel: React.FC<StudentRosterPanelProps> = ({ classId 
 
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
+  const [selectedDemoStudents, setSelectedDemoStudents] = useState<string[]>([]);
 
   const { register, handleSubmit, reset, setValue, watch } = useForm<StudentFormData>();
 
   useEffect(() => {
     fetchStudents();
-    fetchDemoClasses();
+    fetchDemoStudents();
   }, [classId]);
 
   const handleAddStudent = async (data: StudentFormData) => {
@@ -64,8 +66,25 @@ export const StudentRosterPanel: React.FC<StudentRosterPanelProps> = ({ classId 
     setValue('language_preference', student.language_preference);
   };
 
-  const handleCopyStudents = async (sourceClassId: string) => {
-    await copyStudentsFromDemoClass(sourceClassId);
+  const handleAddSelectedDemoStudents = async () => {
+    await addSelectedDemoStudents(selectedDemoStudents);
+    setSelectedDemoStudents([]);
+  };
+
+  const handleDemoStudentSelect = (studentId: string, checked: boolean) => {
+    if (checked) {
+      setSelectedDemoStudents(prev => [...prev, studentId]);
+    } else {
+      setSelectedDemoStudents(prev => prev.filter(id => id !== studentId));
+    }
+  };
+
+  const handleSelectAllDemo = (checked: boolean) => {
+    if (checked) {
+      setSelectedDemoStudents(demoStudents.map(s => s.id));
+    } else {
+      setSelectedDemoStudents([]);
+    }
   };
 
   return (
@@ -158,7 +177,7 @@ export const StudentRosterPanel: React.FC<StudentRosterPanelProps> = ({ classId 
       <Tabs defaultValue="roster" className="space-y-4">
         <TabsList>
           <TabsTrigger value="roster">Current Roster</TabsTrigger>
-          <TabsTrigger value="copy-demo">Copy from Demo</TabsTrigger>
+          <TabsTrigger value="demo-students">Add Demo Students</TabsTrigger>
         </TabsList>
 
         <TabsContent value="roster">
@@ -192,29 +211,52 @@ export const StudentRosterPanel: React.FC<StudentRosterPanelProps> = ({ classId 
           )}
         </TabsContent>
 
-        <TabsContent value="copy-demo">
-          <div className="grid gap-4">
-            {demoClasses.map((demoClass) => (
-              <Card key={demoClass.id}>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle className="text-base">{demoClass.name}</CardTitle>
-                      <p className="text-sm text-muted-foreground">
-                        {demoClass.student_count} students available
-                      </p>
-                    </div>
-                    <Button
-                      onClick={() => handleCopyStudents(demoClass.id)}
-                      disabled={loading || demoClass.student_count === 0}
-                    >
-                      <Copy className="h-4 w-4 mr-2" />
-                      Copy Students
-                    </Button>
-                  </div>
-                </CardHeader>
+        <TabsContent value="demo-students">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <h3 className="text-lg font-medium">Available Demo Students</h3>
+                <Badge variant="secondary">{demoStudents.length} available</Badge>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => handleSelectAllDemo(selectedDemoStudents.length !== demoStudents.length)}
+                >
+                  {selectedDemoStudents.length === demoStudents.length ? 'Deselect All' : 'Select All'}
+                </Button>
+                <Button
+                  onClick={handleAddSelectedDemoStudents}
+                  disabled={loading || selectedDemoStudents.length === 0}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Selected ({selectedDemoStudents.length})
+                </Button>
+              </div>
+            </div>
+
+            {demoStudents.length > 0 ? (
+              <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+                {demoStudents.map((demoStudent) => (
+                  <DemoStudentCard
+                    key={demoStudent.id}
+                    student={demoStudent}
+                    isSelected={selectedDemoStudents.includes(demoStudent.id)}
+                    onSelect={(checked) => handleDemoStudentSelect(demoStudent.id, checked)}
+                  />
+                ))}
+              </div>
+            ) : (
+              <Card>
+                <CardContent className="p-8 text-center">
+                  <Users className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+                  <h3 className="text-lg font-semibold mb-2">No demo students available</h3>
+                  <p className="text-gray-600">
+                    Demo students will appear here when available.
+                  </p>
+                </CardContent>
               </Card>
-            ))}
+            )}
           </div>
         </TabsContent>
       </Tabs>

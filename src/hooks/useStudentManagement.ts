@@ -39,15 +39,13 @@ export interface UpdateStudentData {
   language_preference?: string;
 }
 
-export interface DemoClass {
-  id: string;
-  name: string;
-  student_count: number;
+export interface DemoStudent extends Student {
+  class_name: string;
 }
 
 export const useStudentManagement = (classId: string) => {
   const [students, setStudents] = useState<Student[]>([]);
-  const [demoClasses, setDemoClasses] = useState<DemoClass[]>([]);
+  const [demoStudents, setDemoStudents] = useState<DemoStudent[]>([]);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
@@ -74,44 +72,47 @@ export const useStudentManagement = (classId: string) => {
     }
   };
 
-  const fetchDemoClasses = async () => {
+  const fetchDemoStudents = async () => {
     try {
       const { data, error } = await supabase
-        .from('classes')
+        .from('students')
         .select(`
-          id,
-          name,
-          students(count)
+          *,
+          classes!inner(name)
         `)
-        .or('name.ilike.%demo%,name.ilike.%algebra%');
+        .or('classes.name.ilike.%demo%,classes.name.ilike.%algebra%');
 
       if (error) throw error;
       
-      const demoClassesWithCount = data?.map(cls => ({
-        id: cls.id,
-        name: cls.name,
-        student_count: cls.students?.[0]?.count || 0
+      const demoStudentsWithClass = data?.map(student => ({
+        ...student,
+        class_name: student.classes?.name || 'Unknown Class'
       })) || [];
       
-      setDemoClasses(demoClassesWithCount);
+      setDemoStudents(demoStudentsWithClass as DemoStudent[]);
     } catch (error) {
-      console.error('Error fetching demo classes:', error);
+      console.error('Error fetching demo students:', error);
     }
   };
 
-  const copyStudentsFromDemoClass = async (sourceClassId: string) => {
+  const addSelectedDemoStudents = async (selectedStudentIds: string[]) => {
     setLoading(true);
     try {
-      // Fetch students from source class
-      const { data: sourceStudents, error: fetchError } = await supabase
-        .from('students')
-        .select('*')
-        .eq('class_id', sourceClassId);
+      const selectedStudents = demoStudents.filter(student => 
+        selectedStudentIds.includes(student.id)
+      );
 
-      if (fetchError) throw fetchError;
+      if (selectedStudents.length === 0) {
+        toast({
+          title: 'No Students Selected',
+          description: 'Please select students to add to your class',
+          variant: 'destructive'
+        });
+        return;
+      }
 
-      // Copy students to current class
-      const studentsToInsert = sourceStudents?.map(student => ({
+      // Copy selected students to current class
+      const studentsToInsert = selectedStudents.map(student => ({
         class_id: classId,
         first_name: student.first_name || '',
         last_name: student.last_name || '',
@@ -121,16 +122,7 @@ export const useStudentManagement = (classId: string) => {
         interests: student.interests || [],
         iep_accommodations: student.iep_accommodations || [],
         language_preference: student.language_preference || 'English'
-      })) || [];
-
-      if (studentsToInsert.length === 0) {
-        toast({
-          title: 'No Students',
-          description: 'No students found in the selected class',
-          variant: 'destructive'
-        });
-        return;
-      }
+      }));
 
       const { error: insertError } = await supabase
         .from('students')
@@ -140,15 +132,15 @@ export const useStudentManagement = (classId: string) => {
 
       toast({
         title: 'Success',
-        description: `Copied ${studentsToInsert.length} students to your class`
+        description: `Added ${studentsToInsert.length} students to your class`
       });
 
       await fetchStudents();
     } catch (error) {
-      console.error('Error copying students:', error);
+      console.error('Error adding students:', error);
       toast({
         title: 'Error',
-        description: 'Failed to copy students',
+        description: 'Failed to add students',
         variant: 'destructive'
       });
     } finally {
@@ -251,11 +243,11 @@ export const useStudentManagement = (classId: string) => {
 
   return {
     students,
-    demoClasses,
+    demoStudents,
     loading,
     fetchStudents,
-    fetchDemoClasses,
-    copyStudentsFromDemoClass,
+    fetchDemoStudents,
+    addSelectedDemoStudents,
     addStudent,
     updateStudent,
     deleteStudent
