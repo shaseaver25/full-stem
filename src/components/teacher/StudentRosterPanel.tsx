@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Users, Plus, Edit, Trash2, UserPlus } from 'lucide-react';
 import { DemoStudentCard } from './DemoStudentCard';
+import { AddAIClassStudents } from './AddAIClassStudents';
 import { useStudentManagement, Student, CreateStudentData, DemoStudent } from '@/hooks/useStudentManagement';
 import { useForm } from 'react-hook-form';
 
@@ -176,8 +177,9 @@ export const StudentRosterPanel: React.FC<StudentRosterPanelProps> = ({ classId 
 
       <Tabs defaultValue="roster" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="roster">Current Roster</TabsTrigger>
+          <TabsTrigger value="roster">Current Roster ({students.length})</TabsTrigger>
           <TabsTrigger value="demo-students">Add Demo Students</TabsTrigger>
+          <TabsTrigger value="ai-class">Add AI Class Students</TabsTrigger>
         </TabsList>
 
         <TabsContent value="roster">
@@ -258,6 +260,10 @@ export const StudentRosterPanel: React.FC<StudentRosterPanelProps> = ({ classId 
               </Card>
             )}
           </div>
+        </TabsContent>
+
+        <TabsContent value="ai-class">
+          <AddAIClassStudents classId={classId} />
         </TabsContent>
       </Tabs>
 

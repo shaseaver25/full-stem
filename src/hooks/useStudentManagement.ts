@@ -201,6 +201,45 @@ export const useStudentManagement = (classId: string) => {
     }
   };
 
+  const addBulkStudents = async (studentsData: CreateStudentData[]) => {
+    setLoading(true);
+    try {
+      const studentsToInsert = studentsData.map(studentData => ({
+        class_id: classId,
+        first_name: studentData.first_name,
+        last_name: studentData.last_name,
+        grade_level: studentData.grade_level || '',
+        reading_level: studentData.reading_level || '',
+        learning_style: studentData.learning_style || '',
+        interests: studentData.interests || [],
+        iep_accommodations: studentData.iep_accommodations || [],
+        language_preference: studentData.language_preference || 'English'
+      }));
+
+      const { error } = await supabase
+        .from('students')
+        .insert(studentsToInsert);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Success',
+        description: `Added ${studentsData.length} students successfully`
+      });
+
+      await fetchStudents();
+    } catch (error) {
+      console.error('Error adding bulk students:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to add students',
+        variant: 'destructive'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const updateStudent = async (studentId: string, studentData: UpdateStudentData) => {
     setLoading(true);
     try {
@@ -265,6 +304,7 @@ export const useStudentManagement = (classId: string) => {
     fetchDemoStudents,
     addSelectedDemoStudents,
     addStudent,
+    addBulkStudents,
     updateStudent,
     deleteStudent
   };
