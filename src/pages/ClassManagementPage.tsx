@@ -9,6 +9,7 @@ import { LessonSelectionPanel } from '@/components/teacher/LessonSelectionPanel'
 import { ClassLessonsPanel } from '@/components/teacher/ClassLessonsPanel';
 import { AssignmentSelectionPanel } from '@/components/teacher/AssignmentSelectionPanel';
 import { StudentPreview } from '@/components/teacher/StudentPreview';
+import { StudentRosterPanel } from '@/components/teacher/StudentRosterPanel';
 
 const ClassManagementPage = () => {
   const { classId } = useParams<{ classId: string }>();
@@ -40,14 +41,19 @@ const ClassManagementPage = () => {
         <ClassOverviewHeader classId={classId} />
         
         <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-6">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="lessons">Lesson Management</TabsTrigger>
-            <TabsTrigger value="assignments">Assignment Settings</TabsTrigger>
-            <TabsTrigger value="preview">Student Preview</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="lessons">Lessons</TabsTrigger>
+            <TabsTrigger value="students">Students</TabsTrigger>
+            <TabsTrigger value="assignments">Assignments</TabsTrigger>
+            <TabsTrigger value="preview">Preview</TabsTrigger>
           </TabsList>
           
           <TabsContent value="lessons" className="mt-6">
             <ClassLessonsPanel classId={classId} />
+          </TabsContent>
+          
+          <TabsContent value="students" className="mt-6">
+            <StudentRosterPanel classId={classId} />
           </TabsContent>
           
           <TabsContent value="assignments" className="mt-6">
