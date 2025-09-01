@@ -153,7 +153,7 @@ const ClassCard: React.FC<ClassCardProps> = ({ classItem, showActions }) => {
       <CardHeader>
         <div className="flex items-start justify-between">
           <div className="flex-1">
-            <CardTitle className="text-lg mb-2">{classItem.name}</CardTitle>
+            <CardTitle className="text-lg mb-2">{classItem.title || classItem.name}</CardTitle>
             <CardDescription className="line-clamp-2">
               {classItem.description || 'No description available'}
             </CardDescription>
