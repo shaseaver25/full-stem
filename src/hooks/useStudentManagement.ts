@@ -73,7 +73,6 @@ export const useStudentManagement = (classId: string) => {
   };
 
   const fetchDemoStudents = async () => {
-    console.log('Fetching demo students...');
     try {
       // First get the demo class IDs
       const { data: demoClasses, error: classError } = await supabase
@@ -81,26 +80,20 @@ export const useStudentManagement = (classId: string) => {
         .select('id, name')
         .or('name.ilike.%demo%,name.ilike.%algebra%');
 
-      console.log('Demo classes query result:', { demoClasses, classError });
-
       if (classError) throw classError;
 
       if (!demoClasses || demoClasses.length === 0) {
-        console.log('No demo classes found');
         setDemoStudents([]);
         return;
       }
 
       const demoClassIds = demoClasses.map(cls => cls.id);
-      console.log('Demo class IDs:', demoClassIds);
 
       // Then get students from those classes
       const { data: students, error: studentError } = await supabase
         .from('students')
         .select('*')
         .in('class_id', demoClassIds);
-
-      console.log('Demo students query result:', { students, studentError });
 
       if (studentError) throw studentError;
       
@@ -112,7 +105,6 @@ export const useStudentManagement = (classId: string) => {
         };
       }) || [];
       
-      console.log('Final demo students with class names:', demoStudentsWithClass);
       setDemoStudents(demoStudentsWithClass as DemoStudent[]);
     } catch (error) {
       console.error('Error fetching demo students:', error);
