@@ -74,20 +74,36 @@ export const useStudentManagement = (classId: string) => {
 
   const fetchDemoStudents = async () => {
     try {
-      const { data, error } = await supabase
-        .from('students')
-        .select(`
-          *,
-          classes!inner(name)
-        `)
-        .or('classes.name.ilike.%demo%,classes.name.ilike.%algebra%');
+      // First get the demo class IDs
+      const { data: demoClasses, error: classError } = await supabase
+        .from('classes')
+        .select('id, name')
+        .or('name.ilike.%demo%,name.ilike.%algebra%');
 
-      if (error) throw error;
+      if (classError) throw classError;
+
+      if (!demoClasses || demoClasses.length === 0) {
+        setDemoStudents([]);
+        return;
+      }
+
+      const demoClassIds = demoClasses.map(cls => cls.id);
+
+      // Then get students from those classes
+      const { data: students, error: studentError } = await supabase
+        .from('students')
+        .select('*')
+        .in('class_id', demoClassIds);
+
+      if (studentError) throw studentError;
       
-      const demoStudentsWithClass = data?.map(student => ({
-        ...student,
-        class_name: student.classes?.name || 'Unknown Class'
-      })) || [];
+      const demoStudentsWithClass = students?.map(student => {
+        const studentClass = demoClasses.find(cls => cls.id === student.class_id);
+        return {
+          ...student,
+          class_name: studentClass?.name || 'Unknown Class'
+        };
+      }) || [];
       
       setDemoStudents(demoStudentsWithClass as DemoStudent[]);
     } catch (error) {
