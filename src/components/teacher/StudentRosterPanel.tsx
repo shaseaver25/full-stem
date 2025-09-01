@@ -141,6 +141,7 @@ export const StudentRosterPanel: React.FC<StudentRosterPanelProps> = ({ classId 
             <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Add New Student</DialogTitle>
+                <p className="text-sm text-muted-foreground">Fill in the student details and select any needed lesson modifications.</p>
               </DialogHeader>
               <form onSubmit={handleSubmit(handleAddStudent)} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
@@ -317,6 +318,7 @@ export const StudentRosterPanel: React.FC<StudentRosterPanelProps> = ({ classId 
         <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit Student</DialogTitle>
+            <p className="text-sm text-muted-foreground">Update the student details and modify lesson accommodations as needed.</p>
           </DialogHeader>
           <form onSubmit={handleSubmit(handleUpdateStudent)} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
