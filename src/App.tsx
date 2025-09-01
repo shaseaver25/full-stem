@@ -37,6 +37,7 @@ import DeveloperDashboard from "./pages/DeveloperDashboard";
 import DeveloperRoute from "./components/developer/DeveloperRoute";
 import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import ClassManagementPage from "./pages/ClassManagementPage";
+import AICourseBuilderPage from "./pages/AICourseBuilderPage";
 import DemoGate from "./pages/DemoGate";
 import DemoStart from "./pages/DemoStart";
 import DemoShowcase from "./pages/DemoShowcase";
@@ -85,6 +86,7 @@ const App = () => (
             {/* Admin Routes */}
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
             <Route path="/admin/build-class" element={<BuildClassPage />} />
+            <Route path="/admin/ai-course-builder" element={<AICourseBuilderPage />} />
             <Route path="/admin/course-editor" element={<CourseEditorPage />} />
             <Route path="/admin/advanced" element={<AdvancedAdminPage />} />
             

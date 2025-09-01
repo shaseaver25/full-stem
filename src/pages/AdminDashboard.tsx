@@ -38,6 +38,11 @@ const AdminDashboard = () => {
                   Course Editor
                 </Button>
               </Link>
+              <Link to="/admin/ai-course-builder">
+                <Button variant="outline">
+                  AI Course Builder
+                </Button>
+              </Link>
               <Link to="/admin/build-class">
                 <Button>
                   <Plus className="h-4 w-4 mr-2" />
