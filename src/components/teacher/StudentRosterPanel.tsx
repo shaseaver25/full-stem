@@ -11,6 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Users, Plus, Edit, Trash2, UserPlus } from 'lucide-react';
 import { DemoStudentCard } from './DemoStudentCard';
 import { AddAIClassStudents } from './AddAIClassStudents';
+import { MultiSelect, Option } from '@/components/ui/multi-select';
 import { useStudentManagement, Student, CreateStudentData, DemoStudent } from '@/hooks/useStudentManagement';
 import { useForm } from 'react-hook-form';
 
@@ -19,6 +20,28 @@ interface StudentRosterPanelProps {
 }
 
 interface StudentFormData extends CreateStudentData {}
+
+// Lesson modification options
+const LESSON_MODIFICATION_OPTIONS: Option[] = [
+  { label: 'Extended Time', value: 'extended_time' },
+  { label: 'Reduced Assignment Length', value: 'reduced_length' },
+  { label: 'Text-to-Speech', value: 'text_to_speech' },
+  { label: 'Large Print Materials', value: 'large_print' },
+  { label: 'Simplified Instructions', value: 'simplified_instructions' },
+  { label: 'Visual Supports', value: 'visual_supports' },
+  { label: 'Frequent Breaks', value: 'frequent_breaks' },
+  { label: 'Alternative Assessment', value: 'alternative_assessment' },
+  { label: 'Peer Support', value: 'peer_support' },
+  { label: 'Preferential Seating', value: 'preferential_seating' },
+  { label: 'Chunked Content', value: 'chunked_content' },
+  { label: 'Graphic Organizers', value: 'graphic_organizers' },
+  { label: 'Translation Support', value: 'translation_support' },
+  { label: 'Lower Reading Level', value: 'lower_reading_level' },
+  { label: 'Audio Instructions', value: 'audio_instructions' },
+  { label: 'Movement Breaks', value: 'movement_breaks' },
+  { label: 'Reduced Distractions', value: 'reduced_distractions' },
+  { label: 'Assistive Technology', value: 'assistive_technology' }
+];
 
 export const StudentRosterPanel: React.FC<StudentRosterPanelProps> = ({ classId }) => {
   const {
@@ -36,6 +59,7 @@ export const StudentRosterPanel: React.FC<StudentRosterPanelProps> = ({ classId 
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
   const [selectedDemoStudents, setSelectedDemoStudents] = useState<string[]>([]);
+  const [selectedModifications, setSelectedModifications] = useState<string[]>([]);
 
   const { register, handleSubmit, reset, setValue, watch } = useForm<StudentFormData>();
 
@@ -45,15 +69,25 @@ export const StudentRosterPanel: React.FC<StudentRosterPanelProps> = ({ classId 
   }, [classId]);
 
   const handleAddStudent = async (data: StudentFormData) => {
-    await addStudent(data);
+    const studentData = {
+      ...data,
+      lesson_modifications: selectedModifications
+    };
+    await addStudent(studentData);
     reset();
+    setSelectedModifications([]);
     setIsAddDialogOpen(false);
   };
 
   const handleUpdateStudent = async (data: StudentFormData) => {
     if (!editingStudent) return;
-    await updateStudent(editingStudent.id, data);
+    const studentData = {
+      ...data,
+      lesson_modifications: selectedModifications
+    };
+    await updateStudent(editingStudent.id, studentData);
     reset();
+    setSelectedModifications([]);
     setEditingStudent(null);
   };
 
@@ -65,6 +99,7 @@ export const StudentRosterPanel: React.FC<StudentRosterPanelProps> = ({ classId 
     setValue('reading_level', student.reading_level);
     setValue('learning_style', student.learning_style);
     setValue('language_preference', student.language_preference);
+    setSelectedModifications(student.lesson_modifications || []);
   };
 
   const handleAddSelectedDemoStudents = async () => {
@@ -103,75 +138,85 @@ export const StudentRosterPanel: React.FC<StudentRosterPanelProps> = ({ classId 
               Add Student
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>Add New Student</DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleSubmit(handleAddStudent)} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="first_name">First Name</Label>
-                  <Input {...register('first_name', { required: true })} />
+            <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Add New Student</DialogTitle>
+              </DialogHeader>
+              <form onSubmit={handleSubmit(handleAddStudent)} className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="first_name">First Name</Label>
+                    <Input {...register('first_name', { required: true })} />
+                  </div>
+                  <div>
+                    <Label htmlFor="last_name">Last Name</Label>
+                    <Input {...register('last_name', { required: true })} />
+                  </div>
                 </div>
                 <div>
-                  <Label htmlFor="last_name">Last Name</Label>
-                  <Input {...register('last_name', { required: true })} />
+                  <Label htmlFor="grade_level">Grade Level</Label>
+                  <Select onValueChange={(value) => setValue('grade_level', value)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select grade level" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="6th Grade">6th Grade</SelectItem>
+                      <SelectItem value="7th Grade">7th Grade</SelectItem>
+                      <SelectItem value="8th Grade">8th Grade</SelectItem>
+                      <SelectItem value="9th Grade">9th Grade</SelectItem>
+                      <SelectItem value="10th Grade">10th Grade</SelectItem>
+                      <SelectItem value="11th Grade">11th Grade</SelectItem>
+                      <SelectItem value="12th Grade">12th Grade</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
-              </div>
-              <div>
-                <Label htmlFor="grade_level">Grade Level</Label>
-                <Select onValueChange={(value) => setValue('grade_level', value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select grade level" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="6th Grade">6th Grade</SelectItem>
-                    <SelectItem value="7th Grade">7th Grade</SelectItem>
-                    <SelectItem value="8th Grade">8th Grade</SelectItem>
-                    <SelectItem value="9th Grade">9th Grade</SelectItem>
-                    <SelectItem value="10th Grade">10th Grade</SelectItem>
-                    <SelectItem value="11th Grade">11th Grade</SelectItem>
-                    <SelectItem value="12th Grade">12th Grade</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="reading_level">Reading Level</Label>
-                <Select onValueChange={(value) => setValue('reading_level', value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select reading level" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Below Grade Level">Below Grade Level</SelectItem>
-                    <SelectItem value="Grade Level">Grade Level</SelectItem>
-                    <SelectItem value="Above Grade Level">Above Grade Level</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="learning_style">Learning Style</Label>
-                <Select onValueChange={(value) => setValue('learning_style', value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select learning style" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Visual">Visual</SelectItem>
-                    <SelectItem value="Auditory">Auditory</SelectItem>
-                    <SelectItem value="Kinesthetic">Kinesthetic</SelectItem>
-                    <SelectItem value="Mixed">Mixed</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex gap-2 justify-end">
-                <Button type="button" variant="outline" onClick={() => setIsAddDialogOpen(false)}>
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={loading}>
-                  Add Student
-                </Button>
-              </div>
-            </form>
-          </DialogContent>
+                <div>
+                  <Label htmlFor="reading_level">Reading Level</Label>
+                  <Select onValueChange={(value) => setValue('reading_level', value)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select reading level" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Below Grade Level">Below Grade Level</SelectItem>
+                      <SelectItem value="Grade Level">Grade Level</SelectItem>
+                      <SelectItem value="Above Grade Level">Above Grade Level</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="learning_style">Learning Style</Label>
+                  <Select onValueChange={(value) => setValue('learning_style', value)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select learning style" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Visual">Visual</SelectItem>
+                      <SelectItem value="Auditory">Auditory</SelectItem>
+                      <SelectItem value="Kinesthetic">Kinesthetic</SelectItem>
+                      <SelectItem value="Mixed">Mixed</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="lesson_modifications">Lesson Modifications</Label>
+                  <MultiSelect
+                    options={LESSON_MODIFICATION_OPTIONS}
+                    selected={selectedModifications}
+                    onChange={setSelectedModifications}
+                    placeholder="Select lesson modifications..."
+                    className="w-full"
+                  />
+                </div>
+                <div className="flex gap-2 justify-end">
+                  <Button type="button" variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button type="submit" disabled={loading}>
+                    Add Student
+                  </Button>
+                </div>
+              </form>
+            </DialogContent>
         </Dialog>
       </div>
 
@@ -269,7 +314,7 @@ export const StudentRosterPanel: React.FC<StudentRosterPanelProps> = ({ classId 
 
       {/* Edit Student Dialog */}
       <Dialog open={!!editingStudent} onOpenChange={() => setEditingStudent(null)}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit Student</DialogTitle>
           </DialogHeader>
@@ -328,6 +373,16 @@ export const StudentRosterPanel: React.FC<StudentRosterPanelProps> = ({ classId 
                 </SelectContent>
               </Select>
             </div>
+            <div>
+              <Label htmlFor="lesson_modifications">Lesson Modifications</Label>
+              <MultiSelect
+                options={LESSON_MODIFICATION_OPTIONS}
+                selected={selectedModifications}
+                onChange={setSelectedModifications}
+                placeholder="Select lesson modifications..."
+                className="w-full"
+              />
+            </div>
             <div className="flex gap-2 justify-end">
               <Button type="button" variant="outline" onClick={() => setEditingStudent(null)}>
                 Cancel
@@ -385,6 +440,26 @@ const StudentCard: React.FC<StudentCardProps> = ({ student, onEdit, onDelete }) 
           <p className="text-xs text-muted-foreground">
             Language: {student.language_preference}
           </p>
+        )}
+        {student.lesson_modifications && student.lesson_modifications.length > 0 && (
+          <div className="text-xs text-muted-foreground">
+            <p className="font-medium">Lesson Modifications:</p>
+            <div className="flex gap-1 flex-wrap mt-1">
+              {student.lesson_modifications.slice(0, 3).map((mod, index) => {
+                const option = LESSON_MODIFICATION_OPTIONS.find(opt => opt.value === mod);
+                return (
+                  <Badge key={index} variant="outline" className="text-xs py-0 px-1">
+                    {option?.label || mod}
+                  </Badge>
+                );
+              })}
+              {student.lesson_modifications.length > 3 && (
+                <Badge variant="outline" className="text-xs py-0 px-1">
+                  +{student.lesson_modifications.length - 3} more
+                </Badge>
+              )}
+            </div>
+          </div>
         )}
       </CardContent>
     </Card>

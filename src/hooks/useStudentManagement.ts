@@ -13,6 +13,7 @@ export interface Student {
   interests: string[];
   iep_accommodations: string[];
   language_preference: string;
+  lesson_modifications?: string[];
   created_at: string;
   updated_at: string;
 }
@@ -26,6 +27,7 @@ export interface CreateStudentData {
   interests?: string[];
   iep_accommodations?: string[];
   language_preference?: string;
+  lesson_modifications?: string[];
 }
 
 export interface UpdateStudentData {
@@ -37,6 +39,7 @@ export interface UpdateStudentData {
   interests?: string[];
   iep_accommodations?: string[];
   language_preference?: string;
+  lesson_modifications?: string[];
 }
 
 export interface DemoStudent extends Student {
@@ -59,7 +62,16 @@ export const useStudentManagement = (classId: string) => {
         .order('first_name');
 
       if (error) throw error;
-      setStudents(data || []);
+      
+      // Transform the data to ensure lesson_modifications is properly typed
+      const transformedData = data?.map(student => ({
+        ...student,
+        lesson_modifications: Array.isArray(student.lesson_modifications) 
+          ? (student.lesson_modifications.filter((item): item is string => typeof item === 'string'))
+          : []
+      })) || [];
+      
+      setStudents(transformedData);
     } catch (error) {
       console.error('Error fetching students:', error);
       toast({
@@ -101,6 +113,9 @@ export const useStudentManagement = (classId: string) => {
         const studentClass = demoClasses.find(cls => cls.id === student.class_id);
         return {
           ...student,
+          lesson_modifications: Array.isArray(student.lesson_modifications) 
+            ? (student.lesson_modifications.filter((item): item is string => typeof item === 'string'))
+            : [],
           class_name: studentClass?.name || 'Unknown Class'
         };
       }) || [];
@@ -137,7 +152,8 @@ export const useStudentManagement = (classId: string) => {
         learning_style: student.learning_style || '',
         interests: student.interests || [],
         iep_accommodations: student.iep_accommodations || [],
-        language_preference: student.language_preference || 'English'
+        language_preference: student.language_preference || 'English',
+        lesson_modifications: student.lesson_modifications || []
       }));
 
       const { error: insertError } = await supabase
@@ -178,7 +194,8 @@ export const useStudentManagement = (classId: string) => {
           learning_style: studentData.learning_style || '',
           interests: studentData.interests || [],
           iep_accommodations: studentData.iep_accommodations || [],
-          language_preference: studentData.language_preference || 'English'
+          language_preference: studentData.language_preference || 'English',
+          lesson_modifications: studentData.lesson_modifications || []
         }]);
 
       if (error) throw error;
@@ -213,7 +230,8 @@ export const useStudentManagement = (classId: string) => {
         learning_style: studentData.learning_style || '',
         interests: studentData.interests || [],
         iep_accommodations: studentData.iep_accommodations || [],
-        language_preference: studentData.language_preference || 'English'
+        language_preference: studentData.language_preference || 'English',
+        lesson_modifications: studentData.lesson_modifications || []
       }));
 
       const { error } = await supabase

@@ -1983,6 +1983,7 @@ export type Database = {
           language_preference: string | null
           last_name: string
           learning_style: string | null
+          lesson_modifications: Json | null
           reading_level: string | null
           updated_at: string | null
         }
@@ -1997,6 +1998,7 @@ export type Database = {
           language_preference?: string | null
           last_name: string
           learning_style?: string | null
+          lesson_modifications?: Json | null
           reading_level?: string | null
           updated_at?: string | null
         }
@@ -2011,6 +2013,7 @@ export type Database = {
           language_preference?: string | null
           last_name?: string
           learning_style?: string | null
+          lesson_modifications?: Json | null
           reading_level?: string | null
           updated_at?: string | null
         }
