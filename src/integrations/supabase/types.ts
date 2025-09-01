@@ -1914,6 +1914,33 @@ export type Database = {
           },
         ]
       }
+      student_profiles: {
+        Row: {
+          created_at: string
+          id: string
+          profile_json: Json
+          student_id: string
+          survey_completed_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          profile_json?: Json
+          student_id: string
+          survey_completed_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          profile_json?: Json
+          student_id?: string
+          survey_completed_at?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       student_progress: {
         Row: {
           completed_at: string | null
@@ -2106,6 +2133,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      survey_responses: {
+        Row: {
+          answer_value: Json
+          created_at: string
+          id: string
+          question_id: string
+          student_id: string
+          tags: string[] | null
+          updated_at: string
+        }
+        Insert: {
+          answer_value: Json
+          created_at?: string
+          id?: string
+          question_id: string
+          student_id: string
+          tags?: string[] | null
+          updated_at?: string
+        }
+        Update: {
+          answer_value?: Json
+          created_at?: string
+          id?: string
+          question_id?: string
+          student_id?: string
+          tags?: string[] | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       teacher_profiles: {
         Row: {
