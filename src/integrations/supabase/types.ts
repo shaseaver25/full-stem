@@ -2375,41 +2375,7 @@ export type Database = {
       }
     }
     Views: {
-      token_status: {
-        Row: {
-          consumed: boolean | null
-          created_at: string | null
-          demo_tenant_id: string | null
-          expires_at: string | null
-          id: string | null
-          token: string | null
-        }
-        Insert: {
-          consumed?: boolean | null
-          created_at?: string | null
-          demo_tenant_id?: string | null
-          expires_at?: string | null
-          id?: string | null
-          token?: string | null
-        }
-        Update: {
-          consumed?: boolean | null
-          created_at?: string | null
-          demo_tenant_id?: string | null
-          expires_at?: string | null
-          id?: string | null
-          token?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "magic_tokens_demo_tenant_id_fkey"
-            columns: ["demo_tenant_id"]
-            isOneToOne: false
-            referencedRelation: "demo_tenants"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
+      [_ in never]: never
     }
     Functions: {
       calculate_letter_grade: {
