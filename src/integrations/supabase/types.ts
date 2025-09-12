@@ -112,8 +112,10 @@ export type Database = {
           file_names: string[] | null
           file_types: string[] | null
           file_urls: string[] | null
+          files: Json | null
           id: string
           last_edited_at: string | null
+          overrides: Json | null
           status: string | null
           submitted_at: string | null
           text_response: string | null
@@ -126,8 +128,10 @@ export type Database = {
           file_names?: string[] | null
           file_types?: string[] | null
           file_urls?: string[] | null
+          files?: Json | null
           id?: string
           last_edited_at?: string | null
+          overrides?: Json | null
           status?: string | null
           submitted_at?: string | null
           text_response?: string | null
@@ -140,8 +144,10 @@ export type Database = {
           file_names?: string[] | null
           file_types?: string[] | null
           file_urls?: string[] | null
+          files?: Json | null
           id?: string
           last_edited_at?: string | null
+          overrides?: Json | null
           status?: string | null
           submitted_at?: string | null
           text_response?: string | null
@@ -2067,6 +2073,7 @@ export type Database = {
           lesson_modifications: Json | null
           reading_level: string | null
           updated_at: string | null
+          user_id: string | null
         }
         Insert: {
           class_id: string
@@ -2082,6 +2089,7 @@ export type Database = {
           lesson_modifications?: Json | null
           reading_level?: string | null
           updated_at?: string | null
+          user_id?: string | null
         }
         Update: {
           class_id?: string
@@ -2097,6 +2105,7 @@ export type Database = {
           lesson_modifications?: Json | null
           reading_level?: string | null
           updated_at?: string | null
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -2403,6 +2412,25 @@ export type Database = {
       is_super_admin: {
         Args: { _user_id?: string }
         Returns: boolean
+      }
+      rpc_assign_lesson_to_class: {
+        Args: {
+          p_class_id: string
+          p_component_ids: string[]
+          p_due_at: string
+          p_lesson_id: string
+          p_options?: Json
+          p_release_at?: string
+        }
+        Returns: string
+      }
+      rpc_backfill_assignments_for_student: {
+        Args: { p_class_id: string; p_student_id: string }
+        Returns: undefined
+      }
+      rpc_enroll_students: {
+        Args: { p_class_id: string; p_student_ids: string[] }
+        Returns: undefined
       }
     }
     Enums: {
