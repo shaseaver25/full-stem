@@ -24,8 +24,6 @@ import TeacherOnboarding from "./pages/TeacherOnboarding";
 import TeacherDashboard from "./components/teacher/TeacherDashboard";
 import TeacherClasses from "./pages/TeacherClasses";
 import ClassDetailPage from "./pages/ClassDetailPage";
-import TeacherClasses from "./pages/TeacherClasses";
-import ClassDetailPage from "./pages/ClassDetailPage";
 import ProtectedTeacherRoute from "./components/teacher/ProtectedTeacherRoute";
 import { default as UnifiedGradebookPage } from "./pages/UnifiedGradebookPage";
 import GradebookPage from "./pages/GradebookPage";
@@ -165,10 +163,26 @@ const App: React.FC = () => {
               } 
             />
             <Route 
+              path="/teacher/classes" 
+              element={
+                <ProtectedTeacherRoute requireOnboarding={true}>
+                  <TeacherClasses />
+                </ProtectedTeacherRoute>
+              } 
+            />
+            <Route 
+              path="/teacher/classes/:classId" 
+              element={
+                <ProtectedTeacherRoute requireOnboarding={true}>
+                  <ClassDetailPage />
+                </ProtectedTeacherRoute>
+              } 
+            />
+            <Route 
               path="/teacher/class/:classId" 
               element={
                 <ProtectedTeacherRoute requireOnboarding={true}>
-                  <ClassManagementPage />
+                  <ClassDetailPage />
                 </ProtectedTeacherRoute>
               } 
             />
