@@ -330,11 +330,16 @@ export type Database = {
           class_id: string
           created_at: string
           description: string | null
+          due_at: string | null
           due_date: string | null
           id: string
           instructions: string | null
+          lesson_id: number | null
           max_points: number | null
+          options: Json
+          release_at: string | null
           rubric: string | null
+          selected_components: Json
           title: string
           updated_at: string
         }
@@ -342,11 +347,16 @@ export type Database = {
           class_id: string
           created_at?: string
           description?: string | null
+          due_at?: string | null
           due_date?: string | null
           id?: string
           instructions?: string | null
+          lesson_id?: number | null
           max_points?: number | null
+          options?: Json
+          release_at?: string | null
           rubric?: string | null
+          selected_components?: Json
           title: string
           updated_at?: string
         }
@@ -354,11 +364,16 @@ export type Database = {
           class_id?: string
           created_at?: string
           description?: string | null
+          due_at?: string | null
           due_date?: string | null
           id?: string
           instructions?: string | null
+          lesson_id?: number | null
           max_points?: number | null
+          options?: Json
+          release_at?: string | null
           rubric?: string | null
+          selected_components?: Json
           title?: string
           updated_at?: string
         }
@@ -369,6 +384,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "classes"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "class_assignments_new_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "Lessons"
+            referencedColumns: ["Lesson ID"]
           },
         ]
       }
@@ -545,6 +567,38 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "class_resources_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      class_students: {
+        Row: {
+          class_id: string
+          enrolled_at: string
+          id: string
+          status: string
+          student_id: string
+        }
+        Insert: {
+          class_id: string
+          enrolled_at?: string
+          id?: string
+          status?: string
+          student_id: string
+        }
+        Update: {
+          class_id?: string
+          enrolled_at?: string
+          id?: string
+          status?: string
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "class_students_class_id_fkey"
             columns: ["class_id"]
             isOneToOne: false
             referencedRelation: "classes"
