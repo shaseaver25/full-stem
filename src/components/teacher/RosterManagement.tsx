@@ -43,7 +43,7 @@ export function RosterManagement({ classId, maxStudents }: RosterManagementProps
     !enrolledStudentIds.has(student.id) &&
     (student.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
      student.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-     student.email?.toLowerCase().includes(searchTerm.toLowerCase()))
+     student.user_id?.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   const handleEnrollStudents = async () => {
@@ -146,11 +146,11 @@ export function RosterManagement({ classId, maxStudents }: RosterManagementProps
                           <div className="font-medium">
                             {student.first_name} {student.last_name}
                           </div>
-                          {student.email && (
-                            <div className="text-sm text-muted-foreground">
-                              {student.email}
-                            </div>
-                          )}
+                           {student.user_id && (
+                             <div className="text-sm text-muted-foreground">
+                               ID: {student.user_id.substring(0, 8)}...
+                             </div>
+                           )}
                         </div>
                         {student.grade_level && (
                           <Badge variant="outline">
@@ -217,11 +217,11 @@ export function RosterManagement({ classId, maxStudents }: RosterManagementProps
                     <div className="font-medium">
                       {classStudent.student.first_name} {classStudent.student.last_name}
                     </div>
-                    {classStudent.student.email && (
-                      <div className="text-sm text-muted-foreground">
-                        {classStudent.student.email}
-                      </div>
-                    )}
+                     {classStudent.student.user_id && (
+                       <div className="text-sm text-muted-foreground">
+                         ID: {classStudent.student.user_id.substring(0, 8)}...
+                       </div>
+                     )}
                   </div>
                 </div>
                 <div className="flex items-center space-x-2">

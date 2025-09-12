@@ -13,9 +13,9 @@ import Header from '@/components/Header';
 
 const TeacherDashboard = () => {
   const { profile, loading: profileLoading } = useTeacherProfileSimplified();
-  const { classes: myClasses, loading: loadingMyClasses } = useClasses(false);
+  const { data: myClasses, isLoading: loadingMyClasses } = useClasses();
   const { useClasses: usePublishedClasses } = useClassApi();
-  const { data: publishedClasses, isLoading: loadingPublished } = usePublishedClasses(true);
+  const { data: publishedClasses, isLoading: loadingPublished } = usePublishedClasses();
 
   if (profileLoading) {
     return (

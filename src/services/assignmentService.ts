@@ -33,10 +33,18 @@ export const fetchSubmissions = async (
 
   if (error) throw error;
   
-  // Type assertion to ensure status is properly typed
+  // Type assertion to ensure all fields are properly typed
   return (data || []).map(submission => ({
     ...submission,
-    status: submission.status as 'draft' | 'submitted'
+    status: submission.status as 'draft' | 'submitted',
+    overrides: typeof submission.overrides === 'string' 
+      ? JSON.parse(submission.overrides) 
+      : submission.overrides || {},
+    files: Array.isArray(submission.files) 
+      ? submission.files 
+      : typeof submission.files === 'string'
+      ? JSON.parse(submission.files)
+      : []
   }));
 };
 

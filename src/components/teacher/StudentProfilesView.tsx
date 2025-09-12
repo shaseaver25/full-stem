@@ -24,7 +24,7 @@ import { LEARNING_STYLES, INTERESTS, MOTIVATION_TRIGGERS } from '@/types/surveyT
 
 export const StudentProfilesView: React.FC = () => {
   const { students, loading, fetchStudentProfiles, generateProjectIdea, suggestAssignmentModifications } = useStudentProfiles();
-  const { classes, loading: classesLoading } = useClasses();
+  const { data: classes, isLoading: classesLoading } = useClasses();
   const [selectedClass, setSelectedClass] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');

@@ -282,7 +282,66 @@ export const useAssignment = (assignmentId: string) => {
   });
 };
 
-// Assign lesson mutation
+// Create class mutation
+export const useCreateClass = () => {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (classData: {
+      name: string;
+      subject?: string;
+      grade_level?: string;
+      description?: string;
+      max_students?: number;
+    }) => {
+      const { data, error } = await supabase
+        .from('classes')
+        .insert([{
+          ...classData,
+          teacher_id: (await supabase.auth.getUser()).data.user?.id || ''
+        }])
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['classes'] });
+      toast({
+        title: '✅ Class Created',
+        description: 'Class has been successfully created.',
+      });
+    },
+    onError: (error) => {
+      console.error('Error creating class:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to create class. Please try again.',
+        variant: 'destructive',
+      });
+    },
+  });
+};
+
+// Fetch all classes for teacher
+export const useClasses = () => {
+  return useQuery({
+    queryKey: ['classes'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('classes')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return data || [];
+    },
+  });
+};
+
+// Assign lesson mutation (renamed for clarity)
 export const useAssignLesson = (classId: string) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();

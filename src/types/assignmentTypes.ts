@@ -123,14 +123,14 @@ export interface AssignmentSubmission {
   assignment_id: string;
   user_id: string;
   text_response?: string;
-  file_urls?: string[];
-  file_names?: string[];
-  file_types?: string[];
+  file_urls?: string[] | null;
+  file_names?: string[] | null;
+  file_types?: string[] | null;
   submitted_at?: string;
   last_edited_at?: string;
   status: 'assigned' | 'draft' | 'submitted' | 'graded' | 'exempt';
-  overrides?: Record<string, any>;
-  files?: any[];
+  overrides?: Record<string, any> | null;
+  files?: any[] | null;
   created_at: string;
   updated_at: string;
 }

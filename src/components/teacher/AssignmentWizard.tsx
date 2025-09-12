@@ -43,7 +43,7 @@ import { cn } from '@/lib/utils';
 import {
   useLessons,
   useLessonComponents,
-  useCreateAssignment,
+  useAssignLesson,
   useClassStudents,
 } from '@/hooks/useClassManagement';
 import { LessonComponent } from '@/services/classManagementService';
@@ -79,7 +79,7 @@ export function AssignmentWizard({ classId, open, onOpenChange, initialLessonId 
   const { data: lessons = [] } = useLessons();
   const { data: components = [] } = useLessonComponents(selectedLessonId || 0);
   const { data: classStudents = [] } = useClassStudents(classId);
-  const createAssignment = useCreateAssignment();
+  const assignLesson = useAssignLesson(classId);
 
   const form = useForm<AssignmentForm>({
     resolver: zodResolver(assignmentSchema),
@@ -108,19 +108,16 @@ export function AssignmentWizard({ classId, open, onOpenChange, initialLessonId 
   const onSubmit = async (data: AssignmentForm) => {
     if (currentStep === 'review') {
       try {
-        await createAssignment.mutateAsync({
-          classId,
+        await assignLesson.mutateAsync({
           lessonId: data.lessonId,
-          title: data.title,
-          description: data.description,
-          selectedComponents: data.selectedComponents,
+          componentIds: data.selectedComponents,
+          dueAt: data.dueDate?.toISOString() || new Date().toISOString(),
+          releaseAt: data.releaseDate?.toISOString(),
           options: {
-            allowResubmission: data.allowResubmission,
-            gradingCategory: data.gradingCategory,
+            allow_resubmission: data.allowResubmission,
+            grading_category: data.gradingCategory,
             points: data.points,
           },
-          releaseAt: data.releaseDate?.toISOString(),
-          dueAt: data.dueDate?.toISOString(),
         });
         
         onOpenChange(false);
@@ -635,10 +632,10 @@ export function AssignmentWizard({ classId, open, onOpenChange, initialLessonId 
                   </Button>
                   <Button
                     type="submit"
-                    disabled={createAssignment.isPending}
+                    disabled={assignLesson.isPending}
                   >
                     {currentStep === 'review' ? (
-                      createAssignment.isPending ? 'Creating...' : 'Create Assignment'
+                      assignLesson.isPending ? 'Creating...' : 'Create Assignment'
                     ) : (
                       <>
                         Next
