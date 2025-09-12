@@ -1,160 +1,367 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { classManagementApi, Class, Student, ClassStudent, ClassAssignment } from '@/services/classManagementService';
+import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import type { 
+  ClassStudent, 
+  ClassAssignment, 
+  AssignmentWithSubmissions,
+  Lesson,
+  LessonComponent,
+  AssignmentOptions,
+  StudentOverride
+} from '@/types/assignmentTypes';
 
-// Classes
-export const useClasses = () => {
-  return useQuery({
-    queryKey: ['classes'],
-    queryFn: classManagementApi.getClasses,
-  });
+// Query keys
+export const classQueryKeys = {
+  class: (id: string) => ['class', id] as const,
+  students: (classId: string) => ['class', classId, 'students'] as const,
+  assignments: (classId: string) => ['class', classId, 'assignments'] as const,
+  assignment: (id: string) => ['assignment', id] as const,
+  lessons: () => ['lessons'] as const,
+  lessonComponents: (lessonId: number) => ['lesson', lessonId, 'components'] as const,
+  availableStudents: () => ['students', 'available'] as const,
 };
 
+// Fetch class details
 export const useClass = (classId: string) => {
   return useQuery({
-    queryKey: ['class', classId],
-    queryFn: () => classManagementApi.getClass(classId),
+    queryKey: classQueryKeys.class(classId),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('classes')
+        .select('*')
+        .eq('id', classId)
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
     enabled: !!classId,
   });
 };
 
-export const useCreateClass = () => {
-  const queryClient = useQueryClient();
-  const { toast } = useToast();
-
-  return useMutation({
-    mutationFn: classManagementApi.createClass,
-    onSuccess: (newClass) => {
-      queryClient.invalidateQueries({ queryKey: ['classes'] });
-      toast({
-        title: 'Class created',
-        description: `${newClass.name} has been created successfully.`,
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: 'Error creating class',
-        description: error.message,
-        variant: 'destructive',
-      });
-    },
-  });
-};
-
-// Students
-export const useAvailableStudents = () => {
-  return useQuery({
-    queryKey: ['students', 'available'],
-    queryFn: classManagementApi.getAvailableStudents,
-  });
-};
-
+// Fetch class students (roster)
 export const useClassStudents = (classId: string) => {
   return useQuery({
-    queryKey: ['class', classId, 'students'],
-    queryFn: () => classManagementApi.getClassStudents(classId),
+    queryKey: classQueryKeys.students(classId),
+    queryFn: async (): Promise<ClassStudent[]> => {
+      const { data: classStudentData, error: csError } = await supabase
+        .from('class_students')
+        .select('*')
+        .eq('class_id', classId)
+        .eq('status', 'active')
+        .order('enrolled_at', { ascending: false });
+
+      if (csError) throw csError;
+      if (!classStudentData?.length) return [];
+
+      const studentIds = classStudentData.map(cs => cs.student_id);
+      const { data: studentData, error: sError } = await supabase
+        .from('students')
+        .select('*')
+        .in('id', studentIds)
+        .order('last_name', { ascending: true });
+
+      if (sError) throw sError;
+
+      return classStudentData.map(cs => ({
+        ...cs,
+        status: cs.status as 'active' | 'inactive',
+        student: studentData?.find(s => s.id === cs.student_id) || {
+          id: cs.student_id,
+          first_name: 'Unknown',
+          last_name: 'Student',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        }
+      }));
+    },
     enabled: !!classId,
   });
 };
 
+// Fetch available students for enrollment
+export const useAvailableStudents = () => {
+  return useQuery({
+    queryKey: classQueryKeys.availableStudents(),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('students')
+        .select('*')
+        .order('last_name', { ascending: true });
+
+      if (error) throw error;
+      return data || [];
+    },
+  });
+};
+
+// Enroll students mutation
 export const useEnrollStudents = (classId: string) => {
-  const queryClient = useQueryClient();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (studentIds: string[]) => classManagementApi.enrollStudents(classId, studentIds),
-    onSuccess: (_, studentIds) => {
-      queryClient.invalidateQueries({ queryKey: ['class', classId, 'students'] });
+    mutationFn: async (studentIds: string[]) => {
+      const { error } = await supabase.rpc('rpc_enroll_students', {
+        p_class_id: classId,
+        p_student_ids: studentIds,
+      });
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: classQueryKeys.students(classId) });
       toast({
-        title: 'Students enrolled',
-        description: `${studentIds.length} student${studentIds.length > 1 ? 's' : ''} enrolled successfully.`,
+        title: '✅ Students Enrolled',
+        description: 'Students have been successfully enrolled in the class.',
       });
     },
     onError: (error) => {
+      console.error('Error enrolling students:', error);
       toast({
-        title: 'Error enrolling students',
-        description: error.message,
+        title: 'Error',
+        description: 'Failed to enroll students. Please try again.',
         variant: 'destructive',
       });
     },
   });
 };
 
+// Remove student from class
 export const useRemoveStudent = (classId: string) => {
-  const queryClient = useQueryClient();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (studentId: string) => classManagementApi.removeStudent(classId, studentId),
+    mutationFn: async (studentId: string) => {
+      const { error } = await supabase
+        .from('class_students')
+        .update({ status: 'inactive' })
+        .eq('class_id', classId)
+        .eq('student_id', studentId);
+
+      if (error) throw error;
+    },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['class', classId, 'students'] });
+      queryClient.invalidateQueries({ queryKey: classQueryKeys.students(classId) });
       toast({
-        title: 'Student removed',
+        title: '✅ Student Removed',
         description: 'Student has been removed from the class.',
       });
     },
     onError: (error) => {
+      console.error('Error removing student:', error);
       toast({
-        title: 'Error removing student',
-        description: error.message,
+        title: 'Error',
+        description: 'Failed to remove student. Please try again.',
         variant: 'destructive',
       });
     },
   });
 };
 
-// Lessons and Components
+// Fetch lessons for assignment wizard
 export const useLessons = () => {
   return useQuery({
-    queryKey: ['lessons'],
-    queryFn: classManagementApi.getLessons,
+    queryKey: classQueryKeys.lessons(),
+    queryFn: async (): Promise<Lesson[]> => {
+      const { data, error } = await supabase
+        .from('Lessons')
+        .select('*')
+        .order('Title', { ascending: true });
+
+      if (error) throw error;
+      
+      // Map database structure to our interface
+      return (data || []).map(lesson => ({
+        ...lesson,
+        id: lesson["Lesson ID"],
+        title: lesson.Title,
+        description: lesson.Description || undefined,
+        track: lesson.Track || undefined,
+        subject: lesson.Track || undefined, // Using Track as subject for now
+        grade_level: undefined, // Not available in current schema
+      }));
+    },
   });
 };
 
+// Fetch lesson components
 export const useLessonComponents = (lessonId: number) => {
   return useQuery({
-    queryKey: ['lesson', lessonId, 'components'],
-    queryFn: () => classManagementApi.getLessonComponents(lessonId),
+    queryKey: classQueryKeys.lessonComponents(lessonId),
+    queryFn: async (): Promise<LessonComponent[]> => {
+      const { data, error } = await supabase
+        .from('activities')
+        .select('*')
+        .eq('lesson_id', lessonId.toString())
+        .order('order_index', { ascending: true });
+
+      if (error) throw error;
+
+      return (data || []).map(activity => ({
+        id: activity.id,
+        type: (activity.activity_type as LessonComponent['type']) || 'activity',
+        title: activity.title,
+        description: activity.description,
+        estimated_minutes: activity.estimated_time || 30,
+        requires_submission: activity.activity_type === 'assignment',
+        is_required: false, // Could be derived from activity data if needed
+        order_index: activity.order_index,
+      }));
+    },
     enabled: !!lessonId,
   });
 };
 
-// Assignments
-export const useCreateAssignment = () => {
-  const queryClient = useQueryClient();
+// Fetch class assignments
+export const useClassAssignments = (classId: string) => {
+  return useQuery({
+    queryKey: classQueryKeys.assignments(classId),
+    queryFn: async (): Promise<AssignmentWithSubmissions[]> => {
+      const { data, error } = await supabase
+        .from('class_assignments_new')
+        .select('*')
+        .eq('class_id', classId)
+        .order('created_at', { ascending: false });
+
+      return (data || []).map(assignment => ({
+        ...assignment,
+        selected_components: Array.isArray(assignment.selected_components) 
+          ? assignment.selected_components 
+          : JSON.parse(assignment.selected_components as string || '[]'),
+        options: typeof assignment.options === 'object' 
+          ? assignment.options 
+          : JSON.parse(assignment.options as string || '{}'),
+      }));
+    },
+    enabled: !!classId,
+  });
+};
+
+// Fetch single assignment with submissions
+export const useAssignment = (assignmentId: string) => {
+  return useQuery({
+    queryKey: classQueryKeys.assignment(assignmentId),
+    queryFn: async (): Promise<AssignmentWithSubmissions> => {
+      const { data: assignment, error: assignmentError } = await supabase
+        .from('class_assignments_new')
+        .select('*')
+        .eq('id', assignmentId)
+        .single();
+
+      if (assignmentError) throw assignmentError;
+
+      const { data: submissions, error: submissionsError } = await supabase
+        .from('assignment_submissions')
+        .select('*')
+        .eq('assignment_id', assignmentId);
+
+      if (submissionsError) throw submissionsError;
+
+      return {
+        ...assignment,
+        selected_components: Array.isArray(assignment.selected_components)
+          ? assignment.selected_components
+          : JSON.parse(assignment.selected_components as string || '[]'),
+        options: typeof assignment.options === 'object'
+          ? assignment.options
+          : JSON.parse(assignment.options as string || '{}'),
+        submissions: (submissions || []).map(sub => ({
+          ...sub,
+          status: sub.status as 'assigned' | 'draft' | 'submitted' | 'graded' | 'exempt',
+          overrides: typeof sub.overrides === 'object'
+            ? sub.overrides
+            : JSON.parse(sub.overrides as string || '{}'),
+          files: Array.isArray(sub.files) ? sub.files : [],
+        }))
+      };
+    },
+    enabled: !!assignmentId,
+  });
+};
+
+// Assign lesson mutation
+export const useAssignLesson = (classId: string) => {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: classManagementApi.createAssignment,
-    onSuccess: (assignment) => {
-      queryClient.invalidateQueries({ queryKey: ['class', assignment.class_id, 'assignments'] });
-      toast({
-        title: 'Assignment created',
-        description: `${assignment.title} has been assigned to the class.`,
+    mutationFn: async ({
+      lessonId,
+      componentIds,
+      dueAt,
+      releaseAt,
+      options,
+      studentOverrides = []
+    }: {
+      lessonId: number;
+      componentIds: string[];
+      dueAt: string;
+      releaseAt?: string;
+      options: AssignmentOptions;
+      studentOverrides?: StudentOverride[];
+    }) => {
+      const { data, error } = await supabase.rpc('rpc_assign_lesson_to_class', {
+        p_class_id: classId,
+        p_lesson_id: lessonId.toString(),
+        p_component_ids: componentIds,
+        p_due_at: dueAt,
+        p_release_at: releaseAt || null,
+        p_options: options as any,
       });
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (assignmentId) => {
+      queryClient.invalidateQueries({ queryKey: classQueryKeys.assignments(classId) });
+      toast({
+        title: '✅ Assignment Created',
+        description: 'Assignment has been successfully created and distributed to students.',
+      });
+      return assignmentId;
     },
     onError: (error) => {
+      console.error('Error creating assignment:', error);
       toast({
-        title: 'Error creating assignment',
-        description: error.message,
+        title: 'Error',
+        description: 'Failed to create assignment. Please try again.',
         variant: 'destructive',
       });
     },
   });
 };
 
-export const useClassAssignments = (classId: string) => {
-  return useQuery({
-    queryKey: ['class', classId, 'assignments'],
-    queryFn: () => classManagementApi.getClassAssignments(classId),
-    enabled: !!classId,
-  });
-};
+// Backfill assignments for student
+export const useBackfillStudent = (classId: string) => {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-export const useAssignmentSubmissions = (assignmentId: string) => {
-  return useQuery({
-    queryKey: ['assignment', assignmentId, 'submissions'],
-    queryFn: () => classManagementApi.getAssignmentSubmissions(assignmentId),
-    enabled: !!assignmentId,
+  return useMutation({
+    mutationFn: async (studentId: string) => {
+      const { error } = await supabase.rpc('rpc_backfill_assignments_for_student', {
+        p_class_id: classId,
+        p_student_id: studentId,
+      });
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: classQueryKeys.assignments(classId) });
+      toast({
+        title: '✅ Assignments Backfilled',
+        description: 'Past assignments have been assigned to the new student.',
+      });
+    },
+    onError: (error) => {
+      console.error('Error backfilling assignments:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to backfill assignments. Please try again.',
+        variant: 'destructive',
+      });
+    },
   });
 };
