@@ -5,17 +5,60 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, BookOpen, Users, Calendar, Clock, GraduationCap } from 'lucide-react';
+import { Plus, BookOpen, Users, Calendar, Clock, GraduationCap, Download } from 'lucide-react';
 import { useTeacherProfileSimplified } from '@/hooks/useTeacherProfileSimplified';
 import { useClasses } from '@/hooks/useClasses';
 import { useClassApi } from '@/hooks/useClassApi';
+import { useAuth } from '@/contexts/AuthContext';
+import { toast } from '@/hooks/use-toast';
 import Header from '@/components/Header';
 
 const TeacherDashboard = () => {
   const { profile, loading: profileLoading } = useTeacherProfileSimplified();
-  const { data: myClasses, isLoading: loadingMyClasses } = useClasses();
-  const { useClasses: usePublishedClasses } = useClassApi();
+  const { data: myClasses, isLoading: loadingMyClasses, refetch: refetchMyClasses } = useClasses();
+  const { useClasses: usePublishedClasses, createClass } = useClassApi();
   const { data: publishedClasses, isLoading: loadingPublished } = usePublishedClasses();
+  const { user } = useAuth();
+
+  const handleAdoptClass = async (classItem: any) => {
+    try {
+      // Create a copy of the class for the current teacher
+      const adoptedClassData = {
+        classData: {
+          title: `${classItem.title} (My Copy)`,
+          description: classItem.description || '',
+          gradeLevel: classItem.grade_level || '',
+          subject: classItem.subject || '',
+          duration: classItem.duration || '',
+          instructor: user?.email || 'Teacher',
+          schedule: '',
+          learningObjectives: classItem.learning_objectives || '',
+          prerequisites: classItem.prerequisites || '',
+          maxStudents: classItem.max_students || 25,
+        },
+        lessons: [],
+        assignments: [],
+        classroomActivities: [],
+        individualActivities: [],
+        resources: []
+      };
+
+      await createClass(adoptedClassData);
+      await refetchMyClasses();
+      
+      toast({
+        title: "Class Adopted Successfully!",
+        description: `You can now find "${classItem.title} (My Copy)" in your classes.`,
+      });
+    } catch (error) {
+      console.error('Error adopting class:', error);
+      toast({
+        title: "Error",
+        description: "Failed to adopt class. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
 
   if (profileLoading) {
     return (
@@ -116,7 +159,7 @@ const TeacherDashboard = () => {
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold">Available Classes</h2>
             <p className="text-sm text-gray-600">
-              Classes published by administrators
+              Classes published by administrators - click "Adopt Class" to use them
             </p>
           </div>
 
@@ -125,10 +168,10 @@ const TeacherDashboard = () => {
           ) : publishedClasses && publishedClasses.length > 0 ? (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {publishedClasses.map((classItem) => (
-                <ClassCard
+                <AvailableClassCard
                   key={classItem.id}
                   classItem={classItem}
-                  showActions={false}
+                  onAdopt={handleAdoptClass}
                 />
               ))}
             </div>
@@ -154,6 +197,84 @@ interface ClassCardProps {
   classItem: any;
   showActions: boolean;
 }
+
+interface AvailableClassCardProps {
+  classItem: any;
+  onAdopt?: (classItem: any) => void;
+}
+
+const AvailableClassCard: React.FC<AvailableClassCardProps & { onAdopt?: (classItem: any) => Promise<void> }> = ({ classItem, onAdopt }) => {
+  const [isAdopting, setIsAdopting] = useState(false);
+
+  const handleAdopt = async () => {
+    if (!onAdopt) return;
+    setIsAdopting(true);
+    try {
+      await onAdopt(classItem);
+    } finally {
+      setIsAdopting(false);
+    }
+  };
+
+  return (
+    <Card className="h-full">
+      <CardHeader>
+        <div className="flex items-start justify-between">
+          <div className="flex-1">
+            <CardTitle className="text-lg mb-2">{classItem.title || classItem.name}</CardTitle>
+            <CardDescription className="line-clamp-2">
+              {classItem.description || 'No description available'}
+            </CardDescription>
+          </div>
+          {classItem.published && (
+            <Badge variant="default">Published</Badge>
+          )}
+        </div>
+      </CardHeader>
+      
+      <CardContent className="space-y-4">
+        <div className="grid grid-cols-2 gap-4 text-sm">
+          {classItem.grade_level && (
+            <div className="flex items-center gap-2">
+              <BookOpen className="h-4 w-4 text-gray-500" />
+              <span>{classItem.grade_level}</span>
+            </div>
+          )}
+          {classItem.subject && (
+            <div className="flex items-center gap-2">
+              <BookOpen className="h-4 w-4 text-gray-500" />
+              <span>{classItem.subject}</span>
+            </div>
+          )}
+          {classItem.duration && (
+            <div className="flex items-center gap-2">
+              <Clock className="h-4 w-4 text-gray-500" />
+              <span>{classItem.duration}</span>
+            </div>
+          )}
+          {classItem.max_students && (
+            <div className="flex items-center gap-2">
+              <Users className="h-4 w-4 text-gray-500" />
+              <span>Max {classItem.max_students}</span>
+            </div>
+          )}
+        </div>
+
+        <div className="pt-4">
+          <Button 
+            onClick={handleAdopt} 
+            disabled={isAdopting}
+            className="w-full"
+            size="sm"
+          >
+            <Download className="h-4 w-4 mr-2" />
+            {isAdopting ? 'Adopting...' : 'Adopt Class'}
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
 
 const ClassCard: React.FC<ClassCardProps> = ({ classItem, showActions }) => {
   return (
