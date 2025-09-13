@@ -12,10 +12,19 @@ export const useClasses = () => {
       const { data: user } = await supabase.auth.getUser();
       if (!user?.user?.id) throw new Error('User not authenticated');
 
+      // Get the teacher profile first
+      const { data: teacherProfile } = await supabase
+        .from('teacher_profiles')
+        .select('id')
+        .eq('user_id', user.user.id)
+        .single();
+
+      if (!teacherProfile) throw new Error('Teacher profile not found');
+
       const { data, error } = await supabase
         .from('classes')
         .select('*')
-        .eq('teacher_id', user.user.id)
+        .eq('teacher_id', teacherProfile.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -40,11 +49,20 @@ export const useCreateClass = () => {
       const { data: user } = await supabase.auth.getUser();
       if (!user?.user?.id) throw new Error('User not authenticated');
 
+      // Get the teacher profile first
+      const { data: teacherProfile } = await supabase
+        .from('teacher_profiles')
+        .select('id')
+        .eq('user_id', user.user.id)
+        .single();
+
+      if (!teacherProfile) throw new Error('Teacher profile not found');
+
       const { data, error } = await supabase
         .from('classes')
         .insert({
           ...classData,
-          teacher_id: user.user.id,
+          teacher_id: teacherProfile.id,
         })
         .select()
         .single();
