@@ -105,8 +105,33 @@ export function AssignmentWizard({ classId, open, onOpenChange, initialLessonId 
     }
   }, [watchedLessonId, selectedLessonId, form]);
 
-  const onSubmit = async (data: AssignmentForm) => {
+  const validateAndProceed = async () => {
+    let isValid = false;
+    
+    // Validate current step only
+    switch (currentStep) {
+      case 'lesson':
+        isValid = await form.trigger('lessonId');
+        break;
+      case 'components':
+        isValid = await form.trigger('selectedComponents');
+        break;
+      case 'schedule':
+        isValid = await form.trigger(['title', 'points', 'gradingCategory']);
+        break;
+      case 'differentiate':
+        isValid = true; // No validation needed for differentiate step
+        break;
+      case 'review':
+        isValid = await form.trigger(); // Validate all fields for final submission
+        break;
+    }
+    
+    if (!isValid) return;
+    
     if (currentStep === 'review') {
+      // Submit the assignment
+      const data = form.getValues();
       try {
         await assignLesson.mutateAsync({
           lessonId: data.lessonId,
@@ -190,7 +215,7 @@ export function AssignmentWizard({ classId, open, onOpenChange, initialLessonId 
           </div>
 
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <div className="space-y-6">
               {/* Step 1: Select Lesson */}
               {currentStep === 'lesson' && (
                 <div className="space-y-4">
@@ -631,7 +656,8 @@ export function AssignmentWizard({ classId, open, onOpenChange, initialLessonId 
                     Cancel
                   </Button>
                   <Button
-                    type="submit"
+                    type="button"
+                    onClick={validateAndProceed}
                     disabled={assignLesson.isPending}
                   >
                     {currentStep === 'review' ? (
@@ -645,7 +671,7 @@ export function AssignmentWizard({ classId, open, onOpenChange, initialLessonId 
                   </Button>
                 </div>
               </div>
-            </form>
+            </div>
           </Form>
         </div>
       </DialogContent>
