@@ -25,11 +25,11 @@ export const useBuildClassActions = (
   setCurrentResource: React.Dispatch<React.SetStateAction<Partial<Resource>>>
 ) => {
   const addLesson = () => {
-    if (currentLesson.title && currentLesson.description) {
+    if (currentLesson.title?.trim()) {
       const newLesson: Lesson = {
         id: Date.now().toString(),
         title: currentLesson.title!,
-        description: currentLesson.description!,
+        description: currentLesson.description || '',
         objectives: currentLesson.objectives || [''],
         videos: currentLesson.videos || [],
         materials: currentLesson.materials || [''],
