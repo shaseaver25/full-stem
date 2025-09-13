@@ -82,11 +82,10 @@ const BuildClassTabs: React.FC<BuildClassTabsProps> = ({
 }) => {
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-      <TabsList className="grid w-full grid-cols-7">
-        <TabsTrigger value="details">Class Details</TabsTrigger>
+      <TabsList className="grid w-full grid-cols-6">
+        <TabsTrigger value="details">Details</TabsTrigger>
         <TabsTrigger value="lessons">Lessons</TabsTrigger>
-        <TabsTrigger value="classroom-activities">Classroom Activities</TabsTrigger>
-        <TabsTrigger value="individual-activities">Individual Activities</TabsTrigger>
+        <TabsTrigger value="activities">Activities</TabsTrigger>
         <TabsTrigger value="assignments">Assignments</TabsTrigger>
         <TabsTrigger value="resources">Resources</TabsTrigger>
         <TabsTrigger value="preview">Preview</TabsTrigger>
@@ -112,24 +111,29 @@ const BuildClassTabs: React.FC<BuildClassTabsProps> = ({
         />
       </TabsContent>
 
-      <TabsContent value="classroom-activities" className="space-y-6">
-        <ClassroomActivitiesForm
-          activities={classroomActivities}
-          currentActivity={currentClassroomActivity}
-          setCurrentActivity={setCurrentClassroomActivity}
-          addActivity={addClassroomActivity}
-          removeActivity={removeClassroomActivity}
-        />
-      </TabsContent>
-
-      <TabsContent value="individual-activities" className="space-y-6">
-        <IndividualActivitiesForm
-          activities={individualActivities}
-          currentActivity={currentIndividualActivity}
-          setCurrentActivity={setCurrentIndividualActivity}
-          addActivity={addIndividualActivity}
-          removeActivity={removeIndividualActivity}
-        />
+      <TabsContent value="activities" className="space-y-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div>
+            <h3 className="text-lg font-semibold mb-4">Classroom Activities</h3>
+            <ClassroomActivitiesForm
+              activities={classroomActivities}
+              currentActivity={currentClassroomActivity}
+              setCurrentActivity={setCurrentClassroomActivity}
+              addActivity={addClassroomActivity}
+              removeActivity={removeClassroomActivity}
+            />
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold mb-4">Individual Activities</h3>
+            <IndividualActivitiesForm
+              activities={individualActivities}
+              currentActivity={currentIndividualActivity}
+              setCurrentActivity={setCurrentIndividualActivity}
+              addActivity={addIndividualActivity}
+              removeActivity={removeIndividualActivity}
+            />
+          </div>
+        </div>
       </TabsContent>
 
       <TabsContent value="assignments" className="space-y-6">

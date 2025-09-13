@@ -125,7 +125,7 @@ const BuildClassPage = () => {
 
       if (classId) {
         // Update existing class
-        await updateClass({
+        updateClass({
           id: classId,
           data: {
             title: classData.title,
@@ -140,16 +140,19 @@ const BuildClassPage = () => {
             max_students: classData.maxStudents,
           }
         });
+        
+        toast({
+          title: "Success!",
+          description: "Class updated successfully.",
+        });
       } else {
         // Create new class
-        const newClass = await new Promise<any>((resolve, reject) => {
-          createClass(classDataToSave);
-        });
+        createClass(classDataToSave);
         
-        // Navigate to the edit page for the new class
-        if (newClass && typeof newClass === 'object' && 'id' in newClass) {
-          navigate(`/admin/build-class/${newClass.id}`);
-        }
+        toast({
+          title: "Success!",
+          description: "Class created successfully.",
+        });
       }
     } catch (error) {
       console.error('Error saving class:', error);
