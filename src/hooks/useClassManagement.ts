@@ -176,7 +176,7 @@ export const useLessons = () => {
       // Map database structure to our interface
       return (data || []).map(lesson => ({
         ...lesson,
-        id: lesson["Lesson ID"],
+        id: lesson["Lesson ID"], // Use the numeric Lesson ID, not the UUID id
         title: lesson.Title,
         description: lesson.Description || undefined,
         track: lesson.Track || undefined,
@@ -193,22 +193,29 @@ export const useLessonComponents = (lessonId: number) => {
     queryKey: classQueryKeys.lessonComponents(lessonId),
     queryFn: async (): Promise<LessonComponent[]> => {
       const { data, error } = await supabase
-        .from('activities')
+        .from('lesson_components')
         .select('*')
-        .eq('lesson_id', lessonId.toString())
-        .order('order_index', { ascending: true });
+        .eq('lesson_id', lessonId)
+        .eq('enabled', true)
+        .order('order', { ascending: true });
 
       if (error) throw error;
 
-      return (data || []).map(activity => ({
-        id: activity.id,
-        type: (activity.activity_type as LessonComponent['type']) || 'activity',
-        title: activity.title,
-        description: activity.description,
-        estimated_minutes: activity.estimated_time || 30,
-        requires_submission: activity.activity_type === 'assignment',
-        is_required: false, // Could be derived from activity data if needed
-        order_index: activity.order_index,
+      return (data || []).map(component => ({
+        id: component.id,
+        type: component.component_type as LessonComponent['type'],
+        title: (typeof component.content === 'object' && component.content && 'title' in component.content) 
+          ? String(component.content.title) 
+          : `${component.component_type} Component`,
+        description: (typeof component.content === 'object' && component.content && 'description' in component.content)
+          ? String(component.content.description)
+          : (typeof component.content === 'object' && component.content && 'content' in component.content)
+          ? String(component.content.content).slice(0, 100)
+          : '',
+        estimated_minutes: 30, // Default since not in current schema
+        requires_submission: component.component_type === 'assignment',
+        is_required: true,
+        order_index: component.order,
       }));
     },
     enabled: !!lessonId,
