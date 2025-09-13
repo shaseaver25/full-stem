@@ -13,6 +13,11 @@ export const useBuildClassActions = (
   currentClassroomActivity: Partial<ClassroomActivity>,
   currentIndividualActivity: Partial<IndividualActivity>,
   currentResource: Partial<Resource>,
+  setLessons: React.Dispatch<React.SetStateAction<Lesson[]>>,
+  setAssignments: React.Dispatch<React.SetStateAction<Assignment[]>>,
+  setClassroomActivities: React.Dispatch<React.SetStateAction<ClassroomActivity[]>>,
+  setIndividualActivities: React.Dispatch<React.SetStateAction<IndividualActivity[]>>,
+  setResources: React.Dispatch<React.SetStateAction<Resource[]>>,
   setCurrentLesson: React.Dispatch<React.SetStateAction<Partial<Lesson> & { components?: LessonComponent[] }>>,
   setCurrentAssignment: React.Dispatch<React.SetStateAction<Partial<Assignment>>>,
   setCurrentClassroomActivity: React.Dispatch<React.SetStateAction<Partial<ClassroomActivity>>>,
@@ -35,7 +40,7 @@ export const useBuildClassActions = (
         desmosType: currentLesson.desmosType,
         components: currentLesson.components || [],
       };
-      lessons.push(newLesson);
+      setLessons([...lessons, newLesson]);
       setCurrentLesson({
         title: '',
         description: '',
@@ -61,7 +66,7 @@ export const useBuildClassActions = (
         rubric: currentAssignment.rubric || '',
         maxPoints: currentAssignment.maxPoints || 100
       };
-      assignments.push(newAssignment);
+      setAssignments([...assignments, newAssignment]);
       setCurrentAssignment({
         title: '',
         description: '',
@@ -83,7 +88,7 @@ export const useBuildClassActions = (
         materials: currentClassroomActivity.materials || [''],
         instructions: currentClassroomActivity.instructions || ''
       };
-      classroomActivities.push(newActivity);
+      setClassroomActivities([...classroomActivities, newActivity]);
       setCurrentClassroomActivity({
         title: '',
         description: '',
@@ -104,7 +109,7 @@ export const useBuildClassActions = (
         instructions: currentIndividualActivity.instructions || '',
         resources: currentIndividualActivity.resources || ['']
       };
-      individualActivities.push(newActivity);
+      setIndividualActivities([...individualActivities, newActivity]);
       setCurrentIndividualActivity({
         title: '',
         description: '',
@@ -124,7 +129,7 @@ export const useBuildClassActions = (
         url: currentResource.url!,
         description: currentResource.description || ''
       };
-      resources.push(newResource);
+      setResources([...resources, newResource]);
       setCurrentResource({
         title: '',
         type: 'pdf',
@@ -135,28 +140,23 @@ export const useBuildClassActions = (
   };
 
   const removeLesson = (id: string) => {
-    const index = lessons.findIndex(lesson => lesson.id === id);
-    if (index > -1) lessons.splice(index, 1);
+    setLessons(lessons.filter(lesson => lesson.id !== id));
   };
 
   const removeAssignment = (id: string) => {
-    const index = assignments.findIndex(assignment => assignment.id === id);
-    if (index > -1) assignments.splice(index, 1);
+    setAssignments(assignments.filter(assignment => assignment.id !== id));
   };
 
   const removeClassroomActivity = (id: string) => {
-    const index = classroomActivities.findIndex(activity => activity.id === id);
-    if (index > -1) classroomActivities.splice(index, 1);
+    setClassroomActivities(classroomActivities.filter(activity => activity.id !== id));
   };
 
   const removeIndividualActivity = (id: string) => {
-    const index = individualActivities.findIndex(activity => activity.id === id);
-    if (index > -1) individualActivities.splice(index, 1);
+    setIndividualActivities(individualActivities.filter(activity => activity.id !== id));
   };
 
   const removeResource = (id: string) => {
-    const index = resources.findIndex(resource => resource.id === id);
-    if (index > -1) resources.splice(index, 1);
+    setResources(resources.filter(resource => resource.id !== id));
   };
 
   return {
