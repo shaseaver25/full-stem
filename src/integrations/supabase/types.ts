@@ -116,6 +116,7 @@ export type Database = {
           id: string
           last_edited_at: string | null
           overrides: Json | null
+          return_reason: string | null
           status: string | null
           submitted_at: string | null
           text_response: string | null
@@ -132,6 +133,7 @@ export type Database = {
           id?: string
           last_edited_at?: string | null
           overrides?: Json | null
+          return_reason?: string | null
           status?: string | null
           submitted_at?: string | null
           text_response?: string | null
@@ -148,6 +150,7 @@ export type Database = {
           id?: string
           last_edited_at?: string | null
           overrides?: Json | null
+          return_reason?: string | null
           status?: string | null
           submitted_at?: string | null
           text_response?: string | null

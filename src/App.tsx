@@ -18,6 +18,10 @@ import PowerPointCourse from "./pages/PowerPointCourse";
 import OutlookCourse from "./pages/OutlookCourse";
 import LessonPage from "./pages/LessonPage";
 import UserPreferences from "./pages/UserPreferences";
+import StudentDashboard from "./pages/student/index";
+import StudentAssignmentDetail from "./pages/student/assignments/[id]/index";
+import StudentAssignmentSubmit from "./pages/student/assignments/[id]/submit";
+import TeacherAssignmentDetail from "./pages/teacher/assignments/[assignmentId]/index";
 import NotFound from "./pages/NotFound";
 import TeacherAuth from "./pages/TeacherAuth";
 import TeacherOnboarding from "./pages/TeacherOnboarding";
@@ -112,6 +116,11 @@ const App: React.FC = () => {
               } 
             />
             
+            {/* Student Routes */}
+            <Route path="/student" element={<StudentDashboard />} />
+            <Route path="/student/assignments/:id" element={<StudentAssignmentDetail />} />
+            <Route path="/student/assignments/:id/submit" element={<StudentAssignmentSubmit />} />
+            
             {/* Teacher Routes */}
             <Route path="/teacher/auth" element={<TeacherAuth />} />
             <Route 
@@ -195,6 +204,15 @@ const App: React.FC = () => {
               } 
             />
             <Route 
+              path="/teacher/assignments/:assignmentId" 
+              element={
+                <ProtectedTeacherRoute>
+                  <TeacherAssignmentDetail />
+                </ProtectedTeacherRoute>
+              } 
+            />
+            
+            <Route
               path="/build-class/:classId?" 
               element={
                 <ProtectedTeacherRoute requireOnboarding={true}>
