@@ -152,7 +152,7 @@ const Auth = () => {
               </Button>
             </form>
             
-            <div className="mt-6 text-center">
+            <div className="mt-6 text-center space-y-3">
               <button
                 type="button"
                 onClick={() => setIsLogin(!isLogin)}
@@ -163,6 +163,16 @@ const Auth = () => {
                   : "Already have an account? Sign in"
                 }
               </button>
+              
+              <div className="border-t pt-3">
+                <p className="text-sm text-gray-600 mb-2">Are you a student?</p>
+                <Link 
+                  to="/signup/student" 
+                  className="text-blue-600 hover:text-blue-800 hover:underline font-medium"
+                >
+                  Create a Student Account →
+                </Link>
+              </div>
             </div>
           </CardContent>
         </Card>

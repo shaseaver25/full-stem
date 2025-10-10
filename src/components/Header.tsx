@@ -49,6 +49,12 @@ const Header = () => {
               Home
             </Link>
             <Link
+              to="/signup/student"
+              className="text-green-600 hover:text-green-700 px-3 py-2 rounded-md text-sm font-medium"
+            >
+              Student Signup
+            </Link>
+            <Link
               to="/teacher/auth"
               className="text-gray-500 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
             >
@@ -113,6 +119,13 @@ const Header = () => {
                     onClick={closeMobileMenu}
                   >
                     Home
+                  </Link>
+                  <Link
+                    to="/signup/student"
+                    className="text-green-600 hover:text-green-700 px-3 py-2 rounded-md text-base font-medium"
+                    onClick={closeMobileMenu}
+                  >
+                    Student Signup
                   </Link>
                   <Link
                     to="/teacher/auth"
