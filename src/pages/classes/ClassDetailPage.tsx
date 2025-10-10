@@ -1,14 +1,24 @@
 import { useParams, Link, Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, BookOpen } from 'lucide-react';
+import { ArrowLeft, BookOpen, Calendar, GraduationCap, Mail, User, FileText, Folder } from 'lucide-react';
+import { useClassDetails } from '@/hooks/useClassDetails';
+import { Skeleton } from '@/components/ui/skeleton';
+
+const formatDate = (dateString: string) => 
+  new Date(dateString).toLocaleDateString(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
 
 export default function ClassDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const { user, loading } = useAuth();
+  const { user, loading: authLoading } = useAuth();
+  const { data: classData, isLoading, error } = useClassDetails(id || '');
 
-  if (loading) {
+  if (authLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -20,9 +30,61 @@ export default function ClassDetailPage() {
     return <Navigate to="/auth" replace />;
   }
 
+  if (!id) {
+    return <Navigate to="/classes/my-classes" replace />;
+  }
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background p-4 sm:p-6 lg:p-8">
+        <div className="max-w-4xl mx-auto space-y-6">
+          <div className="flex items-center gap-4">
+            <Skeleton className="h-10 w-10" />
+            <Skeleton className="h-8 w-48" />
+          </div>
+          <Skeleton className="h-64 w-full" />
+          <Skeleton className="h-48 w-full" />
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background p-4 sm:p-6 lg:p-8">
+        <div className="max-w-4xl mx-auto space-y-6">
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" size="icon" asChild>
+              <Link to="/classes/my-classes">
+                <ArrowLeft className="w-4 h-4" />
+              </Link>
+            </Button>
+            <h1 className="text-3xl font-bold">Class Not Found</h1>
+          </div>
+          <Card>
+            <CardContent className="pt-6 text-center">
+              <p className="text-muted-foreground mb-4">
+                {error.message === 'Not enrolled in this class' 
+                  ? "You're not enrolled in this class. Please join it first."
+                  : "Unable to load class details. Please try again."}
+              </p>
+              <Button asChild>
+                <Link to="/classes/my-classes">Back to My Classes</Link>
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  if (!classData) {
+    return null;
+  }
+
   return (
-    <div className="flex flex-col min-h-screen bg-background p-4 sm:p-6 lg:p-8">
-      <div className="w-full max-w-4xl mx-auto space-y-6">
+    <div className="min-h-screen bg-background p-4 sm:p-6 lg:p-8">
+      <div className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" asChild>
@@ -33,37 +95,99 @@ export default function ClassDetailPage() {
           <h1 className="text-3xl font-bold">Class Details</h1>
         </div>
 
-        {/* Coming Soon Card */}
-        <Card className="text-center py-12">
+        {/* Class Overview Card */}
+        <Card>
           <CardHeader>
-            <div className="flex justify-center mb-4">
-              <div className="p-4 rounded-full bg-primary/10">
-                <BookOpen className="w-12 h-12 text-primary" />
-              </div>
-            </div>
-            <CardTitle className="text-2xl">Class Page Coming Soon</CardTitle>
+            <CardTitle className="text-2xl">{classData.title}</CardTitle>
+            {classData.description && (
+              <CardDescription className="text-base mt-2">
+                {classData.description}
+              </CardDescription>
+            )}
           </CardHeader>
           <CardContent className="space-y-4">
-            <p className="text-muted-foreground">
-              This page will display your class lessons, assignments, and resources.
-            </p>
-            <div className="text-sm text-muted-foreground">
-              <p className="mb-2">Features in development:</p>
-              <ul className="list-disc list-inside space-y-1">
-                <li>View class lessons and materials</li>
-                <li>Submit assignments</li>
-                <li>Track your progress</li>
-                <li>Communicate with your teacher</li>
-              </ul>
+            <div className="grid gap-4 sm:grid-cols-2">
+              {classData.teacher && (
+                <>
+                  <div className="flex items-center gap-3">
+                    <User className="w-5 h-5 text-muted-foreground" />
+                    <div>
+                      <p className="text-sm font-medium">Teacher</p>
+                      <p className="text-sm text-muted-foreground">{classData.teacher.name}</p>
+                    </div>
+                  </div>
+                  {classData.teacher.email && (
+                    <div className="flex items-center gap-3">
+                      <Mail className="w-5 h-5 text-muted-foreground" />
+                      <div>
+                        <p className="text-sm font-medium">Email</p>
+                        <p className="text-sm text-muted-foreground">{classData.teacher.email}</p>
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+              {classData.schedule && (
+                <div className="flex items-center gap-3">
+                  <Calendar className="w-5 h-5 text-muted-foreground" />
+                  <div>
+                    <p className="text-sm font-medium">Schedule</p>
+                    <p className="text-sm text-muted-foreground">{classData.schedule}</p>
+                  </div>
+                </div>
+              )}
+              {classData.subject && (
+                <div className="flex items-center gap-3">
+                  <BookOpen className="w-5 h-5 text-muted-foreground" />
+                  <div>
+                    <p className="text-sm font-medium">Subject</p>
+                    <p className="text-sm text-muted-foreground">{classData.subject}</p>
+                  </div>
+                </div>
+              )}
+              {classData.grade_level && (
+                <div className="flex items-center gap-3">
+                  <GraduationCap className="w-5 h-5 text-muted-foreground" />
+                  <div>
+                    <p className="text-sm font-medium">Grade Level</p>
+                    <p className="text-sm text-muted-foreground">{classData.grade_level}</p>
+                  </div>
+                </div>
+              )}
+              <div className="flex items-center gap-3">
+                <Calendar className="w-5 h-5 text-muted-foreground" />
+                <div>
+                  <p className="text-sm font-medium">Enrolled</p>
+                  <p className="text-sm text-muted-foreground">{formatDate(classData.enrolled_at)}</p>
+                </div>
+              </div>
             </div>
-            <div className="flex gap-3 justify-center mt-6">
-              <Button asChild>
-                <Link to="/classes/my-classes">Back to My Classes</Link>
-              </Button>
-              <Button variant="outline" asChild>
-                <Link to="/dashboard/student">Dashboard</Link>
-              </Button>
+          </CardContent>
+        </Card>
+
+        {/* Assignments Section */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <FileText className="w-5 h-5" />
+              <CardTitle>Assignments</CardTitle>
             </div>
+          </CardHeader>
+          <CardContent>
+            <p className="text-muted-foreground">No assignments available yet.</p>
+          </CardContent>
+        </Card>
+
+        {/* Resources Section */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Folder className="w-5 h-5" />
+              <CardTitle>Resources</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <p className="text-muted-foreground">No resources available yet.</p>
           </CardContent>
         </Card>
       </div>
