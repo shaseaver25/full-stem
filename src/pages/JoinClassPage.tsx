@@ -1,36 +1,87 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate, Navigate } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { useAuth } from '@/contexts/AuthContext';
+import { useClassEnrollment } from '@/hooks/useClassEnrollment';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { GraduationCap } from 'lucide-react';
-import { toast } from '@/hooks/use-toast';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { GraduationCap, CheckCircle2, Loader2 } from 'lucide-react';
+
+const enrollmentSchema = z.object({
+  classCode: z
+    .string()
+    .min(4, 'Class code must be at least 4 characters')
+    .max(10, 'Class code must be at most 10 characters')
+    .transform((val) => val.toUpperCase().trim())
+});
+
+type EnrollmentFormData = z.infer<typeof enrollmentSchema>;
 
 export default function JoinClassPage() {
-  const [classCode, setClassCode] = useState('');
+  const { user, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
+  const enrollment = useClassEnrollment();
+  const [enrollmentSuccess, setEnrollmentSuccess] = useState(false);
+  const [enrolledClassName, setEnrolledClassName] = useState('');
 
-  const handleJoinClass = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!classCode.trim()) {
-      toast({
-        title: 'Class Code Required',
-        description: 'Please enter a valid class code',
-        variant: 'destructive'
-      });
-      return;
+  const form = useForm<EnrollmentFormData>({
+    resolver: zodResolver(enrollmentSchema),
+    defaultValues: {
+      classCode: ''
     }
+  });
 
-    toast({
-      title: 'Coming Soon',
-      description: 'Class joining functionality will be available soon!',
-    });
+  // Redirect to dashboard after successful enrollment
+  useEffect(() => {
+    if (enrollmentSuccess) {
+      const timer = setTimeout(() => {
+        navigate('/dashboard/student');
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [enrollmentSuccess, navigate]);
+
+  const onSubmit = async (data: EnrollmentFormData) => {
+    if (!data.classCode) return;
+    
+    const result = await enrollment.mutateAsync({ classCode: data.classCode });
+    
+    if (result.success && result.classTitle) {
+      setEnrollmentSuccess(true);
+      setEnrolledClassName(result.classTitle);
+      form.reset();
+    }
   };
+
+  // Auth protection
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Navigate to="/auth" replace />;
+  }
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4 sm:p-8 bg-background">
       <div className="w-full max-w-2xl space-y-6">
-        <Card>
+        <Card className="shadow-lg">
           <CardHeader>
             <div className="flex justify-center mb-4">
               <div className="p-4 rounded-full bg-primary/10">
@@ -44,27 +95,59 @@ export default function JoinClassPage() {
               Enter the class code provided by your teacher to join their class
             </p>
 
-            <form onSubmit={handleJoinClass} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="classCode">Class Code</Label>
-                <Input
-                  id="classCode"
-                  type="text"
-                  placeholder="e.g., ABC123"
-                  value={classCode}
-                  onChange={(e) => setClassCode(e.target.value.toUpperCase())}
-                  className="text-center text-lg font-mono tracking-wider"
-                  maxLength={10}
-                />
-                <p className="text-xs text-muted-foreground text-center">
-                  Ask your teacher for the class code
-                </p>
-              </div>
+            {enrollmentSuccess ? (
+              <Alert className="bg-green-50 border-green-200">
+                <CheckCircle2 className="h-5 w-5 text-green-600" />
+                <AlertDescription className="ml-2 text-green-800">
+                  <strong>🎉 Success!</strong> You've joined {enrolledClassName}!
+                  <br />
+                  <span className="text-sm">Redirecting to your dashboard...</span>
+                </AlertDescription>
+              </Alert>
+            ) : (
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="classCode"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Class Code</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="e.g., ABC123"
+                            className="text-center text-lg font-mono tracking-wider uppercase"
+                            maxLength={10}
+                            {...field}
+                            onChange={(e) => field.onChange(e.target.value.toUpperCase())}
+                          />
+                        </FormControl>
+                        <p className="text-xs text-muted-foreground text-center">
+                          Ask your teacher for the class code
+                        </p>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-              <Button type="submit" className="w-full" size="lg">
-                Join Class
-              </Button>
-            </form>
+                  <Button 
+                    type="submit" 
+                    className="w-full" 
+                    size="lg"
+                    disabled={enrollment.isPending}
+                  >
+                    {enrollment.isPending ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Joining...
+                      </>
+                    ) : (
+                      'Join Class'
+                    )}
+                  </Button>
+                </form>
+              </Form>
+            )}
 
             <div className="relative">
               <div className="absolute inset-0 flex items-center">

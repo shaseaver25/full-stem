@@ -617,6 +617,7 @@ export type Database = {
       }
       classes: {
         Row: {
+          class_code: string | null
           content_metadata: Json | null
           created_at: string | null
           description: string | null
@@ -638,6 +639,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          class_code?: string | null
           content_metadata?: Json | null
           created_at?: string | null
           description?: string | null
@@ -659,6 +661,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          class_code?: string | null
           content_metadata?: Json | null
           created_at?: string | null
           description?: string | null
@@ -2392,6 +2395,10 @@ export type Database = {
     Functions: {
       calculate_letter_grade: {
         Args: { percentage: number }
+        Returns: string
+      }
+      generate_class_code: {
+        Args: Record<PropertyKey, never>
         Returns: string
       }
       has_permission: {
