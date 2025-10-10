@@ -42,3 +42,9 @@ verify_jwt = true
 
 [functions.test-tts]
 verify_jwt = true
+
+[functions.generate-ai-feedback]
+verify_jwt = true
+
+[functions.generate-performance-summary]
+verify_jwt = true

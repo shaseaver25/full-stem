@@ -57,6 +57,7 @@ import MyClassesPage from "./pages/classes/MyClassesPage";
 import StudentClassDetailPage from "./pages/classes/ClassDetailPage";
 import AssignmentsListPage from "./pages/assignments/AssignmentsListPage";
 import AssignmentDetailPage from "./pages/assignments/AssignmentDetailPage";
+import MyGradesPage from "./pages/grades/MyGradesPage";
 
 const queryClient = new QueryClient();
 
@@ -87,6 +88,7 @@ const App: React.FC = () => {
           <Route path="/classes/:id" element={<StudentClassDetailPage />} />
           <Route path="/assignments" element={<AssignmentsListPage />} />
           <Route path="/assignments/:id" element={<AssignmentDetailPage />} />
+          <Route path="/grades" element={<MyGradesPage />} />
           <Route path="/trial" element={<TrialPage />} />
             
             {/* Demo Routes */}

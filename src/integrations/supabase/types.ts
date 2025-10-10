@@ -107,6 +107,7 @@ export type Database = {
       }
       assignment_submissions: {
         Row: {
+          ai_feedback: string | null
           assignment_id: string
           created_at: string
           file_names: string[] | null
@@ -124,6 +125,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          ai_feedback?: string | null
           assignment_id: string
           created_at?: string
           file_names?: string[] | null
@@ -141,6 +143,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          ai_feedback?: string | null
           assignment_id?: string
           created_at?: string
           file_names?: string[] | null
