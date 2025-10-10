@@ -53,6 +53,7 @@ import { StudentSignupForm } from "@/components/auth/student/StudentSignupForm";
 import NewStudentDashboard from "@/pages/dashboard/StudentDashboard";
 import LearningGeniusSurveyPage from "./pages/LearningGeniusSurveyPage";
 import JoinClassPage from "./pages/JoinClassPage";
+import MyClassesPage from "./pages/classes/MyClassesPage";
 
 const queryClient = new QueryClient();
 
@@ -79,6 +80,7 @@ const App: React.FC = () => {
           <Route path="/dashboard/student" element={<NewStudentDashboard />} />
           <Route path="/quiz/learning-genius" element={<LearningGeniusSurveyPage />} />
           <Route path="/classes/join" element={<JoinClassPage />} />
+          <Route path="/classes/my-classes" element={<MyClassesPage />} />
           <Route path="/trial" element={<TrialPage />} />
             
             {/* Demo Routes */}

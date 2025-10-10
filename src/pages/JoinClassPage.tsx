@@ -102,6 +102,11 @@ export default function JoinClassPage() {
                   <strong>🎉 Success!</strong> You've joined {enrolledClassName}!
                   <br />
                   <span className="text-sm">Redirecting to your dashboard...</span>
+                  <div className="mt-3">
+                    <Button asChild variant="outline" size="sm">
+                      <Link to="/classes/my-classes">View All My Classes →</Link>
+                    </Button>
+                  </div>
                 </AlertDescription>
               </Alert>
             ) : (

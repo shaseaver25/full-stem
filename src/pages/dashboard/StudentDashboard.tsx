@@ -168,28 +168,51 @@ export default function StudentDashboard() {
             </Link>
           </Card>
 
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer group">
-            <Link to="/classes/join" className="block">
-              <CardContent className="pt-6 text-center space-y-4">
-                <div className="flex justify-center">
-                  <div className="p-4 rounded-full bg-primary/10 group-hover:bg-primary/20 transition-colors">
-                    <GraduationCap className="w-8 h-8 text-primary" />
-                  </div>
+        <Card className="hover:shadow-lg transition-shadow cursor-pointer group">
+          <CardContent className="pt-6 text-center space-y-4">
+            <div className="flex justify-center">
+              <div className="p-4 rounded-full bg-primary/10 group-hover:bg-primary/20 transition-colors">
+                <GraduationCap className="w-8 h-8 text-primary" />
+              </div>
+            </div>
+            <div>
+              <h3 className="font-semibold text-lg mb-2">
+                My Classes
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                View all your enrolled classes, assignments, and learning progress
+              </p>
+            </div>
+            <Button asChild className="w-full">
+              <Link to="/classes/my-classes">
+                View Classes →
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card className="hover:shadow-lg transition-shadow cursor-pointer group">
+          <Link to="/classes/join" className="block">
+            <CardContent className="pt-6 text-center space-y-4">
+              <div className="flex justify-center">
+                <div className="p-4 rounded-full bg-primary/10 group-hover:bg-primary/20 transition-colors">
+                  <GraduationCap className="w-8 h-8 text-primary" />
                 </div>
-                <div>
-                  <h3 className="font-semibold text-lg mb-2">
-                    Join a Class
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    Connect with your teacher and access your personalized lessons
-                  </p>
-                </div>
-                <Button variant="secondary" className="w-full">
-                  Browse Classes →
-                </Button>
-              </CardContent>
-            </Link>
-          </Card>
+              </div>
+              <div>
+                <h3 className="font-semibold text-lg mb-2">
+                  Join a Class
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Connect with your teacher and access your personalized lessons
+                </p>
+              </div>
+              <Button variant="secondary" className="w-full">
+                Browse Classes →
+              </Button>
+            </CardContent>
+          </Link>
+        </Card>
         </div>
 
         {/* Additional Help */}
