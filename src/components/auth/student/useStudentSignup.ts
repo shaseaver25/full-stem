@@ -55,7 +55,7 @@ export const useStudentSignup = () => {
 
       // Redirect after a short delay to allow toast to display
       setTimeout(() => {
-        navigate('/student');
+        navigate('/dashboard/student');
       }, 2000);
     },
     onError: (error: SignupError) => {

@@ -50,6 +50,9 @@ import DemoGate from "./pages/DemoGate";
 import DemoStart from "./pages/DemoStart";
 import DemoShowcase from "./pages/DemoShowcase";
 import { StudentSignupForm } from "@/components/auth/student/StudentSignupForm";
+import NewStudentDashboard from "@/pages/dashboard/StudentDashboard";
+import LearningGeniusSurveyPage from "./pages/LearningGeniusSurveyPage";
+import JoinClassPage from "./pages/JoinClassPage";
 
 const queryClient = new QueryClient();
 
@@ -72,8 +75,11 @@ const App: React.FC = () => {
                   <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
-            <Route path="/signup/student" element={<StudentSignupForm />} />
-            <Route path="/trial" element={<TrialPage />} />
+          <Route path="/signup/student" element={<StudentSignupForm />} />
+          <Route path="/dashboard/student" element={<NewStudentDashboard />} />
+          <Route path="/quiz/learning-genius" element={<LearningGeniusSurveyPage />} />
+          <Route path="/classes/join" element={<JoinClassPage />} />
+          <Route path="/trial" element={<TrialPage />} />
             
             {/* Demo Routes */}
             <Route path="/demo" element={<DemoGate />} />
