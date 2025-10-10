@@ -54,6 +54,7 @@ import NewStudentDashboard from "@/pages/dashboard/StudentDashboard";
 import LearningGeniusSurveyPage from "./pages/LearningGeniusSurveyPage";
 import JoinClassPage from "./pages/JoinClassPage";
 import MyClassesPage from "./pages/classes/MyClassesPage";
+import StudentClassDetailPage from "./pages/classes/ClassDetailPage";
 
 const queryClient = new QueryClient();
 
@@ -81,6 +82,7 @@ const App: React.FC = () => {
           <Route path="/quiz/learning-genius" element={<LearningGeniusSurveyPage />} />
           <Route path="/classes/join" element={<JoinClassPage />} />
           <Route path="/classes/my-classes" element={<MyClassesPage />} />
+          <Route path="/classes/:id" element={<StudentClassDetailPage />} />
           <Route path="/trial" element={<TrialPage />} />
             
             {/* Demo Routes */}
