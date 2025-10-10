@@ -2063,7 +2063,7 @@ export type Database = {
       }
       students: {
         Row: {
-          class_id: string
+          class_id: string | null
           created_at: string | null
           first_name: string
           grade_level: string | null
@@ -2079,7 +2079,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
-          class_id: string
+          class_id?: string | null
           created_at?: string | null
           first_name: string
           grade_level?: string | null
@@ -2095,7 +2095,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
-          class_id?: string
+          class_id?: string | null
           created_at?: string | null
           first_name?: string
           grade_level?: string | null
@@ -2437,7 +2437,13 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "moderator" | "user" | "developer" | "super_admin"
+      app_role:
+        | "admin"
+        | "moderator"
+        | "user"
+        | "developer"
+        | "super_admin"
+        | "student"
       permission_type:
         | "read_users"
         | "write_users"
@@ -2583,7 +2589,14 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "moderator", "user", "developer", "super_admin"],
+      app_role: [
+        "admin",
+        "moderator",
+        "user",
+        "developer",
+        "super_admin",
+        "student",
+      ],
       permission_type: [
         "read_users",
         "write_users",
