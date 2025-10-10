@@ -49,6 +49,7 @@ import AICourseBuilderPage from "./pages/AICourseBuilderPage";
 import DemoGate from "./pages/DemoGate";
 import DemoStart from "./pages/DemoStart";
 import DemoShowcase from "./pages/DemoShowcase";
+import { StudentSignupForm } from "@/components/auth/student/StudentSignupForm";
 
 const queryClient = new QueryClient();
 
@@ -71,6 +72,7 @@ const App: React.FC = () => {
                   <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/signup/student" element={<StudentSignupForm />} />
             <Route path="/trial" element={<TrialPage />} />
             
             {/* Demo Routes */}
