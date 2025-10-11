@@ -59,6 +59,7 @@ import StudentClassDetailPage from "./pages/classes/ClassDetailPage";
 import AssignmentsListPage from "./pages/assignments/AssignmentsListPage";
 import AssignmentDetailPage from "./pages/assignments/AssignmentDetailPage";
 import MyGradesPage from "./pages/grades/MyGradesPage";
+import TeacherAnalyticsDashboard from "./pages/dashboard/teacher/TeacherAnalyticsDashboard";
 
 const queryClient = new QueryClient();
 
@@ -235,6 +236,14 @@ const App: React.FC = () => {
               element={
                 <ProtectedTeacherRoute requireOnboarding={true}>
                   <TeacherFeedbackDashboard />
+                </ProtectedTeacherRoute>
+              } 
+            />
+            <Route 
+              path="/dashboard/teacher/analytics" 
+              element={
+                <ProtectedTeacherRoute requireOnboarding={true}>
+                  <TeacherAnalyticsDashboard />
                 </ProtectedTeacherRoute>
               } 
             />
