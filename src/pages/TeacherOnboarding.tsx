@@ -107,7 +107,8 @@ const TeacherOnboarding = () => {
     });
     
     if (success) {
-      navigate('/teacher/dashboard');
+      // Force full page reload to clear all cached state
+      window.location.href = '/teacher/dashboard';
     }
   };
 
