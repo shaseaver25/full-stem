@@ -180,6 +180,38 @@ const LessonComponentRenderer: React.FC<LessonComponentRendererProps> = ({ compo
       case 'codingEditor':
         return <CodeIDE content={content} />;
 
+      case 'slides':
+        return (
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold">Slides</h3>
+            {content.embedUrl ? (
+              <div className="aspect-video w-full rounded-lg overflow-hidden border">
+                <iframe
+                  src={content.embedUrl}
+                  className="w-full h-full"
+                  allowFullScreen
+                  title={content.title || 'Presentation Slides'}
+                />
+              </div>
+            ) : content.slides && Array.isArray(content.slides) ? (
+              <div className="space-y-4">
+                {content.slides.map((slide: any, index: number) => (
+                  <Card key={index} className="p-6">
+                    <h4 className="text-base font-semibold mb-2">Slide {index + 1}</h4>
+                    <SafeHtml html={slide.content || slide.html || ''} className="max-w-none" />
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <Alert>
+                <AlertDescription>
+                  No slide content available. Please add an embed URL or slide content.
+                </AlertDescription>
+              </Alert>
+            )}
+          </div>
+        );
+
       default:
         return (
           <Alert>

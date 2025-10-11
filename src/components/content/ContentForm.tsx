@@ -63,7 +63,21 @@ const ContentForm: React.FC<ContentFormProps> = ({
               <SelectItem value="video">Video</SelectItem>
               <SelectItem value="audio">Audio</SelectItem>
               <SelectItem value="image">Image</SelectItem>
+              <SelectItem value="slides">Slides</SelectItem>
               <SelectItem value="interactive">Interactive</SelectItem>
+              <SelectItem value="instructions">Instructions</SelectItem>
+              <SelectItem value="assignment">Assignment</SelectItem>
+              <SelectItem value="activity">Activity</SelectItem>
+              <SelectItem value="resources">Resources</SelectItem>
+              <SelectItem value="discussion">Discussion</SelectItem>
+              <SelectItem value="reflection">Reflection</SelectItem>
+              <SelectItem value="formativeCheck">Formative Check</SelectItem>
+              <SelectItem value="checklist">Checklist</SelectItem>
+              <SelectItem value="codingEditor">Coding Editor</SelectItem>
+              <SelectItem value="rubric">Rubric</SelectItem>
+              <SelectItem value="peerReview">Peer Review</SelectItem>
+              <SelectItem value="aiAssistant">AI Assistant</SelectItem>
+              <SelectItem value="liveDemo">Live Demo</SelectItem>
             </SelectContent>
           </Select>
         </div>

@@ -84,14 +84,40 @@ export const groupComponentsByType = (components: any[]) => {
 
 export const getComponentTypeLabel = (type: string): string => {
   switch (type) {
+    case 'video':
+      return 'Videos';
+    case 'instructions':
+      return 'Instructions';
+    case 'assignment':
+      return 'Assignments';
     case 'activity':
       return 'Activities';
+    case 'resources':
     case 'resource':
       return 'Resources';
-    case 'quiz':
-      return 'Quizzes';
+    case 'discussion':
+      return 'Discussions';
+    case 'reflection':
+      return 'Reflections';
+    case 'formativeCheck':
     case 'formative_check':
       return 'Formative Checks';
+    case 'rubric':
+      return 'Rubrics';
+    case 'codingEditor':
+      return 'Coding Exercises';
+    case 'aiAssistant':
+      return 'AI Assistants';
+    case 'peerReview':
+      return 'Peer Reviews';
+    case 'checklist':
+      return 'Checklists';
+    case 'liveDemo':
+      return 'Live Demos';
+    case 'slides':
+      return 'Slides';
+    case 'quiz':
+      return 'Quizzes';
     case 'homework':
       return 'Homework';
     default:

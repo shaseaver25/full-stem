@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 export interface LessonComponent {
   id: string;
   lesson_id: number;
-  component_type: 'video' | 'instructions' | 'assignment' | 'activity' | 'resources' | 'discussion' | 'reflection' | 'formativeCheck' | 'rubric' | 'codingEditor' | 'aiAssistant' | 'peerReview' | 'checklist' | 'liveDemo';
+  component_type: 'video' | 'instructions' | 'assignment' | 'activity' | 'resources' | 'discussion' | 'reflection' | 'formativeCheck' | 'rubric' | 'codingEditor' | 'aiAssistant' | 'peerReview' | 'checklist' | 'liveDemo' | 'slides';
   content: any;
   reading_level?: number;
   language_code: string;
