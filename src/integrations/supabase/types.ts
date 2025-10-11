@@ -2302,6 +2302,42 @@ export type Database = {
         }
         Relationships: []
       }
+      tts_cache: {
+        Row: {
+          audio_base64: string
+          audio_mime: string
+          created_at: string | null
+          id: string
+          language_code: string
+          last_accessed: string | null
+          text: string
+          user_id: string | null
+          voice_style: string
+        }
+        Insert: {
+          audio_base64: string
+          audio_mime?: string
+          created_at?: string | null
+          id?: string
+          language_code: string
+          last_accessed?: string | null
+          text: string
+          user_id?: string | null
+          voice_style: string
+        }
+        Update: {
+          audio_base64?: string
+          audio_mime?: string
+          created_at?: string | null
+          id?: string
+          language_code?: string
+          last_accessed?: string | null
+          text?: string
+          user_id?: string | null
+          voice_style?: string
+        }
+        Relationships: []
+      }
       "User Preferences": {
         Row: {
           "Enable Read-Aloud": boolean | null
@@ -2423,6 +2459,10 @@ export type Database = {
       calculate_letter_grade: {
         Args: { percentage: number }
         Returns: string
+      }
+      cleanup_old_tts_cache: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       generate_class_code: {
         Args: Record<PropertyKey, never>

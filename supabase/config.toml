@@ -51,3 +51,6 @@ verify_jwt = true
 
 [functions.translate-text]
 verify_jwt = true
+
+[functions.text-to-speech]
+verify_jwt = true
