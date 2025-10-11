@@ -9,6 +9,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { SuperAdminProvider } from "@/contexts/SuperAdminContext";
 import { ImpersonationProvider } from "@/contexts/ImpersonationContext";
 import { AccessibilityProvider } from "@/contexts/AccessibilityContext";
+import { AccessibilityToolbar } from "@/components/ui/AccessibilityToolbar";
 import { SuperAdminBanner, SuperAdminWatermark } from "@/components/admin/SuperAdminBanner";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
@@ -283,6 +284,7 @@ const App: React.FC = () => {
             <Route path="*" element={<NotFound />} />
                   </Routes>
                   <SuperAdminWatermark />
+                  <AccessibilityToolbar />
                 </div>
               </BrowserRouter>
             </TooltipProvider>
