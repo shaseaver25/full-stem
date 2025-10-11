@@ -1,3 +1,4 @@
+import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -99,45 +100,39 @@ serve(async (req) => {
     
     console.log('Generating AI feedback for submission:', submissionId);
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
+    const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
+    if (!OPENAI_API_KEY) {
+      throw new Error("OPENAI_API_KEY is not configured");
     }
 
-    // Create personalized system prompt based on student's language
-    const languageInstruction = preferredLanguage === 'en' 
-      ? '' 
-      : `Respond in ${preferredLanguage} language.`;
+    // Create personalized prompt based on student's language
+    const prompt = `
+You are an educational assistant that provides kind, constructive feedback to students.
+- The student's work is below:
+---
+${sanitizedText}
+---
+Grade received: ${grade || "N/A"}.
+${teacherFeedback ? `Teacher's feedback: ${teacherFeedback}` : ''}
 
-    const systemPrompt = `You are an encouraging AI tutor providing personalized learning tips to students. 
-${languageInstruction}
-Analyze the student's work and provide:
-1. One specific strength you noticed
-2. One actionable suggestion for improvement
-3. One encouraging tip for continued growth
+Write feedback in ${preferredLanguage || "English"} that:
+- Encourages the student
+- Highlights 1 strength
+- Suggests 1 specific way to improve
+- Uses clear, age-appropriate language
+- Is under 3 sentences long
+    `.trim();
 
-Keep your response concise (2-3 sentences) and age-appropriate for middle/high school students.`;
-
-    const userPrompt = `Student Submission: "${sanitizedText}"
-${grade ? `Grade Received: ${grade}%` : 'Grade: Pending'}
-${teacherFeedback ? `Teacher Feedback: "${teacherFeedback}"` : ''}
-
-Provide personalized learning tips for this student.`;
-
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        Authorization: `Bearer ${OPENAI_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
-        ],
-        temperature: 0.7,
-        max_tokens: 300,
+        model: "gpt-5-mini-2025-08-07",
+        messages: [{ role: "user", content: prompt }],
+        max_completion_tokens: 300,
       }),
     });
 

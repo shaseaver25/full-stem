@@ -1,3 +1,4 @@
+import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
@@ -11,84 +12,69 @@ serve(async (req) => {
   }
 
   try {
-    const { grades, preferredLanguage = 'en' } = await req.json();
+    const { submissions, preferredLanguage = 'en' } = await req.json();
     
-    // Input validation
-    if (!grades || !Array.isArray(grades)) {
+    // Input validation - support both 'submissions' and 'grades' for backward compatibility
+    const gradesArray = submissions || [];
+    
+    if (!Array.isArray(gradesArray)) {
       return new Response(
-        JSON.stringify({ error: "Invalid grades format" }),
+        JSON.stringify({ error: "Invalid submissions format" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
     // Limit number of submissions to prevent excessive API costs
     const maxSubmissions = 50;
-    const limitedGrades = grades.slice(0, maxSubmissions);
+    const limitedSubmissions = gradesArray.slice(0, maxSubmissions);
     
-    console.log('Generating performance summary for', limitedGrades.length, 'submissions');
+    console.log('Generating performance summary for', limitedSubmissions.length, 'submissions');
 
-    if (limitedGrades.length === 0) {
+    if (limitedSubmissions.length === 0) {
       return new Response(
-        JSON.stringify({ summary: "Complete some assignments to see your personalized performance summary!" }),
+        JSON.stringify({ feedback: "Complete some assignments to see your personalized performance summary!" }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
+    const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
+    if (!OPENAI_API_KEY) {
+      throw new Error("OPENAI_API_KEY is not configured");
     }
 
-    // Calculate basic statistics
-    const gradedSubmissions = limitedGrades.filter((g: any) => g.grade !== null && g.grade !== undefined);
-    const averageGrade = gradedSubmissions.length > 0
-      ? gradedSubmissions.reduce((sum: number, g: any) => sum + g.grade, 0) / gradedSubmissions.length
-      : 0;
-
-    const languageInstruction = preferredLanguage === 'en' 
-      ? '' 
-      : `Respond in ${preferredLanguage} language.`;
-
-    const systemPrompt = `You are an encouraging AI academic advisor providing a personalized performance summary to a student.
-${languageInstruction}
-Based on their grades and submissions, provide:
-1. Overall assessment (1 sentence about their performance level)
-2. Key strengths (1-2 specific areas where they excel)
-3. Growth opportunities (1-2 actionable areas to focus on)
-4. Motivational conclusion (1 encouraging sentence)
-
-Keep the summary concise (4-5 sentences total) and age-appropriate for middle/high school students.`;
-
-    const submissionSummary = gradedSubmissions
-      .map((g: any) => {
-        // Sanitize and limit feedback length
-        const feedback = (g.teacherFeedback || 'None').substring(0, 200);
-        const title = (g.assignmentTitle || 'Untitled').substring(0, 100);
-        return `Assignment: ${title}, Grade: ${g.grade}%, Feedback: ${feedback}`;
+    // Build summary from submissions
+    const submissionsSummary = limitedSubmissions
+      .map((s: any) => {
+        const title = (s.assignment_title || s.assignmentTitle || 'Untitled').substring(0, 100);
+        const grade = s.grade || 'N/A';
+        const feedback = (s.feedback || s.teacherFeedback || 'None').substring(0, 200);
+        return `Assignment: ${title}\nGrade: ${grade}\nFeedback: ${feedback}`;
       })
-      .join('\n');
+      .join('\n\n');
 
-    const userPrompt = `Student has completed ${gradedSubmissions.length} graded assignments with an average grade of ${averageGrade.toFixed(1)}%.
+    const prompt = `
+You are an educational AI that summarizes student performance based on multiple assignments.
+Here is their work summary:
+${submissionsSummary}
 
-Submissions:
-${submissionSummary}
+Write a paragraph in ${preferredLanguage || "English"} summarizing:
+- The student's overall progress
+- Top 1–2 strengths
+- One area to improve
+- Keep tone positive and motivational
+- Limit to 4 sentences maximum
+    `.trim();
 
-Provide a personalized performance summary.`;
-
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        Authorization: `Bearer ${OPENAI_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
-        ],
-        temperature: 0.7,
-        max_tokens: 400,
+        model: "gpt-5-mini-2025-08-07",
+        messages: [{ role: "user", content: prompt }],
+        max_completion_tokens: 400,
       }),
     });
 
@@ -114,12 +100,12 @@ Provide a personalized performance summary.`;
     }
 
     const data = await response.json();
-    const summary = data.choices[0].message.content;
+    const feedback = data.choices[0].message.content.trim();
 
     console.log('Performance summary generated successfully');
 
     return new Response(
-      JSON.stringify({ summary }),
+      JSON.stringify({ feedback }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
