@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      accessibility_settings: {
+        Row: {
+          created_at: string | null
+          dyslexia_font: boolean | null
+          high_contrast: boolean | null
+          preferred_language: string | null
+          translation_enabled: boolean | null
+          tts_enabled: boolean | null
+          updated_at: string | null
+          user_id: string
+          voice_style: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          dyslexia_font?: boolean | null
+          high_contrast?: boolean | null
+          preferred_language?: string | null
+          translation_enabled?: boolean | null
+          tts_enabled?: boolean | null
+          updated_at?: string | null
+          user_id: string
+          voice_style?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          dyslexia_font?: boolean | null
+          high_contrast?: boolean | null
+          preferred_language?: string | null
+          translation_enabled?: boolean | null
+          tts_enabled?: boolean | null
+          updated_at?: string | null
+          user_id?: string
+          voice_style?: string | null
+        }
+        Relationships: []
+      }
       activities: {
         Row: {
           activity_type: string

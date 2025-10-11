@@ -8,6 +8,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { SuperAdminProvider } from "@/contexts/SuperAdminContext";
 import { ImpersonationProvider } from "@/contexts/ImpersonationContext";
+import { AccessibilityProvider } from "@/contexts/AccessibilityContext";
 import { SuperAdminBanner, SuperAdminWatermark } from "@/components/admin/SuperAdminBanner";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
@@ -75,14 +76,15 @@ const App: React.FC = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <SuperAdminProvider>
-          <ImpersonationProvider>
-            <TooltipProvider>
-              <Toaster />
-              <Sonner />
-              <BrowserRouter>
-                <div className="min-h-screen bg-background">
-                  <SuperAdminBanner />
+        <AccessibilityProvider>
+          <SuperAdminProvider>
+            <ImpersonationProvider>
+              <TooltipProvider>
+                <Toaster />
+                <Sonner />
+                <BrowserRouter>
+                  <div className="min-h-screen bg-background">
+                    <SuperAdminBanner />
                   <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
@@ -286,9 +288,10 @@ const App: React.FC = () => {
             </TooltipProvider>
           </ImpersonationProvider>
         </SuperAdminProvider>
-      </AuthProvider>
-    </QueryClientProvider>
-  );
+      </AccessibilityProvider>
+    </AuthProvider>
+  </QueryClientProvider>
+);
 };
 
 export default App;

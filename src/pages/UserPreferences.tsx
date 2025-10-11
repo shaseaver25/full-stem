@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
 import { useAuth } from '@/contexts/AuthContext';
+import { AccessibilityToggle } from '@/components/ui/AccessibilityToggle';
 
 interface PreferencesFormData {
   preferredLanguage: string;
@@ -87,7 +88,11 @@ const UserPreferences = () => {
         </div>
 
         {/* User Preferences Content */}
-        <div className="max-w-2xl mx-auto px-4 py-8">
+        <div className="max-w-2xl mx-auto px-4 py-8 space-y-6">
+          {/* Accessibility Settings */}
+          <AccessibilityToggle />
+
+          {/* Legacy Preferences */}
           <Card className="shadow-lg">
             <CardHeader className="text-center">
               <div className="mx-auto bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mb-4">

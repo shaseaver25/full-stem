@@ -101,3 +101,32 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Accessibility: High Contrast Mode */
+.accessibility-high-contrast {
+  filter: contrast(150%);
+}
+
+.accessibility-high-contrast body {
+  background-color: hsl(0, 0%, 0%);
+  color: hsl(0, 0%, 100%);
+}
+
+.accessibility-high-contrast .bg-background {
+  background-color: hsl(0, 0%, 10%) !important;
+}
+
+.accessibility-high-contrast .text-foreground {
+  color: hsl(0, 0%, 100%) !important;
+}
+
+.accessibility-high-contrast .bg-card {
+  background-color: hsl(0, 0%, 15%) !important;
+  border-color: hsl(0, 0%, 40%) !important;
+}
+
+/* Accessibility: OpenDyslexic Font */
+.font-opendyslexic,
+.font-opendyslexic * {
+  font-family: 'OpenDyslexic', sans-serif !important;
+}

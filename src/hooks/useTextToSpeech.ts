@@ -1,95 +1,76 @@
+import { useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAccessibility } from '@/contexts/AccessibilityContext';
+import { useToast } from '@/hooks/use-toast';
 
-import { useState, useRef, useCallback, useEffect } from 'react';
-import { useUserPreferences } from './useUserPreferences';
-
-export const useTextToSpeech = () => {
-  const { preferences } = useUserPreferences();
+export function useTextToSpeech() {
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isPaused, setIsPaused] = useState(false);
-  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const { settings } = useAccessibility();
+  const { toast } = useToast();
 
-  // Always enable text-to-speech functionality
-  const isEnabled = true;
-
-  const speak = useCallback((text: string) => {
-    if (!text.trim()) return;
-
-    console.log('Starting to speak text:', text.substring(0, 100) + '...');
-
-    // Stop any current speech
-    window.speechSynthesis.cancel();
-
-    const utterance = new SpeechSynthesisUtterance(text);
-    utteranceRef.current = utterance;
-
-    // Set speech rate based on user preference, with fallback
-    const textSpeed = preferences?.['Text Speed'] || 'Normal';
-    switch (textSpeed) {
-      case 'Slow':
-        utterance.rate = 0.7;
-        break;
-      case 'Fast':
-        utterance.rate = 1.3;
-        break;
-      default:
-        utterance.rate = 1.0;
+  const speak = async (text: string) => {
+    if (!settings.ttsEnabled) {
+      return;
     }
 
-    utterance.onstart = () => {
-      console.log('Speech started');
-      setIsPlaying(true);
-      setIsPaused(false);
-    };
-
-    utterance.onend = () => {
-      console.log('Speech ended');
-      setIsPlaying(false);
-      setIsPaused(false);
-    };
-
-    utterance.onerror = (event) => {
-      console.error('Speech error:', event);
-      setIsPlaying(false);
-      setIsPaused(false);
-    };
-
-    window.speechSynthesis.speak(utterance);
-  }, [preferences]);
-
-  const pause = useCallback(() => {
-    if (window.speechSynthesis.speaking && !window.speechSynthesis.paused) {
-      window.speechSynthesis.pause();
-      setIsPaused(true);
+    if (!text || text.trim().length === 0) {
+      return;
     }
-  }, []);
 
-  const resume = useCallback(() => {
-    if (window.speechSynthesis.paused) {
-      window.speechSynthesis.resume();
-      setIsPaused(false);
+    setIsLoading(true);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('text-to-speech', {
+        body: {
+          text,
+          language_code: settings.preferredLanguage,
+          voice_style: settings.voiceStyle,
+        },
+      });
+
+      if (error) {
+        console.error('TTS error:', error);
+        toast({
+          title: 'Text-to-Speech Error',
+          description: 'Failed to generate audio. Please try again.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      if (data?.audio_base64) {
+        const audio = new Audio(`data:${data.audio_mime};base64,${data.audio_base64}`);
+        
+        audio.onplay = () => setIsPlaying(true);
+        audio.onended = () => setIsPlaying(false);
+        audio.onerror = () => {
+          setIsPlaying(false);
+          toast({
+            title: 'Playback Error',
+            description: 'Failed to play audio.',
+            variant: 'destructive',
+          });
+        };
+
+        await audio.play();
+      }
+    } catch (error) {
+      console.error('TTS error:', error);
+      toast({
+        title: 'Error',
+        description: 'An unexpected error occurred.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
     }
-  }, []);
-
-  const stop = useCallback(() => {
-    window.speechSynthesis.cancel();
-    setIsPlaying(false);
-    setIsPaused(false);
-  }, []);
-
-  // Clean up on unmount
-  useEffect(() => {
-    return () => {
-      window.speechSynthesis.cancel();
-    };
-  }, []);
+  };
 
   return {
     speak,
-    pause,
-    resume,
-    stop,
     isPlaying,
-    isPaused,
-    isEnabled,
+    isLoading,
+    isEnabled: settings.ttsEnabled,
   };
-};
+}
