@@ -9,7 +9,9 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { SuperAdminProvider } from "@/contexts/SuperAdminContext";
 import { ImpersonationProvider } from "@/contexts/ImpersonationContext";
 import { AccessibilityProvider } from "@/contexts/AccessibilityContext";
+import { FocusModeProvider } from "@/contexts/FocusModeContext";
 import { AccessibilityToolbar } from "@/components/ui/AccessibilityToolbar";
+import { useFocusModeShortcut } from "@/hooks/useFocusModeShortcut";
 import { SuperAdminBanner, SuperAdminWatermark } from "@/components/admin/SuperAdminBanner";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
@@ -71,6 +73,216 @@ const queryClient = new QueryClient();
 
 console.log('App.tsx loading, React available:', typeof React);
 
+// Component that enables keyboard shortcut
+function AppContent() {
+  // Enable keyboard shortcut for Focus Mode (Ctrl + Alt + F)
+  useFocusModeShortcut();
+
+  return (
+    <>
+      <SuperAdminBanner />
+      <Routes>
+        <Route path="/" element={<Index />} />
+        <Route path="/auth" element={<Auth />} />
+        <Route path="/signup/student" element={<StudentSignupForm />} />
+        <Route path="/dashboard/student" element={<NewStudentDashboard />} />
+        <Route path="/quiz/learning-genius" element={<LearningGeniusSurveyPage />} />
+        <Route path="/classes/join" element={<JoinClassPage />} />
+        <Route path="/classes/my-classes" element={<MyClassesPage />} />
+        <Route path="/classes/:id" element={<StudentClassDetailPage />} />
+        <Route path="/assignments" element={<AssignmentsListPage />} />
+        <Route path="/assignments/:id" element={<AssignmentDetailPage />} />
+        <Route path="/grades" element={<MyGradesPage />} />
+        <Route path="/trial" element={<TrialPage />} />
+        
+        {/* Demo Routes */}
+        <Route path="/demo" element={<DemoGate />} />
+        <Route path="/demo/start" element={<DemoStart />} />
+        <Route path="/demo/home" element={<Index />} />
+        <Route path="/course/excel" element={<ExcelCourse />} />
+        <Route path="/course/word" element={<WordCourse />} />
+        <Route path="/course/powerpoint" element={<PowerPointCourse />} />
+        <Route path="/course/outlook" element={<OutlookCourse />} />
+        <Route path="/lesson/:lessonId" element={<LessonPage />} />
+        <Route path="/preferences" element={<UserPreferences />} />
+        
+        {/* Content Management */}
+        <Route path="/content" element={<ContentManagementPage />} />
+        
+        {/* Components Showcase */}
+        <Route path="/components" element={<ComponentsPage />} />
+        
+        {/* Demo Showcase */}
+        <Route path="/demo-showcase" element={<DemoShowcase />} />
+        
+        {/* Parent Portal */}
+        <Route path="/parent" element={<ParentPortalPage />} />
+        <Route 
+          path="/dashboard/parent" 
+          element={
+            <ProtectedParentRoute>
+              <ParentDashboard />
+            </ProtectedParentRoute>
+          } 
+        />
+        
+        {/* Admin Routes */}
+        <Route path="/admin/dashboard" element={<AdminDashboard />} />
+        <Route path="/admin/build-class" element={<BuildClassPage />} />
+        <Route path="/admin/ai-course-builder" element={<AICourseBuilderPage />} />
+        <Route path="/admin/course-editor" element={<CourseEditorPage />} />
+        <Route path="/admin/advanced" element={<AdvancedAdminPage />} />
+        <Route 
+          path="/dashboard/admin/analytics" 
+          element={
+            <ProtectedAdminRoute>
+              <AdminAnalyticsDashboard />
+            </ProtectedAdminRoute>
+          } 
+        />
+        
+        {/* Super Admin Route */}
+        <Route path="/super-admin" element={<SuperAdminDashboard />} />
+        
+        {/* Developer Routes */}
+        <Route 
+          path="/dev" 
+          element={
+            <DeveloperRoute>
+              <DeveloperDashboard />
+            </DeveloperRoute>
+          } 
+        />
+        
+        {/* Student Routes */}
+        <Route path="/student" element={<StudentDashboard />} />
+        <Route path="/student/assignments/:id" element={<StudentAssignmentDetail />} />
+        <Route path="/student/assignments/:id/submit" element={<StudentAssignmentSubmit />} />
+        
+        {/* Teacher Routes */}
+        <Route path="/teacher/auth" element={<TeacherAuth />} />
+        <Route 
+          path="/teacher/onboarding" 
+          element={
+            <ProtectedTeacherRoute requireOnboarding={false}>
+              <TeacherOnboarding />
+            </ProtectedTeacherRoute>
+          } 
+        />
+        <Route 
+          path="/teacher/dashboard" 
+          element={
+            <ProtectedTeacherRoute requireOnboarding={true}>
+              <TeacherDashboard />
+            </ProtectedTeacherRoute>
+          } 
+        />
+        <Route 
+          path="/teacher/gradebook" 
+          element={
+            <ProtectedTeacherRoute requireOnboarding={true}>
+              <UnifiedGradebookPage />
+            </ProtectedTeacherRoute>
+          } 
+        />
+        <Route 
+          path="/teacher/assignment-gradebook" 
+          element={
+            <ProtectedTeacherRoute requireOnboarding={true}>
+              <UnifiedGradebookPage />
+            </ProtectedTeacherRoute>
+          } 
+        />
+        <Route 
+          path="/teacher/submissions" 
+          element={
+            <ProtectedTeacherRoute requireOnboarding={true}>
+              <AssignmentSubmissionsPage />
+            </ProtectedTeacherRoute>
+          } 
+        />
+        <Route 
+          path="/teacher/analytics" 
+          element={
+            <ProtectedTeacherRoute requireOnboarding={true}>
+              <AnalyticsDashboard />
+            </ProtectedTeacherRoute>
+          } 
+        />
+        <Route 
+          path="/teacher/classes" 
+          element={
+            <ProtectedTeacherRoute requireOnboarding={true}>
+              <TeacherClasses />
+            </ProtectedTeacherRoute>
+          } 
+        />
+        <Route 
+          path="/teacher/classes/:classId" 
+          element={
+            <ProtectedTeacherRoute requireOnboarding={true}>
+              <ClassDetailPage />
+            </ProtectedTeacherRoute>
+          } 
+        />
+        <Route 
+          path="/teacher/class/:classId" 
+          element={
+            <ProtectedTeacherRoute requireOnboarding={true}>
+              <ClassDetailPage />
+            </ProtectedTeacherRoute>
+          } 
+        />
+        <Route 
+          path="/class-lesson/:lessonId" 
+          element={
+            <ProtectedTeacherRoute requireOnboarding={true}>
+              <ClassLessonPage />
+            </ProtectedTeacherRoute>
+          } 
+        />
+        <Route 
+          path="/teacher/assignments/:assignmentId" 
+          element={
+            <ProtectedTeacherRoute>
+              <TeacherAssignmentDetail />
+            </ProtectedTeacherRoute>
+          } 
+        />
+        <Route 
+          path="/teacher/feedback" 
+          element={
+            <ProtectedTeacherRoute requireOnboarding={true}>
+              <TeacherFeedbackDashboard />
+            </ProtectedTeacherRoute>
+          } 
+        />
+        <Route 
+          path="/dashboard/teacher/analytics" 
+          element={
+            <ProtectedTeacherRoute requireOnboarding={true}>
+              <TeacherAnalyticsDashboard />
+            </ProtectedTeacherRoute>
+          } 
+        />
+        
+        <Route
+          path="/build-class/:classId?" 
+          element={
+            <ProtectedTeacherRoute requireOnboarding={true}>
+              <BuildClassPage />
+            </ProtectedTeacherRoute>
+          } 
+        />
+        
+        {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+      <SuperAdminWatermark />
+    </>
+  );
+}
+
 const App: React.FC = () => {
   console.log('App rendering, React available:', typeof React);
   
@@ -78,222 +290,26 @@ const App: React.FC = () => {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <AccessibilityProvider>
-          <SuperAdminProvider>
-            <ImpersonationProvider>
-              <TooltipProvider>
-                <Toaster />
-                <Sonner />
-                <BrowserRouter>
-                  <div className="min-h-screen bg-background">
-                    <SuperAdminBanner />
-                  <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/auth" element={<Auth />} />
-          <Route path="/signup/student" element={<StudentSignupForm />} />
-          <Route path="/dashboard/student" element={<NewStudentDashboard />} />
-          <Route path="/quiz/learning-genius" element={<LearningGeniusSurveyPage />} />
-          <Route path="/classes/join" element={<JoinClassPage />} />
-          <Route path="/classes/my-classes" element={<MyClassesPage />} />
-          <Route path="/classes/:id" element={<StudentClassDetailPage />} />
-          <Route path="/assignments" element={<AssignmentsListPage />} />
-          <Route path="/assignments/:id" element={<AssignmentDetailPage />} />
-          <Route path="/grades" element={<MyGradesPage />} />
-          <Route path="/trial" element={<TrialPage />} />
-            
-            {/* Demo Routes */}
-            <Route path="/demo" element={<DemoGate />} />
-            <Route path="/demo/start" element={<DemoStart />} />
-            <Route path="/demo/home" element={<Index />} />
-            <Route path="/course/excel" element={<ExcelCourse />} />
-            <Route path="/course/word" element={<WordCourse />} />
-            <Route path="/course/powerpoint" element={<PowerPointCourse />} />
-            <Route path="/course/outlook" element={<OutlookCourse />} />
-            <Route path="/lesson/:lessonId" element={<LessonPage />} />
-            <Route path="/preferences" element={<UserPreferences />} />
-            
-            {/* Content Management */}
-            <Route path="/content" element={<ContentManagementPage />} />
-            
-            {/* Components Showcase */}
-            <Route path="/components" element={<ComponentsPage />} />
-            
-            {/* Demo Showcase */}
-            <Route path="/demo-showcase" element={<DemoShowcase />} />
-            
-            {/* Parent Portal */}
-            <Route path="/parent" element={<ParentPortalPage />} />
-            <Route 
-              path="/dashboard/parent" 
-              element={
-                <ProtectedParentRoute>
-                  <ParentDashboard />
-                </ProtectedParentRoute>
-              } 
-            />
-            
-            {/* Admin Routes */}
-            <Route path="/admin/dashboard" element={<AdminDashboard />} />
-            <Route path="/admin/build-class" element={<BuildClassPage />} />
-            <Route path="/admin/ai-course-builder" element={<AICourseBuilderPage />} />
-            <Route path="/admin/course-editor" element={<CourseEditorPage />} />
-            <Route path="/admin/advanced" element={<AdvancedAdminPage />} />
-            <Route 
-              path="/dashboard/admin/analytics" 
-              element={
-                <ProtectedAdminRoute>
-                  <AdminAnalyticsDashboard />
-                </ProtectedAdminRoute>
-              } 
-            />
-            
-            {/* Super Admin Route */}
-            <Route path="/super-admin" element={<SuperAdminDashboard />} />
-            
-            {/* Developer Routes */}
-            <Route 
-              path="/dev" 
-              element={
-                <DeveloperRoute>
-                  <DeveloperDashboard />
-                </DeveloperRoute>
-              } 
-            />
-            
-            {/* Student Routes */}
-            <Route path="/student" element={<StudentDashboard />} />
-            <Route path="/student/assignments/:id" element={<StudentAssignmentDetail />} />
-            <Route path="/student/assignments/:id/submit" element={<StudentAssignmentSubmit />} />
-            
-            {/* Teacher Routes */}
-            <Route path="/teacher/auth" element={<TeacherAuth />} />
-            <Route 
-              path="/teacher/onboarding" 
-              element={
-                <ProtectedTeacherRoute requireOnboarding={false}>
-                  <TeacherOnboarding />
-                </ProtectedTeacherRoute>
-              } 
-            />
-            <Route 
-              path="/teacher/dashboard" 
-              element={
-                <ProtectedTeacherRoute requireOnboarding={true}>
-                  <TeacherDashboard />
-                </ProtectedTeacherRoute>
-              } 
-            />
-            <Route 
-              path="/teacher/gradebook" 
-              element={
-                <ProtectedTeacherRoute requireOnboarding={true}>
-                  <UnifiedGradebookPage />
-                </ProtectedTeacherRoute>
-              } 
-            />
-            <Route 
-              path="/teacher/assignment-gradebook" 
-              element={
-                <ProtectedTeacherRoute requireOnboarding={true}>
-                  <UnifiedGradebookPage />
-                </ProtectedTeacherRoute>
-              } 
-            />
-            <Route 
-              path="/teacher/submissions" 
-              element={
-                <ProtectedTeacherRoute requireOnboarding={true}>
-                  <AssignmentSubmissionsPage />
-                </ProtectedTeacherRoute>
-              } 
-            />
-            <Route 
-              path="/teacher/analytics" 
-              element={
-                <ProtectedTeacherRoute requireOnboarding={true}>
-                  <AnalyticsDashboard />
-                </ProtectedTeacherRoute>
-              } 
-            />
-            <Route 
-              path="/teacher/classes" 
-              element={
-                <ProtectedTeacherRoute requireOnboarding={true}>
-                  <TeacherClasses />
-                </ProtectedTeacherRoute>
-              } 
-            />
-            <Route 
-              path="/teacher/classes/:classId" 
-              element={
-                <ProtectedTeacherRoute requireOnboarding={true}>
-                  <ClassDetailPage />
-                </ProtectedTeacherRoute>
-              } 
-            />
-            <Route 
-              path="/teacher/class/:classId" 
-              element={
-                <ProtectedTeacherRoute requireOnboarding={true}>
-                  <ClassDetailPage />
-                </ProtectedTeacherRoute>
-              } 
-            />
-            <Route 
-              path="/class-lesson/:lessonId" 
-              element={
-                <ProtectedTeacherRoute requireOnboarding={true}>
-                  <ClassLessonPage />
-                </ProtectedTeacherRoute>
-              } 
-            />
-            <Route 
-              path="/teacher/assignments/:assignmentId" 
-              element={
-                <ProtectedTeacherRoute>
-                  <TeacherAssignmentDetail />
-                </ProtectedTeacherRoute>
-              } 
-            />
-            <Route 
-              path="/teacher/feedback" 
-              element={
-                <ProtectedTeacherRoute requireOnboarding={true}>
-                  <TeacherFeedbackDashboard />
-                </ProtectedTeacherRoute>
-              } 
-            />
-            <Route 
-              path="/dashboard/teacher/analytics" 
-              element={
-                <ProtectedTeacherRoute requireOnboarding={true}>
-                  <TeacherAnalyticsDashboard />
-                </ProtectedTeacherRoute>
-              } 
-            />
-            
-            <Route
-              path="/build-class/:classId?" 
-              element={
-                <ProtectedTeacherRoute requireOnboarding={true}>
-                  <BuildClassPage />
-                </ProtectedTeacherRoute>
-              } 
-            />
-            
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-                  </Routes>
-                  <SuperAdminWatermark />
-                  <AccessibilityToolbar />
-                </div>
-              </BrowserRouter>
-            </TooltipProvider>
-          </ImpersonationProvider>
-        </SuperAdminProvider>
-      </AccessibilityProvider>
-    </AuthProvider>
-  </QueryClientProvider>
-);
+          <FocusModeProvider>
+            <SuperAdminProvider>
+              <ImpersonationProvider>
+                <TooltipProvider>
+                  <Toaster />
+                  <Sonner />
+                  <BrowserRouter>
+                    <div className="min-h-screen bg-background">
+                      <AppContent />
+                      <AccessibilityToolbar />
+                    </div>
+                  </BrowserRouter>
+                </TooltipProvider>
+              </ImpersonationProvider>
+            </SuperAdminProvider>
+          </FocusModeProvider>
+        </AccessibilityProvider>
+      </AuthProvider>
+    </QueryClientProvider>
+  );
 };
 
 export default App;

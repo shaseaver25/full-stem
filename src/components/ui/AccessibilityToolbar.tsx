@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useAccessibility } from '@/contexts/AccessibilityContext';
+import { useFocusMode } from '@/contexts/FocusModeContext';
 import { Button } from '@/components/ui/button';
 import {
   Tooltip,
@@ -12,10 +13,11 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { Volume2, Globe, Contrast, Type, Accessibility, ChevronUp, ChevronDown } from 'lucide-react';
+import { Volume2, Globe, Contrast, Type, Accessibility, Eye, EyeOff } from 'lucide-react';
 
 export function AccessibilityToolbar() {
   const { settings, updateSettings, isLoading } = useAccessibility();
+  const { focusMode, setFocusMode } = useFocusMode();
   const [isExpanded, setIsExpanded] = useState(false);
 
   const toggleSetting = (key: keyof typeof settings, value: boolean) => {
@@ -107,6 +109,25 @@ export function AccessibilityToolbar() {
           </TooltipTrigger>
           <TooltipContent side="top">
             <p>Dyslexia Font {settings.dyslexiaFont ? 'Enabled' : 'Disabled'}</p>
+          </TooltipContent>
+        </Tooltip>
+
+        {/* Focus Mode */}
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant={focusMode ? 'default' : 'outline'}
+              size="icon"
+              className="rounded-full h-10 w-10"
+              aria-label="Toggle Focus Mode"
+              aria-pressed={focusMode}
+              onClick={() => setFocusMode(!focusMode)}
+            >
+              {focusMode ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="top">
+            <p>Focus Mode {focusMode ? 'Enabled' : 'Disabled'}</p>
           </TooltipContent>
         </Tooltip>
       </div>
@@ -240,6 +261,34 @@ export function AccessibilityToolbar() {
                   <div
                     className={`w-5 h-5 rounded-full bg-background transition-transform ${
                       settings.dyslexiaFont ? 'translate-x-5' : 'translate-x-0.5'
+                    } mt-0.5`}
+                  />
+                </div>
+              </button>
+
+              {/* Focus Mode Toggle */}
+              <button
+                className={`w-full flex items-center justify-between p-3 rounded-lg transition-colors ${
+                  focusMode
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-muted hover:bg-muted/80'
+                }`}
+                onClick={() => setFocusMode(!focusMode)}
+                role="menuitemcheckbox"
+                aria-checked={focusMode}
+              >
+                <div className="flex items-center gap-3">
+                  {focusMode ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  <span className="font-medium">Focus Mode</span>
+                </div>
+                <div
+                  className={`w-10 h-6 rounded-full transition-colors ${
+                    focusMode ? 'bg-primary-foreground/20' : 'bg-muted-foreground/20'
+                  }`}
+                >
+                  <div
+                    className={`w-5 h-5 rounded-full bg-background transition-transform ${
+                      focusMode ? 'translate-x-5' : 'translate-x-0.5'
                     } mt-0.5`}
                   />
                 </div>

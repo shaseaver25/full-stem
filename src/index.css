@@ -130,3 +130,28 @@
 .font-opendyslexic * {
   font-family: 'OpenDyslexic', sans-serif !important;
 }
+
+/* Focus Mode - Hide distractions */
+html.focus-mode .navbar,
+html.focus-mode .sidebar,
+html.focus-mode .footer,
+html.focus-mode header:not(.focus-mode-header),
+html.focus-mode nav:not(.focus-mode-nav),
+html.focus-mode [role="banner"]:not(.focus-mode-banner) {
+  display: none !important;
+}
+
+html.focus-mode body {
+  background: hsl(var(--background));
+  overflow-x: hidden;
+}
+
+/* Focus Mode - Enhanced readability */
+html.focus-mode {
+  scroll-behavior: smooth;
+}
+
+html.focus-mode * {
+  animation: none !important;
+  transition-duration: 0.15s !important;
+}

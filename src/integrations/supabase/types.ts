@@ -1025,6 +1025,24 @@ export type Database = {
           },
         ]
       }
+      focus_mode_settings: {
+        Row: {
+          enabled: boolean | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          enabled?: boolean | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          enabled?: boolean | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       global_settings: {
         Row: {
           created_at: string
