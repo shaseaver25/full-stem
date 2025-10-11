@@ -12,6 +12,15 @@ serve(async (req) => {
   }
 
   try {
+    // Extract and verify authorization token
+    const authHeader = req.headers.get('authorization');
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized: Missing authorization token" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const { submissionId, submissionText, grade, teacherFeedback, preferredLanguage = 'en' } = await req.json();
     
     // Input validation
@@ -19,6 +28,43 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ error: "Missing required fields: submissionId and submissionText" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Verify user owns this submission before processing
+    const supabaseAuth = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      { global: { headers: { Authorization: authHeader } } }
+    );
+
+    const { data: { user }, error: authError } = await supabaseAuth.auth.getUser();
+    
+    if (authError || !user) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized: Invalid token" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Verify ownership of submission
+    const { data: submission, error: ownershipError } = await supabaseAuth
+      .from('assignment_submissions')
+      .select('user_id')
+      .eq('id', submissionId)
+      .single();
+
+    if (ownershipError || !submission) {
+      return new Response(
+        JSON.stringify({ error: "Submission not found" }),
+        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (submission.user_id !== user.id) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized: You can only generate feedback for your own submissions" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
