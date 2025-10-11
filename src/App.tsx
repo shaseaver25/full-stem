@@ -60,6 +60,8 @@ import AssignmentsListPage from "./pages/assignments/AssignmentsListPage";
 import AssignmentDetailPage from "./pages/assignments/AssignmentDetailPage";
 import MyGradesPage from "./pages/grades/MyGradesPage";
 import TeacherAnalyticsDashboard from "./pages/dashboard/teacher/TeacherAnalyticsDashboard";
+import AdminAnalyticsDashboard from "./pages/dashboard/admin/AdminAnalyticsDashboard";
+import ProtectedAdminRoute from "./components/admin/ProtectedAdminRoute";
 
 const queryClient = new QueryClient();
 
@@ -122,6 +124,14 @@ const App: React.FC = () => {
             <Route path="/admin/ai-course-builder" element={<AICourseBuilderPage />} />
             <Route path="/admin/course-editor" element={<CourseEditorPage />} />
             <Route path="/admin/advanced" element={<AdvancedAdminPage />} />
+            <Route 
+              path="/dashboard/admin/analytics" 
+              element={
+                <ProtectedAdminRoute>
+                  <AdminAnalyticsDashboard />
+                </ProtectedAdminRoute>
+              } 
+            />
             
             {/* Super Admin Route */}
             <Route path="/super-admin" element={<SuperAdminDashboard />} />
