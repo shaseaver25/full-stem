@@ -2278,6 +2278,30 @@ export type Database = {
         }
         Relationships: []
       }
+      translation_logs: {
+        Row: {
+          created_at: string | null
+          id: string
+          target_language: string
+          text_length: number
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          target_language: string
+          text_length: number
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          target_language?: string
+          text_length?: number
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       "User Preferences": {
         Row: {
           "Enable Read-Aloud": boolean | null
