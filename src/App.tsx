@@ -62,6 +62,8 @@ import MyGradesPage from "./pages/grades/MyGradesPage";
 import TeacherAnalyticsDashboard from "./pages/dashboard/teacher/TeacherAnalyticsDashboard";
 import AdminAnalyticsDashboard from "./pages/dashboard/admin/AdminAnalyticsDashboard";
 import ProtectedAdminRoute from "./components/admin/ProtectedAdminRoute";
+import ParentDashboard from "./pages/dashboard/parent/ParentDashboard";
+import ProtectedParentRoute from "./components/parent/ProtectedParentRoute";
 
 const queryClient = new QueryClient();
 
@@ -117,6 +119,14 @@ const App: React.FC = () => {
             
             {/* Parent Portal */}
             <Route path="/parent" element={<ParentPortalPage />} />
+            <Route 
+              path="/dashboard/parent" 
+              element={
+                <ProtectedParentRoute>
+                  <ParentDashboard />
+                </ProtectedParentRoute>
+              } 
+            />
             
             {/* Admin Routes */}
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
