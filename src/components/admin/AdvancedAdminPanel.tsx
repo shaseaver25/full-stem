@@ -9,6 +9,7 @@ import BackupManagement from './BackupManagement';
 import PerformanceMonitoring from './PerformanceMonitoring';
 import LessonTemplateManager from './LessonTemplateManager';
 import DemoDataManagement from './DemoDataManagement';
+import { DemoAccountManager } from './DemoAccountManager';
 
 interface UserRole {
   id: string;
@@ -238,8 +239,9 @@ const AdvancedAdminPanel = () => {
         <h1 className="text-3xl font-bold">Advanced Administration</h1>
       </div>
 
-      <Tabs defaultValue="demo" className="space-y-4">
+      <Tabs defaultValue="accounts" className="space-y-4">
         <TabsList>
+          <TabsTrigger value="accounts">Demo Accounts</TabsTrigger>
           <TabsTrigger value="demo">Demo Data</TabsTrigger>
           <TabsTrigger value="roles">User Roles</TabsTrigger>
           <TabsTrigger value="permissions">Permissions</TabsTrigger>
@@ -247,6 +249,10 @@ const AdvancedAdminPanel = () => {
           <TabsTrigger value="backups">Backups</TabsTrigger>
           <TabsTrigger value="performance">Performance</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="accounts" className="space-y-4">
+          <DemoAccountManager />
+        </TabsContent>
 
         <TabsContent value="demo" className="space-y-4">
           <DemoDataManagement />

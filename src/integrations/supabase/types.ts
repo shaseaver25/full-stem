@@ -2580,6 +2580,8 @@ export type Database = {
         | "developer"
         | "super_admin"
         | "student"
+        | "teacher"
+        | "parent"
       permission_type:
         | "read_users"
         | "write_users"
@@ -2732,6 +2734,8 @@ export const Constants = {
         "developer",
         "super_admin",
         "student",
+        "teacher",
+        "parent",
       ],
       permission_type: [
         "read_users",

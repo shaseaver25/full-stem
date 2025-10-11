@@ -40,6 +40,9 @@ verify_jwt = false
 [functions.seed-demo-data]
 verify_jwt = true
 
+[functions.create-demo-accounts]
+verify_jwt = true
+
 [functions.elevenlabs-tts]
 verify_jwt = true
 

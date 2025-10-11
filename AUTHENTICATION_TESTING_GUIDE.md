@@ -6,7 +6,24 @@ This guide provides step-by-step instructions for manually testing TailorEDU's a
 
 ## 📋 Prerequisites
 
-1. **Seed Demo Data First:**
+### Method 1: Use Standardized Demo Accounts (Recommended)
+
+Navigate to `/advanced-admin` → **Demo Accounts** tab and click "Create Demo Accounts" button.
+
+**All demo accounts use password:** `Test1234!`
+
+| Role | Email | Password | Dashboard Route |
+|------|-------|----------|-----------------|
+| Student | student@test.com | Test1234! | /dashboard/student |
+| Teacher | teacher@test.com | Test1234! | /teacher/dashboard |
+| Parent | parent@test.com | Test1234! | /dashboard/parent |
+| Admin | admin@test.com | Test1234! | /admin/dashboard |
+| Super Admin | superadmin@test.com | Test1234! | /super-admin |
+| Developer | developer@test.com | Test1234! | /dev |
+
+### Method 2: Seed Legacy Demo Data (Alternative)
+
+1. **Seed Demo Data:**
    ```javascript
    // Call the seed-demo-data edge function from admin dashboard or console:
    await supabase.functions.invoke("seed-demo-data", {
@@ -14,8 +31,8 @@ This guide provides step-by-step instructions for manually testing TailorEDU's a
    });
    ```
 
-2. **Demo User Credentials:**
-   All demo users use password: `Demo123!@#`
+2. **Legacy Demo User Credentials:**
+   All legacy demo users use password: `Demo123!@#`
 
 ---
 
@@ -28,8 +45,8 @@ This guide provides step-by-step instructions for manually testing TailorEDU's a
 **Steps:**
 1. Navigate to `/auth` or `/teacher/auth`
 2. Log in with:
-   - Email: `johnson@demo.tailoredu.com`
-   - Password: `Demo123!@#`
+   - Email: `teacher@test.com`
+   - Password: `Test1234!`
 3. Should redirect to `/teacher/dashboard`
 4. Navigate to `/dashboard/teacher/analytics`
 
@@ -40,9 +57,10 @@ This guide provides step-by-step instructions for manually testing TailorEDU's a
 - ✅ No RLS errors in console
 - ✅ Can see classes and student data
 
-**Alternative Teacher Accounts:**
-- `nguyen@demo.tailoredu.com`
-- `abdi@demo.tailoredu.com`
+**Alternative Teacher Accounts (Legacy):**
+- `johnson@demo.tailoredu.com` (Password: `Demo123!@#`)
+- `nguyen@demo.tailoredu.com` (Password: `Demo123!@#`)
+- `abdi@demo.tailoredu.com` (Password: `Demo123!@#`)
 
 ---
 
@@ -54,8 +72,8 @@ This guide provides step-by-step instructions for manually testing TailorEDU's a
 1. Log out from teacher account
 2. Navigate to `/auth`
 3. Log in with:
-   - Email: `mai.lor@demo.student.com`
-   - Password: `Demo123!@#`
+   - Email: `student@test.com`
+   - Password: `Test1234!`
 4. Should redirect to `/dashboard/student`
 5. **Attempt unauthorized access:** Navigate to `/dashboard/admin/analytics`
 6. **Attempt unauthorized access:** Navigate to `/dashboard/teacher/analytics`
@@ -69,11 +87,12 @@ This guide provides step-by-step instructions for manually testing TailorEDU's a
 - ✅ Shows "Access Denied" or redirects to student dashboard
 - ✅ No unauthorized data visible in network tab
 
-**Alternative Student Accounts:**
-- `hodan.ali@demo.student.com`
-- `luis.rivera@demo.student.com`
-- `eli.tran@demo.student.com`
-- `daniel.carter@demo.student.com`
+**Alternative Student Accounts (Legacy):**
+- `mai.lor@demo.student.com` (Password: `Demo123!@#`)
+- `hodan.ali@demo.student.com` (Password: `Demo123!@#`)
+- `luis.rivera@demo.student.com` (Password: `Demo123!@#`)
+- `eli.tran@demo.student.com` (Password: `Demo123!@#`)
+- `daniel.carter@demo.student.com` (Password: `Demo123!@#`)
 
 ---
 
@@ -84,9 +103,9 @@ This guide provides step-by-step instructions for manually testing TailorEDU's a
 **Steps:**
 1. Log out from student account
 2. Navigate to `/auth`
-3. Create a parent account OR use existing if seeded:
-   - Email: `parent@demo.tailoredu.com`
-   - Password: `Demo123!@#`
+3. Log in with:
+   - Email: `parent@test.com`
+   - Password: `Test1234!`
 4. Navigate to `/dashboard/parent`
 
 **Expected Results:**
@@ -108,16 +127,11 @@ This guide provides step-by-step instructions for manually testing TailorEDU's a
 **Steps:**
 1. Log out from parent account
 2. Navigate to `/auth`
-3. Create an admin account with proper role:
-   ```sql
-   -- You need to manually create an admin user in Supabase Auth
-   -- Then add admin role to user_roles table:
-   INSERT INTO user_roles (user_id, role)
-   VALUES ('<your-admin-user-id>', 'admin');
-   ```
-4. Log in with admin credentials
-5. Navigate to `/dashboard/admin/analytics`
-6. Test access to:
+3. Log in with:
+   - Email: `admin@test.com`
+   - Password: `Test1234!`
+4. Navigate to `/dashboard/admin/analytics`
+5. Test access to:
    - `/admin/dashboard`
    - `/advanced-admin`
    - `/content-management`
