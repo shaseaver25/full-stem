@@ -13,9 +13,21 @@ serve(async (req) => {
   try {
     const { grades, preferredLanguage = 'en' } = await req.json();
     
-    console.log('Generating performance summary for', grades.length, 'submissions');
+    // Input validation
+    if (!grades || !Array.isArray(grades)) {
+      return new Response(
+        JSON.stringify({ error: "Invalid grades format" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
-    if (!grades || grades.length === 0) {
+    // Limit number of submissions to prevent excessive API costs
+    const maxSubmissions = 50;
+    const limitedGrades = grades.slice(0, maxSubmissions);
+    
+    console.log('Generating performance summary for', limitedGrades.length, 'submissions');
+
+    if (limitedGrades.length === 0) {
       return new Response(
         JSON.stringify({ summary: "Complete some assignments to see your personalized performance summary!" }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -28,7 +40,7 @@ serve(async (req) => {
     }
 
     // Calculate basic statistics
-    const gradedSubmissions = grades.filter((g: any) => g.grade !== null && g.grade !== undefined);
+    const gradedSubmissions = limitedGrades.filter((g: any) => g.grade !== null && g.grade !== undefined);
     const averageGrade = gradedSubmissions.length > 0
       ? gradedSubmissions.reduce((sum: number, g: any) => sum + g.grade, 0) / gradedSubmissions.length
       : 0;
@@ -48,7 +60,12 @@ Based on their grades and submissions, provide:
 Keep the summary concise (4-5 sentences total) and age-appropriate for middle/high school students.`;
 
     const submissionSummary = gradedSubmissions
-      .map((g: any) => `Assignment: ${g.assignmentTitle}, Grade: ${g.grade}%, Feedback: ${g.teacherFeedback || 'None'}`)
+      .map((g: any) => {
+        // Sanitize and limit feedback length
+        const feedback = (g.teacherFeedback || 'None').substring(0, 200);
+        const title = (g.assignmentTitle || 'Untitled').substring(0, 100);
+        return `Assignment: ${title}, Grade: ${g.grade}%, Feedback: ${feedback}`;
+      })
       .join('\n');
 
     const userPrompt = `Student has completed ${gradedSubmissions.length} graded assignments with an average grade of ${averageGrade.toFixed(1)}%.

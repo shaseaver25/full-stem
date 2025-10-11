@@ -24,8 +24,6 @@ export const useAuth = () => {
 };
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  console.log('AuthProvider rendering, React available:', typeof React, typeof useState);
-  
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
@@ -35,7 +33,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        console.log('Auth state changed:', event, session?.user?.email);
         setSession(session);
         setUser(session?.user ?? null);
         
@@ -62,7 +59,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log('Initial session:', session?.user?.email);
       setSession(session);
       setUser(session?.user ?? null);
       
@@ -90,8 +86,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signUp = async (email: string, password: string, fullName: string) => {
     const redirectUrl = `${window.location.origin}/`;
     
-    console.log('Signing up user with email:', email);
-    
     const { error } = await supabase.auth.signUp({
       email,
       password,
@@ -104,34 +98,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     });
 
-    if (error) {
-      console.error('Signup error:', error);
-    } else {
-      console.log('Signup successful');
-    }
-
     return { error };
   };
 
   const signIn = async (email: string, password: string) => {
-    console.log('Signing in user with email:', email);
-    
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password
     });
 
-    if (error) {
-      console.error('Signin error:', error);
-    } else {
-      console.log('Signin successful');
-    }
-
     return { error };
   };
 
   const signOut = async () => {
-    console.log('Signing out user');
     await supabase.auth.signOut();
   };
 

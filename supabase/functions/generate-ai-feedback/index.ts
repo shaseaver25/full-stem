@@ -14,6 +14,43 @@ serve(async (req) => {
   try {
     const { submissionId, submissionText, grade, teacherFeedback, preferredLanguage = 'en' } = await req.json();
     
+    // Input validation
+    if (!submissionId || !submissionText) {
+      return new Response(
+        JSON.stringify({ error: "Missing required fields: submissionId and submissionText" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Validate and sanitize submission text
+    if (typeof submissionText !== 'string') {
+      return new Response(
+        JSON.stringify({ error: "Invalid submission text format" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Length limit: 5000 characters
+    const sanitizedText = submissionText.substring(0, 5000).trim();
+    
+    // Detect potential prompt injection
+    const suspiciousPatterns = [
+      'ignore previous',
+      'ignore all previous',
+      'disregard previous',
+      'system prompt',
+      'override instructions',
+      'forget everything'
+    ];
+    
+    const lowerText = sanitizedText.toLowerCase();
+    if (suspiciousPatterns.some(pattern => lowerText.includes(pattern))) {
+      return new Response(
+        JSON.stringify({ error: "Invalid submission content detected" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    
     console.log('Generating AI feedback for submission:', submissionId);
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
@@ -35,7 +72,7 @@ Analyze the student's work and provide:
 
 Keep your response concise (2-3 sentences) and age-appropriate for middle/high school students.`;
 
-    const userPrompt = `Student Submission: "${submissionText}"
+    const userPrompt = `Student Submission: "${sanitizedText}"
 ${grade ? `Grade Received: ${grade}%` : 'Grade: Pending'}
 ${teacherFeedback ? `Teacher Feedback: "${teacherFeedback}"` : ''}
 
