@@ -1,10 +1,11 @@
 
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useClassApi } from '@/hooks/useClassApi';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Users, BookOpen, Clock, Eye, EyeOff } from 'lucide-react';
+import { Calendar, Users, BookOpen, Clock, Eye, EyeOff, Edit, ExternalLink } from 'lucide-react';
 import { format } from 'date-fns';
 
 export const ClassPublisher = () => {
@@ -115,6 +116,16 @@ const ClassCard: React.FC<ClassCardProps> = ({
   isDeleting,
   isDraft
 }) => {
+  const navigate = useNavigate();
+
+  const handleEdit = () => {
+    navigate(`/admin/ai-course-builder?courseId=${classItem.id}`);
+  };
+
+  const handleView = () => {
+    navigate(`/teacher/classes/${classItem.id}`);
+  };
+
   return (
     <Card className="h-full">
       <CardHeader>
@@ -166,34 +177,57 @@ const ClassCard: React.FC<ClassCardProps> = ({
           </div>
         )}
 
-        <div className="flex gap-2 pt-4">
-          <Button
-            variant={isDraft ? "default" : "outline"}
-            size="sm"
-            onClick={() => onPublish(classItem.id)}
-            disabled={isPublishing}
-            className="flex-1"
-          >
-            {isDraft ? (
-              <>
-                <Eye className="h-4 w-4 mr-2" />
-                {isPublishing ? 'Publishing...' : 'Publish'}
-              </>
-            ) : (
-              <>
-                <EyeOff className="h-4 w-4 mr-2" />
-                {isPublishing ? 'Unpublishing...' : 'Unpublish'}
-              </>
-            )}
-          </Button>
-          <Button
-            variant="destructive"
-            size="sm"
-            onClick={() => onDelete(classItem.id)}
-            disabled={isDeleting}
-          >
-            {isDeleting ? 'Deleting...' : 'Delete'}
-          </Button>
+        <div className="space-y-2 pt-4">
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleEdit}
+              className="flex-1"
+            >
+              <Edit className="h-4 w-4 mr-2" />
+              Edit
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleView}
+              className="flex-1"
+            >
+              <ExternalLink className="h-4 w-4 mr-2" />
+              View
+            </Button>
+          </div>
+          <div className="flex gap-2">
+            <Button
+              variant={isDraft ? "default" : "outline"}
+              size="sm"
+              onClick={() => onPublish(classItem.id)}
+              disabled={isPublishing}
+              className="flex-1"
+            >
+              {isDraft ? (
+                <>
+                  <Eye className="h-4 w-4 mr-2" />
+                  {isPublishing ? 'Publishing...' : 'Publish'}
+                </>
+              ) : (
+                <>
+                  <EyeOff className="h-4 w-4 mr-2" />
+                  {isPublishing ? 'Unpublishing...' : 'Unpublish'}
+                </>
+              )}
+            </Button>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => onDelete(classItem.id)}
+              disabled={isDeleting}
+              className="flex-1"
+            >
+              {isDeleting ? 'Deleting...' : 'Delete'}
+            </Button>
+          </div>
         </div>
       </CardContent>
     </Card>
