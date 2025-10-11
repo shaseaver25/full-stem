@@ -48,3 +48,6 @@ verify_jwt = true
 
 [functions.generate-performance-summary]
 verify_jwt = true
+
+[functions.translate-text]
+verify_jwt = true

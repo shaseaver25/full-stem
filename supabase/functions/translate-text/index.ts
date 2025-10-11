@@ -1,6 +1,7 @@
 
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -16,9 +17,34 @@ serve(async (req) => {
   }
 
   try {
+    // Get auth token from request
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: 'Authentication required' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Create Supabase client to verify user
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      { global: { headers: { Authorization: authHeader } } }
+    );
+
+    const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
+    if (authError || !user) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid authentication' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     const { text, targetLanguage, sourceLanguage = 'auto' } = await req.json();
 
     console.log('Translation request received:', { 
+      userId: user.id,
       targetLanguage, 
       sourceLanguage, 
       textLength: text?.length 
@@ -48,11 +74,11 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-5-mini-2025-08-07',
         messages: [
           {
             role: 'system',
-            content: `You are a professional translator who specializes in making content accessible and easy to understand. 
+            content: `You are a professional translator who specializes in making educational content accessible and easy to understand. 
 
 Translate the given text to ${targetLanguage} using:
 - Simple, everyday language that regular people use
@@ -60,6 +86,7 @@ Translate the given text to ${targetLanguage} using:
 - Natural conversational tone
 - Clear, easy-to-understand explanations
 - Cultural context appropriate for the target language
+- Maintain the tone and educational context
 
 Avoid:
 - Complex vocabulary or technical jargon
@@ -74,8 +101,7 @@ The goal is to make the content feel natural and accessible to everyday speakers
             content: text
           }
         ],
-        temperature: 0.2,
-        max_tokens: 3000,
+        max_completion_tokens: 3000,
       }),
     });
 
@@ -95,6 +121,18 @@ The goal is to make the content feel natural and accessible to everyday speakers
 
     const translatedText = data.choices[0].message.content;
     console.log('Translation completed successfully');
+
+    // Optional: Log translation for analytics
+    try {
+      await supabaseClient.from('translation_logs').insert({
+        user_id: user.id,
+        target_language: targetLanguage,
+        text_length: text.length,
+      });
+    } catch (logError) {
+      console.error('Failed to log translation:', logError);
+      // Don't fail the request if logging fails
+    }
 
     return new Response(
       JSON.stringify({
