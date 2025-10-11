@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useStudentGrades } from '@/hooks/useStudentGrades';
-import { supabase } from '@/integrations/supabase/client';
+import { useAiFeedback } from '@/hooks/useAiFeedback';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
@@ -36,7 +36,7 @@ const getGradeLetter = (grade: number) => {
 
 export default function MyGradesPage() {
   const { data: grades, isLoading, error, refetch } = useStudentGrades();
-  const { toast } = useToast();
+  const { generateFeedback, generateSummary } = useAiFeedback();
   const [loadingFeedback, setLoadingFeedback] = useState<Record<string, boolean>>({});
   const [performanceSummary, setPerformanceSummary] = useState<string>('');
   const [loadingSummary, setLoadingSummary] = useState(false);
@@ -47,57 +47,22 @@ export default function MyGradesPage() {
     return Math.round(total / grades.length);
   };
 
-  const generateAIFeedback = async (submissionId: string, submissionText?: string, grade?: number, teacherFeedback?: string) => {
+  const handleGenerateFeedback = async (submissionId: string, submissionText?: string, grade?: number, teacherFeedback?: string) => {
     setLoadingFeedback(prev => ({ ...prev, [submissionId]: true }));
+    
+    const feedback = await generateFeedback(
+      submissionId,
+      submissionText || 'No submission text available',
+      grade,
+      teacherFeedback
+    );
 
-    try {
-      const { data, error } = await supabase.functions.invoke('generate-ai-feedback', {
-        body: {
-          submissionId,
-          submissionText: submissionText || 'No submission text available',
-          grade,
-          teacherFeedback,
-          preferredLanguage: 'en', // TODO: Get from student profile
-        },
-      });
-
-      if (error) {
-        if (error.message?.includes('429') || error.message?.includes('Rate limit')) {
-          toast({
-            title: "Please wait",
-            description: "Too many requests. Please try again in a moment.",
-            variant: "destructive",
-          });
-        } else if (error.message?.includes('402') || error.message?.includes('Payment')) {
-          toast({
-            title: "Service Unavailable",
-            description: "AI feedback is temporarily unavailable.",
-            variant: "destructive",
-          });
-        } else {
-          throw error;
-        }
-        return;
-      }
-
-      toast({
-        title: "✨ AI Tips Generated!",
-        description: "Personalized learning tips have been added to your submission.",
-      });
-
+    if (feedback) {
       // Refresh the grades data to show the new AI feedback
       refetch();
-
-    } catch (err) {
-      console.error('Error generating AI feedback:', err);
-      toast({
-        title: "Error",
-        description: "Failed to generate AI tips. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoadingFeedback(prev => ({ ...prev, [submissionId]: false }));
     }
+
+    setLoadingFeedback(prev => ({ ...prev, [submissionId]: false }));
   };
 
   const generatePerformanceSummary = async () => {
@@ -108,45 +73,19 @@ export default function MyGradesPage() {
 
     setLoadingSummary(true);
 
-    try {
-      const gradesData = grades.map(g => ({
-        assignmentTitle: g.assignment_title,
-        grade: g.grade,
-        teacherFeedback: g.feedback,
-      }));
+    const submissionsData = grades.map(g => ({
+      assignment_title: g.assignment_title,
+      grade: g.grade,
+      feedback: g.feedback,
+    }));
 
-      const { data, error } = await supabase.functions.invoke('generate-performance-summary', {
-        body: {
-          grades: gradesData,
-          preferredLanguage: 'en', // TODO: Get from student profile
-        },
-      });
+    const summary = await generateSummary(submissionsData);
 
-      if (error) {
-        if (error.message?.includes('429') || error.message?.includes('Rate limit')) {
-          toast({
-            title: "Please wait",
-            description: "Too many requests. Please try again in a moment.",
-            variant: "destructive",
-          });
-        } else {
-          throw error;
-        }
-        return;
-      }
-
-      setPerformanceSummary(data.summary);
-
-    } catch (err) {
-      console.error('Error generating performance summary:', err);
-      toast({
-        title: "Error",
-        description: "Failed to generate performance summary.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoadingSummary(false);
+    if (summary) {
+      setPerformanceSummary(summary);
     }
+
+    setLoadingSummary(false);
   };
 
   if (isLoading) {
@@ -252,6 +191,9 @@ export default function MyGradesPage() {
                 <p className="text-foreground whitespace-pre-wrap leading-relaxed">
                   {performanceSummary}
                 </p>
+                <p className="text-xs text-muted-foreground italic">
+                  Generated by TailorEDU AI Assistant
+                </p>
                 <Button 
                   size="sm" 
                   variant="outline"
@@ -350,7 +292,7 @@ export default function MyGradesPage() {
                             <Button
                               size="sm"
                               variant="outline"
-                              onClick={() => generateAIFeedback(
+                              onClick={() => handleGenerateFeedback(
                                 submission.id,
                                 submission.text_response,
                                 submission.grade,
@@ -373,15 +315,18 @@ export default function MyGradesPage() {
                           )}
                         </div>
                         {submission.ai_feedback ? (
-                          <div className="p-3 bg-primary/5 border border-primary/20 rounded-md">
+                          <div className="p-3 bg-primary/5 border border-primary/20 rounded-md space-y-2">
                             <p className="text-sm whitespace-pre-wrap leading-relaxed">
                               {submission.ai_feedback}
+                            </p>
+                            <p className="text-xs text-muted-foreground italic">
+                              Generated by TailorEDU AI Assistant
                             </p>
                             <Button
                               size="sm"
                               variant="ghost"
                               className="mt-2"
-                              onClick={() => generateAIFeedback(
+                              onClick={() => handleGenerateFeedback(
                                 submission.id,
                                 submission.text_response,
                                 submission.grade,

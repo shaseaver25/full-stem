@@ -2445,6 +2445,14 @@ export type Database = {
         Args: { p_class_id: string; p_student_ids: string[] }
         Returns: undefined
       }
+      user_enrolled_class_ids: {
+        Args: { _user_id: string }
+        Returns: string[]
+      }
+      user_enrolled_in_class: {
+        Args: { _class_id: string; _user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role:
