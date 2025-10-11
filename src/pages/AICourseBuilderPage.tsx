@@ -1,8 +1,14 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import Header from '@/components/Header';
 import BuildClassHeader from '@/components/build-class/BuildClassHeader';
 import BuildClassTabs from '@/components/build-class/BuildClassTabs';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
 import { useClassCreationWithInitialData } from '@/hooks/useClassCreationWithInitialData';
 import { useBuildClassActions } from '@/hooks/useBuildClassActions';
 import { useClassApi } from '@/hooks/useClassApi';
@@ -12,11 +18,100 @@ import { toast } from '@/hooks/use-toast';
 
 const AICourseBuilderPage = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState('details');
-  const [isSaving, setIsSaving] = useState(false);
+  const [selectedCourseId, setSelectedCourseId] = useState<string>('');
+  const [loadedCourseData, setLoadedCourseData] = useState(null);
   
-  // Transform the AI course data
-  const transformedData = transformCourseData(aiCourseJSON);
+  // Get course ID from URL if present
+  useEffect(() => {
+    const courseId = searchParams.get('courseId');
+    if (courseId) {
+      setSelectedCourseId(courseId);
+    }
+  }, [searchParams]);
+  
+  // Fetch all available courses
+  const { data: courses, isLoading: coursesLoading } = useQuery({
+    queryKey: ['all-courses'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('classes')
+        .select('id, name, description, grade_level, subject')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  // Fetch selected course details
+  const { data: selectedCourse, isLoading: courseLoading } = useQuery({
+    queryKey: ['course-detail', selectedCourseId],
+    queryFn: async () => {
+      const { data: classData, error: classError } = await supabase
+        .from('classes')
+        .select('*')
+        .eq('id', selectedCourseId)
+        .single();
+      
+      if (classError) throw classError;
+      
+      // Fetch lessons
+      const { data: lessons, error: lessonsError } = await supabase
+        .from('lessons')
+        .select('*')
+        .eq('class_id', selectedCourseId)
+        .order('order_index');
+      
+      if (lessonsError) throw lessonsError;
+      
+      // Fetch activities
+      const { data: activities, error: activitiesError } = await supabase
+        .from('activities')
+        .select('*')
+        .in('lesson_id', lessons?.map(l => l.id) || [])
+        .order('order_index');
+      
+      return {
+        classData,
+        lessons: lessons || [],
+        activities: activities || [],
+      };
+    },
+    enabled: !!selectedCourseId,
+  });
+
+  // Use either selected course data or AI template
+  const initialData = (selectedCourse && selectedCourseId !== 'new') ? {
+    classData: {
+      title: selectedCourse.classData.name,
+      description: selectedCourse.classData.description || '',
+      gradeLevel: selectedCourse.classData.grade_level || '',
+      subject: selectedCourse.classData.subject || '',
+      duration: selectedCourse.classData.duration || '',
+      instructor: selectedCourse.classData.instructor || '',
+      schedule: selectedCourse.classData.schedule || '',
+      learningObjectives: selectedCourse.classData.learning_objectives || '',
+      prerequisites: selectedCourse.classData.prerequisites || '',
+      maxStudents: selectedCourse.classData.max_students || 30,
+    },
+    lessons: selectedCourse.lessons.map((lesson: any) => ({
+      id: lesson.id,
+      title: lesson.title,
+      description: lesson.description || '',
+      objectives: lesson.objectives || [],
+      videos: [],
+      materials: lesson.materials || [],
+      instructions: lesson.content?.instructions || '',
+      duration: lesson.duration || 60,
+      order: lesson.order_index || 0,
+    })),
+    assignments: [],
+    classroomActivities: [],
+    individualActivities: [],
+    resources: [],
+  } : (selectedCourseId === 'new' ? transformCourseData(aiCourseJSON) : undefined);
   
   const {
     classData,
@@ -45,7 +140,7 @@ const AICourseBuilderPage = () => {
     removeVideoFromLesson,
     updateLessonVideo,
     getCompletionPercentage
-  } = useClassCreationWithInitialData(transformedData);
+  } = useClassCreationWithInitialData(initialData);
 
   const {
     addLesson,
@@ -81,9 +176,9 @@ const AICourseBuilderPage = () => {
     setCurrentResource
   );
 
-  const { createClass, isCreating } = useClassApi();
+  const { createClass, updateClass, isCreating, isUpdating } = useClassApi();
 
-  const handleSaveClass = () => {
+  const handleSaveClass = async () => {
     if (!classData.title.trim()) {
       toast({
         title: "Validation Error",
@@ -102,10 +197,37 @@ const AICourseBuilderPage = () => {
       resources
     };
 
-    // Create new class using mutation
-    createClass(classDataToSave);
+    if (selectedCourseId && selectedCourseId !== 'new') {
+      // Update existing class
+      updateClass({
+        id: selectedCourseId,
+        data: {
+          title: classData.title,
+          description: classData.description,
+          grade_level: classData.gradeLevel,
+          subject: classData.subject,
+          duration: classData.duration,
+          instructor: classData.instructor,
+          schedule: classData.schedule,
+          learning_objectives: classData.learningObjectives,
+          prerequisites: classData.prerequisites,
+          max_students: classData.maxStudents,
+        }
+      });
+      toast({
+        title: "Course Updated",
+        description: "Your course has been updated successfully.",
+      });
+    } else {
+      // Create new class using mutation
+      createClass(classDataToSave);
+      toast({
+        title: "Course Created",
+        description: "Your course has been created successfully.",
+      });
+    }
     
-    // Navigate to teacher dashboard to see the created course
+    // Navigate to teacher dashboard to see the created/updated course
     setTimeout(() => {
       navigate('/teacher/dashboard');
     }, 1500);
@@ -118,54 +240,95 @@ const AICourseBuilderPage = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-gray-900 mb-2">
-            AI Course Builder - Pre-loaded Course
+            Course Builder
           </h1>
           <p className="text-gray-600">
-            Review and customize this pre-built AI course before saving.
+            Create new courses or edit existing ones
           </p>
         </div>
 
-        <BuildClassHeader
-          completionPercentage={getCompletionPercentage()}
-          onSave={handleSaveClass}
-          isSaving={isCreating}
-        />
+        {/* Course Selector */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>Select Course to Edit</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="course-select">Course</Label>
+                <Select value={selectedCourseId} onValueChange={setSelectedCourseId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a course to edit or create new" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="new">➕ Create New Course</SelectItem>
+                    {courses?.map((course) => (
+                      <SelectItem key={course.id} value={course.id}>
+                        {course.name} - {course.grade_level}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              {selectedCourseId && selectedCourseId !== 'new' && (
+                <div className="flex gap-2">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setSelectedCourseId('new')}
+                  >
+                    Create New Instead
+                  </Button>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
 
-        <BuildClassTabs
-          activeTab={activeTab}
-          setActiveTab={setActiveTab}
-          classData={classData}
-          handleClassDataChange={handleClassDataChange}
-          lessons={lessons}
-          currentLesson={currentLesson}
-          setCurrentLesson={setCurrentLesson}
-          addLesson={addLesson}
-          removeLesson={removeLesson}
-          addVideoToLesson={addVideoToLesson}
-          removeVideoFromLesson={removeVideoFromLesson}
-          updateLessonVideo={updateLessonVideo}
-          classroomActivities={classroomActivities}
-          currentClassroomActivity={currentClassroomActivity}
-          setCurrentClassroomActivity={setCurrentClassroomActivity}
-          addClassroomActivity={addClassroomActivity}
-          removeClassroomActivity={removeClassroomActivity}
-          individualActivities={individualActivities}
-          currentIndividualActivity={currentIndividualActivity}
-          setCurrentIndividualActivity={setCurrentIndividualActivity}
-          addIndividualActivity={addIndividualActivity}
-          removeIndividualActivity={removeIndividualActivity}
-          assignments={assignments}
-          currentAssignment={currentAssignment}
-          setCurrentAssignment={setCurrentAssignment}
-          addAssignment={addAssignment}
-          removeAssignment={removeAssignment}
-          resources={resources}
-          currentResource={currentResource}
-          setCurrentResource={setCurrentResource}
-          addResource={addResource}
-          removeResource={removeResource}
-          getCompletionPercentage={getCompletionPercentage}
-        />
+        {(selectedCourseId || !coursesLoading) && (
+          <>
+            <BuildClassHeader
+              completionPercentage={getCompletionPercentage()}
+              onSave={handleSaveClass}
+              isSaving={isCreating || isUpdating}
+            />
+
+            <BuildClassTabs
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
+              classData={classData}
+              handleClassDataChange={handleClassDataChange}
+              lessons={lessons}
+              currentLesson={currentLesson}
+              setCurrentLesson={setCurrentLesson}
+              addLesson={addLesson}
+              removeLesson={removeLesson}
+              addVideoToLesson={addVideoToLesson}
+              removeVideoFromLesson={removeVideoFromLesson}
+              updateLessonVideo={updateLessonVideo}
+              classroomActivities={classroomActivities}
+              currentClassroomActivity={currentClassroomActivity}
+              setCurrentClassroomActivity={setCurrentClassroomActivity}
+              addClassroomActivity={addClassroomActivity}
+              removeClassroomActivity={removeClassroomActivity}
+              individualActivities={individualActivities}
+              currentIndividualActivity={currentIndividualActivity}
+              setCurrentIndividualActivity={setCurrentIndividualActivity}
+              addIndividualActivity={addIndividualActivity}
+              removeIndividualActivity={removeIndividualActivity}
+              assignments={assignments}
+              currentAssignment={currentAssignment}
+              setCurrentAssignment={setCurrentAssignment}
+              addAssignment={addAssignment}
+              removeAssignment={removeAssignment}
+              resources={resources}
+              currentResource={currentResource}
+              setCurrentResource={setCurrentResource}
+              addResource={addResource}
+              removeResource={removeResource}
+              getCompletionPercentage={getCompletionPercentage}
+            />
+          </>
+        )}
       </div>
     </div>
   );
