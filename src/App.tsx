@@ -51,6 +51,7 @@ import DemoStart from "./pages/DemoStart";
 import DemoShowcase from "./pages/DemoShowcase";
 import { StudentSignupForm } from "@/components/auth/student/StudentSignupForm";
 import NewStudentDashboard from "@/pages/dashboard/StudentDashboard";
+import TeacherFeedbackDashboard from "@/pages/dashboard/teacher/TeacherFeedbackDashboard";
 import LearningGeniusSurveyPage from "./pages/LearningGeniusSurveyPage";
 import JoinClassPage from "./pages/JoinClassPage";
 import MyClassesPage from "./pages/classes/MyClassesPage";
@@ -226,6 +227,14 @@ const App: React.FC = () => {
               element={
                 <ProtectedTeacherRoute>
                   <TeacherAssignmentDetail />
+                </ProtectedTeacherRoute>
+              } 
+            />
+            <Route 
+              path="/teacher/feedback" 
+              element={
+                <ProtectedTeacherRoute requireOnboarding={true}>
+                  <TeacherFeedbackDashboard />
                 </ProtectedTeacherRoute>
               } 
             />
