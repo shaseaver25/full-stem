@@ -10,6 +10,7 @@ import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import StudentProgressAnalytics from '@/components/analytics/StudentProgressAnalytics';
 import MobileOptimizedLayout from '@/components/layout/MobileOptimizedLayout';
+import Header from '@/components/Header';
 
 interface Class {
   id: string;
@@ -74,16 +75,21 @@ const AnalyticsDashboard: React.FC = () => {
 
   if (loading) {
     return (
-      <MobileOptimizedLayout header={header}>
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
-        </div>
-      </MobileOptimizedLayout>
+      <div className="min-h-screen bg-background">
+        <Header />
+        <MobileOptimizedLayout header={header}>
+          <div className="flex items-center justify-center h-64">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          </div>
+        </MobileOptimizedLayout>
+      </div>
     );
   }
 
   return (
-    <MobileOptimizedLayout header={header}>
+    <div className="min-h-screen bg-background">
+      <Header />
+      <MobileOptimizedLayout header={header}>
       <div className="space-y-6">
         {classes.length === 0 ? (
           <Card>
@@ -137,6 +143,7 @@ const AnalyticsDashboard: React.FC = () => {
         )}
       </div>
     </MobileOptimizedLayout>
+    </div>
   );
 };
 

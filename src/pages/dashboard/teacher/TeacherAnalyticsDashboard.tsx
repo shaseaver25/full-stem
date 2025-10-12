@@ -11,6 +11,7 @@ import { ArrowLeft, Loader2 } from "lucide-react";
 import OverviewSection from "@/components/analytics/OverviewSection";
 import AssignmentBreakdown from "@/components/analytics/AssignmentBreakdown";
 import AiInsightsSection from "@/components/analytics/AiInsightsSection";
+import Header from "@/components/Header";
 
 interface ClassStats {
   id: string;
@@ -147,14 +148,19 @@ const TeacherAnalyticsDashboard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="flex items-center justify-center h-[calc(100vh-64px)]">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background p-8">
+    <div className="min-h-screen bg-background">
+      <Header />
+      <div className="p-8">
       <div className="max-w-7xl mx-auto">
         <div className="flex items-center gap-4 mb-6">
           <Button variant="ghost" size="icon" onClick={() => navigate("/teacher/dashboard")}>
@@ -201,6 +207,7 @@ const TeacherAnalyticsDashboard = () => {
             </TabsContent>
           </Tabs>
         )}
+      </div>
       </div>
     </div>
   );

@@ -9,6 +9,7 @@ import { useClass, useClassAssignments } from '@/hooks/useClassManagement';
 import { RosterManagement } from '@/components/teacher/RosterManagement';
 import { AssignmentWizard } from '@/components/teacher/AssignmentWizard';
 import { format } from 'date-fns';
+import Header from '@/components/Header';
 
 export default function ClassDetailPage() {
   const { classId } = useParams<{ classId: string }>();
@@ -45,7 +46,9 @@ export default function ClassDetailPage() {
   };
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="min-h-screen bg-background">
+      <Header />
+      <div className="container mx-auto p-6 space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">
         <Button variant="outline" size="sm" onClick={() => navigate('/teacher/dashboard')}>
@@ -275,12 +278,12 @@ export default function ClassDetailPage() {
         </TabsContent>
       </Tabs>
 
-      {/* Assignment Wizard */}
       <AssignmentWizard
         classId={classId}
         open={assignmentWizardOpen}
         onOpenChange={setAssignmentWizardOpen}
       />
+      </div>
     </div>
   );
 }
