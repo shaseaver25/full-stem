@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { StudentSignupFormData } from './studentSignupSchema';
 import { toast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
+import { redirectToRoleDashboard } from '@/utils/roleRedirect';
 
 interface SignupError {
   message: string;
@@ -55,7 +56,11 @@ export const useStudentSignup = () => {
 
       // Redirect after a short delay to allow toast to display
       setTimeout(() => {
-        navigate('/dashboard/student');
+        if (data.user) {
+          redirectToRoleDashboard(data.user.id, navigate);
+        } else {
+          navigate('/dashboard/student');
+        }
       }, 2000);
     },
     onError: (error: SignupError) => {

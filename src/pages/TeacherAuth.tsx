@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, GraduationCap, ArrowLeft } from 'lucide-react';
+import { redirectToRoleDashboard } from '@/utils/roleRedirect';
 
 const TeacherAuth = () => {
   const [email, setEmail] = useState('');
@@ -22,7 +23,7 @@ const TeacherAuth = () => {
   useEffect(() => {
     if (user) {
       console.log('User authenticated, redirecting to dashboard');
-      navigate('/teacher/dashboard');
+      redirectToRoleDashboard(user.id, navigate);
     }
   }, [user, navigate]);
 
@@ -40,7 +41,7 @@ const TeacherAuth = () => {
       setError(error.message);
     } else {
       console.log('Sign in successful');
-      navigate('/teacher/dashboard');
+      // Auth context will handle redirect via useEffect
     }
     
     setLoading(false);

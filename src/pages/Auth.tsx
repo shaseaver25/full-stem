@@ -8,6 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Brain } from 'lucide-react';
+import { redirectToRoleDashboard } from '@/utils/roleRedirect';
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -23,7 +24,7 @@ const Auth = () => {
   // Redirect if already logged in
   useEffect(() => {
     if (user) {
-      navigate('/');
+      redirectToRoleDashboard(user.id, navigate);
     }
   }, [user, navigate]);
 
