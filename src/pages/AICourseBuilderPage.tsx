@@ -300,39 +300,8 @@ const AICourseBuilderPage = () => {
             />
 
             <BuildClassTabs
-              activeTab={activeTab}
-              setActiveTab={setActiveTab}
               classData={classData}
               handleClassDataChange={handleClassDataChange}
-              lessons={lessons}
-              currentLesson={currentLesson}
-              setCurrentLesson={setCurrentLesson}
-              addLesson={addLesson}
-              removeLesson={removeLesson}
-              addVideoToLesson={addVideoToLesson}
-              removeVideoFromLesson={removeVideoFromLesson}
-              updateLessonVideo={updateLessonVideo}
-              classroomActivities={classroomActivities}
-              currentClassroomActivity={currentClassroomActivity}
-              setCurrentClassroomActivity={setCurrentClassroomActivity}
-              addClassroomActivity={addClassroomActivity}
-              removeClassroomActivity={removeClassroomActivity}
-              individualActivities={individualActivities}
-              currentIndividualActivity={currentIndividualActivity}
-              setCurrentIndividualActivity={setCurrentIndividualActivity}
-              addIndividualActivity={addIndividualActivity}
-              removeIndividualActivity={removeIndividualActivity}
-              assignments={assignments}
-              currentAssignment={currentAssignment}
-              setCurrentAssignment={setCurrentAssignment}
-              addAssignment={addAssignment}
-              removeAssignment={removeAssignment}
-              resources={resources}
-              currentResource={currentResource}
-              setCurrentResource={setCurrentResource}
-              addResource={addResource}
-              removeResource={removeResource}
-              getCompletionPercentage={getCompletionPercentage}
             />
           </>
         )}

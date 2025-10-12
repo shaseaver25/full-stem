@@ -1,16 +1,12 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Button } from '@/components/ui/button';
-import { BookOpen, Upload, Loader2 } from 'lucide-react';
+import { BookOpen } from 'lucide-react';
 import { ClassData } from '@/types/buildClassTypes';
-import { useDropzone } from 'react-dropzone';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from '@/hooks/use-toast';
 
 interface ClassDetailsFormProps {
   classData: ClassData;
@@ -18,85 +14,6 @@ interface ClassDetailsFormProps {
 }
 
 const ClassDetailsForm: React.FC<ClassDetailsFormProps> = ({ classData, onClassDataChange }) => {
-  const [isUploading, setIsUploading] = useState(false);
-
-  const parseSyllabusWithAI = async (content: string) => {
-    try {
-      const { data, error } = await supabase.functions.invoke('parse-lesson-plan', {
-        body: { content }
-      });
-
-      if (error) throw error;
-
-      return data;
-    } catch (error: any) {
-      console.error('Error parsing syllabus:', error);
-      throw error;
-    }
-  };
-
-  const onDrop = async (acceptedFiles: File[]) => {
-    if (acceptedFiles.length === 0) return;
-
-    const file = acceptedFiles[0];
-    setIsUploading(true);
-
-    try {
-      const fileType = file.name.split('.').pop()?.toLowerCase();
-      let content = '';
-
-      // Only support plain text files for now
-      if (fileType === 'txt') {
-        content = await file.text();
-      } else {
-        throw new Error('Please use a .txt file. For Word or PDF files, copy the text and paste it into the form fields manually.');
-      }
-
-      if (!content || content.trim().length < 10) {
-        throw new Error('File appears to be empty or too short');
-      }
-
-      console.log('Extracted text length:', content.length);
-      const parsedData = await parseSyllabusWithAI(content);
-
-      // Populate form fields with parsed data
-      if (parsedData.title) onClassDataChange('title', parsedData.title);
-      if (parsedData.description) onClassDataChange('description', parsedData.description);
-      if (parsedData.subject) onClassDataChange('subject', parsedData.subject);
-      if (parsedData.gradeLevel) onClassDataChange('gradeLevel', parsedData.gradeLevel);
-      if (parsedData.duration) onClassDataChange('duration', parsedData.duration);
-      if (parsedData.learningObjectives) {
-        const objectives = Array.isArray(parsedData.learningObjectives) 
-          ? parsedData.learningObjectives.join('\n') 
-          : parsedData.learningObjectives;
-        onClassDataChange('learningObjectives', objectives);
-      }
-      if (parsedData.prerequisites) onClassDataChange('prerequisites', parsedData.prerequisites);
-
-      toast({
-        title: "Syllabus Uploaded!",
-        description: "Lesson information has been populated from your syllabus.",
-      });
-    } catch (error: any) {
-      console.error('Error uploading syllabus:', error);
-      toast({
-        title: "Upload Failed",
-        description: error.message || "Failed to parse syllabus. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsUploading(false);
-    }
-  };
-
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    onDrop,
-    accept: {
-      'text/plain': ['.txt']
-    },
-    maxFiles: 1,
-    disabled: isUploading
-  });
   return (
     <Card>
       <CardHeader>
@@ -105,41 +22,10 @@ const ClassDetailsForm: React.FC<ClassDetailsFormProps> = ({ classData, onClassD
           Basic Information
         </CardTitle>
         <CardDescription>
-          Set up the fundamental details of your lesson or upload a syllabus to auto-populate
+          Set up the fundamental details of your class
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Syllabus Upload */}
-        <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-primary transition-colors">
-          <div {...getRootProps()} className="cursor-pointer">
-            <input {...getInputProps()} />
-            {isUploading ? (
-              <div className="flex flex-col items-center gap-2">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                <p className="text-sm text-muted-foreground">Processing syllabus...</p>
-              </div>
-            ) : isDragActive ? (
-              <div className="flex flex-col items-center gap-2">
-                <Upload className="h-8 w-8 text-primary" />
-                <p className="text-sm text-muted-foreground">Drop your syllabus here</p>
-              </div>
-            ) : (
-              <div className="flex flex-col items-center gap-2">
-                <Upload className="h-8 w-8 text-gray-400" />
-                <p className="text-sm font-medium">Upload Syllabus (Text File Only)</p>
-                <p className="text-xs text-muted-foreground">
-                  Drag & drop or click to upload a .txt file
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  For Word/PDF: Copy text and paste into form fields below
-                </p>
-                <Button type="button" variant="outline" size="sm" className="mt-2">
-                  Choose File
-                </Button>
-              </div>
-            )}
-          </div>
-        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
             <Label htmlFor="title">Class Title *</Label>
