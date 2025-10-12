@@ -38,19 +38,10 @@ export const useAdminProfile = () => {
 
         if (error) {
           if (error.code === 'PGRST116') {
-            // No profile found, create one
-            const { data: newProfile, error: insertError } = await supabase
-              .from('admin_profiles')
-              .insert({ user_id: user.id })
-              .select()
-              .single();
-
-            if (insertError) {
-              console.error('Error creating admin profile:', insertError);
-              setError(insertError.message);
-            } else {
-              setProfile(newProfile);
-            }
+            // No profile found - don't auto-create, just set null
+            // Admin profiles should only be created via role assignment
+            console.log('No admin profile found for user');
+            setProfile(null);
           } else {
             console.error('Error fetching admin profile:', error);
             setError(error.message);

@@ -50,9 +50,20 @@ export const useTeacherProfileSimplified = () => {
   };
 
   const fetchProfile = async (userId: string) => {
-    if (!mountedRef.current || !userId) return;
-
     console.log('fetchProfile called with userId:', userId);
+    
+    if (!userId) {
+      console.log('No userId provided');
+      setLoading(false);
+      setProfile(null);
+      return;
+    }
+
+    if (!mountedRef.current) {
+      console.log('Component unmounted, skipping fetch');
+      return;
+    }
+
     setLoading(true);
     
     try {
@@ -62,9 +73,12 @@ export const useTeacherProfileSimplified = () => {
         .eq('user_id', userId)
         .maybeSingle();
 
-      if (!mountedRef.current) return;
-
       console.log('Profile fetch result:', { data, error });
+
+      if (!mountedRef.current) {
+        console.log('Component unmounted after fetch, skipping state update');
+        return;
+      }
 
       if (error && error.code !== 'PGRST116') {
         console.error('Error fetching teacher profile:', error);
@@ -87,15 +101,27 @@ export const useTeacherProfileSimplified = () => {
       console.log('No profile found, creating initial profile...');
       const newProfile = await createInitialProfile(userId);
       
-      if (mountedRef.current && newProfile) {
+      if (!mountedRef.current) {
+        console.log('Component unmounted after profile creation');
+        return;
+      }
+      
+      if (newProfile) {
         console.log('New profile created:', newProfile);
         setProfile(newProfile);
+      } else {
+        console.log('Failed to create profile');
+        setProfile(null);
       }
       
     } catch (error) {
-      if (!mountedRef.current) return;
-      
       console.error('Error in fetchProfile:', error);
+      
+      if (!mountedRef.current) {
+        console.log('Component unmounted during error handling');
+        return;
+      }
+      
       toast({
         title: "Error",
         description: "Failed to load teacher profile.",
@@ -103,7 +129,9 @@ export const useTeacherProfileSimplified = () => {
       });
       setProfile(null);
     } finally {
+      // CRITICAL: Always set loading to false in finally block
       if (mountedRef.current) {
+        console.log('Setting loading to false');
         setLoading(false);
       }
     }
