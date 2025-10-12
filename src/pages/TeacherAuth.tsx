@@ -58,6 +58,7 @@ const TeacherAuth = () => {
     if (error) {
       console.error('Sign in error:', error);
       setError(error.message);
+      setLoading(false);
     } else {
       console.log('Sign in successful');
       
@@ -65,11 +66,11 @@ const TeacherAuth = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (user?.user_metadata?.requires_onboarding) {
         navigate('/preferences');
+      } else {
+        // Redirect to teacher dashboard
+        navigate('/teacher/dashboard');
       }
-      // Otherwise, auth context will handle redirect via useEffect
     }
-    
-    setLoading(false);
   };
 
   return (
