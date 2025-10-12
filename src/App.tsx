@@ -75,8 +75,6 @@ import { AdminOnboarding } from "@/components/admin/AdminOnboarding";
 
 const queryClient = new QueryClient();
 
-console.log('App.tsx loading, React available:', typeof React);
-
 // Component that enables keyboard shortcut
 function AppContent() {
   // Enable keyboard shortcut for Focus Mode (Ctrl + Alt + F)
@@ -431,8 +429,6 @@ function AppContent() {
 }
 
 const App: React.FC = () => {
-  console.log('App rendering, React available:', typeof React);
-  
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
