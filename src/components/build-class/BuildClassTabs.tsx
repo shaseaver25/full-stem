@@ -7,7 +7,6 @@ import ClassDetailsForm from '@/components/build-class/ClassDetailsForm';
 import LessonsForm from '@/components/build-class/LessonsForm';
 import { ClassroomActivitiesForm, IndividualActivitiesForm } from '@/components/build-class/ActivitiesForm';
 import AssignmentsForm from '@/components/build-class/AssignmentsForm';
-import ResourcesForm from '@/components/build-class/ResourcesForm';
 import ClassPreview from '@/components/build-class/ClassPreview';
 import { ClassData, Lesson, Assignment, ClassroomActivity, IndividualActivity, Resource } from '@/types/buildClassTypes';
 
@@ -84,7 +83,7 @@ const BuildClassTabs: React.FC<BuildClassTabsProps> = ({
 }) => {
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-      <TabsList className="grid w-full grid-cols-6">
+      <TabsList className="grid w-full grid-cols-5">
         <TabsTrigger value="details">Lesson</TabsTrigger>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -106,11 +105,19 @@ const BuildClassTabs: React.FC<BuildClassTabsProps> = ({
             <DropdownMenuItem onClick={() => setActiveTab('lessons')}>
               Assessments
             </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setActiveTab('lessons')}>
+              Discussion
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setActiveTab('lessons')}>
+              Code IDE
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setActiveTab('assignments')}>
+              Assignments
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
         <TabsTrigger value="activities">Activities</TabsTrigger>
         <TabsTrigger value="assignments">Assignments</TabsTrigger>
-        <TabsTrigger value="resources">Resources</TabsTrigger>
         <TabsTrigger value="preview">Preview</TabsTrigger>
       </TabsList>
 
@@ -166,16 +173,6 @@ const BuildClassTabs: React.FC<BuildClassTabsProps> = ({
           setCurrentAssignment={setCurrentAssignment}
           addAssignment={addAssignment}
           removeAssignment={removeAssignment}
-        />
-      </TabsContent>
-
-      <TabsContent value="resources" className="space-y-6">
-        <ResourcesForm
-          resources={resources}
-          currentResource={currentResource}
-          setCurrentResource={setCurrentResource}
-          addResource={addResource}
-          removeResource={removeResource}
         />
       </TabsContent>
 
