@@ -347,77 +347,6 @@ const BuildClassPage = () => {
           handleClassDataChange={handleClassDataChange}
         />
 
-        {/* Lessons Section - Only show if classId exists (editing mode) */}
-        {classId && (
-          <Card className="mt-6">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-              <CardTitle className="text-xl font-bold flex items-center gap-2">
-                <BookOpen className="h-5 w-5" />
-                Lessons
-              </CardTitle>
-              <Button
-                onClick={() => navigate(`/teacher/build-lesson/${classId}`)}
-                className="gap-2"
-              >
-                <Plus className="h-4 w-4" />
-                Add Lesson
-              </Button>
-            </CardHeader>
-            <CardContent>
-              {lessonsLoading ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  Loading lessons...
-                </div>
-              ) : classLessons && classLessons.length > 0 ? (
-                <div className="space-y-3">
-                  {classLessons.map((lesson, index) => (
-                    <div
-                      key={lesson.id}
-                      className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent/50 transition-colors"
-                    >
-                      <div className="flex items-center gap-4">
-                        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary font-semibold text-sm">
-                          {index + 1}
-                        </div>
-                        <div>
-                          <h3 className="font-medium">{lesson.title}</h3>
-                          {lesson.description && (
-                            <p className="text-sm text-muted-foreground line-clamp-1">
-                              {lesson.description}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => navigate(`/teacher/build-lesson/${classId}?lessonId=${lesson.id}`)}
-                      >
-                        Edit
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-12">
-                  <BookOpen className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-semibold text-gray-700 mb-2">No lessons yet</h3>
-                  <p className="text-muted-foreground mb-4">
-                    Start building your class by adding lessons
-                  </p>
-                  <Button
-                    onClick={() => navigate(`/teacher/build-lesson/${classId}`)}
-                    className="gap-2"
-                  >
-                    <Plus className="h-4 w-4" />
-                    Add Your First Lesson
-                  </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        )}
-
         {/* Standards Section - Only show if classId exists (editing mode) */}
         {classId && (
           <Card className="mt-6">
@@ -513,6 +442,77 @@ const BuildClassPage = () => {
                   <p className="text-muted-foreground mb-4">
                     Add learning standards to align your class with educational requirements
                   </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Lessons Section - Only show if classId exists (editing mode) */}
+        {classId && (
+          <Card className="mt-6">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+              <CardTitle className="text-xl font-bold flex items-center gap-2">
+                <BookOpen className="h-5 w-5" />
+                Lessons
+              </CardTitle>
+              <Button
+                onClick={() => navigate(`/teacher/build-lesson/${classId}`)}
+                className="gap-2"
+              >
+                <Plus className="h-4 w-4" />
+                Add Lesson
+              </Button>
+            </CardHeader>
+            <CardContent>
+              {lessonsLoading ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  Loading lessons...
+                </div>
+              ) : classLessons && classLessons.length > 0 ? (
+                <div className="space-y-3">
+                  {classLessons.map((lesson, index) => (
+                    <div
+                      key={lesson.id}
+                      className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent/50 transition-colors"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary font-semibold text-sm">
+                          {index + 1}
+                        </div>
+                        <div>
+                          <h3 className="font-medium">{lesson.title}</h3>
+                          {lesson.description && (
+                            <p className="text-sm text-muted-foreground line-clamp-1">
+                              {lesson.description}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => navigate(`/teacher/build-lesson/${classId}?lessonId=${lesson.id}`)}
+                      >
+                        Edit
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <BookOpen className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-semibold text-gray-700 mb-2">No lessons yet</h3>
+                  <p className="text-muted-foreground mb-4">
+                    Start building your class by adding lessons
+                  </p>
+                  <Button
+                    onClick={() => navigate(`/teacher/build-lesson/${classId}`)}
+                    className="gap-2"
+                  >
+                    <Plus className="h-4 w-4" />
+                    Add Your First Lesson
+                  </Button>
                 </div>
               )}
             </CardContent>
