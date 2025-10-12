@@ -10,6 +10,11 @@ import { useBuildClassActions } from '@/hooks/useBuildClassActions';
 import { useClassApi } from '@/hooks/useClassApi';
 import { useClassCourses } from '@/hooks/useClassCourses';
 import { toast } from '@/hooks/use-toast';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Plus, BookOpen } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useQuery } from '@tanstack/react-query';
 
 const BuildClassPage = () => {
   const { classId } = useParams<{ classId?: string }>();
@@ -82,6 +87,24 @@ const BuildClassPage = () => {
 
   const { createClassAsync, updateClassAsync, useClassWithContent, isCreating, isUpdating } = useClassApi();
   const { classCourses } = useClassCourses(classId);
+
+  // Fetch lessons for this class
+  const { data: classLessons, isLoading: lessonsLoading } = useQuery({
+    queryKey: ['classLessons', classId],
+    queryFn: async () => {
+      if (!classId) return [];
+      
+      const { data, error } = await supabase
+        .from('lessons')
+        .select('*')
+        .eq('class_id', classId)
+        .order('order_index', { ascending: true });
+      
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!classId
+  });
 
   // Load existing class data if editing
   const { data: existingClassData, isLoading } = useClassWithContent(classId || '');
@@ -218,6 +241,77 @@ const BuildClassPage = () => {
           classData={classData}
           handleClassDataChange={handleClassDataChange}
         />
+
+        {/* Lessons Section - Only show if classId exists (editing mode) */}
+        {classId && (
+          <Card className="mt-6">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+              <CardTitle className="text-xl font-bold flex items-center gap-2">
+                <BookOpen className="h-5 w-5" />
+                Lessons
+              </CardTitle>
+              <Button
+                onClick={() => navigate(`/teacher/build-lesson/${classId}`)}
+                className="gap-2"
+              >
+                <Plus className="h-4 w-4" />
+                Add Lesson
+              </Button>
+            </CardHeader>
+            <CardContent>
+              {lessonsLoading ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  Loading lessons...
+                </div>
+              ) : classLessons && classLessons.length > 0 ? (
+                <div className="space-y-3">
+                  {classLessons.map((lesson, index) => (
+                    <div
+                      key={lesson.id}
+                      className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent/50 transition-colors"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary font-semibold text-sm">
+                          {index + 1}
+                        </div>
+                        <div>
+                          <h3 className="font-medium">{lesson.title}</h3>
+                          {lesson.description && (
+                            <p className="text-sm text-muted-foreground line-clamp-1">
+                              {lesson.description}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => navigate(`/teacher/build-lesson/${classId}?lessonId=${lesson.id}`)}
+                      >
+                        Edit
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <BookOpen className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-semibold text-gray-700 mb-2">No lessons yet</h3>
+                  <p className="text-muted-foreground mb-4">
+                    Start building your class by adding lessons
+                  </p>
+                  <Button
+                    onClick={() => navigate(`/teacher/build-lesson/${classId}`)}
+                    className="gap-2"
+                  >
+                    <Plus className="h-4 w-4" />
+                    Add Your First Lesson
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );
