@@ -12,15 +12,21 @@ import { useClassCourses } from '@/hooks/useClassCourses';
 import { toast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, BookOpen } from 'lucide-react';
+import { Plus, BookOpen, Target, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 
 const BuildClassPage = () => {
   const { classId } = useParams<{ classId?: string }>();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('details');
   const [isSaving, setIsSaving] = useState(false);
+  const [showAddStandard, setShowAddStandard] = useState(false);
+  const [newStandard, setNewStandard] = useState({ code: '', description: '' });
+  const queryClient = useQueryClient();
   
   const {
     classData,
@@ -105,6 +111,98 @@ const BuildClassPage = () => {
     },
     enabled: !!classId
   });
+
+  // Fetch standards for this class
+  const { data: classStandards, isLoading: standardsLoading } = useQuery({
+    queryKey: ['classStandards', classId],
+    queryFn: async () => {
+      if (!classId) return [];
+      
+      const { data, error } = await supabase
+        .from('class_standards')
+        .select('*')
+        .eq('class_id', classId)
+        .order('created_at', { ascending: true });
+      
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!classId
+  });
+
+  // Add standard mutation
+  const addStandardMutation = useMutation({
+    mutationFn: async (standard: { code: string; description: string }) => {
+      if (!classId) throw new Error('No class ID');
+      
+      const { error } = await supabase
+        .from('class_standards')
+        .insert({
+          class_id: classId,
+          standard_code: standard.code.trim(),
+          description: standard.description.trim()
+        });
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['classStandards', classId] });
+      setNewStandard({ code: '', description: '' });
+      setShowAddStandard(false);
+      toast({
+        title: "Success",
+        description: "Standard added successfully.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to add standard. Please try again.",
+        variant: "destructive",
+      });
+      console.error('Error adding standard:', error);
+    }
+  });
+
+  // Delete standard mutation
+  const deleteStandardMutation = useMutation({
+    mutationFn: async (standardId: string) => {
+      const { error } = await supabase
+        .from('class_standards')
+        .delete()
+        .eq('id', standardId);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['classStandards', classId] });
+      toast({
+        title: "Success",
+        description: "Standard removed successfully.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to remove standard. Please try again.",
+        variant: "destructive",
+      });
+      console.error('Error deleting standard:', error);
+    }
+  });
+
+  const handleAddStandard = () => {
+    if (!newStandard.code.trim() || !newStandard.description.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Please enter both code and description.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    addStandardMutation.mutate(newStandard);
+  };
 
   // Load existing class data if editing
   const { data: existingClassData, isLoading } = useClassWithContent(classId || '');
@@ -307,6 +405,107 @@ const BuildClassPage = () => {
                     <Plus className="h-4 w-4" />
                     Add Your First Lesson
                   </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Standards Section - Only show if classId exists (editing mode) */}
+        {classId && (
+          <Card className="mt-6">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+              <CardTitle className="text-xl font-bold flex items-center gap-2">
+                <Target className="h-5 w-5" />
+                Learning Standards
+              </CardTitle>
+              <Button
+                onClick={() => setShowAddStandard(!showAddStandard)}
+                variant={showAddStandard ? "outline" : "default"}
+                className="gap-2"
+              >
+                {showAddStandard ? (
+                  "Cancel"
+                ) : (
+                  <>
+                    <Plus className="h-4 w-4" />
+                    Add Standard
+                  </>
+                )}
+              </Button>
+            </CardHeader>
+            <CardContent>
+              {showAddStandard && (
+                <div className="mb-6 p-4 border rounded-lg bg-accent/50">
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="standard-code">Standard Code</Label>
+                      <Input
+                        id="standard-code"
+                        placeholder="e.g., CCSS.MATH.CONTENT.8.F.A.1"
+                        value={newStandard.code}
+                        onChange={(e) => setNewStandard({ ...newStandard, code: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="standard-description">Description</Label>
+                      <Textarea
+                        id="standard-description"
+                        placeholder="Enter the standard description..."
+                        value={newStandard.description}
+                        onChange={(e) => setNewStandard({ ...newStandard, description: e.target.value })}
+                        rows={3}
+                      />
+                    </div>
+                    <Button 
+                      onClick={handleAddStandard}
+                      disabled={addStandardMutation.isPending}
+                      className="w-full"
+                    >
+                      {addStandardMutation.isPending ? "Adding..." : "Add Standard"}
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {standardsLoading ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  Loading standards...
+                </div>
+              ) : classStandards && classStandards.length > 0 ? (
+                <div className="space-y-3">
+                  {classStandards.map((standard) => (
+                    <div
+                      key={standard.id}
+                      className="flex items-start justify-between p-4 border rounded-lg hover:bg-accent/50 transition-colors"
+                    >
+                      <div className="flex-1">
+                        <div className="font-mono text-sm font-semibold text-primary mb-1">
+                          {standard.standard_code}
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          {standard.description}
+                        </p>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => deleteStandardMutation.mutate(standard.id)}
+                        disabled={deleteStandardMutation.isPending}
+                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <Target className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-semibold text-gray-700 mb-2">No standards yet</h3>
+                  <p className="text-muted-foreground mb-4">
+                    Add learning standards to align your class with educational requirements
+                  </p>
                 </div>
               )}
             </CardContent>
