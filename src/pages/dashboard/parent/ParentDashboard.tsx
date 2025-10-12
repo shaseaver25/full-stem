@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import Header from "@/components/Header";
 import ParentStudentOverview from "@/components/parent/ParentStudentOverview";
 import ParentFeedbackSection from "@/components/parent/ParentFeedbackSection";
 import ParentAiInsights from "@/components/parent/ParentAiInsights";
@@ -217,21 +218,23 @@ const ParentDashboard = () => {
   const preferredLanguage = 'en'; // Parent language preference can be added to parent_profiles if needed
 
   return (
-    <div className="min-h-screen bg-background p-8">
-      <div className="max-w-7xl mx-auto">
-        <div className="flex items-center gap-4 mb-6">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/parent")}>
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <div>
-            <h1 className="text-3xl font-semibold">
-              Welcome, {parentName}!
-            </h1>
-            <p className="text-muted-foreground mt-1">
-              Here's {studentData.first_name}'s progress
-            </p>
+    <div className="min-h-screen bg-background">
+      <Header />
+      <div className="p-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center gap-4 mb-6">
+            <Button variant="ghost" size="icon" onClick={() => navigate("/parent")}>
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <div>
+              <h1 className="text-3xl font-semibold">
+                Welcome, {parentName}!
+              </h1>
+              <p className="text-muted-foreground mt-1">
+                Here's {studentData.first_name}'s progress
+              </p>
+            </div>
           </div>
-        </div>
 
         <Tabs defaultValue="overview" className="space-y-6">
           <TabsList className="grid w-full grid-cols-3">
@@ -261,6 +264,7 @@ const ParentDashboard = () => {
             />
           </TabsContent>
         </Tabs>
+        </div>
       </div>
     </div>
   );

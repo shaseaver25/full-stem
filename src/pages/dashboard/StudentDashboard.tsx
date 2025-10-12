@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { EditProfileModal } from '@/components/dashboard/EditProfileModal';
+import Header from '@/components/Header';
 import { GraduationCap, Brain, Mail, User, BookOpen } from 'lucide-react';
 
 export default function StudentDashboard() {
@@ -76,8 +77,10 @@ export default function StudentDashboard() {
   const displayName = profile.first_name || 'Student';
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-4 sm:p-8 bg-background">
-      <div className="w-full max-w-3xl space-y-6">
+    <div className="min-h-screen bg-background">
+      <Header />
+      <div className="flex flex-col items-center justify-center p-4 sm:p-8">
+        <div className="w-full max-w-3xl space-y-6">
         {/* Welcome Header */}
         <div className="text-center space-y-2">
           <h1 className="text-3xl sm:text-4xl font-bold text-foreground">
@@ -226,12 +229,13 @@ export default function StudentDashboard() {
         </div>
       </div>
 
-      {/* Edit Profile Modal */}
-      <EditProfileModal
-        open={editModalOpen}
-        onOpenChange={setEditModalOpen}
-        currentGrade={profile.grade_level}
-      />
+        {/* Edit Profile Modal */}
+        <EditProfileModal
+          open={editModalOpen}
+          onOpenChange={setEditModalOpen}
+          currentGrade={profile.grade_level}
+        />
+      </div>
     </div>
   );
 }
