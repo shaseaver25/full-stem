@@ -1868,24 +1868,30 @@ export type Database = {
       }
       profiles: {
         Row: {
+          allowed_ips: string[] | null
           created_at: string
           email: string | null
           full_name: string | null
           id: string
+          mfa_enabled: boolean | null
           updated_at: string
         }
         Insert: {
+          allowed_ips?: string[] | null
           created_at?: string
           email?: string | null
           full_name?: string | null
           id: string
+          mfa_enabled?: boolean | null
           updated_at?: string
         }
         Update: {
+          allowed_ips?: string[] | null
           created_at?: string
           email?: string | null
           full_name?: string | null
           id?: string
+          mfa_enabled?: boolean | null
           updated_at?: string
         }
         Relationships: []
@@ -2705,6 +2711,7 @@ export type Database = {
         | "student"
         | "teacher"
         | "parent"
+        | "system_admin"
       permission_type:
         | "read_users"
         | "write_users"
@@ -2860,6 +2867,7 @@ export const Constants = {
         "student",
         "teacher",
         "parent",
+        "system_admin",
       ],
       permission_type: [
         "read_users",
