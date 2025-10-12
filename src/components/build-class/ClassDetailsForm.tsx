@@ -45,34 +45,18 @@ const ClassDetailsForm: React.FC<ClassDetailsFormProps> = ({ classData, onClassD
       const fileType = file.name.split('.').pop()?.toLowerCase();
       let content = '';
 
+      // Only support plain text files for now
       if (fileType === 'txt') {
         content = await file.text();
-      } else if (fileType === 'pdf' || fileType === 'docx') {
-        // Convert file to base64
-        const arrayBuffer = await file.arrayBuffer();
-        const bytes = new Uint8Array(arrayBuffer);
-        let binary = '';
-        for (let i = 0; i < bytes.byteLength; i++) {
-          binary += String.fromCharCode(bytes[i]);
-        }
-        const base64File = btoa(binary);
-
-        const { data, error } = await supabase.functions.invoke('extract-text', {
-          body: {
-            file: base64File,
-            fileName: file.name,
-            mimeType: file.type
-          }
-        });
-
-        if (error) throw error;
-        content = data.text;
+      } else {
+        throw new Error('Please use a .txt file. For Word or PDF files, copy the text and paste it into the form fields manually.');
       }
 
-      if (!content) {
-        throw new Error('Unable to extract text from file');
+      if (!content || content.trim().length < 10) {
+        throw new Error('File appears to be empty or too short');
       }
 
+      console.log('Extracted text length:', content.length);
       const parsedData = await parseSyllabusWithAI(content);
 
       // Populate form fields with parsed data
@@ -108,9 +92,7 @@ const ClassDetailsForm: React.FC<ClassDetailsFormProps> = ({ classData, onClassD
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: {
-      'text/plain': ['.txt'],
-      'application/pdf': ['.pdf'],
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx']
+      'text/plain': ['.txt']
     },
     maxFiles: 1,
     disabled: isUploading
@@ -144,9 +126,12 @@ const ClassDetailsForm: React.FC<ClassDetailsFormProps> = ({ classData, onClassD
             ) : (
               <div className="flex flex-col items-center gap-2">
                 <Upload className="h-8 w-8 text-gray-400" />
-                <p className="text-sm font-medium">Upload Syllabus</p>
+                <p className="text-sm font-medium">Upload Syllabus (Text File Only)</p>
                 <p className="text-xs text-muted-foreground">
-                  Drag & drop or click to upload (.txt, .pdf, .docx)
+                  Drag & drop or click to upload a .txt file
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  For Word/PDF: Copy text and paste into form fields below
                 </p>
                 <Button type="button" variant="outline" size="sm" className="mt-2">
                   Choose File
