@@ -10,8 +10,13 @@ interface RoleAwareNavigationProps {
 }
 
 const RoleAwareNavigation = ({ onLinkClick, variant = 'desktop' }: RoleAwareNavigationProps) => {
-  const { role } = useUserRole();
+  const { role, loading } = useUserRole();
   const { isDeveloper } = useImpersonation();
+  
+  // Don't render navigation items while loading
+  if (loading) {
+    return null;
+  }
   
   const navigationItems = getPrimaryNavigationForRole(role);
   

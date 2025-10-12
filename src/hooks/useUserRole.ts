@@ -28,7 +28,10 @@ export const useUserRole = () => {
           .single();
 
         if (error) {
-          console.error('Error fetching user role:', error);
+          // Only log error if it's not a "no rows" error (user might not have role yet)
+          if (error.code !== 'PGRST116') {
+            console.error('Error fetching user role:', error);
+          }
           setRole(null);
         } else {
           setRole(data?.role as UserRole);
@@ -44,30 +47,37 @@ export const useUserRole = () => {
     fetchUserRole();
 
     // Set up real-time subscription for role changes
-    const subscription = supabase
-      .channel('user_roles_changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'user_roles',
-          filter: `user_id=eq.${user?.id}`,
-        },
-        (payload) => {
-          console.log('Role change detected:', payload);
-          if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
-            setRole((payload.new as any).role as UserRole);
-          } else if (payload.eventType === 'DELETE') {
-            setRole(null);
+    // Use unique channel name per user to avoid subscription conflicts
+    if (user?.id) {
+      const channelName = `user_role_${user.id}`;
+      const channel = supabase.channel(channelName);
+      
+      channel
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'user_roles',
+            filter: `user_id=eq.${user.id}`,
+          },
+          (payload) => {
+            console.log('Role change detected:', payload);
+            if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
+              setRole((payload.new as any).role as UserRole);
+            } else if (payload.eventType === 'DELETE') {
+              setRole(null);
+            }
           }
-        }
-      )
-      .subscribe();
+        )
+        .subscribe();
 
-    return () => {
-      subscription.unsubscribe();
-    };
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    }
+
+    return () => {};
   }, [user]);
 
   return { role, loading };
