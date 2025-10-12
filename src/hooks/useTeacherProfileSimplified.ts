@@ -67,13 +67,19 @@ export const useTeacherProfileSimplified = () => {
     setLoading(true);
     
     try {
+      console.log('About to fetch teacher profile for user:', userId);
       const { data, error } = await supabase
         .from('teacher_profiles')
         .select('*')
         .eq('user_id', userId)
         .maybeSingle();
 
-      console.log('Profile fetch result:', { data, error });
+      console.log('Profile fetch completed:', { 
+        hasData: !!data, 
+        errorCode: error?.code, 
+        errorMessage: error?.message,
+        dataPreview: data ? { id: data.id, onboarding_completed: data.onboarding_completed } : null
+      });
 
       if (!mountedRef.current) {
         console.log('Component unmounted after fetch, skipping state update');
@@ -84,7 +90,7 @@ export const useTeacherProfileSimplified = () => {
         console.error('Error fetching teacher profile:', error);
         toast({
           title: "Error",
-          description: "Failed to load teacher profile.",
+          description: `Failed to load teacher profile: ${error.message}`,
           variant: "destructive",
         });
         setProfile(null);
@@ -92,7 +98,7 @@ export const useTeacherProfileSimplified = () => {
       }
 
       if (data) {
-        console.log('Profile found:', data);
+        console.log('Profile found, setting profile state');
         setProfile(data);
         return;
       }
@@ -114,8 +120,8 @@ export const useTeacherProfileSimplified = () => {
         setProfile(null);
       }
       
-    } catch (error) {
-      console.error('Error in fetchProfile:', error);
+    } catch (error: any) {
+      console.error('Exception in fetchProfile:', error?.message || error);
       
       if (!mountedRef.current) {
         console.log('Component unmounted during error handling');
