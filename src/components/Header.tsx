@@ -4,15 +4,14 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useAuth } from '@/contexts/AuthContext';
-import { useImpersonation } from '@/contexts/ImpersonationContext';
 import NotificationBell from '@/components/NotificationBell';
 import ImpersonationBanner from '@/components/developer/ImpersonationBanner';
 import DemoModeIndicator from '@/components/DemoModeIndicator';
-import { Menu, Code } from 'lucide-react';
+import RoleAwareNavigation from '@/components/RoleAwareNavigation';
+import { Menu } from 'lucide-react';
 
 const Header = () => {
   const { user, signOut } = useAuth();
-  const { isDeveloper } = useImpersonation();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -42,45 +41,7 @@ const Header = () => {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex space-x-8">
-            <Link
-              to="/"
-              className="text-gray-500 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
-            >
-              Home
-            </Link>
-            <Link
-              to="/signup/student"
-              className="text-green-600 hover:text-green-700 px-3 py-2 rounded-md text-sm font-medium"
-            >
-              Student Signup
-            </Link>
-            <Link
-              to="/teacher/auth"
-              className="text-gray-500 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
-            >
-              Teacher Portal
-            </Link>
-            <Link
-              to="/admin/dashboard"
-              className="text-gray-500 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
-            >
-              Admin
-            </Link>
-            <Link
-              to="/admin/course-editor"
-              className="text-gray-500 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
-            >
-              Course Editor
-            </Link>
-            {isDeveloper && (
-              <Link
-                to="/dev"
-                className="text-red-500 hover:text-red-700 px-3 py-2 rounded-md text-sm font-medium flex items-center gap-1"
-              >
-                <Code className="h-4 w-4" />
-                Developer
-              </Link>
-            )}
+            <RoleAwareNavigation variant="desktop" />
           </nav>
 
           <div className="flex items-center space-x-4">
@@ -113,51 +74,7 @@ const Header = () => {
               </SheetTrigger>
               <SheetContent side="right" className="w-80">
                 <div className="flex flex-col space-y-4 mt-8">
-                  <Link
-                    to="/"
-                    className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-base font-medium"
-                    onClick={closeMobileMenu}
-                  >
-                    Home
-                  </Link>
-                  <Link
-                    to="/signup/student"
-                    className="text-green-600 hover:text-green-700 px-3 py-2 rounded-md text-base font-medium"
-                    onClick={closeMobileMenu}
-                  >
-                    Student Signup
-                  </Link>
-                  <Link
-                    to="/teacher/auth"
-                    className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-base font-medium"
-                    onClick={closeMobileMenu}
-                  >
-                    Teacher Portal
-                  </Link>
-                  <Link
-                    to="/admin/dashboard"
-                    className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-base font-medium"
-                    onClick={closeMobileMenu}
-                  >
-                    Admin
-                  </Link>
-                  <Link
-                    to="/admin/course-editor"
-                    className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-base font-medium"
-                    onClick={closeMobileMenu}
-                  >
-                    Course Editor
-                  </Link>
-                  {isDeveloper && (
-                    <Link
-                      to="/dev"
-                      className="text-red-500 hover:text-red-700 px-3 py-2 rounded-md text-base font-medium flex items-center gap-2"
-                      onClick={closeMobileMenu}
-                    >
-                      <Code className="h-4 w-4" />
-                      Developer
-                    </Link>
-                  )}
+                  <RoleAwareNavigation variant="mobile" onLinkClick={closeMobileMenu} />
                   
                   {user ? (
                     <>
