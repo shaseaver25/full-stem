@@ -48,6 +48,9 @@ export const allNavigationItems: NavigationItem[] = [
   // Super Admin routes
   { path: '/super-admin', label: 'Super Admin', icon: Settings, description: 'Super admin dashboard' },
   
+  // System Admin routes
+  { path: '/system-dashboard', label: 'System Dashboard', icon: Settings, description: 'System administrator dashboard' },
+  
   // Developer routes
   { path: '/dev', label: 'Developer', icon: Settings, description: 'Developer tools' },
   
@@ -62,7 +65,7 @@ export const adminNavigationGroups: NavigationGroup[] = [
     label: 'Admin Tools',
     icon: Settings,
     defaultOpen: false,
-    roles: ['admin', 'super_admin', 'developer'],
+    roles: ['admin', 'super_admin', 'system_admin', 'developer'],
     items: [
       { path: '/admin/advanced', label: 'Advanced Settings', icon: Settings },
     ],
@@ -130,6 +133,12 @@ export const getAllowedRoutes = (role: UserRole | null): string[] => {
       '/content',
       '/preferences',
       '/build-class',
+    ],
+    system_admin: [
+      '/system-dashboard',
+      '/admin/advanced',
+      '/dashboard/admin/analytics',
+      '/preferences',
     ],
     developer: ['*'], // Full access to all routes
   };
@@ -217,6 +226,11 @@ export const getPrimaryNavigationForRole = (role: UserRole | null): NavigationIt
       { path: '/super-admin', label: 'Super Admin', icon: Settings },
       { path: '/admin/dashboard', label: 'Admin Dashboard', icon: LayoutDashboard },
       { path: '/dashboard/admin/analytics', label: 'Analytics', icon: BarChart3 },
+    ],
+    system_admin: [
+      { path: '/system-dashboard', label: 'System Dashboard', icon: Settings },
+      { path: '/dashboard/admin/analytics', label: 'Analytics', icon: BarChart3 },
+      { path: '/preferences', label: 'Preferences', icon: Settings },
     ],
     developer: [
       { path: '/dev', label: 'Developer', icon: Settings },

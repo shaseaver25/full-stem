@@ -72,6 +72,7 @@ import BootstrapDemo from "./pages/BootstrapDemo";
 import RequireRole from "./components/auth/RequireRole";
 import AccessDenied from "./pages/AccessDenied";
 import { AdminOnboarding } from "@/components/admin/AdminOnboarding";
+import SystemDashboard from "./pages/SystemDashboard";
 
 const queryClient = new QueryClient();
 
@@ -268,6 +269,16 @@ function AppContent() {
           } 
         />
         
+        {/* System Administrator Route */}
+        <Route 
+          path="/system-dashboard" 
+          element={
+            <RequireRole allowedRoles={['system_admin', 'developer']}>
+              <SystemDashboard />
+            </RequireRole>
+          } 
+        />
+        
         {/* Developer Routes */}
         <Route 
           path="/dev" 
@@ -277,7 +288,7 @@ function AppContent() {
             </DeveloperRoute>
           } 
         />
-        
+
         {/* Student Routes */}
         <Route 
           path="/student" 

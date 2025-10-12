@@ -1,6 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 
-export type UserRole = 'student' | 'teacher' | 'admin' | 'super_admin' | 'developer';
+export type UserRole = 'student' | 'teacher' | 'admin' | 'super_admin' | 'system_admin' | 'developer';
 
 interface LogActivityParams {
   userId: string;
@@ -70,5 +70,13 @@ export const ActivityActions = {
     MANAGE_USER: 'Managed User',
     PUBLISH_CLASS: 'Published Class',
     CREATE_BACKUP: 'Created Backup',
+  },
+  // System Admin actions
+  SYSTEM_ADMIN: {
+    TRIGGER_BACKUP: 'Triggered Database Backup',
+    SYNC_CACHE: 'Synced Content Cache',
+    MANAGE_API_KEYS: 'Managed API Keys',
+    VIEW_AUDIT_LOG: 'Viewed Audit Log',
+    SYSTEM_CONFIG: 'Updated System Configuration',
   },
 } as const;

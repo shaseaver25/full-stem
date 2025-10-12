@@ -2672,6 +2672,10 @@ export type Database = {
         Args: { _user_id?: string }
         Returns: boolean
       }
+      is_system_admin: {
+        Args: { _user_id?: string }
+        Returns: boolean
+      }
       rpc_assign_lesson_to_class: {
         Args: {
           p_class_id: string

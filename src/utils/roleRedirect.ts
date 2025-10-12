@@ -1,6 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 
-export type UserRole = 'student' | 'teacher' | 'parent' | 'admin' | 'super_admin' | 'developer';
+export type UserRole = 'student' | 'teacher' | 'parent' | 'admin' | 'super_admin' | 'system_admin' | 'developer';
 
 export const getRoleDashboardPath = (role: UserRole): string => {
   const rolePaths: Record<UserRole, string> = {
@@ -9,6 +9,7 @@ export const getRoleDashboardPath = (role: UserRole): string => {
     parent: '/dashboard/parent',
     admin: '/dashboard/admin/analytics',
     super_admin: '/super-admin',
+    system_admin: '/system-dashboard',
     developer: '/dev'
   };
   
