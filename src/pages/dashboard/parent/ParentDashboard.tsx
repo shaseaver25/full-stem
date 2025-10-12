@@ -201,15 +201,18 @@ const ParentDashboard = () => {
 
   if (!studentData) {
     return (
-      <div className="min-h-screen bg-background p-8">
-        <Card>
-          <CardHeader>
-            <CardTitle>No Student Data</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p>No student is currently linked to your account. Please contact your school administrator.</p>
-          </CardContent>
-        </Card>
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="p-8">
+          <Card>
+            <CardHeader>
+              <CardTitle>No Student Data</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p>No student is currently linked to your account. Please contact your school administrator.</p>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     );
   }
