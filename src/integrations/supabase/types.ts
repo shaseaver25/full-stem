@@ -100,6 +100,39 @@ export type Database = {
           },
         ]
       }
+      admin_profiles: {
+        Row: {
+          admin_type: Database["public"]["Enums"]["admin_type"]
+          created_at: string | null
+          id: string
+          onboarding_completed: boolean | null
+          organization_name: string | null
+          organization_size: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          admin_type?: Database["public"]["Enums"]["admin_type"]
+          created_at?: string | null
+          id?: string
+          onboarding_completed?: boolean | null
+          organization_name?: string | null
+          organization_size?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          admin_type?: Database["public"]["Enums"]["admin_type"]
+          created_at?: string | null
+          id?: string
+          onboarding_completed?: boolean | null
+          organization_name?: string | null
+          organization_size?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       assignment_grades: {
         Row: {
           created_at: string
@@ -2581,6 +2614,7 @@ export type Database = {
       }
     }
     Enums: {
+      admin_type: "school" | "homeschool" | "workforce"
       app_role:
         | "admin"
         | "moderator"
@@ -2735,6 +2769,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      admin_type: ["school", "homeschool", "workforce"],
       app_role: [
         "admin",
         "moderator",

@@ -1,8 +1,9 @@
 import { Link } from 'react-router-dom';
-import { getPrimaryNavigationForRole } from '@/utils/permissions';
+import { getPrimaryNavigationForRole, getNavigationGroupsForRole } from '@/utils/permissions';
 import { useUserRole } from '@/hooks/useUserRole';
 import { Code } from 'lucide-react';
 import { useImpersonation } from '@/contexts/ImpersonationContext';
+import { CollapsibleNavGroup } from '@/components/navigation/CollapsibleNavGroup';
 
 interface RoleAwareNavigationProps {
   onLinkClick?: () => void;
@@ -19,6 +20,7 @@ const RoleAwareNavigation = ({ onLinkClick, variant = 'desktop' }: RoleAwareNavi
   }
   
   const navigationItems = getPrimaryNavigationForRole(role);
+  const navigationGroups = getNavigationGroupsForRole(role);
   
   const baseClasses = variant === 'desktop'
     ? 'text-gray-500 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium'
@@ -59,15 +61,29 @@ const RoleAwareNavigation = ({ onLinkClick, variant = 'desktop' }: RoleAwareNavi
       )}
 
       {/* Role-based navigation items */}
-      {navigationItems.map((item) => (
-        <Link
-          key={item.path}
-          to={item.path}
-          className={baseClasses}
-          onClick={onLinkClick}
-        >
-          {item.label}
-        </Link>
+      {navigationItems.map((item) => {
+        const Icon = item.icon;
+        return (
+          <Link
+            key={item.path}
+            to={item.path}
+            className={`${baseClasses} flex items-center gap-2`}
+            onClick={onLinkClick}
+          >
+            {Icon && <Icon className="h-4 w-4" />}
+            {item.label}
+          </Link>
+        );
+      })}
+
+      {/* Collapsible navigation groups */}
+      {navigationGroups.map((group) => (
+        <CollapsibleNavGroup
+          key={group.label}
+          group={group}
+          onLinkClick={onLinkClick}
+          variant={variant}
+        />
       ))}
 
       {/* Developer-only link */}

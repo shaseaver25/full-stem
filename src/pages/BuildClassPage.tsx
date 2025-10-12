@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
+import { HelpHint } from '@/components/common/HelpHint';
 import BuildClassHeader from '@/components/build-class/BuildClassHeader';
 import BuildClassTabs from '@/components/build-class/BuildClassTabs';
 import { useClassCreation } from '@/hooks/useClassCreation';
@@ -194,6 +195,13 @@ const BuildClassPage = () => {
       <Header />
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="flex items-center gap-2 mb-4">
+          <h1 className="text-2xl font-bold">Build Class</h1>
+          <HelpHint
+            text="Create a new class with lessons, assignments, and student enrollment. Set up your class structure and add content step-by-step."
+            learnMoreUrl="https://docs.lovable.dev/features/build-class"
+          />
+        </div>
         <BuildClassHeader
           completionPercentage={getCompletionPercentage()}
           onSave={handleSaveClass}

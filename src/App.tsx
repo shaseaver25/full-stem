@@ -71,6 +71,7 @@ import ProtectedParentRoute from "./components/parent/ProtectedParentRoute";
 import BootstrapDemo from "./pages/BootstrapDemo";
 import RequireRole from "./components/auth/RequireRole";
 import AccessDenied from "./pages/AccessDenied";
+import { AdminOnboarding } from "@/components/admin/AdminOnboarding";
 
 const queryClient = new QueryClient();
 
@@ -202,6 +203,14 @@ function AppContent() {
         />
         
         {/* Admin Routes */}
+        <Route 
+          path="/admin/onboarding" 
+          element={
+            <RequireRole allowedRoles={['admin', 'super_admin', 'developer']}>
+              <AdminOnboarding />
+            </RequireRole>
+          } 
+        />
         <Route 
           path="/admin/dashboard" 
           element={

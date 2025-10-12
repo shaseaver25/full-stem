@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import Header from '@/components/Header';
+import { HelpHint } from '@/components/common/HelpHint';
 import BuildClassHeader from '@/components/build-class/BuildClassHeader';
 import BuildClassTabs from '@/components/build-class/BuildClassTabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -239,11 +240,17 @@ const AICourseBuilderPage = () => {
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">
-            Course Builder
-          </h1>
+          <div className="flex items-center gap-2 mb-2">
+            <h1 className="text-2xl font-bold text-gray-900">
+              AI Course Builder
+            </h1>
+            <HelpHint
+              text="Use this tool to generate AI-based lesson plans for your classes. Select an existing course to edit or create a new one from scratch."
+              learnMoreUrl="https://docs.lovable.dev/features/ai-course-builder"
+            />
+          </div>
           <p className="text-gray-600">
-            Create new courses or edit existing ones
+            Create new courses or edit existing ones with AI assistance
           </p>
         </div>
 
