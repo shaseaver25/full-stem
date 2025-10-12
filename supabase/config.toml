@@ -69,3 +69,9 @@ verify_jwt = true
 
 [functions.verify-mfa]
 verify_jwt = true
+
+[functions.extract-text]
+verify_jwt = true
+
+[functions.parse-lesson-plan]
+verify_jwt = true
