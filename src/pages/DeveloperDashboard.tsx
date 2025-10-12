@@ -16,6 +16,7 @@ import LessonComponentManager from '@/components/admin/LessonComponentManager';
 import { FeatureTogglePanel } from '@/components/developer/FeatureTogglePanel';
 import { PerformancePanel } from '@/components/developer/PerformancePanel';
 import { ErrorLogViewer } from '@/components/developer/ErrorLogViewer';
+import { SandboxDataManager } from '@/components/developer/SandboxDataManager';
 import { useAuth } from '@/contexts/AuthContext';
 import { MFARequiredBanner } from '@/components/system/MFARequiredBanner';
 import { useMFAEnforcement } from '@/hooks/useMFAEnforcement';
@@ -23,14 +24,31 @@ import { useMFAEnforcement } from '@/hooks/useMFAEnforcement';
 const DeveloperDashboard = () => {
   const { user } = useAuth();
   const { requiresMFA, mfaEnabled } = useMFAEnforcement();
+  
+  // Environment safety check
+  const isProduction = import.meta.env.MODE === 'production';
+  const isDevelopment = import.meta.env.MODE === 'development';
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       <Header />
       <ImpersonationBanner />
       
       <div className="container mx-auto px-4 py-8">
         {requiresMFA && !mfaEnabled && <MFARequiredBanner role="developer" />}
+        
+        {/* Production Environment Warning */}
+        {isProduction && (
+          <Alert variant="destructive" className="mb-6">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertTitle>Production Environment</AlertTitle>
+            <AlertDescription>
+              You are accessing the production environment. All destructive operations are disabled for safety.
+              Only read-only access and sandbox testing are available.
+            </AlertDescription>
+          </Alert>
+        )}
+        
         <div className="mb-8">
           <div className="flex items-center justify-between">
             <div>
@@ -40,11 +58,16 @@ const DeveloperDashboard = () => {
                 <Badge variant="destructive" className="bg-red-600">
                   Internal Use Only
                 </Badge>
+                {isProduction && (
+                  <Badge variant="outline" className="border-yellow-500 text-yellow-600">
+                    Production Mode - Read Only
+                  </Badge>
+                )}
               </div>
-              <p className="text-gray-600">
+              <p className="text-muted-foreground">
                 Full STEM Development Team - Curriculum Management & User Debugging
               </p>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-muted-foreground">
                 Logged in as: {user?.email}
               </p>
             </div>
@@ -57,8 +80,12 @@ const DeveloperDashboard = () => {
           </div>
         </div>
 
-        <Tabs defaultValue="impersonation" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-7">
+        <Tabs defaultValue="sandbox" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-8">
+            <TabsTrigger value="sandbox" className="flex items-center gap-2">
+              <Database className="h-4 w-4" />
+              Sandbox
+            </TabsTrigger>
             <TabsTrigger value="impersonation" className="flex items-center gap-2">
               <Users className="h-4 w-4" />
               Impersonation
@@ -88,6 +115,17 @@ const DeveloperDashboard = () => {
               Settings
             </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="sandbox" className="space-y-4">
+            <Alert className="bg-blue-50 border-blue-200">
+              <Database className="h-4 w-4 text-blue-600" />
+              <AlertTitle>Sandbox Testing Environment</AlertTitle>
+              <AlertDescription>
+                Use sandbox tables for testing without affecting production data. All changes are isolated and can be reset at any time.
+              </AlertDescription>
+            </Alert>
+            <SandboxDataManager isProduction={isProduction} />
+          </TabsContent>
 
           <TabsContent value="impersonation" className="space-y-4">
             <Alert className="bg-yellow-50 border-yellow-200">

@@ -1048,6 +1048,210 @@ export type Database = {
           },
         ]
       }
+      dev_activity_log: {
+        Row: {
+          action: string
+          created_at: string | null
+          developer_id: string
+          environment: string | null
+          id: string
+          metadata: Json | null
+          operation: string | null
+          target_table: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          developer_id: string
+          environment?: string | null
+          id?: string
+          metadata?: Json | null
+          operation?: string | null
+          target_table?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          developer_id?: string
+          environment?: string | null
+          id?: string
+          metadata?: Json | null
+          operation?: string | null
+          target_table?: string | null
+        }
+        Relationships: []
+      }
+      dev_sandbox_classes: {
+        Row: {
+          class_code: string | null
+          content_metadata: Json | null
+          created_at: string | null
+          description: string | null
+          duration: string | null
+          grade_level: string | null
+          id: string
+          instructor: string | null
+          learning_objectives: string | null
+          max_students: number | null
+          name: string
+          prerequisites: string | null
+          published: boolean | null
+          published_at: string | null
+          schedule: string | null
+          school_year: string | null
+          status: string | null
+          subject: string | null
+          teacher_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          class_code?: string | null
+          content_metadata?: Json | null
+          created_at?: string | null
+          description?: string | null
+          duration?: string | null
+          grade_level?: string | null
+          id?: string
+          instructor?: string | null
+          learning_objectives?: string | null
+          max_students?: number | null
+          name: string
+          prerequisites?: string | null
+          published?: boolean | null
+          published_at?: string | null
+          schedule?: string | null
+          school_year?: string | null
+          status?: string | null
+          subject?: string | null
+          teacher_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          class_code?: string | null
+          content_metadata?: Json | null
+          created_at?: string | null
+          description?: string | null
+          duration?: string | null
+          grade_level?: string | null
+          id?: string
+          instructor?: string | null
+          learning_objectives?: string | null
+          max_students?: number | null
+          name?: string
+          prerequisites?: string | null
+          published?: boolean | null
+          published_at?: string | null
+          schedule?: string | null
+          school_year?: string | null
+          status?: string | null
+          subject?: string | null
+          teacher_id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      dev_sandbox_grades: {
+        Row: {
+          assignment_id: string | null
+          category_id: string
+          comments: string | null
+          created_at: string
+          graded_at: string
+          graded_by: string
+          id: string
+          lesson_id: number | null
+          letter_grade: string | null
+          percentage: number | null
+          points_earned: number | null
+          points_possible: number
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          assignment_id?: string | null
+          category_id: string
+          comments?: string | null
+          created_at?: string
+          graded_at?: string
+          graded_by: string
+          id?: string
+          lesson_id?: number | null
+          letter_grade?: string | null
+          percentage?: number | null
+          points_earned?: number | null
+          points_possible: number
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          assignment_id?: string | null
+          category_id?: string
+          comments?: string | null
+          created_at?: string
+          graded_at?: string
+          graded_by?: string
+          id?: string
+          lesson_id?: number | null
+          letter_grade?: string | null
+          percentage?: number | null
+          points_earned?: number | null
+          points_possible?: number
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      dev_sandbox_students: {
+        Row: {
+          class_id: string | null
+          created_at: string | null
+          first_name: string
+          grade_level: string | null
+          id: string
+          iep_accommodations: string[] | null
+          interests: string[] | null
+          language_preference: string | null
+          last_name: string
+          learning_style: string | null
+          lesson_modifications: Json | null
+          reading_level: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          class_id?: string | null
+          created_at?: string | null
+          first_name: string
+          grade_level?: string | null
+          id?: string
+          iep_accommodations?: string[] | null
+          interests?: string[] | null
+          language_preference?: string | null
+          last_name: string
+          learning_style?: string | null
+          lesson_modifications?: Json | null
+          reading_level?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          class_id?: string | null
+          created_at?: string | null
+          first_name?: string
+          grade_level?: string | null
+          id?: string
+          iep_accommodations?: string[] | null
+          interests?: string[] | null
+          language_preference?: string | null
+          last_name?: string
+          learning_style?: string | null
+          lesson_modifications?: Json | null
+          reading_level?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       developer_settings: {
         Row: {
           created_at: string
@@ -2789,6 +2993,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      reset_dev_sandbox: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       rpc_assign_lesson_to_class: {
         Args: {
           p_class_id: string
@@ -2806,6 +3014,10 @@ export type Database = {
       }
       rpc_enroll_students: {
         Args: { p_class_id: string; p_student_ids: string[] }
+        Returns: undefined
+      }
+      seed_dev_sandbox_data: {
+        Args: Record<PropertyKey, never>
         Returns: undefined
       }
       user_enrolled_class_ids: {
