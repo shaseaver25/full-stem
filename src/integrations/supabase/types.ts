@@ -2400,6 +2400,36 @@ export type Database = {
         }
         Relationships: []
       }
+      system_metrics: {
+        Row: {
+          created_at: string
+          id: string
+          metadata: Json | null
+          metric: string
+          status: string
+          updated_at: string
+          value: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          metric: string
+          status?: string
+          updated_at?: string
+          value: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          metric?: string
+          status?: string
+          updated_at?: string
+          value?: number
+        }
+        Relationships: []
+      }
       teacher_profiles: {
         Row: {
           certification_status: string | null
@@ -2675,6 +2705,10 @@ export type Database = {
       is_system_admin: {
         Args: { _user_id?: string }
         Returns: boolean
+      }
+      refresh_system_metrics: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       rpc_assign_lesson_to_class: {
         Args: {

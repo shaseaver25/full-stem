@@ -4,10 +4,11 @@ import Header from '@/components/Header';
 import { SystemModeBadge } from '@/components/system/SystemModeBadge';
 import { SystemOverview } from '@/components/system/SystemOverview';
 import { SystemActionsPanel } from '@/components/system/SystemActionsPanel';
+import { SystemHealthMonitor } from '@/components/system/SystemHealthMonitor';
 import { ActivityLogCard } from '@/components/activity/ActivityLogCard';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { AlertTriangle, Shield, Activity, Database, Settings } from 'lucide-react';
+import { AlertTriangle, Shield, Activity, Database, Settings, Heart } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -66,8 +67,12 @@ const SystemDashboard = () => {
         )}
 
         {/* Main Content Tabs */}
-        <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+        <Tabs defaultValue="health" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-5">
+            <TabsTrigger value="health" className="flex items-center gap-2">
+              <Heart className="h-4 w-4" />
+              Health
+            </TabsTrigger>
             <TabsTrigger value="overview" className="flex items-center gap-2">
               <Database className="h-4 w-4" />
               Overview
@@ -85,6 +90,10 @@ const SystemDashboard = () => {
               Developer
             </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="health" className="space-y-6">
+            <SystemHealthMonitor />
+          </TabsContent>
 
           <TabsContent value="overview" className="space-y-6">
             <SystemOverview />
