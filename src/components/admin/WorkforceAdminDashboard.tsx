@@ -2,6 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Users, Award, TrendingUp, Target, Plus } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { RecentActivityCard } from './RecentActivityCard';
 
 export const WorkforceAdminDashboard = () => {
   return (
@@ -180,6 +181,9 @@ export const WorkforceAdminDashboard = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Recent Activity */}
+      <RecentActivityCard />
     </div>
   );
 };

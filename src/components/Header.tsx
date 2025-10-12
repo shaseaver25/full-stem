@@ -8,6 +8,7 @@ import NotificationBell from '@/components/NotificationBell';
 import ImpersonationBanner from '@/components/developer/ImpersonationBanner';
 import DemoModeIndicator from '@/components/DemoModeIndicator';
 import RoleAwareNavigation from '@/components/RoleAwareNavigation';
+import { GlobalSearch } from '@/components/navigation/GlobalSearch';
 import { Menu } from 'lucide-react';
 
 const Header = () => {
@@ -48,6 +49,7 @@ const Header = () => {
             <DemoModeIndicator variant="header" />
             {user ? (
               <>
+                <GlobalSearch />
                 <NotificationBell />
                 <Link
                   to="/preferences"

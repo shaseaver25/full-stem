@@ -2,6 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { BookOpen, Users, CheckCircle, Lightbulb, Plus } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { RecentActivityCard } from './RecentActivityCard';
 
 export const HomeschoolAdminDashboard = () => {
   return (
@@ -151,6 +152,9 @@ export const HomeschoolAdminDashboard = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Recent Activity */}
+      <RecentActivityCard />
     </div>
   );
 };

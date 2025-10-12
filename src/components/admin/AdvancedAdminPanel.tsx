@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import UserRoleManagement from './UserRoleManagement';
 import PermissionsMatrix from './PermissionsMatrix';
@@ -10,6 +10,7 @@ import PerformanceMonitoring from './PerformanceMonitoring';
 import LessonTemplateManager from './LessonTemplateManager';
 import DemoDataManagement from './DemoDataManagement';
 import { DemoAccountManager } from './DemoAccountManager';
+import { ActivityLogTable } from './ActivityLogTable';
 
 interface UserRole {
   id: string;
@@ -248,6 +249,7 @@ const AdvancedAdminPanel = () => {
           <TabsTrigger value="templates">Lesson Templates</TabsTrigger>
           <TabsTrigger value="backups">Backups</TabsTrigger>
           <TabsTrigger value="performance">Performance</TabsTrigger>
+          <TabsTrigger value="activity">Activity Log</TabsTrigger>
         </TabsList>
 
         <TabsContent value="accounts" className="space-y-4">
@@ -283,6 +285,10 @@ const AdvancedAdminPanel = () => {
 
         <TabsContent value="performance" className="space-y-4">
           <PerformanceMonitoring performanceMetrics={performanceMetrics} />
+        </TabsContent>
+
+        <TabsContent value="activity" className="space-y-4">
+          <ActivityLogTable />
         </TabsContent>
       </Tabs>
     </div>

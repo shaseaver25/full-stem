@@ -100,6 +100,36 @@ export type Database = {
           },
         ]
       }
+      admin_activity_log: {
+        Row: {
+          action: string
+          admin_type: string | null
+          created_at: string | null
+          details: Json | null
+          id: string
+          organization_name: string | null
+          user_id: string
+        }
+        Insert: {
+          action: string
+          admin_type?: string | null
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          organization_name?: string | null
+          user_id: string
+        }
+        Update: {
+          action?: string
+          admin_type?: string | null
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          organization_name?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       admin_profiles: {
         Row: {
           admin_type: Database["public"]["Enums"]["admin_type"]
@@ -2562,6 +2592,16 @@ export type Database = {
       generate_class_code: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      global_search: {
+        Args: { org_name?: string; search_query: string; user_role?: string }
+        Returns: {
+          id: string
+          metadata: Json
+          name: string
+          route: string
+          type: string
+        }[]
       }
       has_permission: {
         Args: {

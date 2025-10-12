@@ -2,6 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Users, GraduationCap, BookOpen, TrendingUp, Plus } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { RecentActivityCard } from './RecentActivityCard';
 
 export const SchoolAdminDashboard = () => {
   return (
@@ -150,6 +151,9 @@ export const SchoolAdminDashboard = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Recent Activity */}
+      <RecentActivityCard />
     </div>
   );
 };
