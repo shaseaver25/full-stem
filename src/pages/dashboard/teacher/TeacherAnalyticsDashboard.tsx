@@ -12,6 +12,7 @@ import OverviewSection from "@/components/analytics/OverviewSection";
 import AssignmentBreakdown from "@/components/analytics/AssignmentBreakdown";
 import AiInsightsSection from "@/components/analytics/AiInsightsSection";
 import Header from "@/components/Header";
+import { TeacherActivityView } from "@/components/activity/TeacherActivityView";
 
 interface ClassStats {
   id: string;
@@ -185,10 +186,11 @@ const TeacherAnalyticsDashboard = () => {
           </Card>
         ) : (
           <Tabs defaultValue="overview" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="assignments">Assignments</TabsTrigger>
               <TabsTrigger value="insights">AI Insights</TabsTrigger>
+              <TabsTrigger value="activity">Activity</TabsTrigger>
             </TabsList>
 
             <TabsContent value="overview" className="space-y-6">
@@ -204,6 +206,10 @@ const TeacherAnalyticsDashboard = () => {
                 classStats={classStats}
                 preferredLanguage="en"
               />
+            </TabsContent>
+
+            <TabsContent value="activity" className="space-y-6">
+              <TeacherActivityView />
             </TabsContent>
           </Tabs>
         )}

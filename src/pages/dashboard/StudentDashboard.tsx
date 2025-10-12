@@ -8,6 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { EditProfileModal } from '@/components/dashboard/EditProfileModal';
 import Header from '@/components/Header';
 import { GraduationCap, Brain, Mail, User, BookOpen } from 'lucide-react';
+import { ActivityLogCard } from '@/components/activity/ActivityLogCard';
 
 export default function StudentDashboard() {
   const { user, loading: authLoading } = useAuth();
@@ -217,6 +218,9 @@ export default function StudentDashboard() {
           </Link>
         </Card>
         </div>
+
+        {/* My Activity Section */}
+        <ActivityLogCard title="My Activity" maxItems={10} />
 
         {/* Additional Help */}
         <div className="text-center">

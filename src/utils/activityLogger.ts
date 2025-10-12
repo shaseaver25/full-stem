@@ -1,0 +1,74 @@
+import { supabase } from '@/integrations/supabase/client';
+
+export type UserRole = 'student' | 'teacher' | 'admin' | 'super_admin' | 'developer';
+
+interface LogActivityParams {
+  userId: string;
+  role: UserRole;
+  action: string;
+  details?: Record<string, any>;
+  adminType?: string;
+  organizationName?: string;
+}
+
+/**
+ * Unified activity logger for all user roles
+ * Tracks actions across students, teachers, and admins
+ */
+export const logUserAction = async ({
+  userId,
+  role,
+  action,
+  details = {},
+  adminType,
+  organizationName,
+}: LogActivityParams): Promise<void> => {
+  try {
+    const { error } = await supabase.from('activity_log').insert({
+      user_id: userId,
+      role,
+      action,
+      details,
+      admin_type: adminType || null,
+      organization_name: organizationName || null,
+    });
+
+    if (error) {
+      console.error('Failed to log activity:', error);
+    }
+  } catch (error) {
+    console.error('Failed to log activity:', error);
+  }
+};
+
+// Common action types for consistency
+export const ActivityActions = {
+  // Student actions
+  STUDENT: {
+    SUBMIT_ASSIGNMENT: 'Submitted Assignment',
+    COMPLETE_LESSON: 'Completed Lesson',
+    JOIN_CLASS: 'Joined Class',
+    UPDATE_PROFILE: 'Updated Profile',
+    VIEW_GRADES: 'Viewed Grades',
+    START_LESSON: 'Started Lesson',
+  },
+  // Teacher actions
+  TEACHER: {
+    CREATE_CLASS: 'Created Class',
+    GRADE_ASSIGNMENT: 'Graded Assignment',
+    PROVIDE_FEEDBACK: 'Provided Feedback',
+    UPLOAD_CONTENT: 'Uploaded Content',
+    CREATE_ASSIGNMENT: 'Created Assignment',
+    UPDATE_CLASS: 'Updated Class',
+    ENROLL_STUDENT: 'Enrolled Student',
+  },
+  // Admin actions
+  ADMIN: {
+    CREATE_COURSE: 'Created Course',
+    UPDATE_ROLE: 'Updated Role',
+    CHANGE_SETTINGS: 'Changed Settings',
+    MANAGE_USER: 'Managed User',
+    PUBLISH_CLASS: 'Published Class',
+    CREATE_BACKUP: 'Created Backup',
+  },
+} as const;

@@ -58,6 +58,7 @@ export const ActivityLogTable = () => {
               <TableHeader>
                 <TableRow>
                   <TableHead>Action</TableHead>
+                  <TableHead>Role</TableHead>
                   <TableHead>Admin Type</TableHead>
                   <TableHead>Organization</TableHead>
                   <TableHead>Details</TableHead>
@@ -68,6 +69,11 @@ export const ActivityLogTable = () => {
                 {filteredActivities.map((activity) => (
                   <TableRow key={activity.id}>
                     <TableCell className="font-medium">{activity.action}</TableCell>
+                    <TableCell>
+                      <span className="px-2 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium">
+                        {activity.role || '-'}
+                      </span>
+                    </TableCell>
                     <TableCell>{activity.admin_type || '-'}</TableCell>
                     <TableCell>{activity.organization_name || '-'}</TableCell>
                     <TableCell className="max-w-xs truncate">

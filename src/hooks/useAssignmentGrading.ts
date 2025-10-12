@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
+import { logUserAction, ActivityActions } from '@/utils/activityLogger';
 
 export interface AssignmentGradeData {
   submission_id: string;
@@ -37,6 +38,55 @@ export const useAssignmentGrading = () => {
         });
 
       if (error) throw error;
+
+      // Get submission and assignment details for logging
+      const { data: submissionData } = await supabase
+        .from('assignment_submissions')
+        .select('user_id, assignment_id')
+        .eq('id', gradeData.submission_id)
+        .single();
+
+      const { data: studentProfile } = await supabase
+        .from('profiles')
+        .select('full_name')
+        .eq('id', submissionData?.user_id)
+        .single();
+
+      // Get assignment and class details
+      let assignmentTitle = null;
+      let classTitle = null;
+      if (submissionData?.assignment_id) {
+        const { data: assignmentData } = await supabase
+          .from('class_assignments_new')
+          .select('title, class_id')
+          .eq('id', submissionData.assignment_id)
+          .single();
+
+        assignmentTitle = assignmentData?.title;
+
+        if (assignmentData?.class_id) {
+          const { data: classData } = await supabase
+            .from('classes')
+            .select('name')
+            .eq('id', assignmentData.class_id)
+            .single();
+          classTitle = classData?.name;
+        }
+      }
+
+      // Log teacher activity
+      await logUserAction({
+        userId: user.id,
+        role: 'teacher',
+        action: ActivityActions.TEACHER.GRADE_ASSIGNMENT,
+        details: {
+          submission_id: gradeData.submission_id,
+          assignment_title: assignmentTitle,
+          class_title: classTitle,
+          student_name: studentProfile?.full_name,
+          grade: gradeData.grade,
+        },
+      });
 
       toast({
         title: "Success",

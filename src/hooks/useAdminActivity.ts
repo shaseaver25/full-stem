@@ -8,6 +8,7 @@ import { useAdminProfile } from './useAdminProfile';
 interface ActivityLog {
   id: string;
   user_id: string;
+  role: string | null;
   admin_type: string | null;
   organization_name: string | null;
   action: string;
@@ -27,14 +28,14 @@ export const useAdminActivity = (timeFilter: 'today' | 'week' | 'all' = 'all') =
   const { role } = useUserRole();
   const { profile: adminProfile } = useAdminProfile();
 
-  // Fetch activity logs
+  // Fetch activity logs from unified activity_log table
   const { data: activities, isLoading } = useQuery({
-    queryKey: ['admin-activity', timeFilter, user?.id],
+    queryKey: ['activity-log', timeFilter, user?.id],
     queryFn: async () => {
       if (!user) return [];
 
       let query = supabase
-        .from('admin_activity_log')
+        .from('activity_log')
         .select('*')
         .order('created_at', { ascending: false });
 
@@ -63,9 +64,10 @@ export const useAdminActivity = (timeFilter: 'today' | 'week' | 'all' = 'all') =
       if (!user) throw new Error('User not authenticated');
 
       const { error } = await supabase
-        .from('admin_activity_log')
+        .from('activity_log')
         .insert({
           user_id: user.id,
+          role: 'admin',
           admin_type: adminProfile?.admin_type || null,
           organization_name: adminProfile?.organization_name || null,
           action,
@@ -75,7 +77,7 @@ export const useAdminActivity = (timeFilter: 'today' | 'week' | 'all' = 'all') =
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-activity'] });
+      queryClient.invalidateQueries({ queryKey: ['activity-log'] });
     },
     onError: (error) => {
       console.error('Failed to log activity:', error);
@@ -101,8 +103,9 @@ export const logAdminAction = async (
   details: Record<string, any> = {}
 ) => {
   try {
-    await supabase.from('admin_activity_log').insert({
+    await supabase.from('activity_log').insert({
       user_id: userId,
+      role: 'admin',
       action,
       details,
     });

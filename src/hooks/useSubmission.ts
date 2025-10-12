@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
+import { logUserAction, ActivityActions } from '@/utils/activityLogger';
 
 interface FileInfo {
   path: string;
@@ -154,11 +155,43 @@ export const useSubmission = (assignmentId: string) => {
         .single();
 
       if (error) throw error;
+
+      // Get assignment details for logging
+      const { data: assignmentData } = await supabase
+        .from('class_assignments_new')
+        .select('title, class_id')
+        .eq('id', assignmentId)
+        .single();
+
+      let classTitle = null;
+      if (assignmentData?.class_id) {
+        const { data: classData } = await supabase
+          .from('classes')
+          .select('name')
+          .eq('id', assignmentData.class_id)
+          .single();
+        classTitle = classData?.name;
+      }
+
+      // Log activity
+      await logUserAction({
+        userId: user.id,
+        role: 'student',
+        action: ActivityActions.STUDENT.SUBMIT_ASSIGNMENT,
+        details: {
+          assignment_id: assignmentId,
+          assignment_title: assignmentData?.title,
+          class_title: classTitle,
+          submitted_at: new Date().toISOString(),
+        },
+      });
+
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['submission', assignmentId, user?.id] });
       queryClient.invalidateQueries({ queryKey: ['student', 'assignments', user?.id] });
+      queryClient.invalidateQueries({ queryKey: ['activity-log'] });
       toast({
         title: "Assignment submitted!",
         description: `Your assignment was submitted at ${new Date().toLocaleTimeString()}.`

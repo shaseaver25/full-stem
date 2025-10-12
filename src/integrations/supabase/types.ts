@@ -100,6 +100,47 @@ export type Database = {
           },
         ]
       }
+      activity_log: {
+        Row: {
+          action: string
+          admin_type: string | null
+          created_at: string | null
+          details: Json | null
+          id: string
+          organization_name: string | null
+          role: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          admin_type?: string | null
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          organization_name?: string | null
+          role?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          admin_type?: string | null
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          organization_name?: string | null
+          role?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activity_log_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       admin_activity_log: {
         Row: {
           action: string

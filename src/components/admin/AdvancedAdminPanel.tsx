@@ -11,6 +11,7 @@ import LessonTemplateManager from './LessonTemplateManager';
 import DemoDataManagement from './DemoDataManagement';
 import { DemoAccountManager } from './DemoAccountManager';
 import { ActivityLogTable } from './ActivityLogTable';
+import { ActivityLogCard } from '@/components/activity/ActivityLogCard';
 
 interface UserRole {
   id: string;
@@ -287,7 +288,12 @@ const AdvancedAdminPanel = () => {
           <PerformanceMonitoring performanceMetrics={performanceMetrics} />
         </TabsContent>
 
-        <TabsContent value="activity" className="space-y-4">
+        <TabsContent value="activity" className="space-y-6">
+          <ActivityLogCard 
+            title="Organization Activity Log" 
+            showRoleFilter={true}
+            maxItems={20}
+          />
           <ActivityLogTable />
         </TabsContent>
       </Tabs>
