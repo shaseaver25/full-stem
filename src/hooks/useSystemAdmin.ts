@@ -60,8 +60,9 @@ export const useSystemAdmin = () => {
   useEffect(() => {
     if (requiresMFA && !isLoading) {
       console.warn('System admin requires MFA setup');
-      // In production, redirect to MFA setup page
-      // navigate('/auth/setup-mfa');
+      // Store return URL for after MFA setup
+      sessionStorage.setItem('mfa_return_url', window.location.pathname);
+      navigate('/auth/setup-mfa');
     }
   }, [requiresMFA, isLoading, navigate]);
 

@@ -63,3 +63,9 @@ verify_jwt = true
 
 [functions.health-check]
 verify_jwt = false
+
+[functions.setup-mfa]
+verify_jwt = true
+
+[functions.verify-mfa]
+verify_jwt = true

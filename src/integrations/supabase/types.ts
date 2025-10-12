@@ -1745,6 +1745,30 @@ export type Database = {
           },
         ]
       }
+      mfa_verification_attempts: {
+        Row: {
+          attempted_at: string
+          id: string
+          ip_address: unknown | null
+          success: boolean
+          user_id: string
+        }
+        Insert: {
+          attempted_at?: string
+          id?: string
+          ip_address?: unknown | null
+          success?: boolean
+          user_id: string
+        }
+        Update: {
+          attempted_at?: string
+          id?: string
+          ip_address?: unknown | null
+          success?: boolean
+          user_id?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           created_at: string
@@ -1918,7 +1942,9 @@ export type Database = {
           email: string | null
           full_name: string | null
           id: string
+          mfa_backup_codes: string[] | null
           mfa_enabled: boolean | null
+          mfa_secret: string | null
           updated_at: string
         }
         Insert: {
@@ -1927,7 +1953,9 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id: string
+          mfa_backup_codes?: string[] | null
           mfa_enabled?: boolean | null
+          mfa_secret?: string | null
           updated_at?: string
         }
         Update: {
@@ -1936,7 +1964,9 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id?: string
+          mfa_backup_codes?: string[] | null
           mfa_enabled?: boolean | null
+          mfa_secret?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -2706,6 +2736,10 @@ export type Database = {
       can_view_student: {
         Args: { _student_id: string; _user_id: string }
         Returns: boolean
+      }
+      cleanup_old_mfa_attempts: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       cleanup_old_tts_cache: {
         Args: Record<PropertyKey, never>

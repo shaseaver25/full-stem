@@ -11,6 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { AlertTriangle, Shield, Activity, Database, Settings, Heart } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
+import { MFARequiredBanner } from '@/components/system/MFARequiredBanner';
 
 const SystemDashboard = () => {
   const { isSystemAdmin, requiresMFA, isLoading } = useSystemAdmin();
@@ -55,16 +56,7 @@ const SystemDashboard = () => {
         </div>
 
         {/* MFA Warning */}
-        {requiresMFA && (
-          <Alert variant="destructive" className="mb-6">
-            <AlertTriangle className="h-4 w-4" />
-            <AlertTitle>Multi-Factor Authentication Required</AlertTitle>
-            <AlertDescription>
-              For security reasons, System Administrators must enable MFA. Please set up
-              two-factor authentication in your account settings.
-            </AlertDescription>
-          </Alert>
-        )}
+        {requiresMFA && <MFARequiredBanner role="system_admin" />}
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="health" className="space-y-6">

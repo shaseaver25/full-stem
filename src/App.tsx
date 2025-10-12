@@ -73,6 +73,8 @@ import RequireRole from "./components/auth/RequireRole";
 import AccessDenied from "./pages/AccessDenied";
 import { AdminOnboarding } from "@/components/admin/AdminOnboarding";
 import SystemDashboard from "./pages/SystemDashboard";
+import MFASetup from "./pages/MFASetup";
+import MFAVerify from "./pages/MFAVerify";
 
 const queryClient = new QueryClient();
 
@@ -88,6 +90,8 @@ function AppContent() {
         <Route path="/" element={<Index />} />
         <Route path="/bootstrap" element={<BootstrapDemo />} />
         <Route path="/auth" element={<Auth />} />
+        <Route path="/auth/setup-mfa" element={<MFASetup />} />
+        <Route path="/auth/verify-mfa" element={<MFAVerify />} />
         <Route path="/signup/student" element={<StudentSignupForm />} />
         <Route path="/access-denied" element={<AccessDenied />} />
         <Route 

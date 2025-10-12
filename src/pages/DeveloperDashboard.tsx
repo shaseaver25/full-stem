@@ -17,9 +17,12 @@ import { FeatureTogglePanel } from '@/components/developer/FeatureTogglePanel';
 import { PerformancePanel } from '@/components/developer/PerformancePanel';
 import { ErrorLogViewer } from '@/components/developer/ErrorLogViewer';
 import { useAuth } from '@/contexts/AuthContext';
+import { MFARequiredBanner } from '@/components/system/MFARequiredBanner';
+import { useMFAEnforcement } from '@/hooks/useMFAEnforcement';
 
 const DeveloperDashboard = () => {
   const { user } = useAuth();
+  const { requiresMFA, mfaEnabled } = useMFAEnforcement();
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -27,6 +30,7 @@ const DeveloperDashboard = () => {
       <ImpersonationBanner />
       
       <div className="container mx-auto px-4 py-8">
+        {requiresMFA && !mfaEnabled && <MFARequiredBanner role="developer" />}
         <div className="mb-8">
           <div className="flex items-center justify-between">
             <div>
