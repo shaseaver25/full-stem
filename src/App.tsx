@@ -171,7 +171,7 @@ function AppContent() {
         <Route 
           path="/content" 
           element={
-            <RequireRole allowedRoles={['teacher', 'admin', 'superadmin', 'developer']}>
+            <RequireRole allowedRoles={['teacher', 'admin', 'super_admin', 'developer']}>
               <ContentManagementPage />
             </RequireRole>
           } 
@@ -205,7 +205,7 @@ function AppContent() {
         <Route 
           path="/admin/dashboard" 
           element={
-            <RequireRole allowedRoles={['admin', 'superadmin', 'developer']}>
+            <RequireRole allowedRoles={['admin', 'super_admin', 'developer']}>
               <AdminDashboard />
             </RequireRole>
           } 
@@ -213,7 +213,7 @@ function AppContent() {
         <Route 
           path="/admin/build-class" 
           element={
-            <RequireRole allowedRoles={['admin', 'superadmin', 'developer']}>
+            <RequireRole allowedRoles={['admin', 'super_admin', 'developer']}>
               <BuildClassPage />
             </RequireRole>
           } 
@@ -221,7 +221,7 @@ function AppContent() {
         <Route 
           path="/admin/ai-course-builder" 
           element={
-            <RequireRole allowedRoles={['admin', 'superadmin', 'developer']}>
+            <RequireRole allowedRoles={['admin', 'super_admin', 'developer']}>
               <AICourseBuilderPage />
             </RequireRole>
           } 
@@ -229,7 +229,7 @@ function AppContent() {
         <Route 
           path="/admin/course-editor" 
           element={
-            <RequireRole allowedRoles={['admin', 'superadmin', 'developer']}>
+            <RequireRole allowedRoles={['admin', 'super_admin', 'developer']}>
               <CourseEditorPage />
             </RequireRole>
           } 
@@ -237,7 +237,7 @@ function AppContent() {
         <Route 
           path="/admin/advanced" 
           element={
-            <RequireRole allowedRoles={['admin', 'superadmin', 'developer']}>
+            <RequireRole allowedRoles={['admin', 'super_admin', 'developer']}>
               <AdvancedAdminPage />
             </RequireRole>
           } 
@@ -255,7 +255,7 @@ function AppContent() {
         <Route 
           path="/super-admin" 
           element={
-            <RequireRole allowedRoles={['superadmin', 'developer']}>
+            <RequireRole allowedRoles={['super_admin', 'developer']}>
               <SuperAdminDashboard />
             </RequireRole>
           } 
