@@ -216,15 +216,27 @@ const AdminAnalyticsDashboard = () => {
   return (
     <div className="min-h-screen bg-background p-8">
       <div className="max-w-7xl mx-auto">
+        <Breadcrumbs
+          items={[
+            { label: 'Admin', href: '/admin/dashboard' },
+            { label: 'Analytics' },
+          ]}
+        />
         <div className="flex items-center gap-4 mb-6">
           <Button variant="ghost" size="icon" onClick={() => navigate("/admin/dashboard")}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <div>
-            <h1 className="text-3xl font-semibold">School-Wide Analytics</h1>
-            <p className="text-muted-foreground mt-1">
-              View performance metrics and AI insights across all teachers and classes
-            </p>
+          <div className="flex items-center gap-2">
+            <div>
+              <h1 className="text-3xl font-semibold">School-Wide Analytics</h1>
+              <p className="text-muted-foreground mt-1">
+                View performance metrics and AI insights across all teachers and classes
+              </p>
+            </div>
+            <HelpHint
+              text="View detailed metrics on student performance, teacher activity, and system usage. Use these insights to make data-driven decisions."
+              learnMoreUrl="https://docs.lovable.dev/features/analytics"
+            />
           </div>
         </div>
 
