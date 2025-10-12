@@ -2514,6 +2514,14 @@ export type Database = {
         Args: { percentage: number }
         Returns: string
       }
+      can_manage_student: {
+        Args: { _student_id: string; _user_id: string }
+        Returns: boolean
+      }
+      can_view_student: {
+        Args: { _student_id: string; _user_id: string }
+        Returns: boolean
+      }
       cleanup_old_tts_cache: {
         Args: Record<PropertyKey, never>
         Returns: undefined
