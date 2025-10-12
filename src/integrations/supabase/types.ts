@@ -735,6 +735,41 @@ export type Database = {
           },
         ]
       }
+      class_standards: {
+        Row: {
+          class_id: string
+          created_at: string
+          description: string
+          id: string
+          standard_code: string
+          updated_at: string
+        }
+        Insert: {
+          class_id: string
+          created_at?: string
+          description: string
+          id?: string
+          standard_code: string
+          updated_at?: string
+        }
+        Update: {
+          class_id?: string
+          created_at?: string
+          description?: string
+          id?: string
+          standard_code?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "class_standards_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       class_students: {
         Row: {
           class_id: string

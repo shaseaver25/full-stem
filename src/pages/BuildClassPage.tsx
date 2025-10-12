@@ -122,10 +122,17 @@ const BuildClassPage = () => {
         .from('class_standards')
         .select('*')
         .eq('class_id', classId)
-        .order('created_at', { ascending: true });
+        .order('created_at', { ascending: true }) as any;
       
       if (error) throw error;
-      return data || [];
+      return (data || []) as Array<{
+        id: string;
+        class_id: string;
+        standard_code: string;
+        description: string;
+        created_at: string;
+        updated_at: string;
+      }>;
     },
     enabled: !!classId
   });
@@ -135,7 +142,7 @@ const BuildClassPage = () => {
     mutationFn: async (standard: { code: string; description: string }) => {
       if (!classId) throw new Error('No class ID');
       
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('class_standards')
         .insert({
           class_id: classId,
@@ -167,7 +174,7 @@ const BuildClassPage = () => {
   // Delete standard mutation
   const deleteStandardMutation = useMutation({
     mutationFn: async (standardId: string) => {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('class_standards')
         .delete()
         .eq('id', standardId);
