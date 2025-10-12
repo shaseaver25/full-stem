@@ -38,10 +38,10 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.seed-demo-data]
-verify_jwt = true
+verify_jwt = false
 
 [functions.create-demo-accounts]
-verify_jwt = true
+verify_jwt = false
 
 [functions.elevenlabs-tts]
 verify_jwt = true

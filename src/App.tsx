@@ -68,6 +68,7 @@ import AdminAnalyticsDashboard from "./pages/dashboard/admin/AdminAnalyticsDashb
 import ProtectedAdminRoute from "./components/admin/ProtectedAdminRoute";
 import ParentDashboard from "./pages/dashboard/parent/ParentDashboard";
 import ProtectedParentRoute from "./components/parent/ProtectedParentRoute";
+import BootstrapDemo from "./pages/BootstrapDemo";
 
 const queryClient = new QueryClient();
 
@@ -83,6 +84,7 @@ function AppContent() {
       <SuperAdminBanner />
       <Routes>
         <Route path="/" element={<Index />} />
+        <Route path="/bootstrap" element={<BootstrapDemo />} />
         <Route path="/auth" element={<Auth />} />
         <Route path="/signup/student" element={<StudentSignupForm />} />
         <Route path="/dashboard/student" element={<NewStudentDashboard />} />

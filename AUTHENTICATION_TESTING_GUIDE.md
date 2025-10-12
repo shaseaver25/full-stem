@@ -6,9 +6,21 @@ This guide provides step-by-step instructions for manually testing TailorEDU's a
 
 ## 📋 Prerequisites
 
-### Method 1: Use Standardized Demo Accounts (Recommended)
+Before you begin testing, ensure you have demo accounts available. There are three methods to obtain demo accounts:
+
+### Method 1: Bootstrap Page (Easiest - Recommended for First-Time Setup)
+
+1. **Navigate to `/bootstrap`** in your browser (no login required)
+2. Click the **"Create Demo Accounts"** button
+3. All standardized test accounts will be created automatically
+4. You'll be redirected to `/auth` when complete
+
+This is the **fastest way** to set up demo accounts when starting from scratch, as it requires no authentication.
+
+### Method 2: Use Standardized Demo Accounts (Recommended for Managing Existing Accounts)
 
 Navigate to `/advanced-admin` → **Demo Accounts** tab and click "Create Demo Accounts" button.
+*Note: Requires admin or super_admin login*
 
 **All demo accounts use password:** `Test1234!`
 
@@ -21,7 +33,7 @@ Navigate to `/advanced-admin` → **Demo Accounts** tab and click "Create Demo A
 | Super Admin | superadmin@test.com | Test1234! | /super-admin |
 | Developer | developer@test.com | Test1234! | /dev |
 
-### Method 2: Seed Legacy Demo Data (Alternative)
+### Method 3: Seed Legacy Demo Data (Alternative)
 
 1. **Seed Demo Data:**
    ```javascript
