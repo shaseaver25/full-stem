@@ -22,21 +22,22 @@ const ProtectedParentRoute = ({ children }: ProtectedParentRouteProps) => {
       }
 
       try {
-        // Check if user has a parent profile
+        // Check if user has parent role in user_roles table
         const { data, error } = await supabase
-          .from('parent_profiles')
-          .select('id')
+          .from('user_roles')
+          .select('role')
           .eq('user_id', user.id)
+          .eq('role', 'parent')
           .maybeSingle();
 
         if (error) {
-          console.error('Error checking parent profile:', error);
+          console.error('Error checking parent role:', error);
           setIsParent(false);
         } else {
           setIsParent(data !== null);
         }
       } catch (error) {
-        console.error('Error checking parent profile:', error);
+        console.error('Error checking parent role:', error);
         setIsParent(false);
       } finally {
         setChecking(false);
