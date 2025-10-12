@@ -105,6 +105,9 @@ const BuildClassTabs: React.FC<BuildClassTabsProps> = ({
             <DropdownMenuItem onClick={() => setActiveTab('lessons')}>
               Assessments
             </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setActiveTab('activities')}>
+              Activities
+            </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setActiveTab('lessons')}>
               Discussion
             </DropdownMenuItem>
