@@ -435,6 +435,15 @@ function AppContent() {
           } 
         />
         
+        <Route
+          path="/teacher/build-class/:classId?" 
+          element={
+            <ProtectedTeacherRoute requireOnboarding={true}>
+              <BuildClassPage />
+            </ProtectedTeacherRoute>
+          } 
+        />
+        
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<NotFound />} />
       </Routes>
