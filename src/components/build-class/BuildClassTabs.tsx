@@ -83,7 +83,7 @@ const BuildClassTabs: React.FC<BuildClassTabsProps> = ({
 }) => {
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-      <TabsList className="grid w-full grid-cols-5">
+      <TabsList className="grid w-full grid-cols-3">
         <TabsTrigger value="details">Lesson</TabsTrigger>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -119,8 +119,6 @@ const BuildClassTabs: React.FC<BuildClassTabsProps> = ({
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-        <TabsTrigger value="activities">Activities</TabsTrigger>
-        <TabsTrigger value="assignments">Assignments</TabsTrigger>
         <TabsTrigger value="preview">Preview</TabsTrigger>
       </TabsList>
 
