@@ -20,9 +20,11 @@ export interface TeacherProfile {
 export const useTeacherProfileSimplified = () => {
   const { user } = useAuth();
   const [profile, setProfile] = useState<TeacherProfile | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true); // Start as true
   const [saving, setSaving] = useState(false);
   const mountedRef = useRef(true);
+  const lastFetchedUserId = useRef<string | null>(null);
+  const isFetchingRef = useRef(false);
 
   const createInitialProfile = async (userId: string): Promise<TeacherProfile | null> => {
     try {
@@ -195,10 +197,12 @@ export const useTeacherProfileSimplified = () => {
     }
   };
 
-  // Track if we've already fetched to prevent infinite loops
-  const lastFetchedUserId = useRef<string | null>(null);
-  const isFetchingRef = useRef(false);
-  
+  useEffect(() => {
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
   useEffect(() => {
     // Only fetch if we have a new user and aren't already fetching
     if (user?.id && user.id !== lastFetchedUserId.current && !isFetchingRef.current) {
@@ -214,12 +218,6 @@ export const useTeacherProfileSimplified = () => {
       setLoading(false);
     }
   }, [user?.id]);
-
-  useEffect(() => {
-    return () => {
-      mountedRef.current = false;
-    };
-  }, []);
 
   return {
     profile,
