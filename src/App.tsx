@@ -387,6 +387,14 @@ function AppContent() {
           } 
         />
         <Route 
+          path="/teacher/classes/:classId/edit" 
+          element={
+            <ProtectedTeacherRoute requireOnboarding={true}>
+              <BuildClassPage />
+            </ProtectedTeacherRoute>
+          } 
+        />
+        <Route 
           path="/teacher/class/:classId" 
           element={
             <ProtectedTeacherRoute requireOnboarding={true}>
