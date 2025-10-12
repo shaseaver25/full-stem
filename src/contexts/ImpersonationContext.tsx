@@ -13,7 +13,7 @@ interface ImpersonationContextType {
   isDeveloper: boolean;
 }
 
-const ImpersonationContext = createContext<ImpersonationContextType | undefined>(undefined);
+export const ImpersonationContext = createContext<ImpersonationContextType | undefined>(undefined);
 
 export const useImpersonation = () => {
   const context = useContext(ImpersonationContext);

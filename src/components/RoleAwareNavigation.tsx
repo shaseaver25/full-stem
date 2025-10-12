@@ -2,8 +2,9 @@ import { Link } from 'react-router-dom';
 import { getPrimaryNavigationForRole, getNavigationGroupsForRole } from '@/utils/permissions';
 import { useUserRole } from '@/hooks/useUserRole';
 import { Code } from 'lucide-react';
-import { useImpersonation } from '@/contexts/ImpersonationContext';
 import { CollapsibleNavGroup } from '@/components/navigation/CollapsibleNavGroup';
+import React, { useContext } from 'react';
+import { ImpersonationContext } from '@/contexts/ImpersonationContext';
 
 interface RoleAwareNavigationProps {
   onLinkClick?: () => void;
@@ -12,7 +13,10 @@ interface RoleAwareNavigationProps {
 
 const RoleAwareNavigation = ({ onLinkClick, variant = 'desktop' }: RoleAwareNavigationProps) => {
   const { role, loading } = useUserRole();
-  const { isDeveloper } = useImpersonation();
+  
+  // Safely check for impersonation context without throwing
+  const impersonationContext = useContext(ImpersonationContext);
+  const isDeveloper = impersonationContext?.isDeveloper ?? false;
   
   // Don't render navigation items while loading
   if (loading) {

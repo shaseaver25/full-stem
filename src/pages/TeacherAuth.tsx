@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, GraduationCap, ArrowLeft } from 'lucide-react';
 import { redirectToRoleDashboard } from '@/utils/roleRedirect';
+import { supabase } from '@/integrations/supabase/client';
 
 const TeacherAuth = () => {
   const [email, setEmail] = useState('');
@@ -21,10 +22,24 @@ const TeacherAuth = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (user) {
-      console.log('User authenticated, redirecting to dashboard');
-      redirectToRoleDashboard(user.id, navigate);
-    }
+    const checkAndRedirect = async () => {
+      if (user) {
+        // Check if user has a teacher role before redirecting
+        const { data: roleData } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', user.id)
+          .eq('role', 'teacher')
+          .maybeSingle();
+        
+        if (roleData) {
+          console.log('User authenticated with teacher role, redirecting to dashboard');
+          redirectToRoleDashboard(user.id, navigate);
+        }
+      }
+    };
+    
+    checkAndRedirect();
   }, [user, navigate]);
 
   const handleSignIn = async (e: React.FormEvent) => {
