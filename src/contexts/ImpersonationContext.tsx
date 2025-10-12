@@ -152,13 +152,28 @@ export const ImpersonationProvider: React.FC<{ children: React.ReactNode }> = ({
         timestamp: new Date().toISOString()
       };
 
-      // Update actions
+      // Update actions in impersonation log
       await supabase
         .from('impersonation_logs')
         .update({ 
           actions_performed: [...currentActions, newAction]
         })
         .eq('id', currentSessionId);
+
+      // Also log to activity_log for audit trail
+      if (user && impersonatedUser) {
+        await supabase
+          .from('activity_log')
+          .insert({
+            user_id: user.id,
+            role: 'developer',
+            action,
+            details,
+            is_impersonation: true,
+            impersonated_user_id: impersonatedUser.id || impersonatedUser.user_id,
+            impersonated_role: impersonatedRole
+          });
+      }
     } catch (error) {
       console.error('Error logging action:', error);
     }

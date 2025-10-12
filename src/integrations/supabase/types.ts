@@ -107,6 +107,9 @@ export type Database = {
           created_at: string | null
           details: Json | null
           id: string
+          impersonated_role: string | null
+          impersonated_user_id: string | null
+          is_impersonation: boolean | null
           organization_name: string | null
           role: string | null
           user_id: string | null
@@ -117,6 +120,9 @@ export type Database = {
           created_at?: string | null
           details?: Json | null
           id?: string
+          impersonated_role?: string | null
+          impersonated_user_id?: string | null
+          is_impersonation?: boolean | null
           organization_name?: string | null
           role?: string | null
           user_id?: string | null
@@ -127,6 +133,9 @@ export type Database = {
           created_at?: string | null
           details?: Json | null
           id?: string
+          impersonated_role?: string | null
+          impersonated_user_id?: string | null
+          is_impersonation?: boolean | null
           organization_name?: string | null
           role?: string | null
           user_id?: string | null
@@ -1128,6 +1137,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      feature_toggles: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          enabled: boolean
+          environment: string
+          feature_name: string
+          id: string
+          metadata: Json | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          enabled?: boolean
+          environment?: string
+          feature_name: string
+          id?: string
+          metadata?: Json | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          enabled?: boolean
+          environment?: string
+          feature_name?: string
+          id?: string
+          metadata?: Json | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       focus_mode_settings: {
         Row: {

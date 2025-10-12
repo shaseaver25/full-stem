@@ -4,7 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Code, Users, FileText, Settings, Shield, Database, Plus } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Code, Users, FileText, Settings, Shield, Database, Plus, AlertTriangle, Zap, Activity } from 'lucide-react';
 import Header from '@/components/Header';
 import UserImpersonation from '@/components/developer/UserImpersonation';
 import ImpersonationLogs from '@/components/developer/ImpersonationLogs';
@@ -12,6 +13,9 @@ import ImpersonationBanner from '@/components/developer/ImpersonationBanner';
 import LessonTemplateManager from '@/components/admin/LessonTemplateManager';
 import LessonViewModeToggle from '@/components/admin/LessonViewModeToggle';
 import LessonComponentManager from '@/components/admin/LessonComponentManager';
+import { FeatureTogglePanel } from '@/components/developer/FeatureTogglePanel';
+import { PerformancePanel } from '@/components/developer/PerformancePanel';
+import { ErrorLogViewer } from '@/components/developer/ErrorLogViewer';
 import { useAuth } from '@/contexts/AuthContext';
 
 const DeveloperDashboard = () => {
@@ -50,10 +54,22 @@ const DeveloperDashboard = () => {
         </div>
 
         <Tabs defaultValue="impersonation" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-6">
+          <TabsList className="grid w-full grid-cols-7">
             <TabsTrigger value="impersonation" className="flex items-center gap-2">
               <Users className="h-4 w-4" />
               Impersonation
+            </TabsTrigger>
+            <TabsTrigger value="features" className="flex items-center gap-2">
+              <Shield className="h-4 w-4" />
+              Features
+            </TabsTrigger>
+            <TabsTrigger value="performance" className="flex items-center gap-2">
+              <Activity className="h-4 w-4" />
+              Performance
+            </TabsTrigger>
+            <TabsTrigger value="errors" className="flex items-center gap-2">
+              <Zap className="h-4 w-4" />
+              Errors
             </TabsTrigger>
             <TabsTrigger value="content" className="flex items-center gap-2">
               <FileText className="h-4 w-4" />
@@ -63,23 +79,37 @@ const DeveloperDashboard = () => {
               <Users className="h-4 w-4" />
               Users
             </TabsTrigger>
-            <TabsTrigger value="database" className="flex items-center gap-2">
-              <Database className="h-4 w-4" />
-              Database
-            </TabsTrigger>
-            <TabsTrigger value="logs" className="flex items-center gap-2">
-              <FileText className="h-4 w-4" />
-              Logs
-            </TabsTrigger>
             <TabsTrigger value="settings" className="flex items-center gap-2">
               <Settings className="h-4 w-4" />
               Settings
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="impersonation" className="grid md:grid-cols-2 gap-6">
-            <UserImpersonation />
-            <ImpersonationLogs />
+          <TabsContent value="impersonation" className="space-y-4">
+            <Alert className="bg-yellow-50 border-yellow-200">
+              <AlertTriangle className="h-4 w-4 text-yellow-600" />
+              <AlertTitle>Developer Mode - Read-Only</AlertTitle>
+              <AlertDescription>
+                You can impersonate users for testing, but cannot modify production data.
+                All actions are logged for security auditing.
+              </AlertDescription>
+            </Alert>
+            <div className="grid md:grid-cols-2 gap-6">
+              <UserImpersonation />
+              <ImpersonationLogs />
+            </div>
+          </TabsContent>
+
+          <TabsContent value="features" className="space-y-4">
+            <FeatureTogglePanel />
+          </TabsContent>
+
+          <TabsContent value="performance" className="space-y-4">
+            <PerformancePanel />
+          </TabsContent>
+
+          <TabsContent value="errors" className="space-y-4">
+            <ErrorLogViewer />
           </TabsContent>
 
           <TabsContent value="content" className="space-y-6">
@@ -163,23 +193,6 @@ const DeveloperDashboard = () => {
             </Card>
           </TabsContent>
 
-          <TabsContent value="database" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Database Overview</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-600 mb-4">
-                  Database health monitoring and management tools.
-                </p>
-                <Badge variant="secondary">Admin Tools Coming Soon</Badge>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="logs" className="space-y-6">
-            <ImpersonationLogs />
-          </TabsContent>
 
           <TabsContent value="settings" className="space-y-6">
             <Card>
