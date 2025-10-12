@@ -1,6 +1,8 @@
 
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { ChevronDown } from 'lucide-react';
 import ClassDetailsForm from '@/components/build-class/ClassDetailsForm';
 import LessonsForm from '@/components/build-class/LessonsForm';
 import { ClassroomActivitiesForm, IndividualActivitiesForm } from '@/components/build-class/ActivitiesForm';
@@ -83,8 +85,29 @@ const BuildClassTabs: React.FC<BuildClassTabsProps> = ({
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
       <TabsList className="grid w-full grid-cols-6">
-        <TabsTrigger value="details">Details</TabsTrigger>
-        <TabsTrigger value="lessons">Lessons</TabsTrigger>
+        <TabsTrigger value="details">Lesson</TabsTrigger>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <TabsTrigger value="lessons" className="flex items-center gap-1">
+              Components
+              <ChevronDown className="h-4 w-4" />
+            </TabsTrigger>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="bg-popover z-50">
+            <DropdownMenuItem onClick={() => setActiveTab('lessons')}>
+              Text Content
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setActiveTab('lessons')}>
+              Video
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setActiveTab('lessons')}>
+              Interactive Elements
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setActiveTab('lessons')}>
+              Assessments
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
         <TabsTrigger value="activities">Activities</TabsTrigger>
         <TabsTrigger value="assignments">Assignments</TabsTrigger>
         <TabsTrigger value="resources">Resources</TabsTrigger>
