@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Search, BookOpen, Users, Calendar, Plus } from 'lucide-react';
 import { useClasses } from '@/hooks/useClassManagement';
-import { CreateClassDialog } from '@/components/teacher/CreateClassDialog';
+// Removed CreateClassDialog - navigating to build-class page instead
 import { format } from 'date-fns';
 import Header from '@/components/Header';
 
@@ -21,9 +21,7 @@ export default function TeacherClasses() {
     cls.grade_level?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleClassCreated = (classId: string) => {
-    navigate(`/teacher/classes/${classId}`);
-  };
+  // Removed handleClassCreated - no longer needed
 
   if (isLoading) {
     return <div>Loading classes...</div>;
@@ -41,7 +39,10 @@ export default function TeacherClasses() {
             Manage your classes and assignments
           </p>
         </div>
-        <CreateClassDialog onSuccess={handleClassCreated} />
+        <Button onClick={() => navigate('/teacher/build-class')}>
+          <Plus className="h-4 w-4 mr-2" />
+          Create Class
+        </Button>
       </div>
 
       {/* Search and Filters */}
@@ -71,7 +72,10 @@ export default function TeacherClasses() {
                 : 'Try adjusting your search terms.'}
             </p>
             {classes.length === 0 && (
-              <CreateClassDialog onSuccess={handleClassCreated} />
+              <Button onClick={() => navigate('/teacher/build-class')}>
+                <Plus className="h-4 w-4 mr-2" />
+                Create Your First Class
+              </Button>
             )}
           </CardContent>
         </Card>
