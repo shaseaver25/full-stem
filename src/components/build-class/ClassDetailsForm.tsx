@@ -48,11 +48,21 @@ const ClassDetailsForm: React.FC<ClassDetailsFormProps> = ({ classData, onClassD
       if (fileType === 'txt') {
         content = await file.text();
       } else if (fileType === 'pdf' || fileType === 'docx') {
-        const formData = new FormData();
-        formData.append('file', file);
+        // Convert file to base64
+        const arrayBuffer = await file.arrayBuffer();
+        const bytes = new Uint8Array(arrayBuffer);
+        let binary = '';
+        for (let i = 0; i < bytes.byteLength; i++) {
+          binary += String.fromCharCode(bytes[i]);
+        }
+        const base64File = btoa(binary);
 
         const { data, error } = await supabase.functions.invoke('extract-text', {
-          body: formData
+          body: {
+            file: base64File,
+            fileName: file.name,
+            mimeType: file.type
+          }
         });
 
         if (error) throw error;
