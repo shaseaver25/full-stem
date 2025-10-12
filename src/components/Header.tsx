@@ -9,6 +9,7 @@ import ImpersonationBanner from '@/components/developer/ImpersonationBanner';
 import DemoModeIndicator from '@/components/DemoModeIndicator';
 import RoleAwareNavigation from '@/components/RoleAwareNavigation';
 import { GlobalSearch } from '@/components/navigation/GlobalSearch';
+import { NotificationsPanel } from '@/components/teacher/dashboard/NotificationsPanel';
 import { Menu } from 'lucide-react';
 
 const Header = () => {

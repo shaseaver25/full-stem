@@ -1,24 +1,115 @@
-
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, BookOpen, Users, Calendar, Clock, GraduationCap, Download } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { useTeacherProfileSimplified } from '@/hooks/useTeacherProfileSimplified';
-import { useClasses } from '@/hooks/useClasses';
-import { useClassApi } from '@/hooks/useClassApi';
-import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import Header from '@/components/Header';
+import { MetricsOverview } from './dashboard/MetricsOverview';
+import { ClassesList } from './dashboard/ClassesList';
+import { QuickActions } from './dashboard/QuickActions';
+import { AnalyticsPreview } from './dashboard/AnalyticsPreview';
+
+interface DashboardData {
+  activeClasses: number;
+  totalStudents: number;
+  assignmentsDueThisWeek: number;
+  averageEngagement: number;
+  unreadMessages: number;
+  classes: any[];
+  completionTrend: Array<{ date: string; completion: number }>;
+  classAverages: Array<{ className: string; average: number }>;
+}
 
 const TeacherDashboard = () => {
   const { profile, loading: profileLoading } = useTeacherProfileSimplified();
-  const { data: myClasses, isLoading: loadingMyClasses, refetch: refetchMyClasses } = useClasses();
-  const { useClasses: usePublishedClasses, createClass } = useClassApi();
-  const { data: publishedClasses, isLoading: loadingPublished } = usePublishedClasses();
-  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const [dashboardData, setDashboardData] = useState<DashboardData>({
+    activeClasses: 0,
+    totalStudents: 0,
+    assignmentsDueThisWeek: 0,
+    averageEngagement: 0,
+    unreadMessages: 0,
+    classes: [],
+    completionTrend: [],
+    classAverages: []
+  });
+
+  useEffect(() => {
+    if (profile?.id) {
+      fetchDashboardData();
+    }
+  }, [profile?.id]);
+
+  const fetchDashboardData = async () => {
+    if (!profile?.id) return;
+
+    try {
+      setLoading(true);
+
+      // Fetch classes
+      const { data: classes, error: classesError } = await supabase
+        .from('classes')
+        .select(`
+          id,
+          name,
+          subject,
+          grade_level,
+          class_students(count)
+        `)
+        .eq('teacher_id', profile.id);
+
+      if (classesError) throw classesError;
+
+      // Calculate metrics
+      const classesWithCounts = classes?.map(c => ({
+        ...c,
+        enrollment_count: c.class_students?.[0]?.count || 0
+      })) || [];
+
+      const totalStudents = classesWithCounts.reduce(
+        (sum, c) => sum + c.enrollment_count,
+        0
+      );
+
+      // Mock data for other metrics (replace with real queries)
+      const completionTrend = [
+        { date: 'Mon', completion: 75 },
+        { date: 'Tue', completion: 82 },
+        { date: 'Wed', completion: 78 },
+        { date: 'Thu', completion: 85 },
+        { date: 'Fri', completion: 88 },
+      ];
+
+      const classAverages = classesWithCounts.slice(0, 5).map(c => ({
+        className: c.name,
+        average: Math.floor(Math.random() * 20) + 75 // Mock data
+      }));
+
+      setDashboardData({
+        activeClasses: classes?.length || 0,
+        totalStudents,
+        assignmentsDueThisWeek: 0, // TODO: Calculate from assignments
+        averageEngagement: 82, // TODO: Calculate from activity
+        unreadMessages: 0, // TODO: Calculate from messages
+        classes: classesWithCounts,
+        completionTrend,
+        classAverages
+      });
+    } catch (error: any) {
+      console.error('Error fetching dashboard data:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load dashboard data',
+        variant: 'destructive'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Show loading state while profile is being fetched
   if (profileLoading) {
@@ -27,7 +118,7 @@ const TeacherDashboard = () => {
         <Header />
         <div className="flex items-center justify-center min-h-[60vh]">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
+            <Loader2 className="h-12 w-12 animate-spin text-indigo-600 mx-auto mb-4" />
             <p className="text-gray-600">Loading your dashboard...</p>
           </div>
         </div>
@@ -44,11 +135,11 @@ const TeacherDashboard = () => {
           <Card className="max-w-md">
             <CardHeader>
               <CardTitle>Setting Up Your Profile</CardTitle>
-              <CardDescription>
-                We're creating your teacher profile. This should only take a moment.
-              </CardDescription>
             </CardHeader>
             <CardContent>
+              <p className="text-muted-foreground mb-4">
+                We're creating your teacher profile. This should only take a moment.
+              </p>
               <Button onClick={() => window.location.reload()} className="w-full">
                 Refresh Page
               </Button>
@@ -59,323 +150,47 @@ const TeacherDashboard = () => {
     );
   }
 
-  const handleAdoptClass = async (classItem: any) => {
-    try {
-      // Create a copy of the class for the current teacher
-      const adoptedClassData = {
-        classData: {
-          title: `${classItem.title} (My Copy)`,
-          description: classItem.description || '',
-          gradeLevel: classItem.grade_level || '',
-          subject: classItem.subject || '',
-          duration: classItem.duration || '',
-          instructor: user?.email || 'Teacher',
-          schedule: '',
-          learningObjectives: classItem.learning_objectives || '',
-          prerequisites: classItem.prerequisites || '',
-          maxStudents: classItem.max_students || 25,
-        },
-        lessons: [],
-        assignments: [],
-        classroomActivities: [],
-        individualActivities: [],
-        resources: []
-      };
-
-      await createClass(adoptedClassData);
-      await refetchMyClasses();
-      
-      toast({
-        title: "Class Adopted Successfully!",
-        description: `You can now find "${classItem.title} (My Copy)" in your classes.`,
-      });
-    } catch (error) {
-      console.error('Error adopting class:', error);
-      toast({
-        title: "Error",
-        description: "Failed to adopt class. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  if (profileLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
-
-  if (!profile) {
-    return (
-      <div className="p-6">
-        <div className="text-center">
-          <h2 className="text-xl font-semibold mb-2">Welcome to TailorEDU</h2>
-          <p className="text-muted-foreground mb-4">Please complete your profile setup to get started.</p>
-          <Link to="/teacher/onboarding">
-            <Button>Complete Setup</Button>
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       <Header />
-      <div className="p-6 space-y-6">
-        <div className="flex items-center justify-between">
+      <div className="container mx-auto p-6 space-y-6">
+        {/* Welcome Header */}
         <div>
-          <h1 className="text-2xl font-bold">Teacher Dashboard</h1>
-          <p className="text-gray-600">Manage your classes and view available content</p>
+          <h1 className="text-3xl font-bold">Welcome back, {profile?.school_name || 'Teacher'}!</h1>
+          <p className="text-muted-foreground mt-1">
+            Here's what's happening with your classes today
+          </p>
         </div>
-        <div className="flex gap-2">
-          <Link to="/teacher/gradebook">
-            <Button variant="outline">
-              <GraduationCap className="h-4 w-4 mr-2" />
-              Gradebook
-            </Button>
-          </Link>
-          <Link to="/admin/build-class">
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              Create New Class
-            </Button>
-          </Link>
-        </div>
-      </div>
 
-      <Tabs defaultValue="my-classes" className="space-y-6">
-        <TabsList>
-          <TabsTrigger value="my-classes">My Classes</TabsTrigger>
-          <TabsTrigger value="available-classes">Available Classes</TabsTrigger>
-        </TabsList>
+        {/* Metrics Overview */}
+        <MetricsOverview
+          activeClasses={dashboardData.activeClasses}
+          totalStudents={dashboardData.totalStudents}
+          assignmentsDueThisWeek={dashboardData.assignmentsDueThisWeek}
+          averageEngagement={dashboardData.averageEngagement}
+          unreadMessages={dashboardData.unreadMessages}
+        />
 
-        <TabsContent value="my-classes" className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold">My Classes</h2>
-            <Link to="/admin/build-class">
-              <Button variant="outline" size="sm">
-                <Plus className="h-4 w-4 mr-2" />
-                New Class
-              </Button>
-            </Link>
+        {/* Main Content Grid */}
+        <div className="grid gap-6 lg:grid-cols-3">
+          {/* Classes List - Takes 2 columns */}
+          <div className="lg:col-span-2">
+            <ClassesList classes={dashboardData.classes} loading={loading} />
           </div>
 
-          {loadingMyClasses ? (
-            <div className="text-center py-8">Loading your classes...</div>
-          ) : myClasses && myClasses.length > 0 ? (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {myClasses.map((classItem) => (
-                <ClassCard
-                  key={classItem.id}
-                  classItem={classItem}
-                  showActions={true}
-                />
-              ))}
-            </div>
-          ) : (
-            <Card>
-              <CardContent className="p-8 text-center">
-                <BookOpen className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-                <h3 className="text-lg font-semibold mb-2">No classes yet</h3>
-                <p className="text-gray-600 mb-4">
-                  Create your first class to get started with TailorEDU.
-                </p>
-                <Link to="/admin/build-class">
-                  <Button>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Create Your First Class
-                  </Button>
-                </Link>
-              </CardContent>
-            </Card>
-          )}
-        </TabsContent>
-
-        <TabsContent value="available-classes" className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold">Available Classes</h2>
-            <p className="text-sm text-gray-600">
-              Classes published by administrators - click "Adopt Class" to use them
-            </p>
+          {/* Quick Actions - Takes 1 column */}
+          <div>
+            <QuickActions />
           </div>
+        </div>
 
-          {loadingPublished ? (
-            <div className="text-center py-8">Loading available classes...</div>
-          ) : publishedClasses && publishedClasses.length > 0 ? (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {publishedClasses.map((classItem) => (
-                <AvailableClassCard
-                  key={classItem.id}
-                  classItem={classItem}
-                  onAdopt={handleAdoptClass}
-                />
-              ))}
-            </div>
-          ) : (
-            <Card>
-              <CardContent className="p-8 text-center">
-                <BookOpen className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-                <h3 className="text-lg font-semibold mb-2">No published classes</h3>
-                <p className="text-gray-600">
-                  Check back later for new classes published by administrators.
-                </p>
-              </CardContent>
-            </Card>
-          )}
-        </TabsContent>
-      </Tabs>
+        {/* Analytics Preview */}
+        <AnalyticsPreview
+          completionTrend={dashboardData.completionTrend}
+          classAverages={dashboardData.classAverages}
+        />
       </div>
     </div>
-  );
-};
-
-interface ClassCardProps {
-  classItem: any;
-  showActions: boolean;
-}
-
-interface AvailableClassCardProps {
-  classItem: any;
-  onAdopt?: (classItem: any) => void;
-}
-
-const AvailableClassCard: React.FC<AvailableClassCardProps & { onAdopt?: (classItem: any) => Promise<void> }> = ({ classItem, onAdopt }) => {
-  const [isAdopting, setIsAdopting] = useState(false);
-
-  const handleAdopt = async () => {
-    if (!onAdopt) return;
-    setIsAdopting(true);
-    try {
-      await onAdopt(classItem);
-    } finally {
-      setIsAdopting(false);
-    }
-  };
-
-  return (
-    <Card className="h-full">
-      <CardHeader>
-        <div className="flex items-start justify-between">
-          <div className="flex-1">
-            <CardTitle className="text-lg mb-2">{classItem.title || classItem.name}</CardTitle>
-            <CardDescription className="line-clamp-2">
-              {classItem.description || 'No description available'}
-            </CardDescription>
-          </div>
-          {classItem.published && (
-            <Badge variant="default">Published</Badge>
-          )}
-        </div>
-      </CardHeader>
-      
-      <CardContent className="space-y-4">
-        <div className="grid grid-cols-2 gap-4 text-sm">
-          {classItem.grade_level && (
-            <div className="flex items-center gap-2">
-              <BookOpen className="h-4 w-4 text-gray-500" />
-              <span>{classItem.grade_level}</span>
-            </div>
-          )}
-          {classItem.subject && (
-            <div className="flex items-center gap-2">
-              <BookOpen className="h-4 w-4 text-gray-500" />
-              <span>{classItem.subject}</span>
-            </div>
-          )}
-          {classItem.duration && (
-            <div className="flex items-center gap-2">
-              <Clock className="h-4 w-4 text-gray-500" />
-              <span>{classItem.duration}</span>
-            </div>
-          )}
-          {classItem.max_students && (
-            <div className="flex items-center gap-2">
-              <Users className="h-4 w-4 text-gray-500" />
-              <span>Max {classItem.max_students}</span>
-            </div>
-          )}
-        </div>
-
-        <div className="pt-4">
-          <Button 
-            onClick={handleAdopt} 
-            disabled={isAdopting}
-            className="w-full"
-            size="sm"
-          >
-            <Download className="h-4 w-4 mr-2" />
-            {isAdopting ? 'Adopting...' : 'Adopt Class'}
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
-  );
-};
-
-const ClassCard: React.FC<ClassCardProps> = ({ classItem, showActions }) => {
-  return (
-    <Card className="h-full">
-      <CardHeader>
-        <div className="flex items-start justify-between">
-          <div className="flex-1">
-            <CardTitle className="text-lg mb-2">{classItem.title || classItem.name}</CardTitle>
-            <CardDescription className="line-clamp-2">
-              {classItem.description || 'No description available'}
-            </CardDescription>
-          </div>
-          {classItem.published && (
-            <Badge variant="default">Published</Badge>
-          )}
-        </div>
-      </CardHeader>
-      
-      <CardContent className="space-y-4">
-        <div className="grid grid-cols-2 gap-4 text-sm">
-          {classItem.grade_level && (
-            <div className="flex items-center gap-2">
-              <BookOpen className="h-4 w-4 text-gray-500" />
-              <span>{classItem.grade_level}</span>
-            </div>
-          )}
-          {classItem.subject && (
-            <div className="flex items-center gap-2">
-              <BookOpen className="h-4 w-4 text-gray-500" />
-              <span>{classItem.subject}</span>
-            </div>
-          )}
-          {classItem.duration && (
-            <div className="flex items-center gap-2">
-              <Clock className="h-4 w-4 text-gray-500" />
-              <span>{classItem.duration}</span>
-            </div>
-          )}
-          {classItem.max_students && (
-            <div className="flex items-center gap-2">
-              <Users className="h-4 w-4 text-gray-500" />
-              <span>Max {classItem.max_students}</span>
-            </div>
-          )}
-        </div>
-
-        {showActions && (
-          <div className="flex gap-2 pt-4">
-            <Link to={`/build-class/${classItem.id}`} className="flex-1">
-              <Button variant="outline" size="sm" className="w-full">
-                Edit
-              </Button>
-            </Link>
-            <Link to={`/teacher/class/${classItem.id}`} className="flex-1">
-              <Button size="sm" className="w-full">
-                Manage
-              </Button>
-            </Link>
-          </div>
-        )}
-      </CardContent>
-    </Card>
   );
 };
 
