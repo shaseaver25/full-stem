@@ -19,7 +19,13 @@ const AccessDenied = () => {
   };
 
   const handleGoBack = () => {
-    navigate(-1);
+    // Check if there's history to go back to
+    if (window.history.length > 1) {
+      navigate(-1);
+    } else {
+      // Fallback to dashboard if no history
+      handleGoToDashboard();
+    }
   };
 
   return (
