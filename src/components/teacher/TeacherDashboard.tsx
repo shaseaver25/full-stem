@@ -20,6 +20,45 @@ const TeacherDashboard = () => {
   const { data: publishedClasses, isLoading: loadingPublished } = usePublishedClasses();
   const { user } = useAuth();
 
+  // Show loading state while profile is being fetched
+  if (profileLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+        <Header />
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading your dashboard...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // If profile is null after loading, show a message
+  if (!profile && !profileLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+        <Header />
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <Card className="max-w-md">
+            <CardHeader>
+              <CardTitle>Setting Up Your Profile</CardTitle>
+              <CardDescription>
+                We're creating your teacher profile. This should only take a moment.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button onClick={() => window.location.reload()} className="w-full">
+                Refresh Page
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
   const handleAdoptClass = async (classItem: any) => {
     try {
       // Create a copy of the class for the current teacher

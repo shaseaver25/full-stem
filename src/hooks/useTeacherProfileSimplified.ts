@@ -195,13 +195,19 @@ export const useTeacherProfileSimplified = () => {
     }
   };
 
-  // Track if we've already fetched for this user to prevent loops
+  // Track if we've already fetched to prevent infinite loops
   const lastFetchedUserId = useRef<string | null>(null);
+  const isFetchingRef = useRef(false);
   
   useEffect(() => {
-    if (user?.id && user.id !== lastFetchedUserId.current) {
+    // Only fetch if we have a new user and aren't already fetching
+    if (user?.id && user.id !== lastFetchedUserId.current && !isFetchingRef.current) {
       lastFetchedUserId.current = user.id;
-      fetchProfile(user.id);
+      isFetchingRef.current = true;
+      
+      fetchProfile(user.id).finally(() => {
+        isFetchingRef.current = false;
+      });
     } else if (!user?.id) {
       lastFetchedUserId.current = null;
       setProfile(null);
