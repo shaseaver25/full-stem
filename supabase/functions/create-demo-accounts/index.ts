@@ -133,7 +133,11 @@ serve(async (req) => {
           }, { onConflict: 'user_id' });
         } else if (account.role === 'teacher' || account.role === 'admin') {
           await supabase.from('teacher_profiles').upsert({
-            user_id: userId
+            user_id: userId,
+            school_name: 'Demo School',
+            subjects: ['Math', 'Science'],
+            years_experience: 5,
+            certification_status: 'certified'
           }, { onConflict: 'user_id' });
         } else if (account.role === 'parent') {
           await supabase.from('parent_profiles').upsert({
@@ -158,6 +162,37 @@ serve(async (req) => {
           status: 'error',
           message: error.message
         });
+      }
+    }
+
+    // Create parent-student relationship
+    const studentUser = results.find(r => r.email === 'student@test.com');
+    const parentUser = results.find(r => r.email === 'parent@test.com');
+    
+    if (studentUser?.userId && parentUser?.userId) {
+      const { data: studentRecord } = await supabase
+        .from('students')
+        .select('id')
+        .eq('user_id', studentUser.userId)
+        .single();
+      
+      const { data: parentRecord } = await supabase
+        .from('parent_profiles')
+        .select('id')
+        .eq('user_id', parentUser.userId)
+        .single();
+      
+      if (studentRecord && parentRecord) {
+        await supabase.from('student_parent_relationships').upsert({
+          student_id: studentRecord.id,
+          parent_id: parentRecord.id,
+          relationship_type: 'parent',
+          can_view_grades: true,
+          can_view_attendance: true,
+          can_receive_communications: true
+        }, { onConflict: 'student_id,parent_id' });
+        
+        console.log('Created parent-student relationship');
       }
     }
 
