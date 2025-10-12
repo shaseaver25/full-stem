@@ -1,10 +1,12 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { ChevronDown } from 'lucide-react';
 import ClassDetailsForm from '@/components/build-class/ClassDetailsForm';
 import LessonsForm from '@/components/build-class/LessonsForm';
+import LessonPlanUploader from '@/components/build-class/LessonPlanUploader';
+import LessonPreview from '@/components/build-class/LessonPreview';
 import { ClassroomActivitiesForm, IndividualActivitiesForm } from '@/components/build-class/ActivitiesForm';
 import AssignmentsForm from '@/components/build-class/AssignmentsForm';
 import ClassPreview from '@/components/build-class/ClassPreview';
@@ -81,9 +83,51 @@ const BuildClassTabs: React.FC<BuildClassTabsProps> = ({
   removeResource,
   getCompletionPercentage
 }) => {
+  const [parsedLesson, setParsedLesson] = useState<any>(null);
+
+  const handleLessonParsed = (lesson: any) => {
+    setParsedLesson(lesson);
+  };
+
+  const handleConfirmParsedLesson = (lesson: any) => {
+    // Convert parsed lesson to our lesson format
+    const newLesson = {
+      title: lesson.title,
+      description: lesson.description,
+      objectives: lesson.objectives,
+      videos: lesson.videos || [],
+      instructions: lesson.instructions,
+      duration: lesson.duration,
+      desmosEnabled: lesson.desmosEnabled,
+      desmosType: lesson.desmosType,
+      materials: lesson.components
+        ?.filter((c: any) => c.type === 'resources')
+        .map((c: any) => c.content.text || c.content.html || '')
+        .filter((text: string) => text.trim()) || [],
+      components: lesson.components || [],
+    };
+
+    setCurrentLesson(newLesson);
+    setParsedLesson(null);
+    setActiveTab('lessons'); // Switch to lessons tab to see the imported lesson
+  };
+
+  const handleCancelParsed = () => {
+    setParsedLesson(null);
+  };
+
+  if (parsedLesson) {
+    return (
+      <LessonPreview
+        lesson={parsedLesson}
+        onConfirm={handleConfirmParsedLesson}
+        onCancel={handleCancelParsed}
+      />
+    );
+  }
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-      <TabsList className="grid w-full grid-cols-3">
+      <TabsList className="grid w-full grid-cols-4">
         <TabsTrigger value="details">Lesson</TabsTrigger>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -119,6 +163,7 @@ const BuildClassTabs: React.FC<BuildClassTabsProps> = ({
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+        <TabsTrigger value="upload">Smart Upload</TabsTrigger>
         <TabsTrigger value="preview">Preview</TabsTrigger>
       </TabsList>
 
@@ -140,6 +185,10 @@ const BuildClassTabs: React.FC<BuildClassTabsProps> = ({
           removeVideoFromLesson={removeVideoFromLesson}
           updateLessonVideo={updateLessonVideo}
         />
+      </TabsContent>
+
+      <TabsContent value="upload" className="space-y-6">
+        <LessonPlanUploader onLessonParsed={handleLessonParsed} />
       </TabsContent>
 
       <TabsContent value="activities" className="space-y-6">

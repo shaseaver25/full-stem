@@ -209,23 +209,15 @@ const LessonsForm: React.FC<LessonsFormProps> = ({
 
   return (
     <div className="space-y-6">
-      <Tabs defaultValue="manual" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="manual">Manual Entry</TabsTrigger>
-          <TabsTrigger value="upload">Smart Upload</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="manual" className="space-y-6">
-          <div className="space-y-6">
-            {/* Lesson Builder */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Plus className="h-5 w-5" />
-                  Build Your Lesson
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
+      {/* Lesson Builder */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Plus className="h-5 w-5" />
+            Build Your Lesson
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
                 {/* Basic Lesson Info */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
@@ -450,13 +442,6 @@ const LessonsForm: React.FC<LessonsFormProps> = ({
                 </div>
               </CardContent>
             </Card>
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="upload" className="space-y-6">
-          <LessonPlanUploader onLessonParsed={handleLessonParsed} />
-        </TabsContent>
-      </Tabs>
     </div>
   );
 };
