@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Check, RotateCcw, Edit } from 'lucide-react';
 import { diffHtml } from '@/utils/diffHtml';
+import SafeHtml from '@/components/ui/SafeHtml';
 
 interface PersonalizeDiffModalProps {
   open: boolean;
@@ -34,15 +35,17 @@ export const PersonalizeDiffModal: React.FC<PersonalizeDiffModalProps> = ({
       <div className="grid grid-cols-2 gap-4 h-64 overflow-y-auto">
         <div className="space-y-2">
           <h4 className="font-semibold text-sm text-muted-foreground">Original</h4>
-          <div className="p-3 bg-muted/50 rounded-md text-sm prose prose-sm max-w-none">
-            <div dangerouslySetInnerHTML={{ __html: originalHtml }} />
-          </div>
+          <SafeHtml 
+            html={originalHtml}
+            className="p-3 bg-muted/50 rounded-md text-sm"
+          />
         </div>
         <div className="space-y-2">
           <h4 className="font-semibold text-sm text-muted-foreground">Personalized</h4>
-          <div className="p-3 bg-primary/5 rounded-md text-sm prose prose-sm max-w-none">
-            <div dangerouslySetInnerHTML={{ __html: personalizedHtml }} />
-          </div>
+          <SafeHtml 
+            html={personalizedHtml}
+            className="p-3 bg-primary/5 rounded-md text-sm"
+          />
         </div>
       </div>
     );
