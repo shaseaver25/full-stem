@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './AuthContext';
+import { sanitizeActionsArray, createSafeImpersonationLog } from '@/utils/logSanitizer';
 
 interface ImpersonationContextType {
   isImpersonating: boolean;
@@ -138,6 +139,15 @@ export const ImpersonationProvider: React.FC<{ children: React.ReactNode }> = ({
     if (!currentSessionId) return;
 
     try {
+      // Create sanitized log entry
+      const safeLogEntry = createSafeImpersonationLog({
+        roleFrom: 'developer',
+        roleTo: impersonatedRole || 'unknown',
+        route: details?.route,
+        action,
+        classId: details?.class_id,
+      });
+
       // Get current actions
       const { data: currentLog } = await supabase
         .from('impersonation_logs')
@@ -146,34 +156,34 @@ export const ImpersonationProvider: React.FC<{ children: React.ReactNode }> = ({
         .single();
 
       const currentActions = Array.isArray(currentLog?.actions_performed) ? currentLog.actions_performed : [];
-      const newAction = {
-        action,
-        details,
-        timestamp: new Date().toISOString()
-      };
+      
+      // Sanitize all existing and new actions
+      const sanitizedActions = sanitizeActionsArray([...currentActions, safeLogEntry]);
 
-      // Update actions in impersonation log
+      // Update actions in impersonation log (only safe data)
       await supabase
         .from('impersonation_logs')
         .update({ 
-          actions_performed: [...currentActions, newAction]
+          actions_performed: sanitizedActions
         })
         .eq('id', currentSessionId);
 
-      // Also log to activity_log for audit trail
-      if (user && impersonatedUser) {
+      // Also log to activity_log for audit trail (sanitized)
+      if (user) {
         await supabase
           .from('activity_log')
           .insert({
             user_id: user.id,
             role: 'developer',
             action,
-            details,
+            details: safeLogEntry, // Use sanitized log entry
             is_impersonation: true,
-            impersonated_user_id: impersonatedUser.id || impersonatedUser.user_id,
+            impersonated_user_id: impersonatedUser?.id || impersonatedUser?.user_id,
             impersonated_role: impersonatedRole
           });
       }
+
+      console.log('Logged sanitized impersonation action:', action);
     } catch (error) {
       console.error('Error logging action:', error);
     }

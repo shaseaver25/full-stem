@@ -8,6 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 /**
  * Hook to enforce MFA for privileged roles
  * Redirects to MFA setup if user has developer or system_admin role but MFA is not enabled
+ * Redirects to MFA verify if MFA is enabled but not verified in JWT
  */
 export const useMFAEnforcement = () => {
   const { user } = useAuth();
@@ -42,15 +43,35 @@ export const useMFAEnforcement = () => {
     const isMFAPage = location.pathname.startsWith('/auth/setup-mfa') || 
                       location.pathname.startsWith('/auth/verify-mfa');
     
-    if (requiresMFA && !profile?.mfa_enabled && !isMFAPage) {
-      // Store return URL for after MFA setup
-      sessionStorage.setItem('mfa_return_url', location.pathname);
-      navigate('/auth/setup-mfa');
+    if (requiresMFA && !isMFAPage) {
+      // Check if MFA is enabled in profile
+      if (!profile?.mfa_enabled) {
+        // Store return URL for after MFA setup
+        sessionStorage.setItem('mfa_return_url', location.pathname);
+        navigate('/auth/setup-mfa');
+        return;
+      }
+
+      // Check if MFA is verified in JWT claims
+      const mfaVerified = user.app_metadata?.mfa_verified;
+      const mfaVerifiedAt = user.app_metadata?.mfa_verified_at;
+      
+      // Check if verification is expired (12 hours)
+      const isExpired = mfaVerifiedAt 
+        ? (Date.now() - new Date(mfaVerifiedAt).getTime()) > (12 * 60 * 60 * 1000)
+        : true;
+
+      if (!mfaVerified || isExpired) {
+        // Store return URL for after MFA verification
+        sessionStorage.setItem('mfa_return_url', location.pathname);
+        navigate('/auth/verify-mfa');
+      }
     }
   }, [user, role, profile, navigate, location]);
 
   return {
     requiresMFA: role === 'developer' || role === 'system_admin',
     mfaEnabled: profile?.mfa_enabled ?? false,
+    mfaVerified: user?.app_metadata?.mfa_verified ?? false,
   };
 };

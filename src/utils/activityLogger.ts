@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { sanitizeActivityMetadata } from './logSanitizer';
 
 export type UserRole = 'student' | 'teacher' | 'admin' | 'super_admin' | 'system_admin' | 'developer';
 
@@ -14,6 +15,7 @@ interface LogActivityParams {
 /**
  * Unified activity logger for all user roles
  * Tracks actions across students, teachers, and admins
+ * All metadata is sanitized to remove PII before logging
  */
 export const logUserAction = async ({
   userId,
@@ -24,11 +26,14 @@ export const logUserAction = async ({
   organizationName,
 }: LogActivityParams): Promise<void> => {
   try {
+    // Sanitize metadata to remove any PII
+    const sanitizedDetails = sanitizeActivityMetadata(details);
+    
     const { error } = await supabase.from('activity_log').insert({
       user_id: userId,
       role,
       action,
-      details,
+      details: sanitizedDetails,
       admin_type: adminType || null,
       organization_name: organizationName || null,
     });

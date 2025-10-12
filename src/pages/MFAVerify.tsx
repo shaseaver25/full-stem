@@ -38,23 +38,32 @@ export default function MFAVerify() {
 
       if (error) throw error;
 
-      if (data.verified) {
+      if (data.verified && data.session) {
+        // The edge function has updated the JWT with mfa_verified claim
+        // Set the new session in Supabase client
+        await supabase.auth.setSession({
+          access_token: data.session.access_token,
+          refresh_token: data.session.refresh_token,
+        });
+
         toast({
           title: "Verified",
           description: "MFA verification successful.",
         });
-        
-        // Store MFA verified status in session
-        sessionStorage.setItem('mfa_verified', 'true');
         
         // Navigate back to intended destination
         const returnUrl = sessionStorage.getItem('mfa_return_url') || '/';
         sessionStorage.removeItem('mfa_return_url');
         navigate(returnUrl);
       } else {
+        const errorMessage = data.error || "The verification code is incorrect. Please try again.";
+        const attemptsRemaining = data.attemptsRemaining;
+        
         toast({
           title: "Invalid Code",
-          description: "The verification code is incorrect. Please try again.",
+          description: attemptsRemaining !== undefined 
+            ? `${errorMessage} (${attemptsRemaining} attempts remaining)`
+            : errorMessage,
           variant: "destructive",
         });
       }

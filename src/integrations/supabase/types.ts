@@ -1949,6 +1949,63 @@ export type Database = {
           },
         ]
       }
+      mfa_audit_log: {
+        Row: {
+          action: string
+          created_at: string
+          id: string
+          ip_address: unknown | null
+          success: boolean
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          id?: string
+          ip_address?: unknown | null
+          success: boolean
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: string
+          ip_address?: unknown | null
+          success?: boolean
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      mfa_rate_limits: {
+        Row: {
+          attempt_count: number
+          created_at: string
+          id: string
+          locked_until: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          attempt_count?: number
+          created_at?: string
+          id?: string
+          locked_until?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          attempt_count?: number
+          created_at?: string
+          id?: string
+          locked_until?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       mfa_verification_attempts: {
         Row: {
           attempted_at: string
@@ -2147,8 +2204,10 @@ export type Database = {
           full_name: string | null
           id: string
           mfa_backup_codes: string[] | null
+          mfa_backup_codes_used: Json | null
           mfa_enabled: boolean | null
           mfa_secret: string | null
+          mfa_secret_enc: string | null
           updated_at: string
         }
         Insert: {
@@ -2158,8 +2217,10 @@ export type Database = {
           full_name?: string | null
           id: string
           mfa_backup_codes?: string[] | null
+          mfa_backup_codes_used?: Json | null
           mfa_enabled?: boolean | null
           mfa_secret?: string | null
+          mfa_secret_enc?: string | null
           updated_at?: string
         }
         Update: {
@@ -2169,8 +2230,10 @@ export type Database = {
           full_name?: string | null
           id?: string
           mfa_backup_codes?: string[] | null
+          mfa_backup_codes_used?: Json | null
           mfa_enabled?: boolean | null
           mfa_secret?: string | null
+          mfa_secret_enc?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -2947,6 +3010,14 @@ export type Database = {
       }
       cleanup_old_tts_cache: {
         Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      decrypt_mfa_secret: {
+        Args: { uid: string }
+        Returns: string
+      }
+      encrypt_mfa_secret: {
+        Args: { secret_text: string; uid: string }
         Returns: undefined
       }
       generate_class_code: {
