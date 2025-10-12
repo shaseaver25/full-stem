@@ -80,7 +80,7 @@ const BuildClassPage = () => {
     setCurrentResource
   );
 
-  const { createClass, updateClass, useClassWithContent } = useClassApi();
+  const { createClassAsync, updateClassAsync, useClassWithContent, isCreating, isUpdating } = useClassApi();
   const { classCourses } = useClassCourses(classId);
 
   // Load existing class data if editing
@@ -136,7 +136,7 @@ const BuildClassPage = () => {
 
       if (classId) {
         // Update existing class
-        updateClass({
+        await updateClassAsync({
           id: classId,
           data: {
             title: classData.title,
@@ -152,26 +152,18 @@ const BuildClassPage = () => {
           }
         });
         
-        toast({
-          title: "Success!",
-          description: "Class updated successfully.",
-        });
+        // Navigate to build lesson page after update
+        navigate(`/teacher/build-lesson/${classId}`);
       } else {
-        // Create new class
-        createClass(classDataToSave);
+        // Create new class and navigate to build lesson page
+        const newClass = await createClassAsync(classDataToSave);
         
-        toast({
-          title: "Success!",
-          description: "Class created successfully.",
-        });
+        // Navigate to build lesson page with the new class ID
+        navigate(`/teacher/build-lesson/${newClass.id}`);
       }
     } catch (error) {
       console.error('Error saving class:', error);
-      toast({
-        title: "Error",
-        description: "Failed to save class. Please try again.",
-        variant: "destructive",
-      });
+      // Error toast is handled by the mutation's onError
     } finally {
       setIsSaving(false);
     }
