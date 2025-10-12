@@ -56,20 +56,14 @@ const ProtectedTeacherRoute: React.FC<ProtectedTeacherRouteProps> = ({
 
   // Handle dashboard and other protected routes
   if (requireOnboarding) {
-    // If no profile exists, redirect to onboarding
+    // If no profile exists, create one in the background but allow access
     if (!profile) {
-      console.log('No profile exists, redirecting to onboarding');
-      return <Navigate to="/teacher/onboarding" replace />;
+      console.log('No profile exists, but allowing access (will be created on first save)');
+      return <>{children}</>;
     }
     
-    // If profile exists but onboarding not completed, redirect to onboarding
-    if (!profile.onboarding_completed) {
-      console.log('Profile exists but onboarding not completed, redirecting to onboarding');
-      return <Navigate to="/teacher/onboarding" replace />;
-    }
-    
-    // If we reach here, profile exists and onboarding is completed
-    console.log('Profile exists and onboarding completed, allowing access');
+    // Always allow access - onboarding is no longer mandatory
+    console.log('Allowing access regardless of onboarding status');
     return <>{children}</>;
   }
 

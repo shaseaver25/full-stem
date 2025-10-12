@@ -61,10 +61,10 @@ const TeacherAuth = () => {
     } else {
       console.log('Sign in successful');
       
-      // Check if this is first login (requires onboarding)
+      // Check if this is first login (requires preferences setup)
       const { data: { user } } = await supabase.auth.getUser();
       if (user?.user_metadata?.requires_onboarding) {
-        navigate('/teacher/onboarding');
+        navigate('/preferences');
       }
       // Otherwise, auth context will handle redirect via useEffect
     }
