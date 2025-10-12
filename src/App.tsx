@@ -69,6 +69,8 @@ import ProtectedAdminRoute from "./components/admin/ProtectedAdminRoute";
 import ParentDashboard from "./pages/dashboard/parent/ParentDashboard";
 import ProtectedParentRoute from "./components/parent/ProtectedParentRoute";
 import BootstrapDemo from "./pages/BootstrapDemo";
+import RequireRole from "./components/auth/RequireRole";
+import AccessDenied from "./pages/AccessDenied";
 
 const queryClient = new QueryClient();
 
@@ -87,14 +89,71 @@ function AppContent() {
         <Route path="/bootstrap" element={<BootstrapDemo />} />
         <Route path="/auth" element={<Auth />} />
         <Route path="/signup/student" element={<StudentSignupForm />} />
-        <Route path="/dashboard/student" element={<NewStudentDashboard />} />
-        <Route path="/quiz/learning-genius" element={<LearningGeniusSurveyPage />} />
-        <Route path="/classes/join" element={<JoinClassPage />} />
-        <Route path="/classes/my-classes" element={<MyClassesPage />} />
-        <Route path="/classes/:id" element={<StudentClassDetailPage />} />
-        <Route path="/assignments" element={<AssignmentsListPage />} />
-        <Route path="/assignments/:id" element={<AssignmentDetailPage />} />
-        <Route path="/grades" element={<MyGradesPage />} />
+        <Route path="/access-denied" element={<AccessDenied />} />
+        <Route 
+          path="/dashboard/student" 
+          element={
+            <RequireRole allowedRoles={['student']}>
+              <NewStudentDashboard />
+            </RequireRole>
+          } 
+        />
+        <Route 
+          path="/quiz/learning-genius" 
+          element={
+            <RequireRole allowedRoles={['student']}>
+              <LearningGeniusSurveyPage />
+            </RequireRole>
+          } 
+        />
+        <Route 
+          path="/classes/join" 
+          element={
+            <RequireRole allowedRoles={['student']}>
+              <JoinClassPage />
+            </RequireRole>
+          } 
+        />
+        <Route 
+          path="/classes/my-classes" 
+          element={
+            <RequireRole allowedRoles={['student']}>
+              <MyClassesPage />
+            </RequireRole>
+          } 
+        />
+        <Route 
+          path="/classes/:id" 
+          element={
+            <RequireRole allowedRoles={['student']}>
+              <StudentClassDetailPage />
+            </RequireRole>
+          } 
+        />
+        <Route 
+          path="/assignments" 
+          element={
+            <RequireRole allowedRoles={['student']}>
+              <AssignmentsListPage />
+            </RequireRole>
+          } 
+        />
+        <Route 
+          path="/assignments/:id" 
+          element={
+            <RequireRole allowedRoles={['student']}>
+              <AssignmentDetailPage />
+            </RequireRole>
+          } 
+        />
+        <Route 
+          path="/grades" 
+          element={
+            <RequireRole allowedRoles={['student']}>
+              <MyGradesPage />
+            </RequireRole>
+          } 
+        />
         <Route path="/trial" element={<TrialPage />} />
         
         {/* Demo Routes */}
@@ -109,7 +168,14 @@ function AppContent() {
         <Route path="/preferences" element={<UserPreferences />} />
         
         {/* Content Management */}
-        <Route path="/content" element={<ContentManagementPage />} />
+        <Route 
+          path="/content" 
+          element={
+            <RequireRole allowedRoles={['teacher', 'admin', 'superadmin', 'developer']}>
+              <ContentManagementPage />
+            </RequireRole>
+          } 
+        />
         
         {/* Components Showcase */}
         <Route path="/components" element={<ComponentsPage />} />
@@ -118,7 +184,14 @@ function AppContent() {
         <Route path="/demo-showcase" element={<DemoShowcase />} />
         
         {/* Parent Portal */}
-        <Route path="/parent" element={<ParentPortalPage />} />
+        <Route 
+          path="/parent" 
+          element={
+            <RequireRole allowedRoles={['parent']}>
+              <ParentPortalPage />
+            </RequireRole>
+          } 
+        />
         <Route 
           path="/dashboard/parent" 
           element={
@@ -129,11 +202,46 @@ function AppContent() {
         />
         
         {/* Admin Routes */}
-        <Route path="/admin/dashboard" element={<AdminDashboard />} />
-        <Route path="/admin/build-class" element={<BuildClassPage />} />
-        <Route path="/admin/ai-course-builder" element={<AICourseBuilderPage />} />
-        <Route path="/admin/course-editor" element={<CourseEditorPage />} />
-        <Route path="/admin/advanced" element={<AdvancedAdminPage />} />
+        <Route 
+          path="/admin/dashboard" 
+          element={
+            <RequireRole allowedRoles={['admin', 'superadmin', 'developer']}>
+              <AdminDashboard />
+            </RequireRole>
+          } 
+        />
+        <Route 
+          path="/admin/build-class" 
+          element={
+            <RequireRole allowedRoles={['admin', 'superadmin', 'developer']}>
+              <BuildClassPage />
+            </RequireRole>
+          } 
+        />
+        <Route 
+          path="/admin/ai-course-builder" 
+          element={
+            <RequireRole allowedRoles={['admin', 'superadmin', 'developer']}>
+              <AICourseBuilderPage />
+            </RequireRole>
+          } 
+        />
+        <Route 
+          path="/admin/course-editor" 
+          element={
+            <RequireRole allowedRoles={['admin', 'superadmin', 'developer']}>
+              <CourseEditorPage />
+            </RequireRole>
+          } 
+        />
+        <Route 
+          path="/admin/advanced" 
+          element={
+            <RequireRole allowedRoles={['admin', 'superadmin', 'developer']}>
+              <AdvancedAdminPage />
+            </RequireRole>
+          } 
+        />
         <Route 
           path="/dashboard/admin/analytics" 
           element={
@@ -144,7 +252,14 @@ function AppContent() {
         />
         
         {/* Super Admin Route */}
-        <Route path="/super-admin" element={<SuperAdminDashboard />} />
+        <Route 
+          path="/super-admin" 
+          element={
+            <RequireRole allowedRoles={['superadmin', 'developer']}>
+              <SuperAdminDashboard />
+            </RequireRole>
+          } 
+        />
         
         {/* Developer Routes */}
         <Route 
@@ -157,9 +272,30 @@ function AppContent() {
         />
         
         {/* Student Routes */}
-        <Route path="/student" element={<StudentDashboard />} />
-        <Route path="/student/assignments/:id" element={<StudentAssignmentDetail />} />
-        <Route path="/student/assignments/:id/submit" element={<StudentAssignmentSubmit />} />
+        <Route 
+          path="/student" 
+          element={
+            <RequireRole allowedRoles={['student']}>
+              <StudentDashboard />
+            </RequireRole>
+          } 
+        />
+        <Route 
+          path="/student/assignments/:id" 
+          element={
+            <RequireRole allowedRoles={['student']}>
+              <StudentAssignmentDetail />
+            </RequireRole>
+          } 
+        />
+        <Route 
+          path="/student/assignments/:id/submit" 
+          element={
+            <RequireRole allowedRoles={['student']}>
+              <StudentAssignmentSubmit />
+            </RequireRole>
+          } 
+        />
         
         {/* Teacher Routes */}
         <Route path="/teacher/auth" element={<TeacherAuth />} />
