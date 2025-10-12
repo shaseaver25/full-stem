@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { UserRole } from '@/utils/roleRedirect';
@@ -11,6 +11,7 @@ export const useUserRole = () => {
   const { user } = useAuth();
   const [role, setRole] = useState<UserRole | null>(null);
   const [loading, setLoading] = useState(true);
+  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
   useEffect(() => {
     const fetchUserRole = async () => {
@@ -47,10 +48,13 @@ export const useUserRole = () => {
     fetchUserRole();
 
     // Set up real-time subscription for role changes
-    // Use unique channel name per user to avoid subscription conflicts
+    // Create a unique channel for each hook instance to avoid subscription conflicts
     if (user?.id) {
-      const channelName = `user_role_${user.id}`;
+      // Use a random ID to ensure each hook instance gets its own channel
+      const uniqueId = Math.random().toString(36).substring(7);
+      const channelName = `user_role_${user.id}_${uniqueId}`;
       const channel = supabase.channel(channelName);
+      channelRef.current = channel;
       
       channel
         .on(
@@ -73,7 +77,10 @@ export const useUserRole = () => {
         .subscribe();
 
       return () => {
-        supabase.removeChannel(channel);
+        if (channelRef.current) {
+          supabase.removeChannel(channelRef.current);
+          channelRef.current = null;
+        }
       };
     }
 
