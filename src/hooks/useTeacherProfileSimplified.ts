@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
@@ -189,10 +189,15 @@ export const useTeacherProfileSimplified = () => {
     }
   };
 
+  // Track if we've already fetched for this user to prevent loops
+  const lastFetchedUserId = useRef<string | null>(null);
+  
   useEffect(() => {
-    if (user?.id) {
+    if (user?.id && user.id !== lastFetchedUserId.current) {
+      lastFetchedUserId.current = user.id;
       fetchProfile(user.id);
-    } else {
+    } else if (!user?.id) {
+      lastFetchedUserId.current = null;
       setProfile(null);
       setLoading(false);
     }

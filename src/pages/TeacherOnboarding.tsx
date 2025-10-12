@@ -28,11 +28,15 @@ const TeacherOnboarding = () => {
   const navigate = useNavigate();
 
   // Check if onboarding is already completed and redirect
+  // Use ref to prevent multiple redirects
+  const hasRedirected = React.useRef(false);
+  
   useEffect(() => {
-    if (!loading && profile?.onboarding_completed) {
-      navigate('/teacher/dashboard');
+    if (!loading && profile?.onboarding_completed && !hasRedirected.current) {
+      hasRedirected.current = true;
+      navigate('/teacher/dashboard', { replace: true });
     }
-  }, [profile, loading, navigate]);
+  }, [profile?.onboarding_completed, loading, navigate]);
 
   const gradeOptions = [
     'Pre-K', 'K', '1st', '2nd', '3rd', '4th', '5th', '6th', 

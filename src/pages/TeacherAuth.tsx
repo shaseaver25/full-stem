@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -20,9 +20,14 @@ const TeacherAuth = () => {
   const { signIn, user } = useAuth();
   const navigate = useNavigate();
 
+  // Use ref to prevent multiple redirect attempts
+  const hasCheckedRole = React.useRef(false);
+  
   useEffect(() => {
     const checkAndRedirect = async () => {
-      if (user) {
+      if (user && !hasCheckedRole.current) {
+        hasCheckedRole.current = true;
+        
         // Check if user has a teacher role before redirecting
         const { data: roleData } = await supabase
           .from('user_roles')
