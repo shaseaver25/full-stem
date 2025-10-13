@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { AlertCircle, BookOpen, Clock, Users, ArrowLeft, Play, Target, CheckCircle, GraduationCap } from 'lucide-react';
@@ -45,6 +45,7 @@ interface Activity {
 
 const ClassLessonPage = () => {
   const { lessonId } = useParams<{ lessonId: string }>();
+  const navigate = useNavigate();
   const [expandedActivities, setExpandedActivities] = useState<string[]>([]);
 
   // Fetch lesson with activities
@@ -102,9 +103,18 @@ const ClassLessonPage = () => {
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
-              <div className="space-y-2">
+              <div className="space-y-4">
                 <div>Lesson not found or failed to load</div>
                 <div className="text-sm opacity-75">Lesson ID: {lessonId}</div>
+                <div className="flex gap-2">
+                  <Button onClick={() => navigate(-1)} variant="outline" size="sm">
+                    <ArrowLeft className="h-4 w-4 mr-2" />
+                    Go Back
+                  </Button>
+                  <Button onClick={() => navigate('/teacher/dashboard')} size="sm">
+                    Return to Dashboard
+                  </Button>
+                </div>
               </div>
             </AlertDescription>
           </Alert>

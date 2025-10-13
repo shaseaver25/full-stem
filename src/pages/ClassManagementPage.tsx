@@ -1,6 +1,5 @@
-
 import React, { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
@@ -13,10 +12,27 @@ import { StudentRosterPanel } from '@/components/teacher/StudentRosterPanel';
 
 const ClassManagementPage = () => {
   const { classId } = useParams<{ classId: string }>();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('lessons');
 
   if (!classId) {
-    return <div className="p-6">Class not found</div>;
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center space-y-4 p-8">
+          <h2 className="text-2xl font-bold">Class Not Found</h2>
+          <p className="text-muted-foreground">The class you're looking for doesn't exist.</p>
+          <div className="flex gap-3 justify-center">
+            <Button onClick={() => navigate(-1)} variant="outline">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Go Back
+            </Button>
+            <Button onClick={() => navigate('/teacher/dashboard')}>
+              Return to Dashboard
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (

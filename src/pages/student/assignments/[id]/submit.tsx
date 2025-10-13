@@ -47,9 +47,17 @@ export default function StudentAssignmentSubmit() {
           <CardContent className="text-center py-8">
             <AlertCircle className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
             <p className="text-muted-foreground">Assignment not found</p>
-            <Button asChild className="mt-4">
-              <Link to="/student">Back to Dashboard</Link>
-            </Button>
+            <div className="flex gap-2 justify-center mt-4">
+              <Button asChild variant="outline">
+                <Link to="/student">
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Go Back
+                </Link>
+              </Button>
+              <Button asChild>
+                <Link to="/student">Back to Dashboard</Link>
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>
