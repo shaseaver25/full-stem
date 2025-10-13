@@ -1,17 +1,32 @@
 import React from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Clock, Eye, Users, BookOpen } from 'lucide-react';
+import { Clock, Eye, Users, BookOpen, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useToast } from '@/hooks/use-toast';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 interface ClassLessonsPanelProps {
   classId: string;
 }
 
 export const ClassLessonsPanel = ({ classId }: ClassLessonsPanelProps) => {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [lessonToDelete, setLessonToDelete] = React.useState<string | null>(null);
+
   // Fetch lessons for this specific class
   const { data: lessons, isLoading } = useQuery({
     queryKey: ['classLessons', classId],
@@ -27,6 +42,34 @@ export const ClassLessonsPanel = ({ classId }: ClassLessonsPanelProps) => {
 
       if (error) throw error;
       return data;
+    },
+  });
+
+  // Mutation to delete a lesson
+  const deleteLesson = useMutation({
+    mutationFn: async (lessonId: string) => {
+      const { error } = await supabase
+        .from('lessons')
+        .delete()
+        .eq('id', lessonId);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['classLessons', classId] });
+      toast({
+        title: 'Lesson removed',
+        description: 'The lesson has been removed from this class.',
+      });
+      setLessonToDelete(null);
+    },
+    onError: (error) => {
+      toast({
+        title: 'Error',
+        description: 'Failed to remove lesson. Please try again.',
+        variant: 'destructive',
+      });
+      console.error('Error deleting lesson:', error);
     },
   });
 
@@ -122,6 +165,14 @@ export const ClassLessonsPanel = ({ classId }: ClassLessonsPanelProps) => {
                       Edit
                     </Button>
                   </Link>
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => setLessonToDelete(lesson.id)}
+                    className="text-destructive hover:text-destructive"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
                 </div>
               </div>
             </div>
@@ -136,6 +187,26 @@ export const ClassLessonsPanel = ({ classId }: ClassLessonsPanelProps) => {
           </Link>
         </div>
       </CardContent>
+
+      <AlertDialog open={!!lessonToDelete} onOpenChange={() => setLessonToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove Lesson</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to remove this lesson from the class? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => lessonToDelete && deleteLesson.mutate(lessonToDelete)}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Remove
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 };
