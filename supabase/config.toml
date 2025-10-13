@@ -75,3 +75,6 @@ verify_jwt = true
 
 [functions.parse-lesson-plan]
 verify_jwt = true
+
+[functions.store-oauth-tokens]
+verify_jwt = true

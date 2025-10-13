@@ -3022,6 +3022,42 @@ export type Database = {
         }
         Relationships: []
       }
+      user_tokens: {
+        Row: {
+          access_token_enc: string | null
+          created_at: string
+          expires_at: string | null
+          id: string
+          provider: string
+          refresh_token_enc: string | null
+          scope: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          access_token_enc?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          provider: string
+          refresh_token_enc?: string | null
+          scope?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          access_token_enc?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          provider?: string
+          refresh_token_enc?: string | null
+          scope?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -3051,9 +3087,17 @@ export type Database = {
         Args: { uid: string }
         Returns: string
       }
+      decrypt_token: {
+        Args: { provider_param: string; user_id_param: string }
+        Returns: string
+      }
       encrypt_mfa_secret: {
         Args: { secret_text: string; uid: string }
         Returns: undefined
+      }
+      encrypt_token: {
+        Args: { token_text: string }
+        Returns: string
       }
       generate_class_code: {
         Args: Record<PropertyKey, never>
