@@ -30,34 +30,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
 
   useEffect(() => {
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        // Defer async operations to avoid deadlocks
-        if (session?.user) {
-          setTimeout(async () => {
-            try {
-              const { data } = await supabase.rpc('is_super_admin', {
-                _user_id: session.user.id
-              });
-              setIsSuperAdmin(data || false);
-            } catch (error) {
-              console.error('Error checking super admin status:', error);
-              setIsSuperAdmin(false);
-            }
-          }, 0);
-        } else {
-          setIsSuperAdmin(false);
-        }
-        
-        setLoading(false);
-      }
-    );
+    let isInitialLoad = true;
 
-    // Get initial session
+    // Get initial session FIRST
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
@@ -78,7 +53,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       
       setLoading(false);
+      isInitialLoad = false;
     });
+
+    // Set up auth state listener for subsequent changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        // Skip the initial SIGNED_IN event to avoid race condition
+        if (isInitialLoad && event === 'SIGNED_IN') {
+          return;
+        }
+
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        // Defer async operations to avoid deadlocks
+        if (session?.user) {
+          setTimeout(async () => {
+            try {
+              const { data } = await supabase.rpc('is_super_admin', {
+                _user_id: session.user.id
+              });
+              setIsSuperAdmin(data || false);
+            } catch (error) {
+              console.error('Error checking super admin status:', error);
+              setIsSuperAdmin(false);
+            }
+          }, 0);
+        } else {
+          setIsSuperAdmin(false);
+        }
+      }
+    );
 
     return () => subscription.unsubscribe();
   }, []);
