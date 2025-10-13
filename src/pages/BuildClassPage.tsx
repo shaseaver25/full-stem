@@ -18,6 +18,16 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 const BuildClassPage = () => {
   const { classId } = useParams<{ classId?: string }>();
@@ -26,6 +36,7 @@ const BuildClassPage = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [showAddStandard, setShowAddStandard] = useState(false);
   const [newStandard, setNewStandard] = useState({ code: '', description: '' });
+  const [lessonToDelete, setLessonToDelete] = useState<string | null>(null);
   const queryClient = useQueryClient();
   
   const {
@@ -195,6 +206,34 @@ const BuildClassPage = () => {
         variant: "destructive",
       });
       console.error('Error deleting standard:', error);
+    }
+  });
+
+  // Delete lesson mutation
+  const deleteLessonMutation = useMutation({
+    mutationFn: async (lessonId: string) => {
+      const { error } = await supabase
+        .from('lessons')
+        .delete()
+        .eq('id', lessonId);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['classLessons', classId] });
+      toast({
+        title: "Success",
+        description: "Lesson removed successfully.",
+      });
+      setLessonToDelete(null);
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to remove lesson. Please try again.",
+        variant: "destructive",
+      });
+      console.error('Error deleting lesson:', error);
     }
   });
 
@@ -489,13 +528,23 @@ const BuildClassPage = () => {
                           )}
                         </div>
                       </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => navigate(`/teacher/build-lesson/${classId}?lessonId=${lesson.id}`)}
-                      >
-                        Edit
-                      </Button>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => navigate(`/teacher/build-lesson/${classId}?lessonId=${lesson.id}`)}
+                        >
+                          Edit
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setLessonToDelete(lesson.id)}
+                          className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -518,6 +567,27 @@ const BuildClassPage = () => {
             </CardContent>
           </Card>
         )}
+
+        {/* Delete Lesson Confirmation Dialog */}
+        <AlertDialog open={!!lessonToDelete} onOpenChange={() => setLessonToDelete(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Remove Lesson</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to remove this lesson from the class? This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => lessonToDelete && deleteLessonMutation.mutate(lessonToDelete)}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                Remove
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   );
