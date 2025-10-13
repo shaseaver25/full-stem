@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, BookOpen, Users, ClipboardList, MessageSquare, Calendar, Clock } from 'lucide-react';
+import { ArrowLeft, BookOpen, Users, ClipboardList, MessageSquare, Calendar, Clock, PlusCircle } from 'lucide-react';
 import { useClass, useClassAssignments } from '@/hooks/useClassManagement';
 import { RosterManagement } from '@/components/teacher/RosterManagement';
 import { AssignmentWizard } from '@/components/teacher/AssignmentWizard';
@@ -156,6 +156,10 @@ export default function ClassDetailPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="flex flex-wrap gap-3">
+              <Button onClick={() => navigate(`/teacher/lesson-builder?classId=${classId}`)}>
+                <PlusCircle className="h-4 w-4 mr-2" />
+                Build a Lesson
+              </Button>
               <Button onClick={() => setAssignmentWizardOpen(true)}>
                 <BookOpen className="h-4 w-4 mr-2" />
                 Assign Lesson

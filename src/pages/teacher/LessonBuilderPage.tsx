@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -27,6 +27,7 @@ export default function LessonBuilderPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
 
   const [title, setTitle] = useState('');
   const [lessonNumber, setLessonNumber] = useState<number>(1);
@@ -37,6 +38,14 @@ export default function LessonBuilderPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [classId, setClassId] = useState<string>('');
   const [isMenuCollapsed, setIsMenuCollapsed] = useState(false);
+
+  useEffect(() => {
+    // Check for classId in URL params (for new lessons)
+    const classIdParam = searchParams.get('classId');
+    if (classIdParam && !lessonId) {
+      setClassId(classIdParam);
+    }
+  }, [searchParams, lessonId]);
 
   useEffect(() => {
     if (lessonId) {
