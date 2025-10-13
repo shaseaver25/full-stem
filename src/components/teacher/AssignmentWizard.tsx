@@ -54,7 +54,7 @@ const assignmentSchema = z.object({
   }),
   title: z.string().min(1, 'Title is required'),
   description: z.string().optional(),
-  selectedComponents: z.array(z.string()).min(1, 'Select at least one component'),
+  selectedComponents: z.array(z.string()), // Made optional - can be empty
   dueDate: z.date().optional(),
   releaseDate: z.date().optional(),
   allowResubmission: z.boolean(),
@@ -116,7 +116,12 @@ export function AssignmentWizard({ classId, open, onOpenChange, initialLessonId 
         isValid = await form.trigger('lessonId');
         break;
       case 'components':
-        isValid = await form.trigger('selectedComponents');
+        // Skip validation if no components exist
+        if (components.length === 0) {
+          isValid = true;
+        } else {
+          isValid = await form.trigger('selectedComponents');
+        }
         break;
       case 'schedule':
         isValid = await form.trigger(['title', 'points', 'gradingCategory']);
@@ -157,9 +162,15 @@ export function AssignmentWizard({ classId, open, onOpenChange, initialLessonId 
         // Error handling is done in the mutation hook
       }
     } else {
-      // Move to next step
+      // Move to next step - skip components step if no components available
       const steps: Step[] = ['lesson', 'components', 'schedule', 'differentiate', 'review'];
-      const currentIndex = steps.indexOf(currentStep);
+      let currentIndex = steps.indexOf(currentStep);
+      
+      // If moving from lesson to components and no components exist, skip to schedule
+      if (currentStep === 'lesson' && components.length === 0) {
+        currentIndex = 1; // Skip to schedule (index 2)
+      }
+      
       if (currentIndex < steps.length - 1) {
         setCurrentStep(steps[currentIndex + 1]);
       }
@@ -168,7 +179,14 @@ export function AssignmentWizard({ classId, open, onOpenChange, initialLessonId 
 
   const goToPreviousStep = () => {
     const steps: Step[] = ['lesson', 'components', 'schedule', 'differentiate', 'review'];
-    const currentIndex = steps.indexOf(currentStep);
+    let currentIndex = steps.indexOf(currentStep);
+    
+    // If on schedule and no components exist, skip back to lesson
+    if (currentStep === 'schedule' && components.length === 0) {
+      setCurrentStep('lesson');
+      return;
+    }
+    
     if (currentIndex > 0) {
       setCurrentStep(steps[currentIndex - 1]);
     }
@@ -344,8 +362,13 @@ export function AssignmentWizard({ classId, open, onOpenChange, initialLessonId 
                   />
 
                   {components.length === 0 && (
-                    <div className="text-center py-8 text-muted-foreground">
-                      No components available for this lesson.
+                    <div className="text-center py-8">
+                      <p className="text-muted-foreground mb-2">
+                        No components available for this lesson.
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        The entire lesson will be assigned. Click Next to continue.
+                      </p>
                     </div>
                   )}
                 </div>
