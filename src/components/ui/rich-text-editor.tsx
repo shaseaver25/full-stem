@@ -17,8 +17,9 @@ const modules = {
     ['bold', 'italic', 'underline', 'strike'],
     [{ 'list': 'ordered'}, { 'list': 'bullet' }],
     [{ 'indent': '-1'}, { 'indent': '+1' }],
-    ['link'],
+    ['link', 'image'],
     [{ 'align': [] }],
+    [{ 'color': [] }, { 'background': [] }],
     ['clean']
   ],
 };
@@ -27,7 +28,8 @@ const formats = [
   'header',
   'bold', 'italic', 'underline', 'strike',
   'list', 'bullet', 'indent',
-  'link', 'align'
+  'link', 'image', 'align',
+  'color', 'background'
 ];
 
 export const RichTextEditor: React.FC<RichTextEditorProps> = ({

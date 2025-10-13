@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import { GripVertical, Trash2, ChevronDown, ChevronUp, Copy } from 'lucide-react';
 import { DraggableProvidedDragHandleProps } from 'react-beautiful-dnd';
 
@@ -94,11 +95,10 @@ export function LessonComponentCard({
             </div>
             <div>
               <Label>Content</Label>
-              <Textarea
+              <RichTextEditor
                 value={component.content.body || ''}
-                onChange={(e) => handleContentChange('body', e.target.value)}
-                placeholder="Page content (supports markdown)"
-                rows={6}
+                onChange={(value) => handleContentChange('body', value)}
+                placeholder="Enter page content with formatting, links, and images..."
               />
             </div>
           </>
