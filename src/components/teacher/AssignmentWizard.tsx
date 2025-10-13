@@ -49,7 +49,9 @@ import {
 import { LessonComponent } from '@/services/classManagementService';
 
 const assignmentSchema = z.object({
-  lessonId: z.number().min(1, 'Please select a lesson'),
+  lessonId: z.union([z.number(), z.string()]).refine(val => val !== 0 && val !== '', {
+    message: 'Please select a lesson'
+  }),
   title: z.string().min(1, 'Title is required'),
   description: z.string().optional(),
   selectedComponents: z.array(z.string()).min(1, 'Select at least one component'),
@@ -66,17 +68,17 @@ interface AssignmentWizardProps {
   classId: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  initialLessonId?: number;
+  initialLessonId?: number | string; // Support both numeric and UUID lesson IDs
 }
 
 type Step = 'lesson' | 'components' | 'schedule' | 'differentiate' | 'review';
 
 export function AssignmentWizard({ classId, open, onOpenChange, initialLessonId }: AssignmentWizardProps) {
   const [currentStep, setCurrentStep] = useState<Step>('lesson');
-  const [selectedLessonId, setSelectedLessonId] = useState<number | null>(initialLessonId || null);
+  const [selectedLessonId, setSelectedLessonId] = useState<number | string | null>(initialLessonId || null);
   const [studentOverrides, setStudentOverrides] = useState<Record<string, any>>({});
 
-  const { data: lessons = [] } = useLessons();
+  const { data: lessons = [] } = useLessons(classId);
   const { data: components = [] } = useLessonComponents(selectedLessonId ? String(selectedLessonId) : '');
   const { data: classStudents = [] } = useClassStudents(classId);
   const assignLesson = useAssignLesson(classId);
@@ -84,7 +86,7 @@ export function AssignmentWizard({ classId, open, onOpenChange, initialLessonId 
   const form = useForm<AssignmentForm>({
     resolver: zodResolver(assignmentSchema),
     defaultValues: {
-      lessonId: initialLessonId || 0,
+      lessonId: initialLessonId || '',
       title: '',
       description: '',
       selectedComponents: [],
@@ -172,7 +174,7 @@ export function AssignmentWizard({ classId, open, onOpenChange, initialLessonId 
     }
   };
 
-  const selectedLesson = lessons.find(l => l['Lesson ID'] === selectedLessonId);
+  const selectedLesson = lessons.find(l => l.id === selectedLessonId || l['Lesson ID'] === selectedLessonId);
   const selectedComponentsData = components.filter(c => watchedComponents.includes(c.id));
 
   return (
@@ -232,23 +234,29 @@ export function AssignmentWizard({ classId, open, onOpenChange, initialLessonId 
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Lesson</FormLabel>
-                        <Select onValueChange={(value) => field.onChange(Number(value))} value={field.value?.toString()}>
+                        <Select onValueChange={(value) => field.onChange(value)} value={field.value?.toString()}>
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Select a lesson" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {lessons.map((lesson) => (
-                              <SelectItem key={lesson['Lesson ID']} value={lesson['Lesson ID'].toString()}>
-                                <div>
-                                  <div className="font-medium">{lesson.Title}</div>
-                                  {lesson.Track && (
-                                    <div className="text-xs text-muted-foreground">{lesson.Track}</div>
-                                  )}
-                                </div>
-                              </SelectItem>
-                            ))}
+                            {lessons.length === 0 ? (
+                              <div className="p-4 text-sm text-muted-foreground text-center">
+                                No lessons found for this class. Create a lesson first.
+                              </div>
+                            ) : (
+                              lessons.map((lesson) => (
+                                <SelectItem key={lesson.id || lesson['Lesson ID']} value={(lesson.id || lesson['Lesson ID']).toString()}>
+                                  <div>
+                                    <div className="font-medium">{lesson.title || lesson.Title}</div>
+                                    {lesson.description && (
+                                      <div className="text-xs text-muted-foreground line-clamp-1">{lesson.description}</div>
+                                    )}
+                                  </div>
+                                </SelectItem>
+                              ))
+                            )}
                           </SelectContent>
                         </Select>
                         <FormMessage />
@@ -259,16 +267,11 @@ export function AssignmentWizard({ classId, open, onOpenChange, initialLessonId 
                   {selectedLesson && (
                     <Card>
                       <CardHeader>
-                        <CardTitle className="text-base">{selectedLesson.Title}</CardTitle>
-                        {selectedLesson.Track && (
-                          <Badge variant="outline" className="w-fit">
-                            {selectedLesson.Track}
-                          </Badge>
-                        )}
+                        <CardTitle className="text-base">{selectedLesson.title || selectedLesson.Title}</CardTitle>
                       </CardHeader>
-                      {selectedLesson.Description && (
+                      {(selectedLesson.description || selectedLesson.Description) && (
                         <CardContent>
-                          <p className="text-sm text-muted-foreground">{selectedLesson.Description}</p>
+                          <p className="text-sm text-muted-foreground">{selectedLesson.description || selectedLesson.Description}</p>
                         </CardContent>
                       )}
                     </Card>

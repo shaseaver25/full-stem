@@ -13,13 +13,13 @@ export interface LessonComponent {
 
 // Lesson types (matching database structure)
 export interface Lesson {
-  "Lesson ID": number;
+  "Lesson ID": number | string; // Support both numeric and UUID IDs
   "Title": string;
   "Description"?: string;
   "Track"?: string;
   slug?: string;
   // Mapped properties for easier access
-  id: number;
+  id: number | string; // Support both numeric and UUID IDs
   title: string;
   description?: string;
   subject?: string;
@@ -68,7 +68,7 @@ export interface StudentOverride {
 export interface ClassAssignment {
   id: string;
   class_id: string;
-  lesson_id: number;
+  lesson_id: number | string; // Support both numeric and UUID lesson IDs
   title: string;
   description?: string;
   selected_components: string[];
@@ -88,7 +88,7 @@ export interface AssignmentWithSubmissions extends ClassAssignment {
 // Assignment wizard form data
 export interface AssignmentWizardData {
   step: number;
-  lessonId?: number;
+  lessonId?: number | string; // Support both numeric and UUID lesson IDs
   selectedComponents: string[];
   dueAt: string;
   releaseAt?: string;
@@ -108,7 +108,7 @@ export interface AssignmentStatusInfo {
 // Legacy assignment types (for backward compatibility)
 export interface Assignment {
   id: string;
-  lesson_id: number;
+  lesson_id: number | string; // Support both numeric and UUID lesson IDs
   title: string;
   instructions: string;
   file_types_allowed: string[];

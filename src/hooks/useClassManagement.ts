@@ -161,29 +161,41 @@ export const useRemoveStudent = (classId: string) => {
   });
 };
 
-// Fetch lessons for assignment wizard
-export const useLessons = () => {
+// Fetch lessons for assignment wizard - filtered by class
+export const useLessons = (classId?: string) => {
   return useQuery({
-    queryKey: classQueryKeys.lessons(),
+    queryKey: [...classQueryKeys.lessons(), classId],
     queryFn: async (): Promise<Lesson[]> => {
-      const { data, error } = await supabase
-        .from('Lessons')
+      let query = supabase
+        .from('lessons')
         .select('*')
-        .order('Title', { ascending: true });
+        .order('title', { ascending: true });
+
+      // Filter by class_id if provided
+      if (classId) {
+        query = query.eq('class_id', classId);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
       
       // Map database structure to our interface
       return (data || []).map(lesson => ({
         ...lesson,
-        id: lesson["Lesson ID"], // Use the numeric Lesson ID, not the UUID id
-        title: lesson.Title,
-        description: lesson.Description || undefined,
-        track: lesson.Track || undefined,
-        subject: lesson.Track || undefined, // Using Track as subject for now
-        grade_level: undefined, // Not available in current schema
+        id: lesson.id,
+        'Lesson ID': lesson.id,
+        title: lesson.title,
+        Title: lesson.title,
+        description: lesson.description || undefined,
+        Description: lesson.description || undefined,
+        track: undefined,
+        Track: undefined,
+        subject: undefined,
+        grade_level: undefined,
       }));
     },
+    enabled: classId ? !!classId : true,
   });
 };
 
@@ -362,7 +374,7 @@ export const useAssignLesson = (classId: string) => {
       options,
       studentOverrides = []
     }: {
-      lessonId: number;
+      lessonId: number | string;
       componentIds: string[];
       dueAt: string;
       releaseAt?: string;
