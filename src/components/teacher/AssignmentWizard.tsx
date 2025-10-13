@@ -145,6 +145,8 @@ export function AssignmentWizard({ classId, open, onOpenChange, initialLessonId 
           componentIds: data.selectedComponents,
           dueAt: data.dueDate?.toISOString() || new Date().toISOString(),
           releaseAt: data.releaseDate?.toISOString(),
+          title: data.title,
+          description: data.description,
           options: {
             allow_resubmission: data.allowResubmission,
             grading_category: data.gradingCategory,

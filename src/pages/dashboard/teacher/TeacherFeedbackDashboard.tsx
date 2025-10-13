@@ -141,12 +141,16 @@ export default function TeacherFeedbackDashboard() {
         `)
         .eq('classes.teacher_id', teacherProfile.id);
 
-      // Get assignment details
-      const lessonIds = [...new Set(classAssignments?.map(ca => ca.lesson_id) || [])];
-      const { data: assignments } = await supabase
-        .from('assignments')
-        .select('id, title, lesson_id')
-        .in('lesson_id', lessonIds);
+      // Get assignment details - skip old numeric lesson IDs since we now use UUIDs
+      const lessonIds = [...new Set(classAssignments?.map(ca => ca.lesson_id).filter(id => typeof id === 'number') || [])];
+      let assignments: any[] = [];
+      if (lessonIds.length > 0) {
+        const { data } = await supabase
+          .from('assignments')
+          .select('id, title, lesson_id')
+          .in('lesson_id', lessonIds as number[]);
+        assignments = data || [];
+      }
 
       // Get student info
       const studentIds = [...new Set(submissionsData?.map(s => s.user_id) || [])];
@@ -172,7 +176,7 @@ export default function TeacherFeedbackDashboard() {
       const formatted = teacherSubmissions.map(sub => {
         const gradeInfo = gradesData?.find(g => g.submission_id === sub.id);
         const classAssignment = classAssignments?.find(ca => ca.id === sub.assignment_id);
-        const assignment = assignments?.find(a => a.lesson_id === classAssignment?.lesson_id);
+        const assignment = assignments?.find(a => String(a.lesson_id) === String(classAssignment?.lesson_id));
         const student = students?.find(s => s.user_id === sub.user_id);
         
         return {

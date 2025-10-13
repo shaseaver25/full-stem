@@ -372,7 +372,11 @@ export const useAssignLesson = (classId: string) => {
       dueAt,
       releaseAt,
       options,
-      studentOverrides = []
+      studentOverrides = [],
+      title,
+      description,
+      instructions,
+      rubric
     }: {
       lessonId: number | string;
       componentIds: string[];
@@ -380,6 +384,10 @@ export const useAssignLesson = (classId: string) => {
       releaseAt?: string;
       options: AssignmentOptions;
       studentOverrides?: StudentOverride[];
+      title?: string;
+      description?: string;
+      instructions?: string;
+      rubric?: string;
     }) => {
       const { data, error } = await supabase.rpc('rpc_assign_lesson_to_class', {
         p_class_id: classId,
@@ -388,6 +396,10 @@ export const useAssignLesson = (classId: string) => {
         p_due_at: dueAt,
         p_release_at: releaseAt || null,
         p_options: options as any,
+        p_title: title || null,
+        p_description: description || null,
+        p_instructions: instructions || null,
+        p_rubric: rubric || null,
       });
 
       if (error) throw error;

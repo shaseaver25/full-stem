@@ -3104,14 +3104,27 @@ export type Database = {
         Returns: undefined
       }
       rpc_assign_lesson_to_class: {
-        Args: {
-          p_class_id: string
-          p_component_ids: string[]
-          p_due_at: string
-          p_lesson_id: string
-          p_options?: Json
-          p_release_at?: string
-        }
+        Args:
+          | {
+              p_class_id: string
+              p_component_ids: string[]
+              p_description?: string
+              p_due_at: string
+              p_instructions?: string
+              p_lesson_id: string
+              p_options?: Json
+              p_release_at?: string
+              p_rubric?: string
+              p_title?: string
+            }
+          | {
+              p_class_id: string
+              p_component_ids: string[]
+              p_due_at: string
+              p_lesson_id: string
+              p_options?: Json
+              p_release_at?: string
+            }
         Returns: string
       }
       rpc_backfill_assignments_for_student: {

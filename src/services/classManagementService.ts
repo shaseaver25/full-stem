@@ -223,7 +223,7 @@ export const classManagementApi = {
   // Assignments
   async createAssignment(assignmentData: {
     classId: string;
-    lessonId?: number;
+    lessonId?: string; // Changed to string for UUID support
     title: string;
     description?: string;
     selectedComponents: string[];
@@ -265,7 +265,7 @@ export const classManagementApi = {
       if (submissionError) throw submissionError;
     }
 
-    return data as ClassAssignment;
+    return data;
   },
 
   async getClassAssignments(classId: string) {
@@ -276,7 +276,7 @@ export const classManagementApi = {
       .order('created_at', { ascending: false });
 
     if (error) throw error;
-    return data as ClassAssignment[];
+    return data;
   },
 
   async getAssignmentSubmissions(assignmentId: string) {
