@@ -457,7 +457,7 @@ const BuildClassPage = () => {
                 Lessons
               </CardTitle>
               <Button
-                onClick={() => navigate(`/teacher/build-lesson/${classId}`)}
+                onClick={() => navigate('/teacher/lesson-builder')}
                 className="gap-2"
               >
                 <Plus className="h-4 w-4" />
@@ -507,7 +507,7 @@ const BuildClassPage = () => {
                     Start building your class by adding lessons
                   </p>
                   <Button
-                    onClick={() => navigate(`/teacher/build-lesson/${classId}`)}
+                    onClick={() => navigate('/teacher/lesson-builder')}
                     className="gap-2"
                   >
                     <Plus className="h-4 w-4" />

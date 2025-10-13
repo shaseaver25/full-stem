@@ -38,7 +38,6 @@ import GradebookPage from "./pages/GradebookPage";
 import AssignmentSubmissionsPage from "./pages/AssignmentSubmissionsPage";
 import AdminDashboard from "./pages/AdminDashboard";
 import BuildClassPage from "./pages/BuildClassPage";
-import BuildLessonPage from "./pages/BuildLessonPage";
 import LessonBuilderPage from "./pages/teacher/LessonBuilderPage";
 import AnalyticsDashboard from "./pages/AnalyticsDashboard";
 import ContentManagementPage from "./pages/ContentManagementPage";
@@ -450,15 +449,6 @@ function AppContent() {
           element={
             <ProtectedTeacherRoute requireOnboarding={true}>
               <BuildClassPage />
-            </ProtectedTeacherRoute>
-          } 
-        />
-        
-        <Route
-          path="/teacher/build-lesson/:classId?" 
-          element={
-            <ProtectedTeacherRoute requireOnboarding={true}>
-              <BuildLessonPage />
             </ProtectedTeacherRoute>
           } 
         />
