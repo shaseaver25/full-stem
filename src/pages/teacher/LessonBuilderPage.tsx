@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Save, Eye } from 'lucide-react';
+import { ArrowLeft, Save, Eye, ChevronUp, ChevronDown } from 'lucide-react';
 import { LessonDetailsForm } from '@/components/lesson-builder/LessonDetailsForm';
 import { ComponentList } from '@/components/lesson-builder/ComponentList';
 import { AddComponentButton } from '@/components/lesson-builder/AddComponentButton';
@@ -36,6 +36,7 @@ export default function LessonBuilderPage() {
   const [isPreview, setIsPreview] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [classId, setClassId] = useState<string>('');
+  const [isMenuCollapsed, setIsMenuCollapsed] = useState(false);
 
   useEffect(() => {
     if (lessonId) {
@@ -206,36 +207,58 @@ export default function LessonBuilderPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="border-b bg-card">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => navigate(-1)}
-              >
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back
-              </Button>
-              <h1 className="text-2xl font-bold">
-                {lessonId ? 'Edit Lesson' : 'Create Lesson'}
-              </h1>
+      <div className="border-b bg-card relative">
+        <div 
+          className={`container mx-auto px-4 transition-all duration-300 overflow-hidden ${
+            isMenuCollapsed ? 'py-2' : 'py-4'
+          }`}
+          style={{ maxHeight: isMenuCollapsed ? '56px' : '500px' }}
+        >
+          {!isMenuCollapsed && (
+            <div className="flex items-center justify-between animate-fade-in">
+              <div className="flex items-center gap-4">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => navigate(-1)}
+                >
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Back
+                </Button>
+                <h1 className="text-2xl font-bold">
+                  {lessonId ? 'Edit Lesson' : 'Create Lesson'}
+                </h1>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setIsPreview(!isPreview)}
+                >
+                  <Eye className="h-4 w-4 mr-2" />
+                  {isPreview ? 'Edit' : 'Preview'}
+                </Button>
+                <Button onClick={handleSave} disabled={isSaving}>
+                  <Save className="h-4 w-4 mr-2" />
+                  {isSaving ? 'Saving...' : 'Save Lesson'}
+                </Button>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                onClick={() => setIsPreview(!isPreview)}
-              >
-                <Eye className="h-4 w-4 mr-2" />
-                {isPreview ? 'Edit' : 'Preview'}
-              </Button>
-              <Button onClick={handleSave} disabled={isSaving}>
-                <Save className="h-4 w-4 mr-2" />
-                {isSaving ? 'Saving...' : 'Save Lesson'}
-              </Button>
-            </div>
-          </div>
+          )}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsMenuCollapsed(!isMenuCollapsed)}
+            className={`absolute right-4 transition-all duration-300 ${
+              isMenuCollapsed ? 'top-2' : 'top-4'
+            }`}
+            aria-label={isMenuCollapsed ? 'Expand menu' : 'Collapse menu'}
+          >
+            {isMenuCollapsed ? (
+              <ChevronDown className="h-4 w-4" />
+            ) : (
+              <ChevronUp className="h-4 w-4" />
+            )}
+          </Button>
         </div>
       </div>
 
