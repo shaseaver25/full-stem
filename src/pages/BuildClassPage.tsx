@@ -532,7 +532,7 @@ const BuildClassPage = () => {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => navigate(`/teacher/build-lesson/${classId}?lessonId=${lesson.id}`)}
+                          onClick={() => navigate(`/teacher/lesson-builder/${lesson.id}`)}
                         >
                           Edit
                         </Button>
