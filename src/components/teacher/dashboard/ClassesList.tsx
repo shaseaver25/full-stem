@@ -82,7 +82,7 @@ export const ClassesList = ({ classes, loading }: ClassesListProps) => {
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  <Link to={`/teacher/classes/${classItem.id}`}>
+                  <Link to={`/classes/${classItem.id}`}>
                     <Button variant="outline" size="sm">
                       <Eye className="h-4 w-4 mr-1" />
                       View

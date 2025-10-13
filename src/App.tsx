@@ -60,7 +60,7 @@ import TeacherFeedbackDashboard from "@/pages/dashboard/teacher/TeacherFeedbackD
 import LearningGeniusSurveyPage from "./pages/LearningGeniusSurveyPage";
 import JoinClassPage from "./pages/JoinClassPage";
 import MyClassesPage from "./pages/classes/MyClassesPage";
-import StudentClassDetailPage from "./pages/classes/ClassDetailPage";
+import RoleAwareClassDetailPage from "./pages/classes/RoleAwareClassDetailPage";
 import AssignmentsListPage from "./pages/assignments/AssignmentsListPage";
 import AssignmentDetailPage from "./pages/assignments/AssignmentDetailPage";
 import MyGradesPage from "./pages/grades/MyGradesPage";
@@ -130,8 +130,8 @@ function AppContent() {
         <Route 
           path="/classes/:id" 
           element={
-            <RequireRole allowedRoles={['student']}>
-              <StudentClassDetailPage />
+            <RequireRole allowedRoles={['student', 'teacher']}>
+              <RoleAwareClassDetailPage />
             </RequireRole>
           } 
         />

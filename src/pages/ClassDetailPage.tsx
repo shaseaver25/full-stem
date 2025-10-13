@@ -12,16 +12,19 @@ import { format } from 'date-fns';
 import Header from '@/components/Header';
 
 export default function ClassDetailPage() {
-  const { classId } = useParams<{ classId: string }>();
+  const { classId, id } = useParams<{ classId?: string; id?: string }>();
   const navigate = useNavigate();
   const [assignmentWizardOpen, setAssignmentWizardOpen] = useState(false);
 
-  if (!classId) {
+  // Support both :classId and :id params for flexibility
+  const resolvedClassId = classId || id;
+
+  if (!resolvedClassId) {
     return <div>Class not found</div>;
   }
 
-  const { data: classData, isLoading: classLoading } = useClass(classId);
-  const { data: assignments = [], isLoading: assignmentsLoading } = useClassAssignments(classId);
+  const { data: classData, isLoading: classLoading } = useClass(resolvedClassId);
+  const { data: assignments = [], isLoading: assignmentsLoading } = useClassAssignments(resolvedClassId);
 
   if (classLoading) {
     return <div>Loading...</div>;
@@ -156,7 +159,7 @@ export default function ClassDetailPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="flex flex-wrap gap-3">
-              <Button onClick={() => navigate(`/teacher/lesson-builder?classId=${classId}`)}>
+              <Button onClick={() => navigate(`/teacher/lesson-builder?classId=${resolvedClassId}`)}>
                 <PlusCircle className="h-4 w-4 mr-2" />
                 Build a Lesson
               </Button>
@@ -178,7 +181,7 @@ export default function ClassDetailPage() {
 
         {/* Roster Tab */}
         <TabsContent value="roster">
-          <RosterManagement classId={classId} maxStudents={classData.max_students} />
+          <RosterManagement classId={resolvedClassId} maxStudents={classData.max_students} />
         </TabsContent>
 
         {/* Assignments Tab */}
@@ -283,7 +286,7 @@ export default function ClassDetailPage() {
       </Tabs>
 
       <AssignmentWizard
-        classId={classId}
+        classId={resolvedClassId}
         open={assignmentWizardOpen}
         onOpenChange={setAssignmentWizardOpen}
       />
