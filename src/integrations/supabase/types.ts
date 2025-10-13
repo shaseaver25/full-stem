@@ -495,7 +495,7 @@ export type Database = {
           due_date: string | null
           id: string
           instructions: string | null
-          lesson_id: number | null
+          lesson_id: string | null
           max_points: number | null
           options: Json
           release_at: string | null
@@ -512,7 +512,7 @@ export type Database = {
           due_date?: string | null
           id?: string
           instructions?: string | null
-          lesson_id?: number | null
+          lesson_id?: string | null
           max_points?: number | null
           options?: Json
           release_at?: string | null
@@ -529,7 +529,7 @@ export type Database = {
           due_date?: string | null
           id?: string
           instructions?: string | null
-          lesson_id?: number | null
+          lesson_id?: string | null
           max_points?: number | null
           options?: Json
           release_at?: string | null
@@ -550,8 +550,8 @@ export type Database = {
             foreignKeyName: "class_assignments_new_lesson_id_fkey"
             columns: ["lesson_id"]
             isOneToOne: false
-            referencedRelation: "Lessons"
-            referencedColumns: ["Lesson ID"]
+            referencedRelation: "lessons"
+            referencedColumns: ["id"]
           },
         ]
       }
