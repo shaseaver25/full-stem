@@ -76,6 +76,7 @@ import { AdminOnboarding } from "@/components/admin/AdminOnboarding";
 import SystemDashboard from "./pages/SystemDashboard";
 import MFASetup from "./pages/MFASetup";
 import MFAVerify from "./pages/MFAVerify";
+import AuthCallback from "./pages/AuthCallback";
 
 const queryClient = new QueryClient();
 
@@ -91,6 +92,7 @@ function AppContent() {
         <Route path="/" element={<Index />} />
         <Route path="/bootstrap" element={<BootstrapDemo />} />
         <Route path="/auth" element={<Auth />} />
+        <Route path="/auth/callback" element={<AuthCallback />} />
         <Route path="/auth/setup-mfa" element={<MFASetup />} />
         <Route path="/auth/verify-mfa" element={<MFAVerify />} />
         <Route path="/signup/student" element={<StudentSignupForm />} />
