@@ -1685,7 +1685,7 @@ export type Database = {
           enabled: boolean | null
           id: string
           language_code: string | null
-          lesson_id: number
+          lesson_id: string
           order: number
           read_aloud: boolean | null
           reading_level: number | null
@@ -1698,7 +1698,7 @@ export type Database = {
           enabled?: boolean | null
           id?: string
           language_code?: string | null
-          lesson_id: number
+          lesson_id: string
           order?: number
           read_aloud?: boolean | null
           reading_level?: number | null
@@ -1711,7 +1711,7 @@ export type Database = {
           enabled?: boolean | null
           id?: string
           language_code?: string | null
-          lesson_id?: number
+          lesson_id?: string
           order?: number
           read_aloud?: boolean | null
           reading_level?: number | null
@@ -1722,8 +1722,8 @@ export type Database = {
             foreignKeyName: "lesson_components_lesson_id_fkey"
             columns: ["lesson_id"]
             isOneToOne: false
-            referencedRelation: "Lessons"
-            referencedColumns: ["Lesson ID"]
+            referencedRelation: "lessons"
+            referencedColumns: ["id"]
           },
         ]
       }

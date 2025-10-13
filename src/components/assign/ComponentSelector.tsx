@@ -21,7 +21,7 @@ export function ComponentSelector({
 }: ComponentSelectorProps) {
   const [openGroups, setOpenGroups] = useState<Set<string>>(new Set());
   
-  const { data: components = [], isLoading } = useLessonComponents(lessonId);
+  const { data: components = [], isLoading } = useLessonComponents(String(lessonId));
   
   // Group components by type
   const groupedComponents = groupComponentsByType(components);

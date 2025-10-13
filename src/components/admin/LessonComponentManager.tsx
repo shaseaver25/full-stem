@@ -118,7 +118,7 @@ const LessonComponentManager: React.FC = () => {
       }
 
       await createComponents.mutateAsync([{
-        lesson_id: Number(selectedLessonId),
+        lesson_id: selectedLessonId,
         component_type: newComponent.component_type as any,
         content,
         reading_level: newComponent.reading_level ? Number(newComponent.reading_level) : undefined,

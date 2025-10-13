@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 export interface LessonComponent {
   id: string;
-  lesson_id: number;
+  lesson_id: string;
   component_type: 'video' | 'instructions' | 'assignment' | 'activity' | 'resources' | 'discussion' | 'reflection' | 'formativeCheck' | 'rubric' | 'codingEditor' | 'aiAssistant' | 'peerReview' | 'checklist' | 'liveDemo' | 'slides';
   content: any;
   reading_level?: number;
@@ -22,7 +22,7 @@ export const useLessonComponents = (lessonId: string | number) => {
       const { data, error } = await supabase
         .from('lesson_components')
         .select('*')
-        .eq('lesson_id', Number(lessonId))
+        .eq('lesson_id', String(lessonId))
         .eq('enabled', true)
         .order('order');
       

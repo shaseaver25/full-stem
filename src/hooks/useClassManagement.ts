@@ -18,7 +18,7 @@ export const classQueryKeys = {
   assignments: (classId: string) => ['class', classId, 'assignments'] as const,
   assignment: (id: string) => ['assignment', id] as const,
   lessons: () => ['lessons'] as const,
-  lessonComponents: (lessonId: number) => ['lesson', lessonId, 'components'] as const,
+  lessonComponents: (lessonId: string) => ['lesson', lessonId, 'components'] as const,
   availableStudents: () => ['students', 'available'] as const,
 };
 
@@ -188,7 +188,7 @@ export const useLessons = () => {
 };
 
 // Fetch lesson components
-export const useLessonComponents = (lessonId: number) => {
+export const useLessonComponents = (lessonId: string) => {
   return useQuery({
     queryKey: classQueryKeys.lessonComponents(lessonId),
     queryFn: async (): Promise<LessonComponent[]> => {

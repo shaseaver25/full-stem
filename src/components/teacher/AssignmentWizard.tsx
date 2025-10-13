@@ -77,7 +77,7 @@ export function AssignmentWizard({ classId, open, onOpenChange, initialLessonId 
   const [studentOverrides, setStudentOverrides] = useState<Record<string, any>>({});
 
   const { data: lessons = [] } = useLessons();
-  const { data: components = [] } = useLessonComponents(selectedLessonId || 0);
+  const { data: components = [] } = useLessonComponents(selectedLessonId ? String(selectedLessonId) : '');
   const { data: classStudents = [] } = useClassStudents(classId);
   const assignLesson = useAssignLesson(classId);
 

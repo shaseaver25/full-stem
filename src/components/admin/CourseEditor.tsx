@@ -96,7 +96,7 @@ const CourseEditor = () => {
       const { data, error } = await supabase
         .from('lesson_components')
         .select('*')
-        .eq('lesson_id', editingLesson)
+        .eq('lesson_id', String(editingLesson))
         .order('order');
       
       if (error) {
@@ -116,7 +116,7 @@ const CourseEditor = () => {
         .from('lesson_components')
         .insert({
           ...component,
-          lesson_id: editingLesson,
+          lesson_id: String(editingLesson),
         })
         .select();
       

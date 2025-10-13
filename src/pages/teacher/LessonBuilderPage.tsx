@@ -62,7 +62,7 @@ export default function LessonBuilderPage() {
       const { data: componentsData, error: componentsError } = await supabase
         .from('lesson_components')
         .select('*')
-        .eq('lesson_id', parseInt(lessonId))
+        .eq('lesson_id', lessonId)
         .order('order');
 
       if (componentsError) throw componentsError;
@@ -133,13 +133,13 @@ export default function LessonBuilderPage() {
         const { error: deleteError } = await supabase
           .from('lesson_components')
           .delete()
-          .eq('lesson_id', parseInt(savedLessonId));
+          .eq('lesson_id', savedLessonId);
 
         if (deleteError) throw deleteError;
 
         if (components.length > 0) {
           const componentsToInsert = components.map((comp, index) => ({
-            lesson_id: parseInt(savedLessonId!),
+            lesson_id: savedLessonId!,
             component_type: comp.component_type,
             content: comp.content,
             order: index,
