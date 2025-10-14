@@ -42,8 +42,8 @@ const Header = () => {
           </div>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex space-x-8">
-            <RoleAwareNavigation variant="desktop" />
+          <nav className="hidden md:flex">
+            <RoleAwareNavigation variant="menubar" />
           </nav>
 
           <div className="flex items-center space-x-4">
