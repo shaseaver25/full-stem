@@ -70,9 +70,9 @@ export default function TeacherAssignmentDetail() {
       {/* Header */}
       <div className="flex items-center space-x-4">
         <Button variant="ghost" size="sm" asChild>
-          <Link to="/teacher/classes" className="flex items-center space-x-2">
+          <Link to="/teacher/dashboard" className="flex items-center space-x-2">
             <ArrowLeft className="h-4 w-4" />
-            <span>Back to Classes</span>
+            <span>Back to Dashboard</span>
           </Link>
         </Button>
       </div>

@@ -30,7 +30,6 @@ import NotFound from "./pages/NotFound";
 import TeacherAuth from "./pages/TeacherAuth";
 import TeacherOnboarding from "./pages/TeacherOnboarding";
 import TeacherDashboard from "./components/teacher/TeacherDashboard";
-import TeacherClasses from "./pages/TeacherClasses";
 import ClassDetailPage from "./pages/ClassDetailPage";
 import ProtectedTeacherRoute from "./components/teacher/ProtectedTeacherRoute";
 import { default as UnifiedGradebookPage } from "./pages/UnifiedGradebookPage";
@@ -376,7 +375,7 @@ function AppContent() {
           path="/teacher/classes" 
           element={
             <ProtectedTeacherRoute requireOnboarding={true}>
-              <TeacherClasses />
+              <TeacherDashboard />
             </ProtectedTeacherRoute>
           } 
         />
