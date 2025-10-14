@@ -10,6 +10,8 @@ import CodeIDE from './CodeIDE';
 import AssignmentSection from '@/components/assignments/AssignmentSection';
 import InlineReadAloud from '@/components/InlineReadAloud';
 import SafeHtml from '@/components/ui/SafeHtml';
+import { DriveAttachmentsList } from '@/components/drive/DriveAttachmentsList';
+import { Separator } from '@/components/ui/separator';
 
 interface LessonComponentRendererProps {
   component: LessonComponent;
@@ -224,8 +226,19 @@ const LessonComponentRenderer: React.FC<LessonComponentRendererProps> = ({ compo
   };
 
   return (
-    <div className="min-h-[200px]">
+    <div className="min-h-[200px] space-y-4">
       {renderContent()}
+      
+      {component.id && (
+        <>
+          <Separator />
+          <DriveAttachmentsList 
+            componentId={component.id} 
+            showEmbeds={true}
+            canDelete={false}
+          />
+        </>
+      )}
     </div>
   );
 };

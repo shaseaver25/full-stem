@@ -7,8 +7,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import { GripVertical, Trash2, ChevronDown, ChevronUp, Copy } from 'lucide-react';
 import { DraggableProvidedDragHandleProps } from 'react-beautiful-dnd';
+import { DriveFilePicker } from '@/components/drive/DriveFilePicker';
+import { DriveAttachmentsList } from '@/components/drive/DriveAttachmentsList';
+import { useDriveAttachment } from '@/hooks/useDriveAttachment';
+import { Separator } from '@/components/ui/separator';
 
 interface LessonComponent {
+  id?: string;
   component_type: string;
   content: any;
   order: number;
@@ -51,11 +56,20 @@ export function LessonComponentCard({
   isDragging,
 }: LessonComponentCardProps) {
   const [isExpanded, setIsExpanded] = useState(true);
+  const { attachFile, isAttaching } = useDriveAttachment();
 
   const handleContentChange = (field: string, value: any) => {
     onUpdate(index, {
       content: { ...component.content, [field]: value },
     });
+  };
+
+  const handleDriveFileSelected = (file: { id: string; name: string; mimeType: string; url: string }) => {
+    if (!component.id) {
+      console.error('❌ Component ID is required to attach files');
+      return;
+    }
+    attachFile({ componentId: component.id, file });
   };
 
   const renderFields = () => {
@@ -326,6 +340,34 @@ export function LessonComponentCard({
       {isExpanded && (
         <CardContent className="space-y-4">
           {renderFields()}
+          
+          <Separator className="my-4" />
+          
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <Label className="text-sm font-medium">Google Drive Attachments</Label>
+              {component.id && (
+                <DriveFilePicker
+                  onFileSelected={handleDriveFileSelected}
+                  disabled={isAttaching}
+                  variant="outline"
+                  size="sm"
+                />
+              )}
+            </div>
+            
+            {component.id ? (
+              <DriveAttachmentsList 
+                componentId={component.id} 
+                showEmbeds={false}
+                canDelete={true}
+              />
+            ) : (
+              <p className="text-sm text-muted-foreground italic">
+                Save this component first to attach Drive files
+              </p>
+            )}
+          </div>
         </CardContent>
       )}
     </Card>

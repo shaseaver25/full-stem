@@ -1377,6 +1377,53 @@ export type Database = {
           },
         ]
       }
+      drive_attachments: {
+        Row: {
+          created_at: string | null
+          file_id: string
+          file_name: string
+          id: string
+          lesson_component_id: string | null
+          metadata: Json | null
+          mime_type: string
+          owner_id: string
+          updated_at: string | null
+          web_view_link: string
+        }
+        Insert: {
+          created_at?: string | null
+          file_id: string
+          file_name: string
+          id?: string
+          lesson_component_id?: string | null
+          metadata?: Json | null
+          mime_type: string
+          owner_id: string
+          updated_at?: string | null
+          web_view_link: string
+        }
+        Update: {
+          created_at?: string | null
+          file_id?: string
+          file_name?: string
+          id?: string
+          lesson_component_id?: string | null
+          metadata?: Json | null
+          mime_type?: string
+          owner_id?: string
+          updated_at?: string | null
+          web_view_link?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "drive_attachments_lesson_component_id_fkey"
+            columns: ["lesson_component_id"]
+            isOneToOne: false
+            referencedRelation: "lesson_components"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       feature_toggles: {
         Row: {
           created_at: string
