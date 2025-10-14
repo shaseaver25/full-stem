@@ -3167,6 +3167,10 @@ export type Database = {
         Args: { _user_id?: string }
         Returns: boolean
       }
+      is_teacher_of_student: {
+        Args: { _student_id: string; _teacher_user_id: string }
+        Returns: boolean
+      }
       refresh_system_metrics: {
         Args: Record<PropertyKey, never>
         Returns: undefined
