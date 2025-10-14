@@ -205,7 +205,6 @@ export const getPrimaryNavigationForRole = (role: UserRole | null): NavigationIt
     ],
     teacher: [
       { path: '/teacher/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-      { path: '/teacher/classes', label: 'Classes', icon: BookOpen },
       { path: '/teacher/gradebook', label: 'Gradebook', icon: ClipboardList },
       { path: '/content', label: 'Content', icon: FolderOpen },
       { path: '/teacher/analytics', label: 'Analytics', icon: BarChart3 },
