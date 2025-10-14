@@ -40,50 +40,50 @@ const RoleAwareNavigation = ({ onLinkClick, variant = 'desktop' }: RoleAwareNavi
   // Menubar variant for horizontal dropdown navigation
   if (variant === 'menubar') {
     return (
-      <Menubar className="border-none bg-transparent">
-        {/* Home link */}
-        <MenubarMenu>
-          <MenubarTrigger className="cursor-pointer" asChild>
-            <Link to="/" className="text-gray-700 hover:text-gray-900">
-              Home
-            </Link>
-          </MenubarTrigger>
-        </MenubarMenu>
+      <Menubar className="border-none bg-transparent space-x-1">
+        {/* Home link - no dropdown */}
+        <Link to="/" className="text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium inline-flex items-center">
+          Home
+        </Link>
 
-        {/* Public routes when not authenticated */}
+        {/* Public routes when not authenticated - no dropdown */}
         {!role && (
           <>
-            <MenubarMenu>
-              <MenubarTrigger className="cursor-pointer" asChild>
-                <Link to="/signup/student" className="text-green-600 hover:text-green-700">
-                  Student Signup
-                </Link>
-              </MenubarTrigger>
-            </MenubarMenu>
-            <MenubarMenu>
-              <MenubarTrigger className="cursor-pointer" asChild>
-                <Link to="/teacher/auth" className="text-gray-700 hover:text-gray-900">
-                  Teacher Portal
-                </Link>
-              </MenubarTrigger>
-            </MenubarMenu>
+            <Link to="/signup/student" className="text-green-600 hover:text-green-700 px-3 py-2 text-sm font-medium inline-flex items-center">
+              Student Signup
+            </Link>
+            <Link to="/teacher/auth" className="text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium inline-flex items-center">
+              Teacher Portal
+            </Link>
           </>
         )}
 
-        {/* Primary navigation items as individual menu items */}
-        {navigationItems.map((item) => {
-          const Icon = item.icon;
-          return (
-            <MenubarMenu key={item.path}>
-              <MenubarTrigger className="cursor-pointer" asChild>
-                <Link to={item.path} className="text-gray-700 hover:text-gray-900 flex items-center gap-2">
-                  {Icon && <Icon className="h-4 w-4" />}
-                  {item.label}
-                </Link>
-              </MenubarTrigger>
-            </MenubarMenu>
-          );
-        })}
+        {/* Role-based navigation - group similar items into dropdown menus */}
+        {role && navigationItems.length > 0 && (
+          <MenubarMenu>
+            <MenubarTrigger className="text-gray-700 hover:text-gray-900 cursor-pointer">
+              <span className="flex items-center gap-2">
+                My Menu
+              </span>
+            </MenubarTrigger>
+            <MenubarContent className="bg-white shadow-lg border rounded-md z-50 min-w-[200px]">
+              {navigationItems.map((item) => {
+                const ItemIcon = item.icon;
+                return (
+                  <MenubarItem key={item.path} asChild>
+                    <Link 
+                      to={item.path} 
+                      className="flex items-center gap-2 px-3 py-2 hover:bg-gray-100 cursor-pointer"
+                    >
+                      {ItemIcon && <ItemIcon className="h-4 w-4" />}
+                      {item.label}
+                    </Link>
+                  </MenubarItem>
+                );
+              })}
+            </MenubarContent>
+          </MenubarMenu>
+        )}
 
         {/* Navigation groups as dropdown menus */}
         {navigationGroups.map((group) => {
@@ -118,14 +118,10 @@ const RoleAwareNavigation = ({ onLinkClick, variant = 'desktop' }: RoleAwareNavi
 
         {/* Developer-only link */}
         {isDeveloper && (
-          <MenubarMenu>
-            <MenubarTrigger className="cursor-pointer" asChild>
-              <Link to="/dev" className="text-red-500 hover:text-red-700 flex items-center gap-2">
-                <Code className="h-4 w-4" />
-                Developer
-              </Link>
-            </MenubarTrigger>
-          </MenubarMenu>
+          <Link to="/dev" className="text-red-500 hover:text-red-700 px-3 py-2 text-sm font-medium inline-flex items-center gap-2">
+            <Code className="h-4 w-4" />
+            Developer
+          </Link>
         )}
       </Menubar>
     );
