@@ -19,8 +19,7 @@ interface DriveFilePickerProps {
   size?: 'default' | 'sm' | 'lg';
 }
 
-// Google API Key - In production, this should come from environment variables
-const GOOGLE_API_KEY = 'YOUR_GOOGLE_API_KEY'; // Replace with actual API key
+const GOOGLE_API_KEY = import.meta.env.VITE_GOOGLE_API_KEY;
 
 export function DriveFilePicker({ 
   onFileSelected, 
