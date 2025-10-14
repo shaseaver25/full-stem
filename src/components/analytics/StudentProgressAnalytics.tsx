@@ -82,13 +82,8 @@ const StudentProgressAnalytics: React.FC<{ classId: string }> = ({ classId }) =>
 
       if (progressError) throw progressError;
 
-      // Fetch grades data
-      const { data: gradesData, error: gradesError } = await supabase
-        .from('grades')
-        .select('*')
-        .in('student_id', progressData?.map(p => p.student_id) || []);
-
-      if (gradesError) throw gradesError;
+      // Fetch grades data - table removed, using empty array
+      const gradesData: any[] = [];
 
       // Process analytics data
       const studentAnalytics = processStudentAnalytics(progressData || [], gradesData || []);

@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import Gradebook from '@/components/teacher/Gradebook';
+import SimpleGradebook from '@/components/teacher/SimpleGradebook';
 import Header from '@/components/Header';
 
 interface Class {
@@ -125,10 +125,7 @@ const GradebookPage: React.FC = () => {
             </Card>
 
             {selectedClass && (
-              <Gradebook 
-                classId={selectedClass.id} 
-                className={selectedClass.name}
-              />
+              <SimpleGradebook classId={selectedClass.id} />
             )}
           </div>
         )}

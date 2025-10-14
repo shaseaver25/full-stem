@@ -1,10 +1,12 @@
 
-import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, GraduationCap } from 'lucide-react';
-import AssignmentGradebook from '@/components/teacher/AssignmentGradebook';
+import SimpleGradebook from '@/components/teacher/SimpleGradebook';
 
 const AssignmentGradebookPage = () => {
+  const [searchParams] = useSearchParams();
+  const classId = searchParams.get('class');
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -24,7 +26,13 @@ const AssignmentGradebookPage = () => {
       </header>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <AssignmentGradebook />
+        {classId ? (
+          <SimpleGradebook classId={classId} />
+        ) : (
+          <div className="text-center py-12">
+            <p className="text-muted-foreground">Please select a class from your dashboard</p>
+          </div>
+        )}
       </div>
     </div>
   );

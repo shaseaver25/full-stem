@@ -64,13 +64,8 @@ const AdaptiveLearningEngine: React.FC<{ userId: string; classId?: string }> = (
 
       if (progressError) throw progressError;
 
-      // Fetch grades data
-      const { data: gradesData, error: gradesError } = await supabase
-        .from('grades')
-        .select('*')
-        .eq('student_id', userId);
-
-      if (gradesError) throw gradesError;
+      // Fetch grades data - table removed, using empty array
+      const gradesData: any[] = [];
 
       // Fetch user preferences
       const { data: preferencesData, error: preferencesError } = await supabase
