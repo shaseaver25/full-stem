@@ -1,26 +1,10 @@
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, Play, Mail, FolderPlus } from 'lucide-react';
+import { Mail, FolderPlus } from 'lucide-react';
 
 export const QuickActions = () => {
   const actions = [
-    {
-      title: 'Create Assignment',
-      description: 'Add a new assignment to your class',
-      icon: Plus,
-      href: '/teacher/assignments/create',
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-50'
-    },
-    {
-      title: 'Start Lesson',
-      description: 'Begin teaching a new lesson',
-      icon: Play,
-      href: '/teacher/lessons/start',
-      color: 'text-green-600',
-      bgColor: 'bg-green-50'
-    },
     {
       title: 'Send Message',
       description: 'Contact students or parents',
