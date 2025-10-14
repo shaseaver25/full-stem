@@ -6,41 +6,74 @@ export const useGoogleAuth = () => {
   const { toast } = useToast();
 
   useEffect(() => {
+    console.log('🔧 useGoogleAuth hook initialized');
+
     // Listen for OAuth callback
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('🔔 Auth state change:', event, {
+          hasSession: !!session,
+          hasProviderToken: !!session?.provider_token,
+          provider: session?.user?.app_metadata?.provider
+        });
+
         if (event === 'SIGNED_IN' && session?.provider_token) {
+          console.log('🔐 Google OAuth sign-in detected with provider token');
+          console.log('📊 Session details:', {
+            userId: session.user.id,
+            email: session.user.email,
+            provider: session.user.app_metadata.provider,
+            tokenPresent: !!session.provider_token,
+            refreshTokenPresent: !!session.provider_refresh_token,
+            expiresAt: session.expires_at
+          });
+
           // Store OAuth tokens securely
           try {
+            console.log('💾 Attempting to store OAuth tokens...');
+            
             const { data, error } = await supabase.functions.invoke('store-oauth-tokens', {
               body: {
                 provider: 'google',
-                session: session,
+                session: {
+                  provider_token: session.provider_token,
+                  provider_refresh_token: session.provider_refresh_token,
+                  expires_at: session.expires_at,
+                  expires_in: session.expires_in
+                }
               },
             });
 
             if (error) {
-              console.error('Failed to store OAuth tokens:', error);
+              console.error('❌ Failed to store OAuth tokens:', error);
               toast({
                 title: "Warning",
-                description: "Signed in successfully, but failed to store Drive access token.",
+                description: "Signed in successfully, but failed to store Drive access token. Drive features may be limited.",
                 variant: "destructive"
               });
             } else {
-              console.log('OAuth tokens stored successfully:', data);
+              console.log('✅ OAuth tokens stored successfully:', data);
               toast({
                 title: "Success",
-                description: "Signed in with Google and secured Drive access.",
+                description: "Google Drive access enabled!",
               });
             }
           } catch (err) {
-            console.error('Error storing tokens:', err);
+            console.error('❌ Error storing tokens:', err);
+            toast({
+              title: "Error",
+              description: "Failed to secure Drive access. Please try signing in again.",
+              variant: "destructive"
+            });
           }
+        } else if (event === 'SIGNED_IN' && !session?.provider_token) {
+          console.log('ℹ️ Standard sign-in without OAuth provider token');
         }
       }
     );
 
     return () => {
+      console.log('🔌 useGoogleAuth hook cleanup');
       authListener?.subscription.unsubscribe();
     };
   }, [toast]);
