@@ -78,3 +78,6 @@ verify_jwt = true
 
 [functions.store-oauth-tokens]
 verify_jwt = true
+
+[functions.import-students-csv]
+verify_jwt = true

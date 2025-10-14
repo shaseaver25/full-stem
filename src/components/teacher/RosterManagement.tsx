@@ -13,7 +13,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Search, UserPlus, X, Users } from 'lucide-react';
+import { Search, UserPlus, X, Users, Upload } from 'lucide-react';
 import {
   useClassStudents,
   useAvailableStudents,
@@ -21,6 +21,7 @@ import {
   useRemoveStudent,
 } from '@/hooks/useClassManagement';
 import { Student } from '@/services/classManagementService';
+import { StudentImportModal } from './StudentImportModal';
 
 interface RosterManagementProps {
   classId: string;
@@ -29,6 +30,7 @@ interface RosterManagementProps {
 
 export function RosterManagement({ classId, maxStudents }: RosterManagementProps) {
   const [enrollDialogOpen, setEnrollDialogOpen] = useState(false);
+  const [importModalOpen, setImportModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
 
@@ -96,13 +98,21 @@ export function RosterManagement({ classId, maxStudents }: RosterManagementProps
               Manage students enrolled in this class ({rosterLimit})
             </CardDescription>
           </div>
-          <Dialog open={enrollDialogOpen} onOpenChange={setEnrollDialogOpen}>
-            <DialogTrigger asChild>
-              <Button disabled={!canEnrollMore}>
-                <UserPlus className="h-4 w-4 mr-2" />
-                Enroll Students
-              </Button>
-            </DialogTrigger>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setImportModalOpen(true)}
+            >
+              <Upload className="h-4 w-4 mr-2" />
+              Import CSV
+            </Button>
+            <Dialog open={enrollDialogOpen} onOpenChange={setEnrollDialogOpen}>
+              <DialogTrigger asChild>
+                <Button disabled={!canEnrollMore}>
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Enroll Students
+                </Button>
+              </DialogTrigger>
             <DialogContent className="max-w-2xl">
               <DialogHeader>
                 <DialogTitle>Enroll Students</DialogTitle>
@@ -193,8 +203,19 @@ export function RosterManagement({ classId, maxStudents }: RosterManagementProps
               </div>
             </DialogContent>
           </Dialog>
+          </div>
         </div>
       </CardHeader>
+      
+      <StudentImportModal
+        open={importModalOpen}
+        onOpenChange={setImportModalOpen}
+        classId={classId}
+        onImportComplete={() => {
+          // Refresh the student list
+          window.location.reload();
+        }}
+      />
       <CardContent>
         {classStudents.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
