@@ -37,13 +37,28 @@ export const getUserRole = async (userId: string): Promise<UserRole | null> => {
 };
 
 export const redirectToRoleDashboard = async (userId: string, navigate: (path: string) => void) => {
-  const role = await getUserRole(userId);
+  // Retry logic to wait for role to be assigned (especially for new OAuth users)
+  let role: UserRole | null = null;
+  let attempts = 0;
+  const maxAttempts = 5;
+  
+  while (!role && attempts < maxAttempts) {
+    role = await getUserRole(userId);
+    
+    if (!role) {
+      console.log(`⏳ Waiting for role assignment... (attempt ${attempts + 1}/${maxAttempts})`);
+      await new Promise(resolve => setTimeout(resolve, 500)); // Wait 500ms between attempts
+      attempts++;
+    }
+  }
   
   if (role) {
+    console.log(`✅ Role found: ${role}, redirecting...`);
     const dashboardPath = getRoleDashboardPath(role);
     navigate(dashboardPath);
   } else {
-    // Default fallback if no role found
+    console.warn('⚠️ No role found after retries, redirecting to home');
+    // Default fallback if no role found after all retries
     navigate('/');
   }
 };
