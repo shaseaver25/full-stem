@@ -55,10 +55,27 @@ export const useStudentManagement = (classId: string) => {
   const fetchStudents = async () => {
     setLoading(true);
     try {
+      // First get student IDs from class_students
+      const { data: enrollmentData, error: enrollmentError } = await supabase
+        .from('class_students')
+        .select('student_id')
+        .eq('class_id', classId)
+        .eq('status', 'active');
+
+      if (enrollmentError) throw enrollmentError;
+
+      const studentIds = enrollmentData?.map(e => e.student_id) || [];
+
+      if (studentIds.length === 0) {
+        setStudents([]);
+        setLoading(false);
+        return;
+      }
+
       const { data, error } = await supabase
         .from('students')
         .select('*')
-        .eq('class_id', classId)
+        .in('id', studentIds)
         .order('first_name');
 
       if (error) throw error;

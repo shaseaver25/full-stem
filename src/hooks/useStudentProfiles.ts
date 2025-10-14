@@ -36,35 +36,59 @@ export const useStudentProfiles = () => {
 
       if (teacherError) throw teacherError;
 
-      // Build base query for students
-      let studentsQuery = supabase
-        .from('students')
-        .select(`
-          id,
-          first_name,
-          last_name,
-          grade_level,
-          reading_level,
-          class_id,
-          classes!inner (
-            name,
-            teacher_id
-          )
-        `)
-        .eq('classes.teacher_id', teacherProfile.id);
+      // Get all classes for this teacher
+      const { data: teacherClasses, error: classesError } = await supabase
+        .from('classes')
+        .select('id')
+        .eq('teacher_id', teacherProfile.id);
 
-      // Filter by class if specified
+      if (classesError) throw classesError;
+
+      const teacherClassIds = teacherClasses?.map(c => c.id) || [];
+
+      // Get student enrollments from teacher's classes
+      let enrollmentQuery = supabase
+        .from('class_students')
+        .select('student_id, class_id')
+        .in('class_id', teacherClassIds)
+        .eq('status', 'active');
+
+      // Filter by specific class if provided
       if (classId) {
-        studentsQuery = studentsQuery.eq('class_id', classId);
+        enrollmentQuery = enrollmentQuery.eq('class_id', classId);
       }
 
-      const { data: studentsData, error: studentsError } = await studentsQuery;
+      const { data: enrollmentData, error: enrollmentError } = await enrollmentQuery;
+
+      if (enrollmentError) throw enrollmentError;
+
+      const studentIds = [...new Set(enrollmentData?.map(e => e.student_id) || [])];
+
+      if (studentIds.length === 0) {
+        setStudents([]);
+        setLoading(false);
+        return;
+      }
+
+      // Get student details
+      const { data: studentsData, error: studentsError } = await supabase
+        .from('students')
+        .select('id, first_name, last_name, grade_level, reading_level, class_id')
+        .in('id', studentIds);
 
       if (studentsError) throw studentsError;
 
+      // Get class names for the students
+      const { data: classesData, error: classNamesError } = await supabase
+        .from('classes')
+        .select('id, name')
+        .in('id', teacherClassIds);
+
+      if (classNamesError) throw classNamesError;
+
+      const classNameMap = new Map(classesData?.map(c => [c.id, c.name]) || []);
+
       // Get profiles for all students
-      const studentIds = studentsData?.map(s => s.id) || [];
-      
       const { data: profilesData, error: profilesError } = await supabase
         .from('student_profiles')
         .select('*')
@@ -75,6 +99,7 @@ export const useStudentProfiles = () => {
       // Combine student data with profiles
       const studentsWithProfiles: StudentWithProfile[] = studentsData?.map(student => {
         const profile = profilesData?.find(p => p.student_id === student.id);
+        const enrollment = enrollmentData?.find(e => e.student_id === student.id);
         
         return {
           id: student.id,
@@ -82,7 +107,7 @@ export const useStudentProfiles = () => {
           last_name: student.last_name,
           grade_level: student.grade_level,
           reading_level: student.reading_level,
-          class_name: (student.classes as any)?.name,
+          class_name: enrollment ? classNameMap.get(enrollment.class_id) : undefined,
           profile: profile?.profile_json as unknown as ProfileData,
           survey_completed: !!profile?.survey_completed_at,
           survey_completed_at: profile?.survey_completed_at

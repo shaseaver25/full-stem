@@ -66,6 +66,23 @@ export const useUnifiedGradebook = (classId?: string) => {
     setLoading(true);
     try {
       // Get students from the class
+      // Get students via class_students junction table
+      const { data: enrollmentData, error: enrollmentError } = await supabase
+        .from('class_students')
+        .select('student_id')
+        .eq('class_id', selectedClassId)
+        .eq('status', 'active');
+
+      if (enrollmentError) throw enrollmentError;
+
+      const studentIds = enrollmentData?.map(e => e.student_id) || [];
+
+      if (studentIds.length === 0) {
+        setUnifiedStudents([]);
+        setLoading(false);
+        return;
+      }
+
       const { data: studentsData, error: studentsError } = await supabase
         .from('students')
         .select(`
@@ -74,7 +91,7 @@ export const useUnifiedGradebook = (classId?: string) => {
           last_name,
           class_id
         `)
-        .eq('class_id', selectedClassId)
+        .in('id', studentIds)
         .order('last_name');
 
       if (studentsError) throw studentsError;

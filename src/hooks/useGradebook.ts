@@ -81,17 +81,32 @@ export const useGradebook = (classId?: string) => {
     if (!classId) return;
 
     try {
-      // Fetch students in the class
+      // First, get student IDs from class_students junction table
+      const { data: enrollmentData, error: enrollmentError } = await supabase
+        .from('class_students')
+        .select('student_id')
+        .eq('class_id', classId)
+        .eq('status', 'active');
+
+      if (enrollmentError) throw enrollmentError;
+      
+      const studentIds = enrollmentData?.map(e => e.student_id) || [];
+      
+      if (studentIds.length === 0) {
+        setStudents([]);
+        return;
+      }
+
+      // Then fetch the student details
       const { data: studentsData, error: studentsError } = await supabase
         .from('students')
         .select('*')
-        .eq('class_id', classId)
+        .in('id', studentIds)
         .order('last_name');
 
       if (studentsError) throw studentsError;
 
       // Fetch grades for all students
-      const studentIds = studentsData?.map(s => s.id) || [];
       const { data: gradesData, error: gradesError } = await supabase
         .from('grades')
         .select('*')
