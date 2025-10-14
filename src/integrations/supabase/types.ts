@@ -3387,6 +3387,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      get_student_id_for_user: {
+        Args: { _user_id: string }
+        Returns: string
+      }
       global_search: {
         Args: { org_name?: string; search_query: string; user_role?: string }
         Returns: {
