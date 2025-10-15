@@ -6,6 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Search, BookOpen, Users, Calendar, Plus, Eye, Edit, BarChart3 } from 'lucide-react';
 import { format } from 'date-fns';
+import { ClassStudentImport } from './ClassStudentImport';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface ClassData {
   id: string;
@@ -35,7 +37,12 @@ export const ClassesGrid = ({
   showCreateButton = true 
 }: ClassesGridProps) => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
+
+  const handleImportComplete = () => {
+    queryClient.invalidateQueries({ queryKey: ['classes'] });
+  };
 
   const filteredClasses = classes.filter(cls =>
     cls.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -174,6 +181,12 @@ export const ClassesGrid = ({
                       <BarChart3 className="h-4 w-4" />
                     </Button>
                   </div>
+
+                  {/* Student Import */}
+                  <ClassStudentImport 
+                    classId={cls.id}
+                    onImportComplete={handleImportComplete}
+                  />
                 </CardContent>
               </Card>
             ))}
