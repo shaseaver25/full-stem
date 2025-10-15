@@ -28,10 +28,24 @@ Deno.serve(async (req) => {
 
   try {
     const authHeader = req.headers.get('Authorization')!;
+    
+    // Client for authentication and authorization checks
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
       { global: { headers: { Authorization: authHeader } } }
+    );
+
+    // Admin client for user creation
+    const supabaseAdmin = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
     );
 
     // Verify authentication
@@ -147,9 +161,9 @@ Deno.serve(async (req) => {
         let userId = existingProfile?.id;
         let action: 'created' | 'existing' = 'existing';
 
-        // If user doesn't exist, create account
+        // If user doesn't exist, create account using admin client
         if (!userId) {
-          const { data: newUser, error: signUpError } = await supabaseClient.auth.admin.createUser({
+          const { data: newUser, error: signUpError } = await supabaseAdmin.auth.admin.createUser({
             email: studentData.email,
             email_confirm: true,
             user_metadata: {
