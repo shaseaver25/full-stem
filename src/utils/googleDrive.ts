@@ -127,24 +127,41 @@ export const refreshDriveToken = async (): Promise<DriveToken | null> => {
  * Get a valid Drive token, refreshing if necessary
  */
 export const getValidDriveToken = async (): Promise<string | null> => {
-  let token = await getDriveToken();
-  
-  if (!token) {
-    console.error('❌ No Drive token found');
-    return null;
-  }
-
-  if (isTokenExpired(token)) {
-    console.log('🔄 Token expired, refreshing...');
-    token = await refreshDriveToken();
+  try {
+    console.log('🔍 Getting valid Drive token...');
+    const token = await getDriveToken();
     
     if (!token) {
-      console.error('❌ Failed to refresh token');
+      console.log('⚠️ No token found in database');
+      console.log('💡 User needs to sign in with Google to enable Drive access');
       return null;
     }
-  }
 
-  return token.access_token;
+    console.log('📅 Checking token expiration...', {
+      expiresAt: new Date(token.expires_at).toLocaleString(),
+      isExpired: isTokenExpired(token),
+      hasRefreshToken: !!token.refresh_token
+    });
+
+    if (isTokenExpired(token)) {
+      console.log('🔄 Token expired, refreshing...');
+      const refreshedToken = await refreshDriveToken();
+      if (!refreshedToken) {
+        console.error('❌ Failed to refresh token - user may need to re-authenticate');
+        return null;
+      }
+      return refreshedToken.access_token;
+    }
+
+    console.log('✅ Token is valid');
+    return token.access_token;
+  } catch (error) {
+    console.error('❌ Error getting valid Drive token:', error);
+    if (error instanceof Error) {
+      console.error('Error details:', error.message);
+    }
+    return null;
+  }
 };
 
 /**
@@ -195,7 +212,23 @@ export const uploadToDrive = async (
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('❌ Drive upload failed:', response.status, errorText);
+      console.error('❌ Drive upload failed:', {
+        status: response.status,
+        statusText: response.statusText,
+        error: errorText
+      });
+      
+      if (response.status === 403) {
+        console.error('🚫 403 Forbidden - Possible causes:');
+        console.error('  1. Drive scope not granted during OAuth');
+        console.error('  2. API key restrictions in Google Cloud Console');
+        console.error('  3. Token expired or invalid');
+        return {
+          success: false,
+          error: 'Drive access denied. Please sign in again with Google to grant Drive permissions.'
+        };
+      }
+      
       return {
         success: false,
         error: `Upload failed: ${response.statusText}`

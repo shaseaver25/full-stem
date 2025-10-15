@@ -17,21 +17,31 @@ export function DriveReauthorization({ onSuccess }: DriveReauthorizationProps) {
     setIsReauthorizing(true);
 
     try {
+      console.log('🔄 Starting Drive reauthorization...');
+      console.log('📋 Requesting scopes: email profile openid https://www.googleapis.com/auth/drive.file');
+      
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          scopes: 'https://www.googleapis.com/auth/drive.file',
+          scopes: 'email profile openid https://www.googleapis.com/auth/drive.file',
           redirectTo: `${window.location.origin}/auth/callback`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent', // Force consent screen to ensure Drive scope is granted
+          },
         },
       });
 
       if (error) {
+        console.error('❌ OAuth error:', error);
         toast({
           title: 'Error',
           description: 'Failed to initiate reauthorization. Please try again.',
           variant: 'destructive'
         });
       } else {
+        console.log('✅ Redirecting to Google for authorization...');
+        console.log('💡 Make sure to grant Drive file access when prompted');
         toast({
           title: 'Redirecting',
           description: 'Redirecting to Google for reauthorization...',

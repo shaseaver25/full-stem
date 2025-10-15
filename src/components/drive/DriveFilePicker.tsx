@@ -4,6 +4,7 @@ import { useToast } from '@/hooks/use-toast';
 import { FolderOpen, Loader2 } from 'lucide-react';
 import { getValidDriveToken, hasDriveAccess } from '@/utils/googleDrive';
 import { DriveReauthorization } from './DriveReauthorization';
+import { supabase } from '@/integrations/supabase/client';
 
 interface DriveFile {
   id: string;
@@ -83,9 +84,20 @@ export function DriveFilePicker({
 
     try {
       console.log('🔍 Getting Drive access token...');
+      console.log('📋 Current user:', await (async () => {
+        const { data: { user } } = await supabase.auth.getUser();
+        return user?.email;
+      })());
+      
       const accessToken = await getValidDriveToken();
 
       if (!accessToken) {
+        console.error('❌ No valid access token available');
+        console.log('💡 Possible causes:');
+        console.log('  1. User not signed in with Google');
+        console.log('  2. Drive scope not granted during OAuth');
+        console.log('  3. Token expired and refresh failed');
+        
         setNeedsAuth(true);
         toast({
           title: 'Authentication Required',
@@ -97,6 +109,7 @@ export function DriveFilePicker({
       }
 
       console.log('✅ Token acquired, opening picker...');
+      console.log('🔑 API Key present:', !!GOOGLE_API_KEY);
 
       // Create picker
       const picker = new window.google.picker.PickerBuilder()
@@ -108,6 +121,8 @@ export function DriveFilePicker({
         .setOAuthToken(accessToken)
         .setDeveloperKey(GOOGLE_API_KEY)
         .setCallback((data: any) => {
+          console.log('📥 Picker callback:', data.action);
+          
           if (data.action === window.google.picker.Action.PICKED) {
             const file = data.docs[0];
             console.log('📎 File selected:', file);
@@ -135,9 +150,20 @@ export function DriveFilePicker({
       picker.setVisible(true);
     } catch (error) {
       console.error('❌ Error opening picker:', error);
+      
+      let errorMessage = 'Failed to open Google Drive picker. Please try again.';
+      
+      if (error instanceof Error) {
+        console.error('Error details:', error.message);
+        if (error.message.includes('403') || error.message.includes('Forbidden')) {
+          errorMessage = 'Drive access denied. Please sign in again with Google to grant Drive permissions.';
+          setNeedsAuth(true);
+        }
+      }
+      
       toast({
         title: 'Error',
-        description: 'Failed to open Google Drive picker. Please try again.',
+        description: errorMessage,
         variant: 'destructive'
       });
       setIsLoading(false);

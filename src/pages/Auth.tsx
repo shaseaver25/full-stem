@@ -77,22 +77,33 @@ const Auth = () => {
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
     try {
+      console.log('🔐 Initiating Google OAuth sign-in with Drive access...');
+      console.log('📋 Requesting scopes: email profile openid https://www.googleapis.com/auth/drive.file');
+      
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          scopes: 'https://www.googleapis.com/auth/drive.file',
+          scopes: 'email profile openid https://www.googleapis.com/auth/drive.file',
           redirectTo: `${window.location.origin}/auth/callback`,
+          queryParams: {
+            access_type: 'offline', // Request refresh token
+            prompt: 'consent', // Force consent screen to ensure all scopes are granted
+          },
         },
       });
 
       if (error) {
+        console.error('❌ Google OAuth error:', error);
         toast({
           title: "Error",
           description: error.message,
           variant: "destructive"
         });
+      } else {
+        console.log('✅ Redirecting to Google for authentication...');
       }
     } catch (error) {
+      console.error('❌ Exception during Google sign-in:', error);
       toast({
         title: "Error",
         description: "Failed to initiate Google sign-in. Please try again.",
@@ -102,6 +113,7 @@ const Auth = () => {
       setIsLoading(false);
     }
   };
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-green-50 to-orange-50 flex items-center justify-center p-4">
