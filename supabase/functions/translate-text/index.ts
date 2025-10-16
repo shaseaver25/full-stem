@@ -17,34 +17,26 @@ serve(async (req) => {
   }
 
   try {
-    // Get auth token from request
+    // Get auth token from request (optional)
     const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      return new Response(
-        JSON.stringify({ error: 'Authentication required' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    let user = null;
+    
+    // Try to get user if authenticated, but don't require it
+    if (authHeader) {
+      const supabaseClient = createClient(
+        Deno.env.get('SUPABASE_URL') ?? '',
+        Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+        { global: { headers: { Authorization: authHeader } } }
       );
-    }
 
-    // Create Supabase client to verify user
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      { global: { headers: { Authorization: authHeader } } }
-    );
-
-    const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
-    if (authError || !user) {
-      return new Response(
-        JSON.stringify({ error: 'Invalid authentication' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      const { data: { user: authenticatedUser } } = await supabaseClient.auth.getUser();
+      user = authenticatedUser;
     }
 
     const { text, targetLanguage, sourceLanguage = 'auto' } = await req.json();
 
     console.log('Translation request received:', { 
-      userId: user.id,
+      userId: user?.id || 'anonymous',
       targetLanguage, 
       sourceLanguage, 
       textLength: text?.length 
@@ -122,16 +114,24 @@ The goal is to make the content feel natural and accessible to everyday speakers
     const translatedText = data.choices[0].message.content;
     console.log('Translation completed successfully');
 
-    // Optional: Log translation for analytics
-    try {
-      await supabaseClient.from('translation_logs').insert({
-        user_id: user.id,
-        target_language: targetLanguage,
-        text_length: text.length,
-      });
-    } catch (logError) {
-      console.error('Failed to log translation:', logError);
-      // Don't fail the request if logging fails
+    // Optional: Log translation for analytics (only if authenticated)
+    if (user) {
+      try {
+        const supabaseClient = createClient(
+          Deno.env.get('SUPABASE_URL') ?? '',
+          Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+          { global: { headers: { Authorization: authHeader } } }
+        );
+        
+        await supabaseClient.from('translation_logs').insert({
+          user_id: user.id,
+          target_language: targetLanguage,
+          text_length: text.length,
+        });
+      } catch (logError) {
+        console.error('Failed to log translation:', logError);
+        // Don't fail the request if logging fails
+      }
     }
 
     return new Response(

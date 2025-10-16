@@ -24,34 +24,26 @@ serve(async (req) => {
   }
 
   try {
-    // Get auth token from request
+    // Get auth token from request (optional)
     const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      return new Response(
-        JSON.stringify({ error: 'Authentication required' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    let user = null;
+    
+    // Try to get user if authenticated, but don't require it
+    if (authHeader) {
+      const supabaseClient = createClient(
+        Deno.env.get('SUPABASE_URL') ?? '',
+        Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+        { global: { headers: { Authorization: authHeader } } }
       );
-    }
 
-    // Create Supabase client to verify user
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      { global: { headers: { Authorization: authHeader } } }
-    );
-
-    const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
-    if (authError || !user) {
-      return new Response(
-        JSON.stringify({ error: 'Invalid authentication' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      const { data: { user: authenticatedUser } } = await supabaseClient.auth.getUser();
+      user = authenticatedUser;
     }
 
     const { text, language_code = 'en', voice_style = 'neutral' } = await req.json();
 
     console.log('TTS request received:', { 
-      userId: user.id,
+      userId: user?.id || 'anonymous',
       language_code, 
       voice_style, 
       textLength: text?.length 
@@ -72,41 +64,49 @@ serve(async (req) => {
       );
     }
 
-    // Check cache first
-    console.log('Checking TTS cache...');
-    const { data: cachedAudio, error: cacheError } = await supabaseClient
-      .from('tts_cache')
-      .select('audio_base64, audio_mime')
-      .eq('user_id', user.id)
-      .eq('text', text)
-      .eq('language_code', language_code)
-      .eq('voice_style', voice_style)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    if (cachedAudio && !cacheError) {
-      console.log('TTS cache hit');
-      // Update last_accessed timestamp
-      await supabaseClient
+    // Check cache first (only if authenticated)
+    if (user && authHeader) {
+      console.log('Checking TTS cache...');
+      const supabaseClient = createClient(
+        Deno.env.get('SUPABASE_URL') ?? '',
+        Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+        { global: { headers: { Authorization: authHeader } } }
+      );
+      
+      const { data: cachedAudio, error: cacheError } = await supabaseClient
         .from('tts_cache')
-        .update({ last_accessed: new Date().toISOString() })
+        .select('audio_base64, audio_mime')
         .eq('user_id', user.id)
         .eq('text', text)
         .eq('language_code', language_code)
-        .eq('voice_style', voice_style);
+        .eq('voice_style', voice_style)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
 
-      return new Response(
-        JSON.stringify({
-          audio_base64: cachedAudio.audio_base64,
-          audio_mime: cachedAudio.audio_mime,
-          cached: true,
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      if (cachedAudio && !cacheError) {
+        console.log('TTS cache hit');
+        // Update last_accessed timestamp
+        await supabaseClient
+          .from('tts_cache')
+          .update({ last_accessed: new Date().toISOString() })
+          .eq('user_id', user.id)
+          .eq('text', text)
+          .eq('language_code', language_code)
+          .eq('voice_style', voice_style);
+
+        return new Response(
+          JSON.stringify({
+            audio_base64: cachedAudio.audio_base64,
+            audio_mime: cachedAudio.audio_mime,
+            cached: true,
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
     }
 
-    console.log('Cache miss, generating TTS...');
+    console.log('Cache miss or anonymous user, generating TTS...');
 
     // Generate TTS using OpenAI
     const voice = VOICE_MAP[voice_style] || VOICE_MAP['default'];
@@ -152,20 +152,28 @@ serve(async (req) => {
 
     console.log('TTS generation completed successfully');
 
-    // Cache the result
-    try {
-      await supabaseClient.from('tts_cache').insert({
-        user_id: user.id,
-        text,
-        language_code,
-        voice_style,
-        audio_base64: base64Audio,
-        audio_mime: 'audio/mp3',
-      });
-      console.log('TTS cached successfully');
-    } catch (cacheInsertError) {
-      console.error('Failed to cache TTS:', cacheInsertError);
-      // Don't fail the request if caching fails
+    // Cache the result (only if authenticated)
+    if (user && authHeader) {
+      try {
+        const supabaseClient = createClient(
+          Deno.env.get('SUPABASE_URL') ?? '',
+          Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+          { global: { headers: { Authorization: authHeader } } }
+        );
+        
+        await supabaseClient.from('tts_cache').insert({
+          user_id: user.id,
+          text,
+          language_code,
+          voice_style,
+          audio_base64: base64Audio,
+          audio_mime: 'audio/mp3',
+        });
+        console.log('TTS cached successfully');
+      } catch (cacheInsertError) {
+        console.error('Failed to cache TTS:', cacheInsertError);
+        // Don't fail the request if caching fails
+      }
     }
 
     return new Response(
