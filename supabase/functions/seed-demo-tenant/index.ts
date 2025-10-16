@@ -10,12 +10,12 @@ const ANON_KEY     = Deno.env.get('SUPABASE_ANON_KEY')!
 
 // ── CONSTANTS ────────────────────────────────────────────────────────────────
 const TEACHER_EMAIL = 'demo@creatempls.org'
-const CLASS_NAME    = 'AI for Middle School Students (Grades 7–8)'
+const CLASS_NAME    = 'Outlook Odyssey: Professional Communication Training'
 const STUDENT_EMAIL = (i: number) => `student${String(i).padStart(2,'0')}@demo.school`
 const PARENT_EMAIL  = (i: number) => `parent${String(i).padStart(2,'0')}@demo.family`
 const NUM_STUDENTS = 12
 // Generate proper UUIDs for assignments
-const generateAssignmentIds = () => [crypto.randomUUID(), crypto.randomUUID(), crypto.randomUUID()]
+const generateAssignmentIds = (count: number) => Array(count).fill(0).map(() => crypto.randomUUID())
 
 // ── CORS ─────────────────────────────────────────────────────────────────────
 function buildCors(req: Request) {
@@ -237,9 +237,12 @@ async function seedDemoData(ownerId: string) {
   
   const { error: classError } = await db.from('classes').upsert({
     id:classId, teacher_id:teacherProfileId, name:CLASS_NAME,
-    grade_level:'7th-8th Grade', subject:'Computer Science - AI', school_year:'2024-2025',
-    description:'Intro to AI concepts for middle school', duration:'1 Semester', instructor:'Demo Teacher',
-    schedule:'MWF 2:00-3:00 PM', learning_objectives:'AI basics, ethics, hands-on projects', prerequisites:'Basic computer literacy',
+    grade_level:'9th-12th Grade', subject:'Career & Technical Education / Digital Communications', school_year:'2024-2025',
+    description:'Master Microsoft Outlook and professional communication skills for workplace success. Prepare for MOS certification.', 
+    duration:'4 Weeks', instructor:'Demo Teacher',
+    schedule:'Mon-Thu 9:00-11:00 AM', 
+    learning_objectives:'Navigate Outlook efficiently, compose professional emails, manage calendars and tasks, practice AI-assisted communication, prepare for MOS Outlook certification',
+    prerequisites:'Basic computer literacy',
     published:true, status:'published', max_students:25, published_at:nowISO(),
     created_at:nowISO(), updated_at:nowISO()
   })
@@ -260,33 +263,248 @@ async function seedDemoData(ownerId: string) {
     }
   }
 
-  // assignments
-  const ASSIGNMENT_IDS = generateAssignmentIds()
-  const bodies: Array<{title:string;html:string;days:number;}> = [
-    { title:'What is AI? (Reading + 3 questions)', html:`<h2>What is Artificial Intelligence?</h2>
-<p>Artificial Intelligence, or AI, is when computers are built to do tasks that usually need human thinking.</p>
-<p>For example, recognizing a face in a photo or suggesting the next word in a sentence.</p>
-<p><strong>Quick check:</strong> 1) Name one AI example. 2) Where have you seen AI? 3) Why can AI make mistakes?</p>
-<hr/>
-<p><em>Spanish sample:</em> La inteligencia artificial ayuda a las computadoras a aprender patrones y tomar decisiones más rápido.</p>`, days:3 },
-    { title:'Ethics & Bias (Short Answer)', html:`<h2>AI Ethics & Bias</h2>
-<p>AI can accidentally learn bias if the data it studies is unfair.</p>
-<p>Explain a fair way to train an AI model for a school project.</p>`, days:5 },
-    { title:'Build a Classifier (No-Code)', html:`<h2>Build a Tiny Classifier</h2>
-<p>Use a no-code tool to train a model to tell apart two objects (e.g., apples vs. bananas).</p>
-<p>Upload 5 examples of each, then share a one-paragraph reflection on what worked and what didn't.</p>`, days:7 },
+  // create 4 comprehensive lessons based on Outlook curriculum
+  console.log('Creating lessons...')
+  const lessons = [
+    {
+      id: crypto.randomUUID(),
+      class_id: classId,
+      title: 'Day 1: Getting Started with Outlook',
+      description: 'Navigate Outlook interface, manage inbox, folders, and basic features',
+      objectives: ['Navigate Outlook interface efficiently', 'Manage inbox and folders', 'Use search and tags effectively', 'Set up email signature'],
+      materials: ['Computer with Outlook access', 'Video: https://youtu.be/pWGtXWumb4A', 'Outlook Treasure Hunt worksheet'],
+      content: { introduction: 'Welcome to Outlook! Today we begin our journey to master professional email communication.' },
+      duration: 120,
+      order_index: 1,
+      created_at: nowISO(),
+      updated_at: nowISO()
+    },
+    {
+      id: crypto.randomUUID(),
+      class_id: classId,
+      title: 'Day 2: Email Writing & Professional Etiquette',
+      description: 'Learn professional email formatting, tone, and communication best practices',
+      objectives: ['Write professional emails with proper formatting', 'Understand formal vs informal tone', 'Apply email etiquette rules', 'Revise using AI feedback'],
+      materials: ['Email examples handout', 'Case study scenarios', 'Peer review rubric', 'AI Email Coach activity'],
+      content: { introduction: 'Professional communication is key to workplace success. Let us master email etiquette.' },
+      duration: 120,
+      order_index: 2,
+      created_at: nowISO(),
+      updated_at: nowISO()
+    },
+    {
+      id: crypto.randomUUID(),
+      class_id: classId,
+      title: 'Day 3: Calendar & Task Management',
+      description: 'Master Outlook Calendar for scheduling meetings, events, and task coordination',
+      objectives: ['Schedule meetings and calendar events', 'Assign and manage tasks', 'Coordinate team schedules effectively', 'Use Outlook To Do'],
+      materials: ['Outlook Calendar access', 'Task manager guide', 'Real-world simulation scenarios', 'Weekly Calendar Blocking Template'],
+      content: { introduction: 'Effective scheduling is crucial for productivity. Learn to manage your time like a pro.' },
+      duration: 120,
+      order_index: 3,
+      created_at: nowISO(),
+      updated_at: nowISO()
+    },
+    {
+      id: crypto.randomUUID(),
+      class_id: classId,
+      title: 'Day 4: Certification Practice & Phishing Security',
+      description: 'MOS Outlook certification prep and cybersecurity awareness training',
+      objectives: ['Practice MOS certification exam questions', 'Identify phishing attempts', 'Apply security best practices', 'Complete course reflection'],
+      materials: ['CertPREP practice tests', 'Phishing examples', 'Security checklist', 'Course survey'],
+      content: { introduction: 'Final day! Let us prepare for certification and learn to stay safe online.' },
+      duration: 120,
+      order_index: 4,
+      created_at: nowISO(),
+      updated_at: nowISO()
+    }
   ]
+  
+  const { data: createdLessons, error: lessonsError } = await db.from('lessons').insert(lessons).select()
+  if (lessonsError) {
+    console.error('Failed to create lessons:', lessonsError)
+    throw new Error(`Failed to create lessons: ${lessonsError.message}`)
+  }
+  console.log(`Created ${createdLessons.length} lessons`)
+
+  // create lesson components for interactive content
+  console.log('Creating lesson components...')
+  const lessonComponents = []
+  for (const lesson of createdLessons) {
+    lessonComponents.push(
+      {
+        id: crypto.randomUUID(),
+        lesson_id: lesson.id,
+        component_type: 'video',
+        content: { 
+          url: 'https://youtu.be/pWGtXWumb4A',
+          title: 'Outlook Navigation Overview',
+          description: 'Learn the basics of navigating Microsoft Outlook'
+        },
+        order: 1,
+        enabled: true,
+        created_at: nowISO(),
+        updated_at: nowISO()
+      },
+      {
+        id: crypto.randomUUID(),
+        lesson_id: lesson.id,
+        component_type: 'instructions',
+        content: {
+          title: lesson.title,
+          text: `<h2>${lesson.title}</h2><p>${lesson.description}</p><h3>Learning Objectives:</h3><ul>${lesson.objectives.map((obj: string) => `<li>${obj}</li>`).join('')}</ul><h3>Materials Needed:</h3><ul>${lesson.materials.map((mat: string) => `<li>${mat}</li>`).join('')}</ul>`
+        },
+        order: 2,
+        enabled: true,
+        created_at: nowISO(),
+        updated_at: nowISO()
+      },
+      {
+        id: crypto.randomUUID(),
+        lesson_id: lesson.id,
+        component_type: 'activity',
+        content: {
+          title: 'Hands-On Practice',
+          description: 'Complete the practice activities to reinforce your learning',
+          instructions: lesson.description
+        },
+        order: 3,
+        enabled: true,
+        created_at: nowISO(),
+        updated_at: nowISO()
+      }
+    )
+  }
+  
+  const { error: componentsError } = await db.from('lesson_components').insert(lessonComponents)
+  if (componentsError) {
+    console.error('Warning: Failed to create lesson components:', componentsError)
+  } else {
+    console.log(`Created ${lessonComponents.length} lesson components`)
+  }
+
+  // assignments with rich realistic content
+  const ASSIGNMENT_IDS = generateAssignmentIds(4)
+  const bodies: Array<{title:string;html:string;rubric:string;days:number;}> = [
+    { 
+      title:'Outlook Treasure Hunt', 
+      html:`<h2>Outlook Treasure Hunt Assignment</h2>
+<p>Complete the following tasks to familiarize yourself with Outlook's key features:</p>
+<ol>
+  <li><strong>Send a test email</strong> to yourself with the subject "Outlook Test"</li>
+  <li><strong>Create three custom folders</strong>: Work, Personal, and Archive</li>
+  <li><strong>Search for messages</strong> using keywords and date filters</li>
+  <li><strong>Apply tags/categories</strong> to 3 different emails</li>
+  <li><strong>Set up an email signature</strong> with your name and role</li>
+</ol>
+<p><strong>Submission Requirements:</strong> Take screenshots of each completed task and upload them as a single document or zip file.</p>`,
+      rubric:`<h3>Grading Rubric (100 points)</h3>
+<ul>
+  <li><strong>All 5 tasks completed:</strong> 50 points</li>
+  <li><strong>Screenshots clearly show completion:</strong> 30 points</li>
+  <li><strong>Organization and presentation:</strong> 20 points</li>
+</ul>`,
+      days:3 
+    },
+    { 
+      title:'Professional Email Writing', 
+      html:`<h2>Professional Email Assignment</h2>
+<p>Write professional emails for the following three workplace scenarios:</p>
+<h3>Scenario 1: Requesting Time Off</h3>
+<p>Write an email to your supervisor requesting 2 days off next month. Include dates and reason.</p>
+<h3>Scenario 2: Client Follow-Up</h3>
+<p>Follow up with a client about the status of a project. Be professional and clear about next steps.</p>
+<h3>Scenario 3: Meeting Response</h3>
+<p>Respond to a meeting invitation, confirming your attendance and requesting the agenda.</p>
+<p><strong>Requirements for each email:</strong></p>
+<ul>
+  <li>Appropriate subject line</li>
+  <li>Professional greeting and closing</li>
+  <li>Clear, concise body text with proper tone</li>
+  <li>Proper email structure</li>
+</ul>
+<p><strong>Bonus:</strong> Submit your drafts to ChatGPT for feedback, then revise and highlight the changes you made.</p>`,
+      rubric:`<h3>Grading Rubric (100 points)</h3>
+<ul>
+  <li><strong>Content and clarity:</strong> 40 points</li>
+  <li><strong>Professional tone:</strong> 30 points</li>
+  <li><strong>Format and structure:</strong> 20 points</li>
+  <li><strong>AI revision reflection (bonus):</strong> 10 points</li>
+</ul>`,
+      days:5 
+    },
+    { 
+      title:'Calendar Coordination Challenge', 
+      html:`<h2>Calendar Management Assignment</h2>
+<p>You need to coordinate a team meeting with the following requirements:</p>
+<ul>
+  <li><strong>4 team members</strong> in different time zones (EST, CST, PST, GMT)</li>
+  <li><strong>Meeting duration:</strong> 1 hour</li>
+  <li><strong>Conference room booking</strong> required</li>
+  <li><strong>Send calendar invitations</strong> to all participants</li>
+  <li><strong>Create task assignments</strong> for meeting preparation</li>
+</ul>
+<h3>Deliverables:</h3>
+<ol>
+  <li>Screenshot of calendar with meeting scheduled showing all participants</li>
+  <li>Screenshot of task list with assigned prep items</li>
+  <li>Brief explanation of how you handled the time zone coordination</li>
+</ol>
+<p><strong>Tip:</strong> Use Outlook's "Scheduling Assistant" feature to find the best meeting time.</p>`,
+      rubric:`<h3>Grading Rubric (100 points)</h3>
+<ul>
+  <li><strong>Correct time zone coordination:</strong> 35 points</li>
+  <li><strong>Proper calendar invitation format:</strong> 25 points</li>
+  <li><strong>Task creation and assignment:</strong> 25 points</li>
+  <li><strong>Professional meeting details:</strong> 15 points</li>
+</ul>`,
+      days:7 
+    },
+    { 
+      title:'Phishing Detection Challenge', 
+      html:`<h2>Cybersecurity Challenge: Identify Phishing Attempts</h2>
+<p>Review the 10 emails in your practice inbox and complete the following:</p>
+<ol>
+  <li><strong>Identify the 3 phishing emails</strong> among the 10 provided</li>
+  <li><strong>List the red flags</strong> you noticed for each phishing attempt</li>
+  <li><strong>Describe the proper response</strong> for each suspicious email</li>
+  <li><strong>Create a security checklist</strong> (5-10 items) for your team to use when evaluating suspicious emails</li>
+</ol>
+<h3>Common Phishing Indicators to Watch For:</h3>
+<ul>
+  <li>Urgent or threatening language</li>
+  <li>Suspicious sender addresses</li>
+  <li>Unexpected requests for personal information</li>
+  <li>Poor grammar and spelling</li>
+  <li>Generic greetings ("Dear Customer")</li>
+  <li>Suspicious links or attachments</li>
+</ul>
+<p><strong>Real-World Scams to Know:</strong> Package delivery notices, fake job offers, student loan forgiveness scams, tech support scams, QR code traps</p>`,
+      rubric:`<h3>Grading Rubric (100 points)</h3>
+<ul>
+  <li><strong>Correctly identified phishing emails:</strong> 40 points</li>
+  <li><strong>Explanation of red flags:</strong> 30 points</li>
+  <li><strong>Response procedures:</strong> 20 points</li>
+  <li><strong>Security checklist quality:</strong> 10 points</li>
+</ul>`,
+      days:10 
+    },
+  ]
+  
   for (let i = 0; i < ASSIGNMENT_IDS.length; i++) {
     const id = ASSIGNMENT_IDS[i]
     const body = bodies[i]
     const due = new Date(); due.setDate(due.getDate()+body.days)
     await db.from('published_assignments').upsert({
-      id, class_assignment_id:id, class_id:classId,
-      title:body.title, instructions:body.html, description:`Demo assignment: ${body.title}`,
-      due_date:due.toISOString(), max_points:100, allow_text_response:true, max_files:3, file_types_allowed:['pdf','doc','docx','txt'],
+      id, class_assignment_id:id, class_id:classId, lesson_id: createdLessons[i]?.id,
+      title:body.title, instructions:body.html, description:`Week ${i+1} assignment for Outlook training`,
+      rubric: body.rubric,
+      due_date:due.toISOString(), max_points:100, allow_text_response:true, max_files:5, 
+      file_types_allowed:['pdf','doc','docx','txt','jpg','jpeg','png','zip'],
       published_at:nowISO(), is_active:true, created_at:nowISO(), updated_at:nowISO()
     })
   }
+  console.log(`Created ${ASSIGNMENT_IDS.length} assignments`)
 
   // grades scaffolding
   let { data: cat } = await db.from('grade_categories').select('id').eq('name','Assignments').maybeSingle()
@@ -299,11 +517,12 @@ async function seedDemoData(ownerId: string) {
   }
 
   // submissions + grades
-  const submissionRates = [0.7, 0.4, 2/12]
+  const submissionRates = [0.75, 0.5, 0.33, 0.17]
   const sampleAnswers = [
-    "AI examples include voice assistants, recommendation systems, and facial recognition. I've seen AI in my phone camera and on YouTube suggestions. AI can make mistakes because it learns from incomplete or biased data.",
-    "Train fairly with diverse, representative data. Test with varied examples and invite feedback to catch bias.",
-    "I used a no-code tool to classify apples vs. bananas. Clear, well-lit photos worked; blurry or occluded images confused the model."
+    "Completed all 5 tasks. Screenshots attached showing: 1) Test email sent to myself, 2) Three folders created (Work, Personal, Archive), 3) Search results using keyword filters, 4) Tags applied to emails, 5) Email signature configured with name and role.",
+    "Three professional emails completed:\n\n1. Time Off Request: Requested Nov 15-16 for family event, offered to complete urgent tasks beforehand.\n\n2. Client Follow-Up: Checked in on Q3 deliverables, proposed Friday meeting to review roadmap.\n\n3. Meeting Response: Confirmed attendance for Team Sync, requested agenda to prepare.\n\nAI feedback helped me improve tone and clarity - made language more concise and professional.",
+    "Scheduled team meeting for Tuesday 2pm EST (11am PST, 7pm GMT). Used Scheduling Assistant to find time that works for all 4 participants. Booked Conference Room B. Created task list: John - prepare slides, Maria - send pre-read materials, Chen - set up video conference, Lisa - take notes. Time zone coordination was tricky but I used world clock feature to verify.",
+    "Identified 3 phishing emails:\n\nEmail #3 (Free Gift Card): Red flags - suspicious sender, urgent tone, unverified link\n\nEmail #6 (Account Suspension): Red flags - threatening language, requests immediate action, fake sender address\n\nEmail #9 (Inheritance): Red flags - too good to be true, requests bank details, poor grammar\n\nProper response: Don't click links, report to IT, delete immediately.\n\nSecurity Checklist:\n1. Verify sender address\n2. Check for urgent/threatening language\n3. Hover over links before clicking\n4. Look for grammar errors\n5. Question unexpected requests\n6. Never share passwords/bank info\n7. Report suspicious emails to IT"
   ]
   for (let a=0;a<ASSIGNMENT_IDS.length;a++) {
     const assnId = ASSIGNMENT_IDS[a]
