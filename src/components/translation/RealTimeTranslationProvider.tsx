@@ -40,15 +40,6 @@ export const RealTimeTranslationProvider: React.FC<RealTimeTranslationProviderPr
     targetLanguage: string, 
     contentId?: string
   ): Promise<string | null> => {
-    if (!user) {
-      toast({
-        title: "Authentication Required",
-        description: "Please sign in to use translation features.",
-        variant: "destructive",
-      });
-      return null;
-    }
-
     // Check if we already have this translation cached
     const cacheKey = `${contentId || content.substring(0, 50)}_${targetLanguage}`;
     if (translatedContent.has(cacheKey)) {

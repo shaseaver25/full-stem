@@ -22,15 +22,6 @@ export const useLiveTranslation = () => {
   const { user } = useAuth();
 
   const translateText = async ({ text, targetLanguage, sourceLanguage = 'auto' }: TranslationRequest): Promise<string | null> => {
-    if (!user) {
-      toast({
-        title: "Authentication Required",
-        description: "Please sign in to use translation features.",
-        variant: "destructive",
-      });
-      return null;
-    }
-
     // Check cache first
     const cacheKey = `${text}_${targetLanguage}`;
     if (translationCache.has(cacheKey)) {
