@@ -115,16 +115,26 @@ export const useElevenLabsTTS = (language?: string) => {
       };
 
       audio.onloadedmetadata = () => {
-        setDuration(audio.duration);
-        console.log('Audio duration:', audio.duration);
+        const actualDuration = audio.duration;
+        setDuration(actualDuration);
+        console.log('Audio duration:', actualDuration, 'Playback rate:', audio.playbackRate);
+        
+        // Calculate adjusted duration based on playback rate
+        const adjustedDuration = actualDuration * audio.playbackRate;
         
         // Prefer precise server timings if provided
         if (serverTimings?.length) {
-          setWordTimings(serverTimings);
+          // Scale server timings based on playback rate
+          const scaledTimings = serverTimings.map(timing => ({
+            ...timing,
+            start: timing.start * audio.playbackRate,
+            end: timing.end * audio.playbackRate
+          }));
+          setWordTimings(scaledTimings);
           return;
         }
-        // Otherwise synthesize per-word timings across the REAL audio duration
-        const syntheticTimings = synthesizeTimings(localTokens, localWeights, audio.duration);
+        // Otherwise synthesize per-word timings using adjusted duration
+        const syntheticTimings = synthesizeTimings(localTokens, localWeights, adjustedDuration);
         setWordTimings(syntheticTimings);
       };
 
