@@ -18,7 +18,6 @@ export const useElevenLabsTTS = (language?: string) => {
   const [error, setError] = useState<string | null>(null);
   const timeUpdateIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const [wordTimings, setWordTimings] = useState<WordTiming[] | null>(null);
-  const syncCheckRef = useRef<{ lastSyncCheck: number; syncPoints: number[] }>({ lastSyncCheck: 0, syncPoints: [] });
 
   const isEnabled = true;
 
@@ -93,7 +92,7 @@ export const useElevenLabsTTS = (language?: string) => {
       // Reset timing states
       setWordTimings(null);
 
-      // Adjust playback rate based on user preference (optimized for highlighting sync)
+      // Set consistent playback rate based on user preference
       switch (textSpeed) {
         case 'Slow':
           audio.playbackRate = 0.8;
@@ -102,7 +101,7 @@ export const useElevenLabsTTS = (language?: string) => {
           audio.playbackRate = 1.2;
           break;
         default:
-          audio.playbackRate = 0.95; // Slightly slower than normal for better word sync
+          audio.playbackRate = 1.0;
       }
 
       // Set up event listeners before playing
@@ -122,21 +121,11 @@ export const useElevenLabsTTS = (language?: string) => {
         // Prefer precise server timings if provided
         if (serverTimings?.length) {
           setWordTimings(serverTimings);
-          // Identify sync points (end of sentences/paragraphs)
-          syncCheckRef.current.syncPoints = serverTimings
-            .map((timing, i) => ({ ...timing, i }))
-            .filter(timing => /[.!?]$/.test(timing.text.trim()) || timing.text.includes('\n'))
-            .map(timing => timing.end);
           return;
         }
         // Otherwise synthesize per-word timings across the REAL audio duration
         const syntheticTimings = synthesizeTimings(localTokens, localWeights, audio.duration);
         setWordTimings(syntheticTimings);
-        
-        // Identify sync points for synthetic timings
-        syncCheckRef.current.syncPoints = syntheticTimings
-          .filter(timing => /[.!?]$/.test(timing.text.trim()) || timing.text.includes('\n'))
-          .map(timing => timing.end);
       };
 
       audio.onplay = () => {
@@ -144,16 +133,12 @@ export const useElevenLabsTTS = (language?: string) => {
         setIsPlaying(true);
         setIsPaused(false);
         
-         // Start time tracking for word highlighting sync - aggressive correction
+         // Start time tracking for word highlighting
          timeUpdateIntervalRef.current = setInterval(() => {
            if (audio && !audio.paused) {
-             const currentAudioTime = audio.currentTime;
-             setCurrentTime(currentAudioTime);
-             
-             // Apply sync correction every update
-             adjustPlaybackForSync(audio, currentAudioTime);
+             setCurrentTime(audio.currentTime);
            }
-         }, 50); // Check every 50ms for very responsive sync
+         }, 50); // Update every 50ms for responsive highlighting
       };
 
       audio.onpause = () => {
@@ -236,48 +221,6 @@ export const useElevenLabsTTS = (language?: string) => {
     }
   }, [preferences]);
 
-  // Dynamic sync correction function - simplified and more effective
-  const adjustPlaybackForSync = useCallback((audio: HTMLAudioElement, currentAudioTime: number) => {
-    if (!wordTimings || wordTimings.length === 0) return;
-    
-    // Find which word should be highlighted right now based on audio time
-    const expectedWordIndex = wordTimings.findIndex(
-      timing => currentAudioTime >= timing.start && currentAudioTime <= timing.end
-    );
-    
-    // If we're between words or at the end, don't adjust
-    if (expectedWordIndex === -1) return;
-    
-    // Calculate how far we are through the current word (0 to 1)
-    const currentWord = wordTimings[expectedWordIndex];
-    const progressThroughWord = (currentAudioTime - currentWord.start) / (currentWord.end - currentWord.start);
-    
-    // If we're moving too fast through words, slow down
-    if (progressThroughWord > 0.8) {  // Near end of word, slow down to let highlighting catch up
-      audio.playbackRate = getBasePlaybackRate() * 0.6;
-      console.log(`Slowing down to ${audio.playbackRate} - progress: ${progressThroughWord.toFixed(2)}`);
-    }
-    // If we're moving too slow, speed up slightly
-    else if (progressThroughWord < 0.1 && currentAudioTime > currentWord.start + 0.1) {
-      audio.playbackRate = getBasePlaybackRate() * 1.1;
-      console.log(`Speeding up to ${audio.playbackRate} - progress: ${progressThroughWord.toFixed(2)}`);
-    }
-    // Normal rate when we're in the middle of a word
-    else if (progressThroughWord >= 0.1 && progressThroughWord <= 0.8) {
-      audio.playbackRate = getBasePlaybackRate();
-    }
-  }, [wordTimings, preferences]);
-
-  // Helper to get base playback rate from user preferences
-  const getBasePlaybackRate = useCallback(() => {
-    const textSpeed = preferences?.['Text Speed'] || 'Normal';
-    switch (textSpeed) {
-      case 'Slow': return 0.8;
-      case 'Fast': return 1.2;
-      default: return 0.95;
-    }
-  }, [preferences]);
-
   const pause = useCallback(() => {
     if (audioRef.current && !audioRef.current.paused) {
       audioRef.current.pause();
@@ -298,14 +241,12 @@ export const useElevenLabsTTS = (language?: string) => {
         });
       }
       
-       // Restart time tracking with sync correction
+       // Restart time tracking
        timeUpdateIntervalRef.current = setInterval(() => {
          if (audioRef.current && !audioRef.current.paused) {
-           const currentAudioTime = audioRef.current.currentTime;
-           setCurrentTime(currentAudioTime);
-           adjustPlaybackForSync(audioRef.current, currentAudioTime);
+           setCurrentTime(audioRef.current.currentTime);
          }
-       }, 50); // Check every 50ms for very responsive sync
+       }, 50); // Update every 50ms for responsive highlighting
     }
   }, []);
 
@@ -321,8 +262,6 @@ export const useElevenLabsTTS = (language?: string) => {
       clearInterval(timeUpdateIntervalRef.current);
       timeUpdateIntervalRef.current = null;
     }
-    // Reset sync tracking
-    syncCheckRef.current = { lastSyncCheck: 0, syncPoints: [] };
   }, []);
 
   const seek = useCallback((targetTime: number) => {
