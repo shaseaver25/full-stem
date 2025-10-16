@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { BookOpen, Globe } from 'lucide-react';
 import AdaptiveContentBox from './AdaptiveContentBox';
 import InlineReadAloud from '@/components/InlineReadAloud';
+import SafeHtml from '@/components/ui/SafeHtml';
 
 interface LessonContentProps {
   showPersonalizedView: boolean;
@@ -64,10 +65,11 @@ const LessonContent: React.FC<LessonContentProps> = ({
               <h3 className="font-semibold text-lg text-primary">English (Primary Instruction)</h3>
               <Badge variant="secondary">Original</Badge>
             </div>
-            <div className="prose prose-sm max-w-none bg-background p-6 rounded-lg border shadow-sm min-h-[400px]">
-              <div className="whitespace-pre-wrap leading-relaxed text-foreground">
-                {lessonContent}
-              </div>
+            <div className="bg-background p-6 rounded-lg border shadow-sm min-h-[400px]">
+              <SafeHtml 
+                html={lessonContent}
+                className="prose prose-sm max-w-none text-foreground"
+              />
             </div>
             {/* Accessibility features */}
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -89,10 +91,11 @@ const LessonContent: React.FC<LessonContentProps> = ({
                 <h3 className="font-semibold text-lg text-blue-600">{liveTranslationLanguage} (Language Support)</h3>
                 <Badge variant="outline" className="border-blue-200 text-blue-600">Translation</Badge>
               </div>
-              <div className="prose prose-sm max-w-none bg-blue-50 p-6 rounded-lg border border-blue-200 shadow-sm min-h-[400px]">
-                <div className="whitespace-pre-wrap leading-relaxed text-gray-800">
-                  {liveTranslatedContent}
-                </div>
+              <div className="bg-blue-50 p-6 rounded-lg border border-blue-200 shadow-sm min-h-[400px]">
+                <SafeHtml 
+                  html={liveTranslatedContent}
+                  className="prose prose-sm max-w-none text-gray-800"
+                />
               </div>
               {/* EL support indicator */}
               <div className="flex items-center gap-2 text-xs text-blue-600">
