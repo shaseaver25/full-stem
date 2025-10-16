@@ -265,9 +265,10 @@ async function seedDemoData(ownerId: string) {
 
   // create 4 comprehensive lessons based on Outlook curriculum
   console.log('Creating lessons...')
+  const DEMO_LESSON_ID = '961aaf3e-4e1a-4617-87b7-8fd56ec8848f' // Fixed ID for the public demo button
   const lessons = [
     {
-      id: crypto.randomUUID(),
+      id: DEMO_LESSON_ID, // Use fixed ID for demo lesson
       class_id: classId,
       title: 'Day 1: Getting Started with Outlook',
       description: 'Navigate Outlook interface, manage inbox, folders, and basic features',
