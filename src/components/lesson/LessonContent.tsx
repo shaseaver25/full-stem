@@ -1,8 +1,9 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { BookOpen, Globe } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { BookOpen, Globe, Volume2 } from 'lucide-react';
 import AdaptiveContentBox from './AdaptiveContentBox';
 import InlineReadAloud from '@/components/InlineReadAloud';
 import SafeHtml from '@/components/ui/SafeHtml';
@@ -24,6 +25,9 @@ const LessonContent: React.FC<LessonContentProps> = ({
   liveTranslatedContent,
   liveTranslationLanguage
 }) => {
+  const [showReadAloud, setShowReadAloud] = useState(false);
+  const [showTranslatedReadAloud, setShowTranslatedReadAloud] = useState(false);
+
   if (showPersonalizedView) {
     return (
       <div className="space-y-6">
@@ -77,10 +81,24 @@ const LessonContent: React.FC<LessonContentProps> = ({
               <span>•</span>
               <span>🎯 IEP/504 accommodations supported</span>
             </div>
-            {/* Read aloud integration */}
+            {/* Read aloud button */}
             <div className="mt-4">
-              <InlineReadAloud text={lessonContent} language="en" />
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => setShowReadAloud(!showReadAloud)}
+                className="gap-2"
+              >
+                <Volume2 className="h-4 w-4" />
+                {showReadAloud ? 'Hide' : 'Show'} Read Aloud
+              </Button>
             </div>
+            {/* Read aloud integration - only shown when activated */}
+            {showReadAloud && (
+              <div className="mt-4">
+                <InlineReadAloud text={lessonContent} language="en" />
+              </div>
+            )}
           </div>
 
           {/* Translated content pane - only shown when translation is available */}
@@ -103,13 +121,27 @@ const LessonContent: React.FC<LessonContentProps> = ({
                 <span>•</span>
                 <span>🗣️ Multilingual accessibility</span>
               </div>
-              {/* Read aloud for translated content */}
+              {/* Read aloud button for translated content */}
               <div className="mt-4">
-                <InlineReadAloud 
-                  text={liveTranslatedContent} 
-                  language={liveTranslationLanguage?.toLowerCase() || 'auto'} 
-                />
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => setShowTranslatedReadAloud(!showTranslatedReadAloud)}
+                  className="gap-2"
+                >
+                  <Volume2 className="h-4 w-4" />
+                  {showTranslatedReadAloud ? 'Hide' : 'Show'} Read Aloud
+                </Button>
               </div>
+              {/* Read aloud for translated content - only shown when activated */}
+              {showTranslatedReadAloud && (
+                <div className="mt-4">
+                  <InlineReadAloud 
+                    text={liveTranslatedContent} 
+                    language={liveTranslationLanguage?.toLowerCase() || 'auto'} 
+                  />
+                </div>
+              )}
             </div>
           )}
         </div>
