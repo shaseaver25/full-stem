@@ -8,7 +8,8 @@ export const useInPlaceWordHighlighter = (
   currentTime: number,
   isActive: boolean,
   language?: string,
-  mode: 'word' | 'sentence' = 'sentence' // Default to sentence mode
+  mode: 'word' | 'sentence' = 'sentence', // Default to sentence mode
+  leadTime: number = 0.4 // Lead time in seconds to trigger highlighting early
 ) => {
   const wrappedSpansRef = useRef<HTMLElement[]>([]);
   const lastHighlightedIndexRef = useRef<number>(-1);
@@ -98,20 +99,21 @@ export const useInPlaceWordHighlighter = (
     isInitializedRef.current = true;
   }, [isBrowser, containerRef, isActive]);
 
-  // Calculate current segment index based on timing
+  // Calculate current segment index based on timing with lead time offset
   const currentSegmentIndex = useMemo(() => {
     if (!timings.length || !isActive) return -1;
     
-    const t = Math.max(0, currentTime);
-    let idx = timings.findIndex(w => t >= w.start && t < w.end);
+    // Apply lead time to trigger highlighting earlier
+    const adjustedTime = Math.max(0, currentTime + leadTime);
+    let idx = timings.findIndex(w => adjustedTime >= w.start && adjustedTime < w.end);
     
     // If we're past all timings, highlight the last segment
-    if (idx === -1 && t >= timings[timings.length - 1]?.end) {
+    if (idx === -1 && adjustedTime >= timings[timings.length - 1]?.end) {
       idx = timings.length - 1;
     }
     
     return idx;
-  }, [timings, currentTime, isActive]);
+  }, [timings, currentTime, isActive, leadTime]);
 
   // Update highlighting based on current segment index
   useEffect(() => {
