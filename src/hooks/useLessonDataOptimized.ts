@@ -62,19 +62,58 @@ export const useLessonDataOptimized = (lessonId: string): LessonDataOptimized =>
       }
 
       try {
-        const { data, error } = await supabase
-          .from('Lessons')
+        // Try new lessons table first (UUID-based)
+        const { data: newLesson, error: newError } = await supabase
+          .from('lessons')
           .select('*')
-          .eq('Lesson ID', parseInt(lessonId))
+          .eq('id', lessonId)
           .maybeSingle();
 
-        if (error) {
-          console.error('Error fetching lesson:', error);
-          throw error;
+        if (newLesson) {
+          console.log('Lesson data fetched from new table:', newLesson.title);
+          // Map new schema to old schema for backwards compatibility
+          return {
+            'Lesson ID': 0, // Not used anymore
+            Title: newLesson.title,
+            Description: newLesson.description,
+            Track: null,
+            Order: newLesson.order_index,
+            Text: JSON.stringify(newLesson.content), // Store content JSON as text
+            'Text (Grade 3)': null,
+            'Text (Grade 5)': null,
+            'Text (Grade 8)': null,
+            'Text (High School)': null,
+            Texta: null,
+            'Translated Content': null,
+            'Source Doc URL': null,
+            slug: null,
+            video_url: newLesson.materials?.[0] || null,
+            desmos_enabled: newLesson.desmos_enabled,
+            desmos_type: newLesson.desmos_type as 'calculator' | 'geometry' | null,
+          } as LessonData;
         }
 
-        console.log('Lesson data fetched successfully:', data?.Title);
-        return data as LessonData;
+        // Fallback to old Lessons table (bigint-based)
+        const numericId = parseInt(lessonId);
+        if (!isNaN(numericId)) {
+          const { data: oldLesson, error: oldError } = await supabase
+            .from('Lessons')
+            .select('*')
+            .eq('Lesson ID', numericId)
+            .maybeSingle();
+
+          if (oldLesson) {
+            console.log('Lesson data fetched from old table:', oldLesson.Title);
+            return oldLesson as LessonData;
+          }
+          
+          if (oldError) {
+            console.error('Error fetching from old lessons:', oldError);
+          }
+        }
+
+        console.log('No lesson found in either table');
+        return null;
       } catch (err) {
         console.error('Exception in lesson fetch:', err);
         throw err;
