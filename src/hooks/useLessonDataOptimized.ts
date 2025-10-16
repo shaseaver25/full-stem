@@ -71,14 +71,58 @@ export const useLessonDataOptimized = (lessonId: string): LessonDataOptimized =>
 
         if (newLesson) {
           console.log('Lesson data fetched from new table:', newLesson.title);
+          
+          // Extract readable content from new lesson format
+          let textContent = '';
+          if (newLesson.content && typeof newLesson.content === 'object') {
+            const content = newLesson.content as any;
+            
+            // Start with introduction if available
+            if (content.introduction) {
+              textContent += `<div class="lesson-introduction">\n${content.introduction}\n</div>\n\n`;
+            }
+            
+            // Add objectives if available
+            if (newLesson.objectives && Array.isArray(newLesson.objectives) && newLesson.objectives.length > 0) {
+              textContent += `<div class="lesson-objectives">\n<h3>Learning Objectives:</h3>\n<ul>\n`;
+              newLesson.objectives.forEach((obj: string) => {
+                textContent += `  <li>${obj}</li>\n`;
+              });
+              textContent += `</ul>\n</div>\n\n`;
+            }
+            
+            // Add activities if available
+            if (content.activities && Array.isArray(content.activities) && content.activities.length > 0) {
+              textContent += `<div class="lesson-activities">\n<h3>Activities:</h3>\n<ol>\n`;
+              content.activities.forEach((activity: any) => {
+                textContent += `  <li><strong>${activity.type}:</strong> ${activity.content}</li>\n`;
+              });
+              textContent += `</ol>\n</div>\n\n`;
+            }
+            
+            // Add resources if available
+            if (content.resources && Array.isArray(content.resources) && content.resources.length > 0) {
+              textContent += `<div class="lesson-resources">\n<h3>Resources:</h3>\n<ul>\n`;
+              content.resources.forEach((resource: any) => {
+                textContent += `  <li>${resource.title} (${resource.type})</li>\n`;
+              });
+              textContent += `</ul>\n</div>\n`;
+            }
+          }
+          
+          // Fallback if no content extracted
+          if (!textContent) {
+            textContent = newLesson.description || 'No content available for this lesson.';
+          }
+          
           // Map new schema to old schema for backwards compatibility
           return {
-            'Lesson ID': 0, // Not used anymore
+            'Lesson ID': 0,
             Title: newLesson.title,
             Description: newLesson.description,
             Track: null,
             Order: newLesson.order_index,
-            Text: JSON.stringify(newLesson.content), // Store content JSON as text
+            Text: textContent,
             'Text (Grade 3)': null,
             'Text (Grade 5)': null,
             'Text (Grade 8)': null,
