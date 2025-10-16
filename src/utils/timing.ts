@@ -30,6 +30,46 @@ export function synthesizeTimings(
 }
 
 /**
+ * Group word timings into sentence-level timings
+ * Sentences are detected by punctuation (., !, ?)
+ */
+export function groupTimingsIntoSentences(wordTimings: WordTiming[]): WordTiming[] {
+  if (wordTimings.length === 0) return [];
+  
+  const sentenceTimings: WordTiming[] = [];
+  let currentSentence: WordTiming[] = [];
+  let sentenceText = '';
+  
+  for (let i = 0; i < wordTimings.length; i++) {
+    const timing = wordTimings[i];
+    currentSentence.push(timing);
+    sentenceText += timing.text;
+    
+    // Check if this word ends a sentence (contains ., !, or ?)
+    const endsWithPunctuation = /[.!?]/.test(timing.text);
+    const isLastWord = i === wordTimings.length - 1;
+    
+    if (endsWithPunctuation || isLastWord) {
+      // Create a sentence timing from the accumulated words
+      sentenceTimings.push({
+        start: currentSentence[0].start,
+        end: currentSentence[currentSentence.length - 1].end,
+        index: sentenceTimings.length,
+        text: sentenceText.trim()
+      });
+      
+      // Reset for next sentence
+      currentSentence = [];
+      sentenceText = '';
+    } else {
+      sentenceText += ' '; // Add space between words
+    }
+  }
+  
+  return sentenceTimings;
+}
+
+/**
  * Validate that timings are strictly increasing and within bounds
  */
 export function validateTimings(timings: WordTiming[], duration: number): boolean {

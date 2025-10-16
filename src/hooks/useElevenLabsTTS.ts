@@ -2,7 +2,7 @@ import { useRef, useState, useCallback, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useUserPreferences } from './useUserPreferences';
 import { segmentWords, calculateWordWeight } from '@/utils/segment';
-import { synthesizeTimings } from '@/utils/timing';
+import { synthesizeTimings, groupTimingsIntoSentences } from '@/utils/timing';
 import { WordTiming, TTSOptions } from '@/types/tts';
 
 type SpeakOpts = TTSOptions;
@@ -130,12 +130,16 @@ export const useElevenLabsTTS = (language?: string) => {
             start: timing.start * audio.playbackRate,
             end: timing.end * audio.playbackRate
           }));
-          setWordTimings(scaledTimings);
+          // Group word timings into sentence timings
+          const sentenceTimings = groupTimingsIntoSentences(scaledTimings);
+          setWordTimings(sentenceTimings);
           return;
         }
         // Otherwise synthesize per-word timings using adjusted duration
         const syntheticTimings = synthesizeTimings(localTokens, localWeights, adjustedDuration);
-        setWordTimings(syntheticTimings);
+        // Group synthetic timings into sentence timings
+        const sentenceTimings = groupTimingsIntoSentences(syntheticTimings);
+        setWordTimings(sentenceTimings);
       };
 
       audio.onplay = () => {
