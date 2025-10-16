@@ -7,7 +7,8 @@ export const useInPlaceWordHighlighter = (
   timings: WordTiming[],
   currentTime: number,
   isActive: boolean,
-  language?: string
+  language?: string,
+  mode: 'word' | 'sentence' = 'sentence' // Default to sentence mode
 ) => {
   const wrappedSpansRef = useRef<HTMLElement[]>([]);
   const lastHighlightedIndexRef = useRef<number>(-1);
@@ -23,7 +24,7 @@ export const useInPlaceWordHighlighter = (
     const container = containerRef.current;
     const spans: HTMLElement[] = [];
 
-    // Walk through all text nodes and wrap non-whitespace tokens
+    // Walk through all text nodes and wrap based on mode (sentence or word)
     const wrapTextNodes = (node: Node) => {
       if (node.nodeType === Node.TEXT_NODE) {
         const textNode = node as Text;
@@ -32,41 +33,58 @@ export const useInPlaceWordHighlighter = (
         if (!text.trim()) return;
 
         const fragment = document.createDocumentFragment();
-        // Use international word segmentation
-        const words = segmentWords(text, language);
-        let wordIndex = 0;
-
-        // Split by words but preserve whitespace structure
-        const parts = text.split(/(\s+)/);
         
-        for (const part of parts) {
-          if (!part) continue;
+        if (mode === 'sentence') {
+          // Split by sentence boundaries (., !, ?)
+          const sentences = text.split(/([.!?]+\s+)/);
           
-          if (/^\s+$/.test(part)) {
-            // Preserve whitespace as-is
-            fragment.appendChild(document.createTextNode(part));
-          } else {
-            // Check if this part contains word content
-            const partWords = segmentWords(part, language);
-            if (partWords.length > 0) {
-              // Wrap the whole part in a span
+          for (let i = 0; i < sentences.length; i++) {
+            const part = sentences[i];
+            if (!part) continue;
+            
+            // Check if this is actual sentence content (not just punctuation/whitespace)
+            if (part.trim() && !/^[.!?\s]+$/.test(part)) {
               const span = document.createElement('span');
               span.textContent = part;
-              span.setAttribute('data-word', spans.length.toString());
-              span.className = 'readable-word';
-              span.style.transition = 'background-color 0.12s ease';
+              span.setAttribute('data-segment', spans.length.toString());
+              span.className = 'readable-segment';
+              span.style.transition = 'background-color 0.2s ease';
               fragment.appendChild(span);
               spans.push(span);
             } else {
-              // No word content, keep as text
+              // Keep punctuation and whitespace as-is
               fragment.appendChild(document.createTextNode(part));
+            }
+          }
+        } else {
+          // Word mode (original logic)
+          const words = segmentWords(text, language);
+          const parts = text.split(/(\s+)/);
+          
+          for (const part of parts) {
+            if (!part) continue;
+            
+            if (/^\s+$/.test(part)) {
+              fragment.appendChild(document.createTextNode(part));
+            } else {
+              const partWords = segmentWords(part, language);
+              if (partWords.length > 0) {
+                const span = document.createElement('span');
+                span.textContent = part;
+                span.setAttribute('data-segment', spans.length.toString());
+                span.className = 'readable-segment';
+                span.style.transition = 'background-color 0.12s ease';
+                fragment.appendChild(span);
+                spans.push(span);
+              } else {
+                fragment.appendChild(document.createTextNode(part));
+              }
             }
           }
         }
 
         textNode.replaceWith(fragment);
       } else if (node.nodeType === Node.ELEMENT_NODE) {
-        // Recursively process child nodes
         const children = Array.from(node.childNodes);
         children.forEach(wrapTextNodes);
       }
@@ -80,14 +98,14 @@ export const useInPlaceWordHighlighter = (
     isInitializedRef.current = true;
   }, [isBrowser, containerRef, isActive]);
 
-  // Calculate current word index based on timing
-  const currentWordIndex = useMemo(() => {
+  // Calculate current segment index based on timing
+  const currentSegmentIndex = useMemo(() => {
     if (!timings.length || !isActive) return -1;
     
     const t = Math.max(0, currentTime);
     let idx = timings.findIndex(w => t >= w.start && t < w.end);
     
-    // If we're past all timings, highlight the last word
+    // If we're past all timings, highlight the last segment
     if (idx === -1 && t >= timings[timings.length - 1]?.end) {
       idx = timings.length - 1;
     }
@@ -95,7 +113,7 @@ export const useInPlaceWordHighlighter = (
     return idx;
   }, [timings, currentTime, isActive]);
 
-  // Update highlighting based on current word index
+  // Update highlighting based on current segment index
   useEffect(() => {
     if (!isBrowser || !isInitializedRef.current || wrappedSpansRef.current.length === 0) {
       return;
@@ -103,30 +121,30 @@ export const useInPlaceWordHighlighter = (
 
     const spans = wrappedSpansRef.current;
     const prevIndex = lastHighlightedIndexRef.current;
-    const newIndex = currentWordIndex;
+    const newIndex = currentSegmentIndex;
 
-    // Remove highlight from previous word
+    // Remove highlight from previous segment
     if (prevIndex >= 0 && prevIndex < spans.length) {
       const prevSpan = spans[prevIndex];
-      prevSpan.removeAttribute('data-word-highlight');
+      prevSpan.removeAttribute('data-highlight');
       prevSpan.removeAttribute('aria-current');
       prevSpan.style.backgroundColor = '';
       prevSpan.style.borderRadius = '';
       prevSpan.style.padding = '';
     }
 
-    // Add highlight to current word
+    // Add highlight to current segment
     if (newIndex >= 0 && newIndex < spans.length) {
       const currentSpan = spans[newIndex];
-      currentSpan.setAttribute('data-word-highlight', 'true');
+      currentSpan.setAttribute('data-highlight', 'true');
       currentSpan.setAttribute('aria-current', 'true');
       currentSpan.style.backgroundColor = 'rgba(59,130,246,0.35)';
       currentSpan.style.borderRadius = '3px';
-      currentSpan.style.padding = '0 2px';
+      currentSpan.style.padding = '2px 4px';
     }
 
     lastHighlightedIndexRef.current = newIndex;
-  }, [isBrowser, currentWordIndex]);
+  }, [isBrowser, currentSegmentIndex]);
 
   // Clean up when not active
   useEffect(() => {
@@ -136,7 +154,7 @@ export const useInPlaceWordHighlighter = (
       // Remove all highlights when not active
       if (isInitializedRef.current && wrappedSpansRef.current.length > 0) {
         wrappedSpansRef.current.forEach(span => {
-          span.removeAttribute('data-word-highlight');
+          span.removeAttribute('data-highlight');
           span.removeAttribute('aria-current');
           span.style.backgroundColor = '';
           span.style.borderRadius = '';
@@ -155,6 +173,6 @@ export const useInPlaceWordHighlighter = (
     };
   }, [containerRef]);
 
-  // Return the currently highlighted word index for external use (like auto-scroll)
-  return { currentWordIndex: isActive ? currentWordIndex : -1 };
+  // Return the currently highlighted segment index for external use (like auto-scroll)
+  return { currentWordIndex: isActive ? currentSegmentIndex : -1 };
 };
