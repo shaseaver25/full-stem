@@ -80,17 +80,15 @@ export function AccessibilityProvider({ children }: { children: ReactNode }) {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       
-      if (!user) {
-        toast({
-          title: 'Authentication Required',
-          description: 'Please sign in to save accessibility settings.',
-          variant: 'destructive',
-        });
-        return;
-      }
-
+      // Always update local settings immediately for demo/anonymous users
       const newSettings = { ...settings, ...updates };
       setSettings(newSettings);
+      
+      // Only persist to database if user is authenticated
+      if (!user) {
+        // For demo/anonymous users, just keep settings in memory
+        return;
+      }
 
       const { error } = await supabase
         .from('accessibility_settings')
