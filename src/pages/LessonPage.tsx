@@ -172,16 +172,6 @@ const LessonPage = () => {
               />
             </Suspense>
 
-            {/* Smart Translation Widget - lazy loaded */}
-            <Suspense fallback={<LessonSkeleton type="content" />}>
-              <SmartTranslationWidget
-                content={lessonContent}
-                contentId={lessonId}
-                showControls={true}
-                autoTranslate={false}
-              />
-            </Suspense>
-
             {/* Assignment Section - lazy loaded */}
             <Suspense fallback={<LessonSkeleton type="assignment" />}>
               <AssignmentSection lessonId={lessonId || ''} />
