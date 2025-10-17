@@ -65,11 +65,18 @@ const LessonContent: React.FC<LessonContentProps> = ({
         <div className="space-y-4">
           <div className="flex items-center gap-2 mb-3">
             <h3 className="font-semibold text-lg text-primary">Lesson Content</h3>
-            <Badge variant="secondary">Original</Badge>
+            {liveTranslatedContent && liveTranslationLanguage ? (
+              <Badge variant="outline" className="ml-2">
+                <Globe className="h-3 w-3 mr-1" />
+                {liveTranslationLanguage}
+              </Badge>
+            ) : (
+              <Badge variant="secondary">English</Badge>
+            )}
           </div>
           <div className="bg-background p-6 rounded-lg border shadow-sm min-h-[400px]">
             <SafeHtml 
-              html={lessonContent}
+              html={liveTranslatedContent || lessonContent}
               className="prose prose-sm max-w-none text-foreground"
             />
           </div>
@@ -78,6 +85,12 @@ const LessonContent: React.FC<LessonContentProps> = ({
             <span>📖 Screen reader compatible</span>
             <span>•</span>
             <span>🎯 IEP/504 accommodations supported</span>
+            {liveTranslatedContent && (
+              <>
+                <span>•</span>
+                <span>🌍 Multilingual accessibility</span>
+              </>
+            )}
           </div>
           {/* Read aloud button */}
           <div className="mt-4">
@@ -94,7 +107,10 @@ const LessonContent: React.FC<LessonContentProps> = ({
           {/* Read aloud integration - only shown when activated */}
           {showReadAloud && (
             <div className="mt-4">
-              <InlineReadAloud text={lessonContent} language="en" />
+              <InlineReadAloud 
+                text={liveTranslatedContent || lessonContent} 
+                language={liveTranslationLanguage?.toLowerCase() || 'en'} 
+              />
             </div>
           )}
         </div>
