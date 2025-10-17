@@ -135,7 +135,7 @@ const LearningGeniusSurveyPage: React.FC = () => {
         />
 
         <div className="text-center mt-8">
-          <Button onClick={() => navigate('/dashboard')} variant="outline">
+          <Button onClick={() => navigate('/dashboard/student')} variant="outline">
             <User className="h-4 w-4 mr-2" />
             Back to Dashboard
           </Button>
