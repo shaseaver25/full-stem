@@ -72,6 +72,15 @@ export const StudentRosterPanel: React.FC<StudentRosterPanelProps> = ({ classId 
     fetchDemoStudents();
   }, [classId]);
 
+  // Open dialog when hash is #add-student
+  useEffect(() => {
+    if (window.location.hash === '#add-student') {
+      setIsAddDialogOpen(true);
+      // Clear the hash after opening
+      window.history.replaceState(null, '', window.location.pathname + window.location.search);
+    }
+  }, []);
+
   const handleAddStudent = async (data: StudentFormData) => {
     const studentData = {
       ...data,
@@ -192,7 +201,13 @@ export const StudentRosterPanel: React.FC<StudentRosterPanelProps> = ({ classId 
           <h2 className="text-xl font-semibold">Student Roster</h2>
           <Badge variant="secondary">{students.length} students</Badge>
         </div>
-        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+        <Dialog open={isAddDialogOpen} onOpenChange={(open) => {
+          setIsAddDialogOpen(open);
+          if (!open) {
+            setSearchQuery('');
+            setSearchResults([]);
+          }
+        }}>
           <DialogTrigger asChild>
             <Button>
               <Plus className="h-4 w-4 mr-2" />
@@ -206,7 +221,7 @@ export const StudentRosterPanel: React.FC<StudentRosterPanelProps> = ({ classId 
             </DialogHeader>
             
             <Tabs defaultValue="search" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
+              <TabsList className="grid w-full grid-cols-2 mb-4">
                 <TabsTrigger value="search">Search Existing</TabsTrigger>
                 <TabsTrigger value="create">Create New</TabsTrigger>
               </TabsList>
