@@ -110,8 +110,8 @@ const LessonContent: React.FC<LessonContentProps> = ({
           )}
         </div>
 
-        {/* Read aloud button */}
-        <div className="mt-4">
+        {/* Read aloud buttons */}
+        <div className="mt-4 flex gap-2">
           <Button 
             variant="outline" 
             size="sm"
@@ -119,16 +119,38 @@ const LessonContent: React.FC<LessonContentProps> = ({
             className="gap-2"
           >
             <Volume2 className="h-4 w-4" />
-            {showReadAloud ? 'Hide' : 'Show'} Read Aloud
+            {showReadAloud ? 'Hide' : 'Show'} English Read Aloud
           </Button>
+          
+          {liveTranslatedContent && liveTranslationLanguage && (
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => setShowTranslatedReadAloud(!showTranslatedReadAloud)}
+              className="gap-2"
+            >
+              <Volume2 className="h-4 w-4" />
+              {showTranslatedReadAloud ? 'Hide' : 'Show'} {liveTranslationLanguage} Read Aloud
+            </Button>
+          )}
         </div>
 
-        {/* Read aloud integration - only shown when activated */}
+        {/* Read aloud integration - English */}
         {showReadAloud && (
           <div className="mt-4">
             <InlineReadAloud 
               text={lessonContent} 
               language="en" 
+            />
+          </div>
+        )}
+
+        {/* Read aloud integration - Translated */}
+        {showTranslatedReadAloud && liveTranslatedContent && liveTranslationLanguage && (
+          <div className="mt-4">
+            <InlineReadAloud 
+              text={liveTranslatedContent} 
+              language={liveTranslationLanguage.toLowerCase()} 
             />
           </div>
         )}
