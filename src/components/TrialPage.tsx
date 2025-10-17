@@ -50,7 +50,7 @@ const TrialPage = () => {
             <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight">
               Join the 
               <span className="bg-gradient-to-r from-blue-600 via-green-600 to-orange-600 bg-clip-text text-transparent">
-                {' '}Full STEM Free Trial
+                {' '}TailoredU Trial
               </span>
             </h1>
             
