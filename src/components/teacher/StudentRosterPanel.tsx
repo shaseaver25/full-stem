@@ -14,6 +14,7 @@ import { AddAIClassStudents } from './AddAIClassStudents';
 import { MultiSelect, Option } from '@/components/ui/multi-select';
 import { useStudentManagement, Student, CreateStudentData, DemoStudent } from '@/hooks/useStudentManagement';
 import { useForm } from 'react-hook-form';
+import { supabase } from '@/integrations/supabase/client';
 
 interface StudentRosterPanelProps {
   classId: string;
@@ -60,6 +61,9 @@ export const StudentRosterPanel: React.FC<StudentRosterPanelProps> = ({ classId 
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
   const [selectedDemoStudents, setSelectedDemoStudents] = useState<string[]>([]);
   const [selectedModifications, setSelectedModifications] = useState<string[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<Student[]>([]);
+  const [searchLoading, setSearchLoading] = useState(false);
 
   const { register, handleSubmit, reset, setValue, watch } = useForm<StudentFormData>();
 
@@ -123,6 +127,63 @@ export const StudentRosterPanel: React.FC<StudentRosterPanelProps> = ({ classId 
     }
   };
 
+  const handleSearchStudents = async (query: string) => {
+    setSearchQuery(query);
+    if (!query.trim()) {
+      setSearchResults([]);
+      return;
+    }
+
+    setSearchLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('students')
+        .select('*')
+        .or(`first_name.ilike.%${query}%,last_name.ilike.%${query}%`)
+        .limit(20);
+
+      if (error) throw error;
+      
+      // Filter out students already in this class
+      const currentStudentIds = students.map(s => s.id);
+      const availableStudents = (data || []).filter(
+        student => !currentStudentIds.includes(student.id)
+      ).map(student => ({
+        ...student,
+        lesson_modifications: Array.isArray(student.lesson_modifications) 
+          ? student.lesson_modifications 
+          : []
+      })) as Student[];
+      
+      setSearchResults(availableStudents);
+    } catch (error) {
+      console.error('Error searching students:', error);
+    } finally {
+      setSearchLoading(false);
+    }
+  };
+
+  const handleEnrollExistingStudent = async (studentId: string) => {
+    try {
+      const { error } = await supabase
+        .from('class_students')
+        .insert({
+          class_id: classId,
+          student_id: studentId,
+          status: 'active'
+        });
+
+      if (error) throw error;
+
+      await fetchStudents();
+      setSearchQuery('');
+      setSearchResults([]);
+      setIsAddDialogOpen(false);
+    } catch (error) {
+      console.error('Error enrolling student:', error);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -156,16 +217,53 @@ export const StudentRosterPanel: React.FC<StudentRosterPanelProps> = ({ classId 
                   <Input 
                     id="search-student"
                     placeholder="Type student name to search..."
+                    value={searchQuery}
+                    onChange={(e) => handleSearchStudents(e.target.value)}
                     className="w-full"
                   />
                   <p className="text-xs text-muted-foreground">
                     Search will find students already registered in the system
                   </p>
                 </div>
-                <div className="border rounded-lg p-4 min-h-[200px]">
-                  <p className="text-sm text-muted-foreground text-center py-8">
-                    Start typing to search for students...
-                  </p>
+                <div className="border rounded-lg p-4 min-h-[200px] max-h-[400px] overflow-y-auto">
+                  {searchLoading ? (
+                    <p className="text-sm text-muted-foreground text-center py-8">
+                      Searching...
+                    </p>
+                  ) : searchQuery && searchResults.length === 0 ? (
+                    <p className="text-sm text-muted-foreground text-center py-8">
+                      No students found matching "{searchQuery}"
+                    </p>
+                  ) : searchResults.length > 0 ? (
+                    <div className="space-y-2">
+                      {searchResults.map((student) => (
+                        <div
+                          key={student.id}
+                          className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors"
+                        >
+                          <div>
+                            <p className="font-medium">
+                              {student.first_name} {student.last_name}
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              {student.grade_level} • {student.learning_style || 'N/A'}
+                            </p>
+                          </div>
+                          <Button
+                            size="sm"
+                            onClick={() => handleEnrollExistingStudent(student.id)}
+                          >
+                            <Plus className="h-4 w-4 mr-1" />
+                            Enroll
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground text-center py-8">
+                      Start typing to search for students...
+                    </p>
+                  )}
                 </div>
               </TabsContent>
               
