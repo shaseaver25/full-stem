@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Brain, BarChart3, Users, CheckCircle, Sparkles, Target, BookOpen } from "lucide-react";
 import { Link } from "react-router-dom";
+import CoreTracks from "@/components/CoreTracks";
 
 const TrialPage = () => {
   return (
@@ -148,6 +149,14 @@ const TrialPage = () => {
                 />
               </CardContent>
             </Card>
+          </div>
+
+          {/* Interested Tracks Section */}
+          <div className="mt-16">
+            <h2 className="text-3xl font-bold text-center mb-8 text-gray-900">
+              Interested Tracks
+            </h2>
+            <CoreTracks />
           </div>
 
           {/* Trust indicators */}
