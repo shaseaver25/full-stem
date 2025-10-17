@@ -66,6 +66,7 @@ const LiveTranslationBox: React.FC<LiveTranslationBoxProps> = ({
     setCurrentTargetLanguage('');
     setTargetLanguage('');
     setCustomLanguage('');
+    onTranslationComplete?.('', '');
   };
 
   const fullTranslatedText = translatedContent ? `${lessonTitle}. ${translatedContent}` : '';
@@ -79,39 +80,39 @@ const LiveTranslationBox: React.FC<LiveTranslationBoxProps> = ({
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {!translatedContent ? (
-          <div className="space-y-4">
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="flex-1">
-                <Select value={targetLanguage} onValueChange={setTargetLanguage}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select target language" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {commonLanguages.map((lang) => (
-                      <SelectItem key={lang.code} value={lang.code}>
-                        {lang.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              {targetLanguage === 'custom' && (
-                <div className="flex-1">
-                  <Input
-                    placeholder="Enter language name"
-                    value={customLanguage}
-                    onChange={(e) => setCustomLanguage(e.target.value)}
-                  />
-                </div>
-              )}
+        <div className="space-y-4">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex-1">
+              <Select value={targetLanguage} onValueChange={setTargetLanguage}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select target language" />
+                </SelectTrigger>
+                <SelectContent>
+                  {commonLanguages.map((lang) => (
+                    <SelectItem key={lang.code} value={lang.code}>
+                      {lang.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
+            
+            {targetLanguage === 'custom' && (
+              <div className="flex-1">
+                <Input
+                  placeholder="Enter language name"
+                  value={customLanguage}
+                  onChange={(e) => setCustomLanguage(e.target.value)}
+                />
+              </div>
+            )}
+          </div>
 
+          <div className="flex gap-2">
             <Button 
               onClick={handleTranslate}
               disabled={isTranslating || !targetLanguage || (targetLanguage === 'custom' && !customLanguage)}
-              className="w-full"
+              className="flex-1"
             >
               {isTranslating ? (
                 <>
@@ -125,33 +126,25 @@ const LiveTranslationBox: React.FC<LiveTranslationBoxProps> = ({
                 </>
               )}
             </Button>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <Badge variant="secondary" className="flex items-center gap-1">
-                <Globe className="h-3 w-3" />
-                Translated to {currentTargetLanguage}
-              </Badge>
-              <div className="flex items-center gap-2">
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={handleClearTranslation}
-                >
-                  <X className="h-4 w-4 mr-1" />
-                  Clear
-                </Button>
-              </div>
-            </div>
             
-            <div className="prose prose-sm max-w-none bg-blue-50 p-4 rounded-lg border border-blue-200 shadow-sm">
-              <p className="whitespace-pre-wrap leading-relaxed text-gray-800">
-                {translatedContent}
-              </p>
-            </div>
+            {translatedContent && (
+              <Button 
+                variant="outline"
+                onClick={handleClearTranslation}
+              >
+                <X className="h-4 w-4 mr-1" />
+                Clear
+              </Button>
+            )}
           </div>
-        )}
+
+          {translatedContent && currentTargetLanguage && (
+            <Badge variant="secondary" className="flex items-center gap-1 w-fit">
+              <Globe className="h-3 w-3" />
+              Translated to {currentTargetLanguage}
+            </Badge>
+          )}
+        </div>
       </CardContent>
     </Card>
   );

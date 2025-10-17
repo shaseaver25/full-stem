@@ -11,6 +11,7 @@ import EnhancedLessonControls from '@/components/lesson/EnhancedLessonControls';
 import LessonContent from '@/components/lesson/LessonContent';
 import LessonStatusNav from '@/components/lesson/LessonStatusNav';
 import ReadAloudDemoGuide from '@/components/lesson/ReadAloudDemoGuide';
+import LiveTranslationBox from '@/components/lesson/LiveTranslationBox';
 import { useLessonPageLogicOptimized } from '@/hooks/useLessonPageLogicOptimized';
 import { useGlobalSetting } from '@/hooks/useGlobalSettings';
 import { RealTimeTranslationProvider } from '@/components/translation/RealTimeTranslationProvider';
@@ -153,6 +154,13 @@ const LessonPage = () => {
               onToggleLessonView={toggleLessonView}
               fullLessonText={fullLessonText}
               lessonId={lesson['Lesson ID'].toString()}
+            />
+
+            {/* Translation Controls */}
+            <LiveTranslationBox
+              originalContent={lessonContent}
+              lessonTitle={lessonTitle}
+              onTranslationComplete={handleLiveTranslationComplete}
             />
 
             {/* Core Content Section - loads immediately */}

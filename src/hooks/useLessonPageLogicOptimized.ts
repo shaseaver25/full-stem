@@ -44,8 +44,8 @@ export const useLessonPageLogicOptimized = (lessonId: string) => {
   };
 
   const handleLiveTranslationComplete = (translatedContent: string, language: string) => {
-    setLiveTranslatedContent(translatedContent);
-    setLiveTranslationLanguage(language);
+    setLiveTranslatedContent(translatedContent || null);
+    setLiveTranslationLanguage(language || null);
   };
 
   // Convert the old UserProgress format to the new format for compatibility
