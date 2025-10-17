@@ -182,6 +182,17 @@ export const ClassesGrid = ({
                     </Button>
                   </div>
 
+                  {/* Add Single Student Button */}
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    className="w-full"
+                    onClick={() => navigate(`/classes/${cls.id}#add-student`)}
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Student
+                  </Button>
+
                   {/* Student Import */}
                   <ClassStudentImport 
                     classId={cls.id}
