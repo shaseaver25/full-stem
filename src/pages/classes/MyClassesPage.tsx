@@ -70,6 +70,13 @@ export default function MyClassesPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
+            <div className="flex items-center gap-4 mb-2">
+              <Button variant="ghost" size="sm" asChild>
+                <Link to="/dashboard/student">
+                  ← Back to Dashboard
+                </Link>
+              </Button>
+            </div>
             <h1 className="text-3xl sm:text-4xl font-bold text-foreground flex items-center gap-3">
               <GraduationCap className="w-8 h-8 text-primary" />
               My Classes
