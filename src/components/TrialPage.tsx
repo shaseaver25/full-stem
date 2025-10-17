@@ -55,7 +55,7 @@ const TrialPage = () => {
             </h1>
             
             <p className="text-xl md:text-2xl text-gray-700 mb-8 max-w-3xl mx-auto leading-relaxed">
-              Get early access to interactive STEM lessons—and help shape the future of education.
+              Get early access to personalized lessons--
             </p>
 
             {/* What You'll Get Section */}
