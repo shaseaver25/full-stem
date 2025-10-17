@@ -62,58 +62,76 @@ const LessonContent: React.FC<LessonContentProps> = ({
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="space-y-4">
-          <div className="flex items-center gap-2 mb-3">
-            <h3 className="font-semibold text-lg text-primary">Lesson Content</h3>
-            {liveTranslatedContent && liveTranslationLanguage ? (
-              <Badge variant="outline" className="ml-2">
-                <Globe className="h-3 w-3 mr-1" />
-                {liveTranslationLanguage}
-              </Badge>
-            ) : (
-              <Badge variant="secondary">English</Badge>
-            )}
-          </div>
-          <div className="bg-background p-6 rounded-lg border shadow-sm min-h-[400px]">
-            <SafeHtml 
-              html={liveTranslatedContent || lessonContent}
-              className="prose prose-sm max-w-none text-foreground"
-            />
-          </div>
-          {/* Accessibility features */}
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <span>📖 Screen reader compatible</span>
-            <span>•</span>
-            <span>🎯 IEP/504 accommodations supported</span>
-            {liveTranslatedContent && (
-              <>
-                <span>•</span>
-                <span>🌍 Multilingual accessibility</span>
-              </>
-            )}
-          </div>
-          {/* Read aloud button */}
-          <div className="mt-4">
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => setShowReadAloud(!showReadAloud)}
-              className="gap-2"
-            >
-              <Volume2 className="h-4 w-4" />
-              {showReadAloud ? 'Hide' : 'Show'} Read Aloud
-            </Button>
-          </div>
-          {/* Read aloud integration - only shown when activated */}
-          {showReadAloud && (
-            <div className="mt-4">
-              <InlineReadAloud 
-                text={liveTranslatedContent || lessonContent} 
-                language={liveTranslationLanguage?.toLowerCase() || 'en'} 
+        <div className={liveTranslatedContent ? "grid grid-cols-2 gap-6" : "space-y-4"}>
+          {/* English Content */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 mb-3">
+              <h3 className="font-semibold text-lg text-primary">English</h3>
+              <Badge variant="secondary">Original</Badge>
+            </div>
+            <div className="bg-background p-6 rounded-lg border shadow-sm min-h-[400px]">
+              <SafeHtml 
+                html={lessonContent}
+                className="prose prose-sm max-w-none text-foreground"
               />
+            </div>
+          </div>
+
+          {/* Translated Content - only shown when available */}
+          {liveTranslatedContent && liveTranslationLanguage && (
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 mb-3">
+                <h3 className="font-semibold text-lg text-primary">{liveTranslationLanguage}</h3>
+                <Badge variant="outline">
+                  <Globe className="h-3 w-3 mr-1" />
+                  Translation
+                </Badge>
+              </div>
+              <div className="bg-background p-6 rounded-lg border shadow-sm min-h-[400px]">
+                <SafeHtml 
+                  html={liveTranslatedContent}
+                  className="prose prose-sm max-w-none text-foreground"
+                />
+              </div>
             </div>
           )}
         </div>
+
+        {/* Accessibility features */}
+        <div className="flex items-center gap-2 text-xs text-muted-foreground mt-4">
+          <span>📖 Screen reader compatible</span>
+          <span>•</span>
+          <span>🎯 IEP/504 accommodations supported</span>
+          {liveTranslatedContent && (
+            <>
+              <span>•</span>
+              <span>🌍 Multilingual accessibility</span>
+            </>
+          )}
+        </div>
+
+        {/* Read aloud button */}
+        <div className="mt-4">
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => setShowReadAloud(!showReadAloud)}
+            className="gap-2"
+          >
+            <Volume2 className="h-4 w-4" />
+            {showReadAloud ? 'Hide' : 'Show'} Read Aloud
+          </Button>
+        </div>
+
+        {/* Read aloud integration - only shown when activated */}
+        {showReadAloud && (
+          <div className="mt-4">
+            <InlineReadAloud 
+              text={lessonContent} 
+              language="en" 
+            />
+          </div>
+        )}
       </CardContent>
     </Card>
   );
