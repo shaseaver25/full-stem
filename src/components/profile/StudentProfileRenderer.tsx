@@ -81,23 +81,9 @@ export const StudentProfileRenderer: React.FC<StudentProfileRendererProps> = ({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Quick Actions */}
-            <div className="md:col-span-3 flex flex-wrap gap-2">
-              <Button onClick={onGenerateProject} size="sm" variant="default">
-                <Sparkles className="h-4 w-4 mr-2" />
-                Generate Project Idea
-              </Button>
-              <Button onClick={onSuggestModifications} size="sm" variant="outline">
-                <BookOpen className="h-4 w-4 mr-2" />
-                Suggest Assignment Modifications
-              </Button>
-              <Button onClick={onTranslateMaterials} size="sm" variant="outline">
-                <Languages className="h-4 w-4 mr-2" />
-                Translate Class Materials
-              </Button>
-            </div>
-          </div>
+          <p className="text-muted-foreground">
+            This profile helps teachers understand your unique learning preferences and provide personalized support.
+          </p>
         </CardContent>
       </Card>
 

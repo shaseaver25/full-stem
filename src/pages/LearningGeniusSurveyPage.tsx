@@ -132,15 +132,6 @@ const LearningGeniusSurveyPage: React.FC = () => {
         <StudentProfileRenderer
           profileData={existingProfile.profile_json}
           studentName={user?.email || 'Student'}
-          onGenerateProject={() => {
-            console.log('Generate project clicked - to be implemented');
-          }}
-          onSuggestModifications={() => {
-            console.log('Suggest modifications clicked - to be implemented');
-          }}
-          onTranslateMaterials={() => {
-            console.log('Translate materials clicked - to be implemented');
-          }}
         />
 
         <div className="text-center mt-8">
