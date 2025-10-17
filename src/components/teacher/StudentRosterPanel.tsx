@@ -138,86 +138,115 @@ export const StudentRosterPanel: React.FC<StudentRosterPanelProps> = ({ classId 
               Add Student
             </Button>
           </DialogTrigger>
-            <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>Add New Student</DialogTitle>
-                <p className="text-sm text-muted-foreground">Fill in the student details and select any needed lesson modifications.</p>
-              </DialogHeader>
-              <form onSubmit={handleSubmit(handleAddStudent)} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="first_name">First Name</Label>
-                    <Input {...register('first_name', { required: true })} />
-                  </div>
-                  <div>
-                    <Label htmlFor="last_name">Last Name</Label>
-                    <Input {...register('last_name', { required: true })} />
-                  </div>
-                </div>
-                <div>
-                  <Label htmlFor="grade_level">Grade Level</Label>
-                  <Select onValueChange={(value) => setValue('grade_level', value)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select grade level" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="6th Grade">6th Grade</SelectItem>
-                      <SelectItem value="7th Grade">7th Grade</SelectItem>
-                      <SelectItem value="8th Grade">8th Grade</SelectItem>
-                      <SelectItem value="9th Grade">9th Grade</SelectItem>
-                      <SelectItem value="10th Grade">10th Grade</SelectItem>
-                      <SelectItem value="11th Grade">11th Grade</SelectItem>
-                      <SelectItem value="12th Grade">12th Grade</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="reading_level">Reading Level</Label>
-                  <Select onValueChange={(value) => setValue('reading_level', value)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select reading level" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Below Grade Level">Below Grade Level</SelectItem>
-                      <SelectItem value="Grade Level">Grade Level</SelectItem>
-                      <SelectItem value="Above Grade Level">Above Grade Level</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="learning_style">Learning Style</Label>
-                  <Select onValueChange={(value) => setValue('learning_style', value)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select learning style" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Visual">Visual</SelectItem>
-                      <SelectItem value="Auditory">Auditory</SelectItem>
-                      <SelectItem value="Kinesthetic">Kinesthetic</SelectItem>
-                      <SelectItem value="Mixed">Mixed</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="lesson_modifications">Lesson Modifications</Label>
-                  <MultiSelect
-                    options={LESSON_MODIFICATION_OPTIONS}
-                    selected={selectedModifications}
-                    onChange={setSelectedModifications}
-                    placeholder="Select lesson modifications..."
+          <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Add Student to Class</DialogTitle>
+              <p className="text-sm text-muted-foreground">Search for an existing student or create a new one.</p>
+            </DialogHeader>
+            
+            <Tabs defaultValue="search" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="search">Search Existing</TabsTrigger>
+                <TabsTrigger value="create">Create New</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="search" className="space-y-4">
+                <div className="space-y-3">
+                  <Label htmlFor="search-student">Search for Student</Label>
+                  <Input 
+                    id="search-student"
+                    placeholder="Type student name to search..."
                     className="w-full"
                   />
+                  <p className="text-xs text-muted-foreground">
+                    Search will find students already registered in the system
+                  </p>
                 </div>
-                <div className="flex gap-2 justify-end">
-                  <Button type="button" variant="outline" onClick={() => setIsAddDialogOpen(false)}>
-                    Cancel
-                  </Button>
-                  <Button type="submit" disabled={loading}>
-                    Add Student
-                  </Button>
+                <div className="border rounded-lg p-4 min-h-[200px]">
+                  <p className="text-sm text-muted-foreground text-center py-8">
+                    Start typing to search for students...
+                  </p>
                 </div>
-              </form>
-            </DialogContent>
+              </TabsContent>
+              
+              <TabsContent value="create">
+                <form onSubmit={handleSubmit(handleAddStudent)} className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="first_name">First Name</Label>
+                      <Input {...register('first_name', { required: true })} />
+                    </div>
+                    <div>
+                      <Label htmlFor="last_name">Last Name</Label>
+                      <Input {...register('last_name', { required: true })} />
+                    </div>
+                  </div>
+                  <div>
+                    <Label htmlFor="grade_level">Grade Level</Label>
+                    <Select onValueChange={(value) => setValue('grade_level', value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select grade level" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="6th Grade">6th Grade</SelectItem>
+                        <SelectItem value="7th Grade">7th Grade</SelectItem>
+                        <SelectItem value="8th Grade">8th Grade</SelectItem>
+                        <SelectItem value="9th Grade">9th Grade</SelectItem>
+                        <SelectItem value="10th Grade">10th Grade</SelectItem>
+                        <SelectItem value="11th Grade">11th Grade</SelectItem>
+                        <SelectItem value="12th Grade">12th Grade</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="reading_level">Reading Level</Label>
+                    <Select onValueChange={(value) => setValue('reading_level', value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select reading level" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Below Grade Level">Below Grade Level</SelectItem>
+                        <SelectItem value="Grade Level">Grade Level</SelectItem>
+                        <SelectItem value="Above Grade Level">Above Grade Level</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="learning_style">Learning Style</Label>
+                    <Select onValueChange={(value) => setValue('learning_style', value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select learning style" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Visual">Visual</SelectItem>
+                        <SelectItem value="Auditory">Auditory</SelectItem>
+                        <SelectItem value="Kinesthetic">Kinesthetic</SelectItem>
+                        <SelectItem value="Mixed">Mixed</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="lesson_modifications">Lesson Modifications</Label>
+                    <MultiSelect
+                      options={LESSON_MODIFICATION_OPTIONS}
+                      selected={selectedModifications}
+                      onChange={setSelectedModifications}
+                      placeholder="Select lesson modifications..."
+                      className="w-full"
+                    />
+                  </div>
+                  <div className="flex gap-2 justify-end">
+                    <Button type="button" variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button type="submit" disabled={loading}>
+                      Create Student
+                    </Button>
+                  </div>
+                </form>
+              </TabsContent>
+            </Tabs>
+          </DialogContent>
         </Dialog>
       </div>
 
