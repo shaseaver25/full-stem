@@ -60,6 +60,26 @@ This project is built with:
 - shadcn-ui
 - Tailwind CSS
 
+## Key Features
+
+### Performance Optimizations
+
+- **Image Optimization**: Responsive image loading with automatic srcSet generation
+  - See [IMAGE_OPTIMIZATION.md](IMAGE_OPTIMIZATION.md) for detailed usage guide
+  - Components: `OptimizedImage`, `useOptimizedImage` hook
+  - Automatic viewport-based image sizing for better performance
+
+- **Error Monitoring**: Sentry integration for production error tracking
+  - See [SENTRY_SETUP.md](SENTRY_SETUP.md) for configuration
+
+- **React Query**: Optimized data fetching with caching (5-minute stale time)
+
+### Developer Documentation
+
+- [DEVELOPER_DOCUMENTATION.md](DEVELOPER_DOCUMENTATION.md) - Comprehensive development guide
+- [IMAGE_OPTIMIZATION.md](IMAGE_OPTIMIZATION.md) - Image optimization utilities
+- [SENTRY_SETUP.md](SENTRY_SETUP.md) - Error monitoring setup
+
 ## How can I deploy this project?
 
 Simply open [Lovable](https://lovable.dev/projects/6ba0ffd1-9a8e-49f9-9f63-94f86000b68b) and click on Share -> Publish.

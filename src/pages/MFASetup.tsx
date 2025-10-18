@@ -185,7 +185,14 @@ export default function MFASetup() {
           {qrCode && (
             <div className="space-y-4">
               <div className="flex justify-center">
-                <img src={qrCode} alt="MFA QR Code" className="border rounded-lg p-4" />
+                <img 
+                  src={qrCode} 
+                  alt="MFA QR Code" 
+                  className="border rounded-lg p-4"
+                  loading="eager"
+                  width="256"
+                  height="256"
+                />
               </div>
 
               <div className="space-y-2">

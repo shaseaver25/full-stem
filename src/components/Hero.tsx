@@ -3,6 +3,7 @@ import { ArrowRight, Play, Users, Award, Globe, Star } from "lucide-react";
 import { Link } from "react-router-dom";
 import LoginDropdown from "@/components/LoginDropdown";
 import { useAuth } from "@/contexts/AuthContext";
+import { OptimizedImage } from "@/components/ui/OptimizedImage";
 
 const Hero = () => {
   const { user } = useAuth();
@@ -51,10 +52,17 @@ const Hero = () => {
         <div className="max-w-5xl mx-auto">
           {/* Logo with subtle animation */}
           <div className="mb-8 animate-fade-in">
-            <img 
+            <OptimizedImage 
               src="/lovable-uploads/3674debe-cc91-44e5-b661-71199ab7a186.png" 
               alt="Full STEM Logo" 
               className="h-24 md:h-32 mx-auto hover:scale-105 transition-transform duration-300"
+              sizes={{
+                mobile: '96px',
+                tablet: '128px',
+                desktop: '128px'
+              }}
+              widths={[96, 128, 192, 256]}
+              loading="eager"
             />
           </div>
           
