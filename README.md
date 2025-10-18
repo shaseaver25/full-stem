@@ -79,6 +79,7 @@ This project is built with:
 - [DEVELOPER_DOCUMENTATION.md](DEVELOPER_DOCUMENTATION.md) - Comprehensive development guide
 - [IMAGE_OPTIMIZATION.md](IMAGE_OPTIMIZATION.md) - Image optimization utilities
 - [SENTRY_SETUP.md](SENTRY_SETUP.md) - Error monitoring setup
+- [CODE_QUALITY.md](CODE_QUALITY.md) - Code quality standards and ESLint configuration
 
 ## How can I deploy this project?
 

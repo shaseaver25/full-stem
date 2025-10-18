@@ -1,4 +1,3 @@
-import React from 'react';
 import { Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -16,12 +15,12 @@ const sizeMap = {
   xl: 'h-16 w-16',
 };
 
-export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({ 
+export const LoadingSpinner = ({ 
   size = 'lg',
   text = 'Loading...',
   fullScreen = true,
   className 
-}) => {
+}: LoadingSpinnerProps) => {
   const content = (
     <div className="text-center space-y-4" role="status" aria-live="polite">
       <Loader2 className={cn('animate-spin text-primary mx-auto', sizeMap[size])} />

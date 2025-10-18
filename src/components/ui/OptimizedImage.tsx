@@ -1,4 +1,3 @@
-import React from 'react';
 import { useOptimizedImage } from '@/hooks/useOptimizedImage';
 import { cn } from '@/lib/utils';
 
@@ -18,7 +17,7 @@ interface OptimizedImageProps extends Omit<React.ImgHTMLAttributes<HTMLImageElem
 /**
  * Optimized image component with automatic srcSet generation and responsive loading
  */
-export const OptimizedImage: React.FC<OptimizedImageProps> = ({
+export const OptimizedImage = ({
   src,
   alt,
   sizes,
@@ -26,7 +25,7 @@ export const OptimizedImage: React.FC<OptimizedImageProps> = ({
   className,
   loading = 'lazy',
   ...props
-}) => {
+}: OptimizedImageProps) => {
   const optimized = useOptimizedImage({ src, sizes, widths });
 
   return (

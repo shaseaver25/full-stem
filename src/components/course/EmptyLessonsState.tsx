@@ -1,12 +1,10 @@
-
-import React from 'react';
 import { BookOpen } from 'lucide-react';
 
 interface EmptyLessonsStateProps {
   courseName: string;
 }
 
-const EmptyLessonsState: React.FC<EmptyLessonsStateProps> = ({ courseName }) => {
+const EmptyLessonsState = ({ courseName }: EmptyLessonsStateProps) => {
   return (
     <div className="text-center py-12">
       <BookOpen className="h-16 w-16 text-gray-400 mx-auto mb-4" />
