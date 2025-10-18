@@ -1,5 +1,6 @@
 import { useQuery, UseQueryOptions } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { logError } from '@/utils/errorLogging';
 
 // Standardized query keys
 export const studentQueryKeys = {
@@ -25,14 +26,19 @@ export const useStudentByUserId = (
     queryFn: async () => {
       if (!userId) throw new Error('User ID required');
 
-      const { data, error } = await supabase
-        .from('students')
-        .select('*')
-        .eq('user_id', userId)
-        .maybeSingle();
+      try {
+        const { data, error } = await supabase
+          .from('students')
+          .select('*')
+          .eq('user_id', userId)
+          .maybeSingle();
 
-      if (error) throw error;
-      return data;
+        if (error) throw error;
+        return data;
+      } catch (error) {
+        logError(error, 'useStudentByUserId');
+        throw error;
+      }
     },
     enabled: !!userId,
     staleTime: DEFAULT_STALE_TIME,
@@ -50,29 +56,34 @@ export const useStudentsByClass = (
     queryFn: async () => {
       if (!classId) throw new Error('Class ID required');
 
-      // Get student IDs from class_students
-      const { data: enrollmentData, error: enrollmentError } = await supabase
-        .from('class_students')
-        .select('student_id')
-        .eq('class_id', classId)
-        .eq('status', 'active');
+      try {
+        // Get student IDs from class_students
+        const { data: enrollmentData, error: enrollmentError } = await supabase
+          .from('class_students')
+          .select('student_id')
+          .eq('class_id', classId)
+          .eq('status', 'active');
 
-      if (enrollmentError) throw enrollmentError;
+        if (enrollmentError) throw enrollmentError;
 
-      const studentIds = enrollmentData?.map(e => e.student_id) || [];
+        const studentIds = enrollmentData?.map(e => e.student_id) || [];
 
-      if (studentIds.length === 0) {
-        return [];
+        if (studentIds.length === 0) {
+          return [];
+        }
+
+        const { data, error } = await supabase
+          .from('students')
+          .select('*')
+          .in('id', studentIds)
+          .order('first_name');
+
+        if (error) throw error;
+        return data || [];
+      } catch (error) {
+        logError(error, 'useStudentsByClass');
+        throw error;
       }
-
-      const { data, error } = await supabase
-        .from('students')
-        .select('*')
-        .in('id', studentIds)
-        .order('first_name');
-
-      if (error) throw error;
-      return data || [];
     },
     enabled: !!classId,
     staleTime: DEFAULT_STALE_TIME,

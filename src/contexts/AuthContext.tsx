@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { logError, setErrorUser, clearErrorUser } from '@/utils/errorLogging';
 
 interface AuthContextType {
   user: User | null;
@@ -37,6 +38,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setSession(session);
       setUser(session?.user ?? null);
       
+      // Set Sentry user context
+      if (session?.user) {
+        setErrorUser(session.user.id, session.user.email);
+      }
+      
       // Defer super admin check for initial session
       if (session?.user) {
         setTimeout(async () => {
@@ -46,7 +52,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             });
             setIsSuperAdmin(data || false);
           } catch (error) {
-            console.error('Error checking super admin status:', error);
+            logError(error, 'AuthContext: is_super_admin check');
             setIsSuperAdmin(false);
           }
         }, 0);
@@ -67,6 +73,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setSession(session);
         setUser(session?.user ?? null);
         
+        // Set or clear Sentry user context
+        if (session?.user) {
+          setErrorUser(session.user.id, session.user.email);
+        } else {
+          clearErrorUser();
+        }
+        
         // Defer async operations to avoid deadlocks
         if (session?.user) {
           setTimeout(async () => {
@@ -76,7 +89,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               });
               setIsSuperAdmin(data || false);
             } catch (error) {
-              console.error('Error checking super admin status:', error);
+              logError(error, 'AuthContext: is_super_admin onAuthStateChange');
               setIsSuperAdmin(false);
             }
           }, 0);
@@ -117,7 +130,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    try {
+      clearErrorUser();
+      await supabase.auth.signOut();
+    } catch (error) {
+      logError(error, 'AuthContext: signOut');
+      throw error;
+    }
   };
 
   const value = {
