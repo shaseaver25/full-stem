@@ -1,6 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useStudentsByClass } from './useStudentData';
+import { useQueryClient } from '@tanstack/react-query';
+import { studentQueryKeys } from './useStudentData';
 
 export interface Student {
   id: string;
@@ -47,59 +50,21 @@ export interface DemoStudent extends Student {
 }
 
 export const useStudentManagement = (classId: string) => {
-  const [students, setStudents] = useState<Student[]>([]);
   const [demoStudents, setDemoStudents] = useState<DemoStudent[]>([]);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  const fetchStudents = async () => {
-    setLoading(true);
-    try {
-      // First get student IDs from class_students
-      const { data: enrollmentData, error: enrollmentError } = await supabase
-        .from('class_students')
-        .select('student_id')
-        .eq('class_id', classId)
-        .eq('status', 'active');
-
-      if (enrollmentError) throw enrollmentError;
-
-      const studentIds = enrollmentData?.map(e => e.student_id) || [];
-
-      if (studentIds.length === 0) {
-        setStudents([]);
-        setLoading(false);
-        return;
-      }
-
-      const { data, error } = await supabase
-        .from('students')
-        .select('*')
-        .in('id', studentIds)
-        .order('first_name');
-
-      if (error) throw error;
-      
-      // Transform the data to ensure lesson_modifications is properly typed
-      const transformedData = data?.map(student => ({
-        ...student,
-        lesson_modifications: Array.isArray(student.lesson_modifications) 
-          ? (student.lesson_modifications.filter((item): item is string => typeof item === 'string'))
-          : []
-      })) || [];
-      
-      setStudents(transformedData);
-    } catch (error) {
-      console.error('Error fetching students:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to fetch students',
-        variant: 'destructive'
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Use the shared hook to fetch students with caching
+  const { data: studentsData = [], isLoading: studentsLoading, refetch } = useStudentsByClass(classId);
+  
+  // Transform the data to ensure lesson_modifications is properly typed
+  const students = studentsData.map(student => ({
+    ...student,
+    lesson_modifications: Array.isArray(student.lesson_modifications) 
+      ? (student.lesson_modifications.filter((item): item is string => typeof item === 'string'))
+      : []
+  })) as Student[];
 
   const fetchDemoStudents = async () => {
     try {
@@ -184,7 +149,9 @@ export const useStudentManagement = (classId: string) => {
         description: `Added ${studentsToInsert.length} students to your class`
       });
 
-      await fetchStudents();
+      // Invalidate and refetch
+      queryClient.invalidateQueries({ queryKey: studentQueryKeys.byClass(classId) });
+      await refetch();
     } catch (error) {
       console.error('Error adding students:', error);
       toast({
@@ -222,7 +189,9 @@ export const useStudentManagement = (classId: string) => {
         description: 'Student added successfully'
       });
 
-      await fetchStudents();
+      // Invalidate and refetch
+      queryClient.invalidateQueries({ queryKey: studentQueryKeys.byClass(classId) });
+      await refetch();
     } catch (error) {
       console.error('Error adding student:', error);
       toast({
@@ -262,7 +231,9 @@ export const useStudentManagement = (classId: string) => {
         description: `Added ${studentsData.length} students successfully`
       });
 
-      await fetchStudents();
+      // Invalidate and refetch
+      queryClient.invalidateQueries({ queryKey: studentQueryKeys.byClass(classId) });
+      await refetch();
     } catch (error) {
       console.error('Error adding bulk students:', error);
       toast({
@@ -290,7 +261,9 @@ export const useStudentManagement = (classId: string) => {
         description: 'Student updated successfully'
       });
 
-      await fetchStudents();
+      // Invalidate and refetch
+      queryClient.invalidateQueries({ queryKey: studentQueryKeys.byClass(classId) });
+      await refetch();
     } catch (error) {
       console.error('Error updating student:', error);
       toast({
@@ -318,7 +291,9 @@ export const useStudentManagement = (classId: string) => {
         description: 'Student removed successfully'
       });
 
-      await fetchStudents();
+      // Invalidate and refetch
+      queryClient.invalidateQueries({ queryKey: studentQueryKeys.byClass(classId) });
+      await refetch();
     } catch (error) {
       console.error('Error deleting student:', error);
       toast({
@@ -334,8 +309,7 @@ export const useStudentManagement = (classId: string) => {
   return {
     students,
     demoStudents,
-    loading,
-    fetchStudents,
+    loading: loading || studentsLoading,
     fetchDemoStudents,
     addSelectedDemoStudents,
     addStudent,

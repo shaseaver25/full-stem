@@ -49,7 +49,6 @@ export const StudentRosterPanel: React.FC<StudentRosterPanelProps> = ({ classId 
     students,
     demoStudents,
     loading,
-    fetchStudents,
     fetchDemoStudents,
     addSelectedDemoStudents,
     addStudent,
@@ -68,9 +67,8 @@ export const StudentRosterPanel: React.FC<StudentRosterPanelProps> = ({ classId 
   const { register, handleSubmit, reset, setValue, watch } = useForm<StudentFormData>();
 
   useEffect(() => {
-    fetchStudents();
     fetchDemoStudents();
-  }, [classId]);
+  }, [classId, fetchDemoStudents]);
 
   // Open dialog when hash is #add-student
   useEffect(() => {
@@ -184,7 +182,7 @@ export const StudentRosterPanel: React.FC<StudentRosterPanelProps> = ({ classId 
 
       if (error) throw error;
 
-      await fetchStudents();
+      // The students list will auto-refresh through React Query
       setSearchQuery('');
       setSearchResults([]);
       setIsAddDialogOpen(false);

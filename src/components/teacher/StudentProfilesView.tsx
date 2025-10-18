@@ -23,17 +23,13 @@ import { StudentProfileRenderer } from '@/components/profile/StudentProfileRende
 import { LEARNING_STYLES, INTERESTS, MOTIVATION_TRIGGERS } from '@/types/surveyTypes';
 
 export const StudentProfilesView: React.FC = () => {
-  const { students, loading, fetchStudentProfiles, generateProjectIdea, suggestAssignmentModifications } = useStudentProfiles();
+  const { students, loading, generateProjectIdea, suggestAssignmentModifications } = useStudentProfiles();
   const { data: classes, isLoading: classesLoading } = useClasses();
   const [selectedClass, setSelectedClass] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [selectedStudent, setSelectedStudent] = useState<StudentWithProfile | null>(null);
   const [generatedContent, setGeneratedContent] = useState<{ type: 'project' | 'modification'; content: string } | null>(null);
-
-  useEffect(() => {
-    fetchStudentProfiles(selectedClass === 'all' ? undefined : selectedClass);
-  }, [selectedClass, fetchStudentProfiles]);
 
   const filteredStudents = students.filter(student => {
     const matchesSearch = searchTerm === '' || 

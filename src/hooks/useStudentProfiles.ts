@@ -1,8 +1,9 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
 import { StudentProfile, ProfileData } from '@/types/surveyTypes';
+import { useTeacherStudents, useStudentProfiles as useStudentProfilesData } from './useStudentData';
 
 export interface StudentWithProfile {
   id: string;
@@ -16,116 +17,40 @@ export interface StudentWithProfile {
   survey_completed_at?: string;
 }
 
-export const useStudentProfiles = () => {
+export const useStudentProfiles = (classId?: string) => {
   const { user } = useAuth();
-  const [loading, setLoading] = useState(false);
-  const [students, setStudents] = useState<StudentWithProfile[]>([]);
+  
+  // Use the shared hook to fetch students
+  const { data: studentsData = [], isLoading: studentsLoading } = useTeacherStudents(user?.id, classId);
+  
+  const studentIds = useMemo(() => studentsData.map(s => s.id), [studentsData]);
+  
+  // Get profiles for the students
+  const { data: profilesData = [], isLoading: profilesLoading } = useStudentProfilesData(studentIds);
+  
+  // Get class names
+  const { data: classesData = [] } = useTeacherStudents(user?.id);
 
-  const fetchStudentProfiles = useCallback(async (classId?: string) => {
-    if (!user?.id) return;
-
-    try {
-      setLoading(true);
-
-      // Get teacher profile first
-      const { data: teacherProfile, error: teacherError } = await supabase
-        .from('teacher_profiles')
-        .select('id')
-        .eq('user_id', user.id)
-        .single();
-
-      if (teacherError) throw teacherError;
-
-      // Get all classes for this teacher
-      const { data: teacherClasses, error: classesError } = await supabase
-        .from('classes')
-        .select('id')
-        .eq('teacher_id', teacherProfile.id);
-
-      if (classesError) throw classesError;
-
-      const teacherClassIds = teacherClasses?.map(c => c.id) || [];
-
-      // Get student enrollments from teacher's classes
-      let enrollmentQuery = supabase
-        .from('class_students')
-        .select('student_id, class_id')
-        .in('class_id', teacherClassIds)
-        .eq('status', 'active');
-
-      // Filter by specific class if provided
-      if (classId) {
-        enrollmentQuery = enrollmentQuery.eq('class_id', classId);
-      }
-
-      const { data: enrollmentData, error: enrollmentError } = await enrollmentQuery;
-
-      if (enrollmentError) throw enrollmentError;
-
-      const studentIds = [...new Set(enrollmentData?.map(e => e.student_id) || [])];
-
-      if (studentIds.length === 0) {
-        setStudents([]);
-        setLoading(false);
-        return;
-      }
-
-      // Get student details
-      const { data: studentsData, error: studentsError } = await supabase
-        .from('students')
-        .select('id, first_name, last_name, grade_level, reading_level, class_id')
-        .in('id', studentIds);
-
-      if (studentsError) throw studentsError;
-
-      // Get class names for the students
-      const { data: classesData, error: classNamesError } = await supabase
-        .from('classes')
-        .select('id, name')
-        .in('id', teacherClassIds);
-
-      if (classNamesError) throw classNamesError;
-
-      const classNameMap = new Map(classesData?.map(c => [c.id, c.name]) || []);
-
-      // Get profiles for all students
-      const { data: profilesData, error: profilesError } = await supabase
-        .from('student_profiles')
-        .select('*')
-        .in('student_id', studentIds);
-
-      if (profilesError) throw profilesError;
-
-      // Combine student data with profiles
-      const studentsWithProfiles: StudentWithProfile[] = studentsData?.map(student => {
-        const profile = profilesData?.find(p => p.student_id === student.id);
-        const enrollment = enrollmentData?.find(e => e.student_id === student.id);
-        
-        return {
-          id: student.id,
-          first_name: student.first_name,
-          last_name: student.last_name,
-          grade_level: student.grade_level,
-          reading_level: student.reading_level,
-          class_name: enrollment ? classNameMap.get(enrollment.class_id) : undefined,
-          profile: profile?.profile_json as unknown as ProfileData,
-          survey_completed: !!profile?.survey_completed_at,
-          survey_completed_at: profile?.survey_completed_at
-        };
-      }) || [];
-
-      setStudents(studentsWithProfiles);
-    } catch (error) {
-      console.error('Error fetching student profiles:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load student profiles",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, [user?.id]);
+  // Combine student data with profiles
+  const students = useMemo(() => {
+    return studentsData.map(student => {
+      const profile = profilesData.find(p => p.student_id === student.id);
+      
+      return {
+        id: student.id,
+        first_name: student.first_name,
+        last_name: student.last_name,
+        grade_level: student.grade_level,
+        reading_level: student.reading_level,
+        class_name: student.class_id,
+        profile: profile?.profile_json as unknown as ProfileData,
+        survey_completed: !!profile?.survey_completed_at,
+        survey_completed_at: profile?.survey_completed_at
+      };
+    });
+  }, [studentsData, profilesData]);
+  
+  const loading = studentsLoading || profilesLoading;
 
   const generateProjectIdea = useCallback(async (student: StudentWithProfile): Promise<string> => {
     if (!student.profile) {
@@ -232,7 +157,6 @@ export const useStudentProfiles = () => {
   return {
     loading,
     students,
-    fetchStudentProfiles,
     generateProjectIdea,
     suggestAssignmentModifications
   };
