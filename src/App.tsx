@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { Suspense } from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -14,68 +13,73 @@ import { AccessibilityToolbar } from "@/components/ui/AccessibilityToolbar";
 import { useFocusModeShortcut } from "@/hooks/useFocusModeShortcut";
 import { SuperAdminBanner, SuperAdminWatermark } from "@/components/admin/SuperAdminBanner";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
-import Index from "./pages/Index";
-import Auth from "./pages/Auth";
-import TrialPage from "./components/TrialPage";
-import ExcelCourse from "./pages/ExcelCourse";
-import WordCourse from "./pages/WordCourse";
-import PowerPointCourse from "./pages/PowerPointCourse";
-import OutlookCourse from "./pages/OutlookCourse";
-import LessonPage from "./pages/LessonPage";
-import UserPreferences from "./pages/UserPreferences";
-import StudentDashboard from "./pages/student/index";
-import StudentAssignmentDetail from "./pages/student/assignments/[id]/index";
-import StudentAssignmentSubmit from "./pages/student/assignments/[id]/submit";
-import TeacherAssignmentDetail from "./pages/teacher/assignments/[assignmentId]/index";
-import NotFound from "./pages/NotFound";
-import TeacherAuth from "./pages/TeacherAuth";
-import TeacherOnboarding from "./pages/TeacherOnboarding";
-import TeacherDashboard from "./components/teacher/TeacherDashboard";
-import ClassDetailPage from "./pages/ClassDetailPage";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+
+// Lazy load all page components for code splitting
+const Index = React.lazy(() => import("./pages/Index"));
+const Auth = React.lazy(() => import("./pages/Auth"));
+const TrialPage = React.lazy(() => import("./components/TrialPage"));
+const ExcelCourse = React.lazy(() => import("./pages/ExcelCourse"));
+const WordCourse = React.lazy(() => import("./pages/WordCourse"));
+const PowerPointCourse = React.lazy(() => import("./pages/PowerPointCourse"));
+const OutlookCourse = React.lazy(() => import("./pages/OutlookCourse"));
+const LessonPage = React.lazy(() => import("./pages/LessonPage"));
+const UserPreferences = React.lazy(() => import("./pages/UserPreferences"));
+const StudentDashboard = React.lazy(() => import("./pages/student/index"));
+const StudentAssignmentDetail = React.lazy(() => import("./pages/student/assignments/[id]/index"));
+const StudentAssignmentSubmit = React.lazy(() => import("./pages/student/assignments/[id]/submit"));
+const TeacherAssignmentDetail = React.lazy(() => import("./pages/teacher/assignments/[assignmentId]/index"));
+const NotFound = React.lazy(() => import("./pages/NotFound"));
+const TeacherAuth = React.lazy(() => import("./pages/TeacherAuth"));
+const TeacherOnboarding = React.lazy(() => import("./pages/TeacherOnboarding"));
+const TeacherDashboard = React.lazy(() => import("./components/teacher/TeacherDashboard"));
+const ClassDetailPage = React.lazy(() => import("./pages/ClassDetailPage"));
+const UnifiedGradebookPage = React.lazy(() => import("./pages/UnifiedGradebookPage"));
+const AssignmentSubmissionsPage = React.lazy(() => import("./pages/AssignmentSubmissionsPage"));
+const AdminDashboard = React.lazy(() => import("./pages/AdminDashboard"));
+const BuildClassPage = React.lazy(() => import("./pages/BuildClassPage"));
+const LessonBuilderPage = React.lazy(() => import("./pages/teacher/LessonBuilderPage"));
+const AnalyticsDashboard = React.lazy(() => import("./pages/AnalyticsDashboard"));
+const ContentManagementPage = React.lazy(() => import("./pages/ContentManagementPage"));
+const ParentPortalPage = React.lazy(() => import("./pages/ParentPortalPage"));
+const AdvancedAdminPage = React.lazy(() => import("./pages/AdvancedAdminPage"));
+const CourseEditorPage = React.lazy(() => import("./pages/CourseEditorPage"));
+const ComponentsPage = React.lazy(() => import("./pages/ComponentsPage"));
+const DeveloperDashboard = React.lazy(() => import("./pages/DeveloperDashboard"));
+const SuperAdminDashboard = React.lazy(() => import("./pages/SuperAdminDashboard"));
+const ClassManagementPage = React.lazy(() => import("./pages/ClassManagementPage"));
+const ClassLessonPage = React.lazy(() => import("./pages/ClassLessonPage"));
+const AICourseBuilderPage = React.lazy(() => import("./pages/AICourseBuilderPage"));
+const DemoGate = React.lazy(() => import("./pages/DemoGate"));
+const DemoStart = React.lazy(() => import("./pages/DemoStart"));
+const DemoShowcase = React.lazy(() => import("./pages/DemoShowcase"));
+const NewStudentDashboard = React.lazy(() => import("./pages/dashboard/StudentDashboard"));
+const TeacherFeedbackDashboard = React.lazy(() => import("./pages/dashboard/teacher/TeacherFeedbackDashboard"));
+const LearningGeniusSurveyPage = React.lazy(() => import("./pages/LearningGeniusSurveyPage"));
+const JoinClassPage = React.lazy(() => import("./pages/JoinClassPage"));
+const MyClassesPage = React.lazy(() => import("./pages/classes/MyClassesPage"));
+const RoleAwareClassDetailPage = React.lazy(() => import("./pages/classes/RoleAwareClassDetailPage"));
+const AssignmentsListPage = React.lazy(() => import("./pages/assignments/AssignmentsListPage"));
+const AssignmentDetailPage = React.lazy(() => import("./pages/assignments/AssignmentDetailPage"));
+const MyGradesPage = React.lazy(() => import("./pages/grades/MyGradesPage"));
+const TeacherAnalyticsDashboard = React.lazy(() => import("./pages/dashboard/teacher/TeacherAnalyticsDashboard"));
+const AdminAnalyticsDashboard = React.lazy(() => import("./pages/dashboard/admin/AdminAnalyticsDashboard"));
+const ParentDashboard = React.lazy(() => import("./pages/dashboard/parent/ParentDashboard"));
+const BootstrapDemo = React.lazy(() => import("./pages/BootstrapDemo"));
+const AccessDenied = React.lazy(() => import("./pages/AccessDenied"));
+const SystemDashboard = React.lazy(() => import("./pages/SystemDashboard"));
+const MFASetup = React.lazy(() => import("./pages/MFASetup"));
+const MFAVerify = React.lazy(() => import("./pages/MFAVerify"));
+const AuthCallback = React.lazy(() => import("./pages/AuthCallback"));
+
+// Eagerly load these smaller components that are used for route protection
 import ProtectedTeacherRoute from "./components/teacher/ProtectedTeacherRoute";
-import { default as UnifiedGradebookPage } from "./pages/UnifiedGradebookPage";
-import AssignmentSubmissionsPage from "./pages/AssignmentSubmissionsPage";
-import AdminDashboard from "./pages/AdminDashboard";
-import BuildClassPage from "./pages/BuildClassPage";
-import LessonBuilderPage from "./pages/teacher/LessonBuilderPage";
-import AnalyticsDashboard from "./pages/AnalyticsDashboard";
-import ContentManagementPage from "./pages/ContentManagementPage";
-import ParentPortalPage from "./pages/ParentPortalPage";
-import AdvancedAdminPage from "./pages/AdvancedAdminPage";
-import CourseEditorPage from "./pages/CourseEditorPage";
-import ComponentsPage from "./pages/ComponentsPage";
-import DeveloperDashboard from "./pages/DeveloperDashboard";
-import DeveloperRoute from "./components/developer/DeveloperRoute";
-import SuperAdminDashboard from "./pages/SuperAdminDashboard";
-import ClassManagementPage from "./pages/ClassManagementPage";
-import ClassLessonPage from "./pages/ClassLessonPage";
-import AICourseBuilderPage from "./pages/AICourseBuilderPage";
-import DemoGate from "./pages/DemoGate";
-import DemoStart from "./pages/DemoStart";
-import DemoShowcase from "./pages/DemoShowcase";
-import { StudentSignupForm } from "@/components/auth/student/StudentSignupForm";
-import NewStudentDashboard from "@/pages/dashboard/StudentDashboard";
-import TeacherFeedbackDashboard from "@/pages/dashboard/teacher/TeacherFeedbackDashboard";
-import LearningGeniusSurveyPage from "./pages/LearningGeniusSurveyPage";
-import JoinClassPage from "./pages/JoinClassPage";
-import MyClassesPage from "./pages/classes/MyClassesPage";
-import RoleAwareClassDetailPage from "./pages/classes/RoleAwareClassDetailPage";
-import AssignmentsListPage from "./pages/assignments/AssignmentsListPage";
-import AssignmentDetailPage from "./pages/assignments/AssignmentDetailPage";
-import MyGradesPage from "./pages/grades/MyGradesPage";
-import TeacherAnalyticsDashboard from "./pages/dashboard/teacher/TeacherAnalyticsDashboard";
-import AdminAnalyticsDashboard from "./pages/dashboard/admin/AdminAnalyticsDashboard";
 import ProtectedAdminRoute from "./components/admin/ProtectedAdminRoute";
-import ParentDashboard from "./pages/dashboard/parent/ParentDashboard";
 import ProtectedParentRoute from "./components/parent/ProtectedParentRoute";
-import BootstrapDemo from "./pages/BootstrapDemo";
+import DeveloperRoute from "./components/developer/DeveloperRoute";
 import RequireRole from "./components/auth/RequireRole";
-import AccessDenied from "./pages/AccessDenied";
+import { StudentSignupForm } from "@/components/auth/student/StudentSignupForm";
 import { AdminOnboarding } from "@/components/admin/AdminOnboarding";
-import SystemDashboard from "./pages/SystemDashboard";
-import MFASetup from "./pages/MFASetup";
-import MFAVerify from "./pages/MFAVerify";
-import AuthCallback from "./pages/AuthCallback";
 
 const queryClient = new QueryClient();
 
@@ -87,7 +91,8 @@ function AppContent() {
   return (
     <>
       <SuperAdminBanner />
-      <Routes>
+      <Suspense fallback={<LoadingSpinner />}>
+        <Routes>
         <Route path="/" element={<ErrorBoundary><Index /></ErrorBoundary>} />
         <Route path="/bootstrap" element={<ErrorBoundary><BootstrapDemo /></ErrorBoundary>} />
         <Route path="/auth" element={<ErrorBoundary><Auth /></ErrorBoundary>} />
@@ -516,7 +521,8 @@ function AppContent() {
         
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<ErrorBoundary><NotFound /></ErrorBoundary>} />
-      </Routes>
+        </Routes>
+      </Suspense>
       <SuperAdminWatermark />
     </>
   );
