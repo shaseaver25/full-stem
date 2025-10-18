@@ -420,16 +420,7 @@ function AppContent() {
         />
         
         <Route
-          path="/build-class/:classId?" 
-          element={
-            <ProtectedTeacherRoute requireOnboarding={true}>
-              <BuildClassPage />
-            </ProtectedTeacherRoute>
-          } 
-        />
-        
-        <Route
-          path="/teacher/build-class/:classId?" 
+          path="/teacher/build-class/:classId?"
           element={
             <ProtectedTeacherRoute requireOnboarding={true}>
               <BuildClassPage />

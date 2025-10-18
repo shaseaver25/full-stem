@@ -84,7 +84,7 @@ export const ClassLessonsPanel = ({ classId }: ClassLessonsPanelProps) => {
           <BookOpen className="h-12 w-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-semibold text-gray-900 mb-2">No lessons found</h3>
           <p className="text-gray-600 mb-4">This class doesn't have any lessons yet.</p>
-          <Link to={`/build-class/${classId}`}>
+          <Link to={`/teacher/build-class/${classId}`}>
             <Button>Add Lessons</Button>
           </Link>
         </CardContent>
@@ -160,7 +160,7 @@ export const ClassLessonsPanel = ({ classId }: ClassLessonsPanelProps) => {
                       Preview
                     </Button>
                   </Link>
-                  <Link to={`/build-class/${classId}?lesson=${lesson.id}`}>
+                  <Link to={`/teacher/build-class/${classId}?lesson=${lesson.id}`}>
                     <Button variant="ghost" size="sm">
                       Edit
                     </Button>
@@ -180,7 +180,7 @@ export const ClassLessonsPanel = ({ classId }: ClassLessonsPanelProps) => {
         </div>
         
         <div className="mt-6 pt-4 border-t">
-          <Link to={`/build-class/${classId}`}>
+          <Link to={`/teacher/build-class/${classId}`}>
             <Button className="w-full">
               Add More Lessons
             </Button>

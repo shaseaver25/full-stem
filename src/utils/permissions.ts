@@ -101,7 +101,7 @@ export const getAllowedRoutes = (role: UserRole | null): string[] => {
       '/dashboard/teacher/analytics',
       '/content',
       '/preferences',
-      '/build-class',
+      '/teacher/build-class',
       '/lesson/*',
       '/class-lesson/*',
     ],
@@ -119,7 +119,7 @@ export const getAllowedRoutes = (role: UserRole | null): string[] => {
       '/dashboard/admin/analytics',
       '/content',
       '/preferences',
-      '/build-class',
+      '/teacher/build-class',
     ],
     super_admin: [
       '/super-admin',
@@ -131,7 +131,7 @@ export const getAllowedRoutes = (role: UserRole | null): string[] => {
       '/dashboard/admin/analytics',
       '/content',
       '/preferences',
-      '/build-class',
+      '/teacher/build-class',
     ],
     system_admin: [
       '/system-dashboard',
