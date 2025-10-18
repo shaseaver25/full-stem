@@ -81,7 +81,18 @@ import RequireRole from "./components/auth/RequireRole";
 import { StudentSignupForm } from "@/components/auth/student/StudentSignupForm";
 import { AdminOnboarding } from "@/components/admin/AdminOnboarding";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: { 
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      retry: 2, 
+      refetchOnWindowFocus: false 
+    },
+    mutations: { 
+      retry: 1 
+    }
+  }
+});
 
 // Component that enables keyboard shortcut
 function AppContent() {
