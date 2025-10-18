@@ -151,17 +151,15 @@ Deno.serve(async (req) => {
       }
 
       try {
-        // Check if user exists by email
-        const { data: existingProfile } = await supabaseClient
-          .from('profiles')
-          .select('id, email')
-          .eq('email', studentData.email)
-          .maybeSingle();
+        // First check if user already exists by email
+        const { data: existingUsers, error: lookupError } = await supabaseAdmin.auth.admin.listUsers();
+        
+        const existingUser = existingUsers?.users?.find(u => u.email === studentData.email);
+        
+        let userId = existingUser?.id;
+        let action: 'created' | 'existing' = existingUser ? 'existing' : 'created';
 
-        let userId = existingProfile?.id;
-        let action: 'created' | 'existing' = 'existing';
-
-        // If user doesn't exist, create account using admin client
+        // Only create user if they don't exist
         if (!userId) {
           const { data: newUser, error: signUpError } = await supabaseAdmin.auth.admin.createUser({
             email: studentData.email,
@@ -190,7 +188,6 @@ Deno.serve(async (req) => {
           }
 
           userId = newUser.user.id;
-          action = 'created';
         }
 
         // Check if student record exists using admin client
