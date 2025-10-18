@@ -77,9 +77,11 @@ This project is built with:
 ### Developer Documentation
 
 - [DEVELOPER_DOCUMENTATION.md](DEVELOPER_DOCUMENTATION.md) - Comprehensive development guide
+- [CODE_STRUCTURE.md](CODE_STRUCTURE.md) - Directory structure and naming conventions
+- [CODE_QUALITY.md](CODE_QUALITY.md) - Code quality standards and ESLint configuration
 - [IMAGE_OPTIMIZATION.md](IMAGE_OPTIMIZATION.md) - Image optimization utilities
 - [SENTRY_SETUP.md](SENTRY_SETUP.md) - Error monitoring setup
-- [CODE_QUALITY.md](CODE_QUALITY.md) - Code quality standards and ESLint configuration
+- [REFACTORING_SUMMARY.md](REFACTORING_SUMMARY.md) - Recent refactoring changes
 
 ## How can I deploy this project?
 

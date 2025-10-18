@@ -53,8 +53,8 @@ const AICourseBuilderPage = React.lazy(() => import("./pages/AICourseBuilderPage
 const DemoGate = React.lazy(() => import("./pages/DemoGate"));
 const DemoStart = React.lazy(() => import("./pages/DemoStart"));
 const DemoShowcase = React.lazy(() => import("./pages/DemoShowcase"));
-const NewStudentDashboard = React.lazy(() => import("./pages/dashboard/StudentDashboard"));
-const TeacherFeedbackDashboard = React.lazy(() => import("./pages/dashboard/teacher/TeacherFeedbackDashboard"));
+const NewStudentDashboard = React.lazy(() => import("./pages/student/StudentDashboard"));
+const TeacherFeedbackDashboard = React.lazy(() => import("./pages/teacher/TeacherFeedbackDashboard"));
 const LearningGeniusSurveyPage = React.lazy(() => import("./pages/LearningGeniusSurveyPage"));
 const JoinClassPage = React.lazy(() => import("./pages/JoinClassPage"));
 const MyClassesPage = React.lazy(() => import("./pages/classes/MyClassesPage"));
@@ -62,9 +62,9 @@ const RoleAwareClassDetailPage = React.lazy(() => import("./pages/classes/RoleAw
 const AssignmentsListPage = React.lazy(() => import("./pages/assignments/AssignmentsListPage"));
 const AssignmentDetailPage = React.lazy(() => import("./pages/assignments/AssignmentDetailPage"));
 const MyGradesPage = React.lazy(() => import("./pages/grades/MyGradesPage"));
-const TeacherAnalyticsDashboard = React.lazy(() => import("./pages/dashboard/teacher/TeacherAnalyticsDashboard"));
-const AdminAnalyticsDashboard = React.lazy(() => import("./pages/dashboard/admin/AdminAnalyticsDashboard"));
-const ParentDashboard = React.lazy(() => import("./pages/dashboard/parent/ParentDashboard"));
+const TeacherAnalyticsDashboard = React.lazy(() => import("./pages/teacher/TeacherAnalyticsDashboard"));
+const AdminAnalyticsDashboard = React.lazy(() => import("./pages/admin/AdminAnalyticsDashboard"));
+const ParentDashboard = React.lazy(() => import("./pages/parent/ParentDashboard"));
 const BootstrapDemo = React.lazy(() => import("./pages/BootstrapDemo"));
 const AccessDenied = React.lazy(() => import("./pages/AccessDenied"));
 const SystemDashboard = React.lazy(() => import("./pages/SystemDashboard"));
