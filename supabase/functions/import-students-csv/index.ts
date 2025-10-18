@@ -193,8 +193,8 @@ Deno.serve(async (req) => {
           action = 'created';
         }
 
-        // Check if student record exists
-        const { data: existingStudent } = await supabaseClient
+        // Check if student record exists using admin client
+        const { data: existingStudent } = await supabaseAdmin
           .from('students')
           .select('id')
           .eq('user_id', userId)
@@ -202,15 +202,18 @@ Deno.serve(async (req) => {
 
         let studentId = existingStudent?.id;
 
-        // Create student record if doesn't exist
+        // Create or update student record
         if (!studentId) {
           const { data: newStudent, error: studentError } = await supabaseAdmin
             .from('students')
-            .insert({
+            .upsert({
               user_id: userId,
               first_name: studentData.first_name,
               last_name: studentData.last_name,
               grade_level: studentData.grade_level || ''
+            }, {
+              onConflict: 'user_id',
+              ignoreDuplicates: false
             })
             .select('id')
             .single();
