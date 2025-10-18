@@ -53,30 +53,42 @@ export const useSimpleGradebook = (classId?: string) => {
       setLoading(true);
 
       // Fetch students enrolled in the class
-      const { data: studentsData, error: studentsError } = await supabase
+      const { data: enrollmentData, error: enrollmentError } = await supabase
         .from('class_students')
-        .select(`
-          student_id,
-          students!inner (
-            id,
-            user_id,
-            first_name,
-            last_name
-          )
-        `)
+        .select('student_id')
         .eq('class_id', classId)
         .eq('status', 'active');
+
+      if (enrollmentError) throw enrollmentError;
+
+      const studentIds = (enrollmentData || []).map(e => e.student_id);
+      
+      if (studentIds.length === 0) {
+        setData({
+          students: [],
+          assignments: [],
+          grades: []
+        });
+        setLoading(false);
+        return;
+      }
+
+      // Fetch student details
+      const { data: studentsData, error: studentsError } = await supabase
+        .from('students')
+        .select('id, user_id, first_name, last_name')
+        .in('id', studentIds);
 
       if (studentsError) throw studentsError;
 
       const students: GradebookStudent[] = (studentsData || [])
-        .map((item: any) => ({
-          id: item.students.id,
-          user_id: item.students.user_id,
-          first_name: item.students.first_name,
-          last_name: item.students.last_name,
-        }))
-        .filter((s) => s.user_id);
+        .filter((s) => s.user_id)
+        .map((s: any) => ({
+          id: s.id,
+          user_id: s.user_id,
+          first_name: s.first_name,
+          last_name: s.last_name,
+        }));
 
       // Get user profiles for emails
       const userIds = students.map(s => s.user_id);
