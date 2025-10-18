@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, Users, BookOpen, Clock, Eye, EyeOff, Edit, ExternalLink } from 'lucide-react';
 import { format } from 'date-fns';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 
 export const ClassPublisher = () => {
   const { useClasses, publishClass, deleteClass, isPublishing, isDeleting } = useClassApi();
@@ -41,7 +42,7 @@ export const ClassPublisher = () => {
   };
 
   if (loadingDrafts || loadingPublished) {
-    return <div className="p-6">Loading classes...</div>;
+    return <LoadingSpinner size="md" text="Loading classes..." fullScreen={false} />;
   }
 
   return (

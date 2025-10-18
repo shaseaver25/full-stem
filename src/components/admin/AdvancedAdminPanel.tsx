@@ -12,6 +12,7 @@ import DemoDataManagement from './DemoDataManagement';
 import { DemoAccountManager } from './DemoAccountManager';
 import { ActivityLogTable } from './ActivityLogTable';
 import { ActivityLogCard } from '@/components/activity/ActivityLogCard';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 
 interface UserRole {
   id: string;
@@ -232,7 +233,7 @@ const AdvancedAdminPanel = () => {
   };
 
   if (loading) {
-    return <div className="flex items-center justify-center h-64">Loading admin panel...</div>;
+    return <LoadingSpinner size="lg" text="Loading admin panel..." />;
   }
 
   return (
