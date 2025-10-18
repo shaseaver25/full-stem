@@ -24,6 +24,8 @@ export const ClassStudentImport = ({ classId, onImportComplete }: ClassStudentIm
       'has_504',
       'is_ESL',
       'primary_language',
+      'parent_contact',
+      'parent_email',
       'notes'
     ];
     const exampleRow = [
@@ -36,6 +38,8 @@ export const ClassStudentImport = ({ classId, onImportComplete }: ClassStudentIm
       'False',
       'True',
       'Spanish',
+      'Sarah Johnson',
+      'sarah.johnson@example.com',
       'Reading support recommended'
     ];
     const csvContent = headers.join(',') + '\n' + exampleRow.join(',') + '\n';
@@ -51,7 +55,7 @@ export const ClassStudentImport = ({ classId, onImportComplete }: ClassStudentIm
     
     toast({
       title: 'Template Downloaded',
-      description: 'Fill in the template with student information including IEP, 504, and ESL status.',
+      description: 'Fill in the template with student information including IEP, 504, ESL status, and parent contact details.',
     });
   };
 
