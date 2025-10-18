@@ -1,3 +1,6 @@
+This is a test edit to trigger the audit workflow.
+
+
 # Welcome to your Lovable project
 
 ## Project info
