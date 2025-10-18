@@ -8,6 +8,8 @@ import { Search, BookOpen, Users, Calendar, Plus, Eye, Edit, BarChart3 } from 'l
 import { format } from 'date-fns';
 import { ClassStudentImport } from './ClassStudentImport';
 import { useQueryClient } from '@tanstack/react-query';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { StudentRosterPanel } from './StudentRosterPanel';
 
 interface ClassData {
   id: string;
@@ -39,6 +41,7 @@ export const ClassesGrid = ({
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedClassId, setSelectedClassId] = useState<string | null>(null);
 
   const handleImportComplete = () => {
     queryClient.invalidateQueries({ queryKey: ['classes'] });
@@ -187,7 +190,7 @@ export const ClassesGrid = ({
                     variant="secondary"
                     size="sm"
                     className="w-full"
-                    onClick={() => navigate(`/classes/${cls.id}#add-student`)}
+                    onClick={() => setSelectedClassId(cls.id)}
                   >
                     <Plus className="h-4 w-4 mr-2" />
                     Add Student
@@ -258,6 +261,18 @@ export const ClassesGrid = ({
           )}
         </>
       )}
+
+      {/* Add Student Dialog */}
+      <Dialog open={!!selectedClassId} onOpenChange={(open) => !open && setSelectedClassId(null)}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Manage Students</DialogTitle>
+          </DialogHeader>
+          {selectedClassId && (
+            <StudentRosterPanel classId={selectedClassId} />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

@@ -14,13 +14,36 @@ export const ClassStudentImport = ({ classId, onImportComplete }: ClassStudentIm
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const downloadTemplate = () => {
-    const headers = ['first_name', 'last_name', 'email', 'grade_level', 'student_id'];
-    const csvContent = headers.join(',') + '\n';
+    const headers = [
+      'first_name',
+      'last_name', 
+      'email',
+      'grade',
+      'class_id',
+      'has_IEP',
+      'has_504',
+      'is_ESL',
+      'primary_language',
+      'notes'
+    ];
+    const exampleRow = [
+      'Katie',
+      'Johnson',
+      'katie.johnson@example.com',
+      '5',
+      classId,
+      'True',
+      'False',
+      'True',
+      'Spanish',
+      'Reading support recommended'
+    ];
+    const csvContent = headers.join(',') + '\n' + exampleRow.join(',') + '\n';
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'student_import_template.csv';
+    a.download = 'student_import_template_with_IEP_504_ESL.csv';
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -28,7 +51,7 @@ export const ClassStudentImport = ({ classId, onImportComplete }: ClassStudentIm
     
     toast({
       title: 'Template Downloaded',
-      description: 'Fill in the template and upload it to add students.',
+      description: 'Fill in the template with student information including IEP, 504, and ESL status.',
     });
   };
 

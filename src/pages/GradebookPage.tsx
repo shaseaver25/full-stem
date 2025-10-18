@@ -31,10 +31,24 @@ const GradebookPage: React.FC = () => {
       if (!user) return;
 
       try {
+        // First get teacher profile ID
+        const { data: teacherProfile, error: teacherError } = await supabase
+          .from('teacher_profiles')
+          .select('id')
+          .eq('user_id', user.id)
+          .single();
+
+        if (teacherError) throw teacherError;
+        if (!teacherProfile) {
+          setLoading(false);
+          return;
+        }
+
+        // Then fetch classes using teacher profile ID
         const { data, error } = await supabase
           .from('classes')
           .select('*')
-          .eq('teacher_id', user.id)
+          .eq('teacher_id', teacherProfile.id)
           .order('name');
 
         if (error) throw error;
