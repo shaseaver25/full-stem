@@ -199,7 +199,7 @@ Deno.serve(async (req) => {
 
         let studentId = existingStudent?.id;
 
-        // Create or update student record
+        // Create or update student record - ensure user_id is always set
         if (!studentId) {
           const { data: newStudent, error: studentError } = await supabaseAdmin
             .from('students')
@@ -232,6 +232,22 @@ Deno.serve(async (req) => {
           }
 
           studentId = newStudent.id;
+        }
+
+        // Only proceed if we have both userId and studentId
+        if (!userId || !studentId) {
+          results.push({
+            success: false,
+            student: {
+              id: studentId || '',
+              first_name: studentData.first_name,
+              last_name: studentData.last_name,
+              email: studentData.email
+            },
+            action: 'error',
+            error: 'Failed to create or find user account and student record'
+          });
+          continue;
         }
 
         // Check if already enrolled
