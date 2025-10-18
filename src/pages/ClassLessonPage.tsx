@@ -136,7 +136,7 @@ const ClassLessonPage = () => {
       <div className="max-w-6xl mx-auto px-4 py-8">
         {/* Navigation */}
         <div className="mb-6">
-          <Link to={`/teacher/class/${lesson.class_id}`} className="flex items-center text-blue-600 hover:text-blue-800 mb-4">
+          <Link to={`/teacher/classes/${lesson.class_id}`} className="flex items-center text-blue-600 hover:text-blue-800 mb-4">
             <ArrowLeft className="w-4 h-4 mr-1" />
             Back to {classInfo?.name || 'Class'}
           </Link>
