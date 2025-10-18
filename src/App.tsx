@@ -13,6 +13,7 @@ import { FocusModeProvider } from "@/contexts/FocusModeContext";
 import { AccessibilityToolbar } from "@/components/ui/AccessibilityToolbar";
 import { useFocusModeShortcut } from "@/hooks/useFocusModeShortcut";
 import { SuperAdminBanner, SuperAdminWatermark } from "@/components/admin/SuperAdminBanner";
+import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import TrialPage from "./components/TrialPage";
@@ -87,122 +88,144 @@ function AppContent() {
     <>
       <SuperAdminBanner />
       <Routes>
-        <Route path="/" element={<Index />} />
-        <Route path="/bootstrap" element={<BootstrapDemo />} />
-        <Route path="/auth" element={<Auth />} />
-        <Route path="/auth/callback" element={<AuthCallback />} />
-        <Route path="/auth/setup-mfa" element={<MFASetup />} />
-        <Route path="/auth/verify-mfa" element={<MFAVerify />} />
-        <Route path="/signup/student" element={<StudentSignupForm />} />
-        <Route path="/access-denied" element={<AccessDenied />} />
+        <Route path="/" element={<ErrorBoundary><Index /></ErrorBoundary>} />
+        <Route path="/bootstrap" element={<ErrorBoundary><BootstrapDemo /></ErrorBoundary>} />
+        <Route path="/auth" element={<ErrorBoundary><Auth /></ErrorBoundary>} />
+        <Route path="/auth/callback" element={<ErrorBoundary><AuthCallback /></ErrorBoundary>} />
+        <Route path="/auth/setup-mfa" element={<ErrorBoundary><MFASetup /></ErrorBoundary>} />
+        <Route path="/auth/verify-mfa" element={<ErrorBoundary><MFAVerify /></ErrorBoundary>} />
+        <Route path="/signup/student" element={<ErrorBoundary><StudentSignupForm /></ErrorBoundary>} />
+        <Route path="/access-denied" element={<ErrorBoundary><AccessDenied /></ErrorBoundary>} />
         <Route 
           path="/dashboard/student" 
           element={
-            <RequireRole allowedRoles={['student']}>
-              <NewStudentDashboard />
-            </RequireRole>
+            <ErrorBoundary>
+              <RequireRole allowedRoles={['student']}>
+                <NewStudentDashboard />
+              </RequireRole>
+            </ErrorBoundary>
           } 
         />
         <Route 
           path="/quiz/learning-genius" 
           element={
-            <RequireRole allowedRoles={['student']}>
-              <LearningGeniusSurveyPage />
-            </RequireRole>
+            <ErrorBoundary>
+              <RequireRole allowedRoles={['student']}>
+                <LearningGeniusSurveyPage />
+              </RequireRole>
+            </ErrorBoundary>
           } 
         />
         <Route 
           path="/classes/join" 
           element={
-            <RequireRole allowedRoles={['student']}>
-              <JoinClassPage />
-            </RequireRole>
+            <ErrorBoundary>
+              <RequireRole allowedRoles={['student']}>
+                <JoinClassPage />
+              </RequireRole>
+            </ErrorBoundary>
           } 
         />
         <Route 
           path="/classes/my-classes" 
           element={
-            <RequireRole allowedRoles={['student']}>
-              <MyClassesPage />
-            </RequireRole>
+            <ErrorBoundary>
+              <RequireRole allowedRoles={['student']}>
+                <MyClassesPage />
+              </RequireRole>
+            </ErrorBoundary>
           } 
         />
         <Route 
           path="/classes/:id" 
           element={
-            <RequireRole allowedRoles={['student', 'teacher']}>
-              <RoleAwareClassDetailPage />
-            </RequireRole>
+            <ErrorBoundary>
+              <RequireRole allowedRoles={['student', 'teacher']}>
+                <RoleAwareClassDetailPage />
+              </RequireRole>
+            </ErrorBoundary>
           } 
         />
         <Route 
           path="/assignments" 
           element={
-            <RequireRole allowedRoles={['student']}>
-              <AssignmentsListPage />
-            </RequireRole>
+            <ErrorBoundary>
+              <RequireRole allowedRoles={['student']}>
+                <AssignmentsListPage />
+              </RequireRole>
+            </ErrorBoundary>
           } 
         />
         <Route 
           path="/assignments/:id" 
           element={
-            <RequireRole allowedRoles={['student']}>
-              <AssignmentDetailPage />
-            </RequireRole>
+            <ErrorBoundary>
+              <RequireRole allowedRoles={['student']}>
+                <AssignmentDetailPage />
+              </RequireRole>
+            </ErrorBoundary>
           } 
         />
         <Route 
           path="/grades" 
           element={
-            <RequireRole allowedRoles={['student']}>
-              <MyGradesPage />
-            </RequireRole>
+            <ErrorBoundary>
+              <RequireRole allowedRoles={['student']}>
+                <MyGradesPage />
+              </RequireRole>
+            </ErrorBoundary>
           } 
         />
-        <Route path="/trial" element={<TrialPage />} />
+        <Route path="/trial" element={<ErrorBoundary><TrialPage /></ErrorBoundary>} />
         
         {/* Demo Routes */}
-        <Route path="/demo" element={<DemoGate />} />
-        <Route path="/demo/start" element={<DemoStart />} />
-        <Route path="/demo/home" element={<Index />} />
-        <Route path="/course/excel" element={<ExcelCourse />} />
-        <Route path="/course/word" element={<WordCourse />} />
-        <Route path="/course/powerpoint" element={<PowerPointCourse />} />
-        <Route path="/course/outlook" element={<OutlookCourse />} />
-        <Route path="/lesson/:lessonId" element={<LessonPage />} />
-        <Route path="/preferences" element={<UserPreferences />} />
+        <Route path="/demo" element={<ErrorBoundary><DemoGate /></ErrorBoundary>} />
+        <Route path="/demo/start" element={<ErrorBoundary><DemoStart /></ErrorBoundary>} />
+        <Route path="/demo/home" element={<ErrorBoundary><Index /></ErrorBoundary>} />
+        <Route path="/course/excel" element={<ErrorBoundary><ExcelCourse /></ErrorBoundary>} />
+        <Route path="/course/word" element={<ErrorBoundary><WordCourse /></ErrorBoundary>} />
+        <Route path="/course/powerpoint" element={<ErrorBoundary><PowerPointCourse /></ErrorBoundary>} />
+        <Route path="/course/outlook" element={<ErrorBoundary><OutlookCourse /></ErrorBoundary>} />
+        <Route path="/lesson/:lessonId" element={<ErrorBoundary><LessonPage /></ErrorBoundary>} />
+        <Route path="/preferences" element={<ErrorBoundary><UserPreferences /></ErrorBoundary>} />
         
         {/* Content Management */}
         <Route 
           path="/content" 
           element={
-            <RequireRole allowedRoles={['teacher', 'admin', 'super_admin', 'developer']}>
-              <ContentManagementPage />
-            </RequireRole>
+            <ErrorBoundary>
+              <RequireRole allowedRoles={['teacher', 'admin', 'super_admin', 'developer']}>
+                <ContentManagementPage />
+              </RequireRole>
+            </ErrorBoundary>
           } 
         />
         
         {/* Components Showcase */}
-        <Route path="/components" element={<ComponentsPage />} />
+        <Route path="/components" element={<ErrorBoundary><ComponentsPage /></ErrorBoundary>} />
         
         {/* Demo Showcase */}
-        <Route path="/demo-showcase" element={<DemoShowcase />} />
+        <Route path="/demo-showcase" element={<ErrorBoundary><DemoShowcase /></ErrorBoundary>} />
         
         {/* Parent Portal */}
         <Route 
           path="/parent" 
           element={
-            <RequireRole allowedRoles={['parent']}>
-              <ParentPortalPage />
-            </RequireRole>
+            <ErrorBoundary>
+              <RequireRole allowedRoles={['parent']}>
+                <ParentPortalPage />
+              </RequireRole>
+            </ErrorBoundary>
           } 
         />
         <Route 
           path="/dashboard/parent" 
           element={
-            <ProtectedParentRoute>
-              <ParentDashboard />
-            </ProtectedParentRoute>
+            <ErrorBoundary>
+              <ProtectedParentRoute>
+                <ParentDashboard />
+              </ProtectedParentRoute>
+            </ErrorBoundary>
           } 
         />
         
@@ -210,57 +233,71 @@ function AppContent() {
         <Route 
           path="/admin/onboarding" 
           element={
-            <RequireRole allowedRoles={['admin', 'super_admin', 'developer']}>
-              <AdminOnboarding />
-            </RequireRole>
+            <ErrorBoundary>
+              <RequireRole allowedRoles={['admin', 'super_admin', 'developer']}>
+                <AdminOnboarding />
+              </RequireRole>
+            </ErrorBoundary>
           } 
         />
         <Route 
           path="/admin/dashboard" 
           element={
-            <RequireRole allowedRoles={['admin', 'super_admin', 'developer']}>
-              <AdminDashboard />
-            </RequireRole>
+            <ErrorBoundary>
+              <RequireRole allowedRoles={['admin', 'super_admin', 'developer']}>
+                <AdminDashboard />
+              </RequireRole>
+            </ErrorBoundary>
           } 
         />
         <Route 
           path="/admin/build-class" 
           element={
-            <RequireRole allowedRoles={['admin', 'super_admin', 'developer']}>
-              <BuildClassPage />
-            </RequireRole>
+            <ErrorBoundary>
+              <RequireRole allowedRoles={['admin', 'super_admin', 'developer']}>
+                <BuildClassPage />
+              </RequireRole>
+            </ErrorBoundary>
           } 
         />
         <Route 
           path="/admin/ai-course-builder" 
           element={
-            <RequireRole allowedRoles={['admin', 'super_admin', 'developer']}>
-              <AICourseBuilderPage />
-            </RequireRole>
+            <ErrorBoundary>
+              <RequireRole allowedRoles={['admin', 'super_admin', 'developer']}>
+                <AICourseBuilderPage />
+              </RequireRole>
+            </ErrorBoundary>
           } 
         />
         <Route 
           path="/admin/course-editor" 
           element={
-            <RequireRole allowedRoles={['admin', 'super_admin', 'developer']}>
-              <CourseEditorPage />
-            </RequireRole>
+            <ErrorBoundary>
+              <RequireRole allowedRoles={['admin', 'super_admin', 'developer']}>
+                <CourseEditorPage />
+              </RequireRole>
+            </ErrorBoundary>
           } 
         />
         <Route 
           path="/admin/advanced" 
           element={
-            <RequireRole allowedRoles={['admin', 'super_admin', 'developer']}>
-              <AdvancedAdminPage />
-            </RequireRole>
+            <ErrorBoundary>
+              <RequireRole allowedRoles={['admin', 'super_admin', 'developer']}>
+                <AdvancedAdminPage />
+              </RequireRole>
+            </ErrorBoundary>
           } 
         />
         <Route 
           path="/dashboard/admin/analytics" 
           element={
-            <ProtectedAdminRoute>
-              <AdminAnalyticsDashboard />
-            </ProtectedAdminRoute>
+            <ErrorBoundary>
+              <ProtectedAdminRoute>
+                <AdminAnalyticsDashboard />
+              </ProtectedAdminRoute>
+            </ErrorBoundary>
           } 
         />
         
@@ -268,9 +305,11 @@ function AppContent() {
         <Route 
           path="/super-admin" 
           element={
-            <RequireRole allowedRoles={['super_admin', 'developer']}>
-              <SuperAdminDashboard />
-            </RequireRole>
+            <ErrorBoundary>
+              <RequireRole allowedRoles={['super_admin', 'developer']}>
+                <SuperAdminDashboard />
+              </RequireRole>
+            </ErrorBoundary>
           } 
         />
         
@@ -278,9 +317,11 @@ function AppContent() {
         <Route 
           path="/system-dashboard" 
           element={
-            <RequireRole allowedRoles={['system_admin', 'developer']}>
-              <SystemDashboard />
-            </RequireRole>
+            <ErrorBoundary>
+              <RequireRole allowedRoles={['system_admin', 'developer']}>
+                <SystemDashboard />
+              </RequireRole>
+            </ErrorBoundary>
           } 
         />
         
@@ -288,9 +329,11 @@ function AppContent() {
         <Route 
           path="/dev" 
           element={
-            <DeveloperRoute>
-              <DeveloperDashboard />
-            </DeveloperRoute>
+            <ErrorBoundary>
+              <DeveloperRoute>
+                <DeveloperDashboard />
+              </DeveloperRoute>
+            </ErrorBoundary>
           } 
         />
 
@@ -298,147 +341,181 @@ function AppContent() {
         <Route 
           path="/student" 
           element={
-            <RequireRole allowedRoles={['student']}>
-              <StudentDashboard />
-            </RequireRole>
+            <ErrorBoundary>
+              <RequireRole allowedRoles={['student']}>
+                <StudentDashboard />
+              </RequireRole>
+            </ErrorBoundary>
           } 
         />
         <Route 
           path="/student/assignments/:id" 
           element={
-            <RequireRole allowedRoles={['student']}>
-              <StudentAssignmentDetail />
-            </RequireRole>
+            <ErrorBoundary>
+              <RequireRole allowedRoles={['student']}>
+                <StudentAssignmentDetail />
+              </RequireRole>
+            </ErrorBoundary>
           } 
         />
         <Route 
           path="/student/assignments/:id/submit" 
           element={
-            <RequireRole allowedRoles={['student']}>
-              <StudentAssignmentSubmit />
-            </RequireRole>
+            <ErrorBoundary>
+              <RequireRole allowedRoles={['student']}>
+                <StudentAssignmentSubmit />
+              </RequireRole>
+            </ErrorBoundary>
           } 
         />
         
         {/* Teacher Routes */}
-        <Route path="/teacher/auth" element={<TeacherAuth />} />
+        <Route path="/teacher/auth" element={<ErrorBoundary><TeacherAuth /></ErrorBoundary>} />
         <Route 
           path="/teacher/onboarding" 
           element={
-            <ProtectedTeacherRoute requireOnboarding={false}>
-              <TeacherOnboarding />
-            </ProtectedTeacherRoute>
+            <ErrorBoundary>
+              <ProtectedTeacherRoute requireOnboarding={false}>
+                <TeacherOnboarding />
+              </ProtectedTeacherRoute>
+            </ErrorBoundary>
           } 
         />
         <Route 
           path="/teacher/dashboard" 
           element={
-            <ProtectedTeacherRoute requireOnboarding={true}>
-              <TeacherDashboard />
-            </ProtectedTeacherRoute>
+            <ErrorBoundary>
+              <ProtectedTeacherRoute requireOnboarding={true}>
+                <TeacherDashboard />
+              </ProtectedTeacherRoute>
+            </ErrorBoundary>
           } 
         />
         <Route 
           path="/teacher/gradebook" 
           element={
-            <ProtectedTeacherRoute requireOnboarding={true}>
-              <UnifiedGradebookPage />
-            </ProtectedTeacherRoute>
+            <ErrorBoundary>
+              <ProtectedTeacherRoute requireOnboarding={true}>
+                <UnifiedGradebookPage />
+              </ProtectedTeacherRoute>
+            </ErrorBoundary>
           } 
         />
         <Route 
           path="/teacher/submissions" 
           element={
-            <ProtectedTeacherRoute requireOnboarding={true}>
-              <AssignmentSubmissionsPage />
-            </ProtectedTeacherRoute>
+            <ErrorBoundary>
+              <ProtectedTeacherRoute requireOnboarding={true}>
+                <AssignmentSubmissionsPage />
+              </ProtectedTeacherRoute>
+            </ErrorBoundary>
           } 
         />
         <Route 
           path="/teacher/analytics" 
           element={
-            <ProtectedTeacherRoute requireOnboarding={true}>
-              <AnalyticsDashboard />
-            </ProtectedTeacherRoute>
+            <ErrorBoundary>
+              <ProtectedTeacherRoute requireOnboarding={true}>
+                <AnalyticsDashboard />
+              </ProtectedTeacherRoute>
+            </ErrorBoundary>
           } 
         />
         <Route 
           path="/teacher/classes" 
           element={
-            <ProtectedTeacherRoute requireOnboarding={true}>
-              <TeacherDashboard />
-            </ProtectedTeacherRoute>
+            <ErrorBoundary>
+              <ProtectedTeacherRoute requireOnboarding={true}>
+                <TeacherDashboard />
+              </ProtectedTeacherRoute>
+            </ErrorBoundary>
           } 
         />
         <Route 
           path="/teacher/classes/:classId" 
           element={
-            <ProtectedTeacherRoute requireOnboarding={true}>
-              <ClassDetailPage />
-            </ProtectedTeacherRoute>
+            <ErrorBoundary>
+              <ProtectedTeacherRoute requireOnboarding={true}>
+                <ClassDetailPage />
+              </ProtectedTeacherRoute>
+            </ErrorBoundary>
           } 
         />
         <Route 
           path="/teacher/classes/:classId/edit" 
           element={
-            <ProtectedTeacherRoute requireOnboarding={true}>
-              <BuildClassPage />
-            </ProtectedTeacherRoute>
+            <ErrorBoundary>
+              <ProtectedTeacherRoute requireOnboarding={true}>
+                <BuildClassPage />
+              </ProtectedTeacherRoute>
+            </ErrorBoundary>
           } 
         />
         <Route
           path="/class-lesson/:lessonId" 
           element={
-            <ProtectedTeacherRoute requireOnboarding={true}>
-              <ClassLessonPage />
-            </ProtectedTeacherRoute>
+            <ErrorBoundary>
+              <ProtectedTeacherRoute requireOnboarding={true}>
+                <ClassLessonPage />
+              </ProtectedTeacherRoute>
+            </ErrorBoundary>
           } 
         />
         <Route 
           path="/teacher/assignments/:assignmentId" 
           element={
-            <ProtectedTeacherRoute>
-              <TeacherAssignmentDetail />
-            </ProtectedTeacherRoute>
+            <ErrorBoundary>
+              <ProtectedTeacherRoute>
+                <TeacherAssignmentDetail />
+              </ProtectedTeacherRoute>
+            </ErrorBoundary>
           } 
         />
         <Route 
           path="/teacher/feedback" 
           element={
-            <ProtectedTeacherRoute requireOnboarding={true}>
-              <TeacherFeedbackDashboard />
-            </ProtectedTeacherRoute>
+            <ErrorBoundary>
+              <ProtectedTeacherRoute requireOnboarding={true}>
+                <TeacherFeedbackDashboard />
+              </ProtectedTeacherRoute>
+            </ErrorBoundary>
           } 
         />
         <Route 
           path="/dashboard/teacher/analytics" 
           element={
-            <ProtectedTeacherRoute requireOnboarding={true}>
-              <TeacherAnalyticsDashboard />
-            </ProtectedTeacherRoute>
+            <ErrorBoundary>
+              <ProtectedTeacherRoute requireOnboarding={true}>
+                <TeacherAnalyticsDashboard />
+              </ProtectedTeacherRoute>
+            </ErrorBoundary>
           } 
         />
         
         <Route
           path="/teacher/build-class/:classId?"
           element={
-            <ProtectedTeacherRoute requireOnboarding={true}>
-              <BuildClassPage />
-            </ProtectedTeacherRoute>
+            <ErrorBoundary>
+              <ProtectedTeacherRoute requireOnboarding={true}>
+                <BuildClassPage />
+              </ProtectedTeacherRoute>
+            </ErrorBoundary>
           } 
         />
         
         <Route
           path="/teacher/lesson-builder/:lessonId?" 
           element={
-            <ProtectedTeacherRoute requireOnboarding={true}>
-              <LessonBuilderPage />
-            </ProtectedTeacherRoute>
+            <ErrorBoundary>
+              <ProtectedTeacherRoute requireOnboarding={true}>
+                <LessonBuilderPage />
+              </ProtectedTeacherRoute>
+            </ErrorBoundary>
           } 
         />
         
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-        <Route path="*" element={<NotFound />} />
+        <Route path="*" element={<ErrorBoundary><NotFound /></ErrorBoundary>} />
       </Routes>
       <SuperAdminWatermark />
     </>
