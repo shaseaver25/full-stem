@@ -1,3 +1,4 @@
+This edit triggers the TailorEDU Continuous Audit workflow.
 # Welcome to your Lovable project
 
 ## Project info
