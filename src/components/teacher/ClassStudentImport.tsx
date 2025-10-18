@@ -88,12 +88,39 @@ export const ClassStudentImport = ({ classId, onImportComplete }: ClassStudentIm
 
       if (error) throw error;
 
-      const { summary } = data;
+      const { summary, results } = data;
 
-      toast({
-        title: 'Import Complete',
-        description: `Successfully added ${summary.successful} student(s). ${summary.errors > 0 ? `${summary.errors} error(s).` : ''}`,
-      });
+      // If all imports failed, show error toast with details
+      if (summary.errors > 0 && summary.successful === 0) {
+        const errorMessages = results
+          .filter((r: any) => !r.success)
+          .map((r: any) => `${r.student.first_name} ${r.student.last_name}: ${r.error}`)
+          .join('\n');
+        
+        toast({
+          title: 'Import Failed',
+          description: errorMessages || `Failed to import ${summary.errors} student(s).`,
+          variant: 'destructive',
+        });
+      } else if (summary.errors > 0) {
+        // Partial success - show warning with details
+        const errorMessages = results
+          .filter((r: any) => !r.success)
+          .map((r: any) => `${r.student.first_name} ${r.student.last_name}: ${r.error}`)
+          .join('\n');
+        
+        toast({
+          title: 'Import Completed with Errors',
+          description: `Successfully added ${summary.successful} student(s). ${summary.errors} failed:\n${errorMessages}`,
+          variant: 'destructive',
+        });
+      } else {
+        // Complete success
+        toast({
+          title: 'Import Successful',
+          description: `Successfully added ${summary.successful} student(s) to the class.`,
+        });
+      }
 
       if (onImportComplete) {
         onImportComplete();
