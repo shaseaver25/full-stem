@@ -1,3 +1,4 @@
+Triggering audit registration.
 # Welcome to your Lovable project
 
 ## Project info
