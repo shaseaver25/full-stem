@@ -204,7 +204,7 @@ Deno.serve(async (req) => {
 
         // Create student record if doesn't exist
         if (!studentId) {
-          const { data: newStudent, error: studentError } = await supabaseClient
+          const { data: newStudent, error: studentError } = await supabaseAdmin
             .from('students')
             .insert({
               user_id: userId,
@@ -244,7 +244,7 @@ Deno.serve(async (req) => {
 
         // Enroll student in class if not already enrolled
         if (!existingEnrollment) {
-          const { error: enrollError } = await supabaseClient
+          const { error: enrollError } = await supabaseAdmin
             .from('class_students')
             .insert({
               class_id: classId,
