@@ -95,7 +95,6 @@ export const getAllowedRoutes = (role: UserRole | null): string[] => {
       '/teacher/dashboard',
       '/teacher/classes',
       '/teacher/gradebook',
-      '/teacher/assignment-gradebook',
       '/teacher/analytics',
       '/teacher/feedback',
       '/teacher/submissions',

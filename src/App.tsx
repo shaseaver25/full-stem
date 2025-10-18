@@ -33,7 +33,6 @@ import TeacherDashboard from "./components/teacher/TeacherDashboard";
 import ClassDetailPage from "./pages/ClassDetailPage";
 import ProtectedTeacherRoute from "./components/teacher/ProtectedTeacherRoute";
 import { default as UnifiedGradebookPage } from "./pages/UnifiedGradebookPage";
-import GradebookPage from "./pages/GradebookPage";
 import AssignmentSubmissionsPage from "./pages/AssignmentSubmissionsPage";
 import AdminDashboard from "./pages/AdminDashboard";
 import BuildClassPage from "./pages/BuildClassPage";
@@ -341,14 +340,6 @@ function AppContent() {
         />
         <Route 
           path="/teacher/gradebook" 
-          element={
-            <ProtectedTeacherRoute requireOnboarding={true}>
-              <UnifiedGradebookPage />
-            </ProtectedTeacherRoute>
-          } 
-        />
-        <Route 
-          path="/teacher/assignment-gradebook" 
           element={
             <ProtectedTeacherRoute requireOnboarding={true}>
               <UnifiedGradebookPage />
