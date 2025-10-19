@@ -3,6 +3,7 @@
 [![CI](https://github.com/shaseaver25/full-stem/actions/workflows/ci.yml/badge.svg)](https://github.com/shaseaver25/full-stem/actions/workflows/ci.yml)
 [![Security](https://github.com/shaseaver25/full-stem/actions/workflows/security.yml/badge.svg)](https://github.com/shaseaver25/full-stem/actions/workflows/security.yml)
 [![Accessibility & Performance](https://github.com/shaseaver25/full-stem/actions/workflows/accessibility.yml/badge.svg)](https://github.com/shaseaver25/full-stem/actions/workflows/accessibility.yml)
+[![GEO Optimization](https://github.com/shaseaver25/full-stem/actions/workflows/geo-audit.yml/badge.svg)](https://github.com/shaseaver25/full-stem/actions/workflows/geo-audit.yml)
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.5-blue.svg)](https://www.typescriptlang.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-20.x-green.svg)](https://nodejs.org/)
@@ -117,6 +118,16 @@ This project is built with:
   - Automatic logging to console and analytics
   - Performance budgets enforced in CI/CD
 
+### AI & Search Optimization
+
+- **GEO (Generative Engine Optimization)**: AI-friendly metadata and structure
+  - See [GEO_OPTIMIZATION.md](docs/GEO_OPTIMIZATION.md) for complete guide
+  - Schema.org JSON-LD markup for Organization, Course, and Person types
+  - OpenGraph and Twitter Card metadata for social sharing
+  - Automated GEO scoring in CI/CD (target: ≥85/100)
+  - Entity verification and provenance tracking
+  - Optimized for ChatGPT, Perplexity, and Google AI Overviews
+
 ## Accessibility
 
 TailorEdu achieves full WCAG 2.1 Level AA compliance with comprehensive accessibility features:
@@ -168,6 +179,7 @@ In development mode, axe-core automatically monitors for accessibility violation
 - [docs/ACCESSIBILITY_AUDIT.md](docs/ACCESSIBILITY_AUDIT.md) - WCAG 2.1 AA compliance audit
 - [docs/SECURITY_POLICIES.md](docs/SECURITY_POLICIES.md) - RLS policies and database security audit
 - [docs/PERFORMANCE_AUDIT.md](docs/PERFORMANCE_AUDIT.md) - Performance optimization audit and benchmarks
+- [docs/GEO_OPTIMIZATION.md](docs/GEO_OPTIMIZATION.md) - Generative Engine Optimization guide
 - [IMAGE_OPTIMIZATION.md](IMAGE_OPTIMIZATION.md) - Image optimization utilities
 - [SENTRY_SETUP.md](SENTRY_SETUP.md) - Error monitoring setup
 - [REFACTORING_SUMMARY.md](REFACTORING_SUMMARY.md) - Recent refactoring changes

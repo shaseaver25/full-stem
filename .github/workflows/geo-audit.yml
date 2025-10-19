@@ -1,0 +1,71 @@
+name: GEO Audit
+
+on:
+  push:
+    branches: ['*']
+  pull_request:
+    branches: ['main']
+
+jobs:
+  geo-audit:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build project
+        run: npm run build
+
+      - name: Install serve
+        run: npm install -g serve
+
+      - name: Start server in background
+        run: |
+          serve -s dist -l 8080 &
+          echo $! > serve.pid
+          sleep 5
+
+      - name: Run GEO audit
+        run: node scripts/geo-audit.js
+
+      - name: Stop server
+        if: always()
+        run: |
+          if [ -f serve.pid ]; then
+            kill $(cat serve.pid) || true
+          fi
+
+      - name: Upload GEO Score Report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: geo-score-report
+          path: |
+            GEO_SCORE.md
+            geo-score.json
+
+      - name: Comment PR with GEO Score
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            if (fs.existsSync('GEO_SCORE.md')) {
+              const report = fs.readFileSync('GEO_SCORE.md', 'utf8');
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: `## 🤖 GEO Audit Results\n\n${report}`
+              });
+            }
