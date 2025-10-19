@@ -4,11 +4,14 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { ArrowLeft, Save, Eye, ChevronUp, ChevronDown } from 'lucide-react';
 import { LessonDetailsForm } from '@/components/lesson-builder/LessonDetailsForm';
 import { ComponentList } from '@/components/lesson-builder/ComponentList';
 import { AddComponentButton } from '@/components/lesson-builder/AddComponentButton';
 import { LessonPreview } from '@/components/lesson-builder/LessonPreview';
+import AIGenerationWizard from '@/components/lesson/AIGenerationWizard';
 
 interface LessonComponent {
   id?: string;
@@ -234,9 +237,7 @@ export default function LessonBuilderPage() {
                   <ArrowLeft className="h-4 w-4 mr-2" />
                   Back
                 </Button>
-                <h1 className="text-2xl font-bold">
-                  {lessonId ? 'Edit Lesson' : 'Create Lesson'}
-                </h1>
+                <h1 className="text-2xl font-bold">Lesson Builder</h1>
               </div>
               <div className="flex items-center gap-2">
                 <Button
@@ -271,42 +272,59 @@ export default function LessonBuilderPage() {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-8 max-w-5xl">
-        {isPreview ? (
-          <LessonPreview
-            title={title}
-            objectives={objectives}
-            components={components}
-          />
-        ) : (
-          <>
-            <LessonDetailsForm
-              title={title}
-              setTitle={setTitle}
-              lessonNumber={lessonNumber}
-              setLessonNumber={setLessonNumber}
-              unitId={unitId}
-              setUnitId={setUnitId}
-              objectives={objectives}
-              setObjectives={setObjectives}
-              classId={classId}
-              setClassId={setClassId}
-            />
+      <div className="container mx-auto px-4 py-8 max-w-6xl">
+        <Card>
+          <CardContent className="pt-6">
+            <Tabs defaultValue="manual" className="w-full">
+              <TabsList className="grid w-full grid-cols-2 mb-6">
+                <TabsTrigger value="manual">Manual Build</TabsTrigger>
+                <TabsTrigger value="ai">AI Generator</TabsTrigger>
+              </TabsList>
 
-            <div className="mt-8">
-              <ComponentList
-                components={components}
-                onUpdate={handleUpdateComponent}
-                onDelete={handleDeleteComponent}
-                onReorder={handleReorderComponents}
-              />
-            </div>
+              <TabsContent value="manual" className="mt-0">
+                {isPreview ? (
+                  <LessonPreview
+                    title={title}
+                    objectives={objectives}
+                    components={components}
+                  />
+                ) : (
+                  <>
+                    <LessonDetailsForm
+                      title={title}
+                      setTitle={setTitle}
+                      lessonNumber={lessonNumber}
+                      setLessonNumber={setLessonNumber}
+                      unitId={unitId}
+                      setUnitId={setUnitId}
+                      objectives={objectives}
+                      setObjectives={setObjectives}
+                      classId={classId}
+                      setClassId={setClassId}
+                    />
 
-            <div className="mt-6">
-              <AddComponentButton onSelect={handleAddComponent} />
-            </div>
-          </>
-        )}
+                    <div className="mt-8">
+                      <ComponentList
+                        components={components}
+                        onUpdate={handleUpdateComponent}
+                        onDelete={handleDeleteComponent}
+                        onReorder={handleReorderComponents}
+                      />
+                    </div>
+
+                    <div className="mt-6">
+                      <AddComponentButton onSelect={handleAddComponent} />
+                    </div>
+                  </>
+                )}
+              </TabsContent>
+
+              <TabsContent value="ai" className="mt-0">
+                <AIGenerationWizard />
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
