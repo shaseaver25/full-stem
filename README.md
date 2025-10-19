@@ -62,6 +62,14 @@ This project is built with:
 
 ## Key Features
 
+### Environment Configuration
+
+- **Environment Variable Hardening**: Type-safe environment configuration with Zod validation
+  - See [ENV_HARDENING.md](docs/ENV_HARDENING.md) for complete guide
+  - Build-time guards prevent production deployments with missing critical vars
+  - Typed environment variables with automatic validation
+  - Protection against misconfiguration and injection attacks
+
 ### Performance Optimizations
 
 - **Database Performance**: Strategic indexes and query optimization
@@ -131,6 +139,7 @@ In development mode, axe-core automatically monitors for accessibility violation
 - [DEVELOPER_DOCUMENTATION.md](DEVELOPER_DOCUMENTATION.md) - Comprehensive development guide
 - [CODE_STRUCTURE.md](CODE_STRUCTURE.md) - Directory structure and naming conventions
 - [CODE_QUALITY.md](CODE_QUALITY.md) - Code quality standards and ESLint configuration
+- [docs/ENV_HARDENING.md](docs/ENV_HARDENING.md) - Environment variable validation and security
 - [docs/ACCESSIBILITY_AUDIT.md](docs/ACCESSIBILITY_AUDIT.md) - WCAG 2.1 AA compliance audit
 - [docs/SECURITY_POLICIES.md](docs/SECURITY_POLICIES.md) - RLS policies and database security audit
 - [docs/PERFORMANCE_AUDIT.md](docs/PERFORMANCE_AUDIT.md) - Performance optimization audit and benchmarks

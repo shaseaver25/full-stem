@@ -1,5 +1,6 @@
 import React from 'react';
 import { WordTiming, SpeechState } from '@/types/tts';
+import { isDev } from '@/utils/env';
 
 interface TTSDebugHUDProps {
   speechState: SpeechState;
@@ -15,7 +16,7 @@ const TTSDebugHUD: React.FC<TTSDebugHUDProps> = ({
   language
 }) => {
   // Only show in development with debug flag
-  const shouldShow = import.meta.env.DEV && 
+  const shouldShow = isDev && 
     new URLSearchParams(window.location.search).get('debug') === '1';
 
   if (!shouldShow) return null;

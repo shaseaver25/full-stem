@@ -5,6 +5,7 @@ import { FolderOpen, Loader2 } from 'lucide-react';
 import { getValidDriveToken, hasDriveAccess } from '@/utils/googleDrive';
 import { DriveReauthorization } from './DriveReauthorization';
 import { supabase } from '@/integrations/supabase/client';
+import { env } from '@/utils/env';
 
 interface DriveFile {
   id: string;
@@ -20,7 +21,7 @@ interface DriveFilePickerProps {
   size?: 'default' | 'sm' | 'lg';
 }
 
-const GOOGLE_API_KEY = import.meta.env.VITE_GOOGLE_API_KEY;
+const GOOGLE_API_KEY = env.VITE_GOOGLE_API_KEY;
 
 export function DriveFilePicker({ 
   onFileSelected, 

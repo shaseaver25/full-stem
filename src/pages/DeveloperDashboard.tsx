@@ -20,14 +20,16 @@ import { SandboxDataManager } from '@/components/developer/SandboxDataManager';
 import { useAuth } from '@/contexts/AuthContext';
 import { MFARequiredBanner } from '@/components/system/MFARequiredBanner';
 import { useMFAEnforcement } from '@/hooks/useMFAEnforcement';
+import { getMode } from '@/utils/env';
 
 const DeveloperDashboard = () => {
   const { user } = useAuth();
   const { requiresMFA, mfaEnabled } = useMFAEnforcement();
   
   // Environment safety check
-  const isProduction = import.meta.env.MODE === 'production';
-  const isDevelopment = import.meta.env.MODE === 'development';
+  const mode = getMode();
+  const isProduction = mode === 'production';
+  const isDevelopment = mode === 'development';
 
   return (
     <div className="min-h-screen bg-background">

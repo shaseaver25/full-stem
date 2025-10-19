@@ -2,6 +2,7 @@ import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { AlertTriangle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from './alert';
 import { Button } from './button';
+import { isDev } from '@/utils/env';
 
 interface Props {
   children: ReactNode;
@@ -25,7 +26,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     // Log error to console in development
-    if (import.meta.env.DEV) {
+    if (isDev) {
       console.error('ErrorBoundary caught an error:', error, errorInfo);
     }
   }
@@ -47,7 +48,7 @@ export class ErrorBoundary extends Component<Props, State> {
           <AlertDescription>
             <div className="space-y-2">
               <p>The read-aloud feature encountered an error and needs to be reset.</p>
-              {import.meta.env.DEV && this.state.error && (
+              {isDev && this.state.error && (
                 <details className="text-xs">
                   <summary className="cursor-pointer font-medium">Error Details (Dev)</summary>
                   <pre className="mt-2 whitespace-pre-wrap break-all">

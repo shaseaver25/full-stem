@@ -5,11 +5,12 @@ import * as Sentry from "@sentry/react";
 import App from './App.tsx';
 import './index.css';
 import { initWebVitalsTracking } from "./utils/webVitals";
+import { env, isDev, isProd } from "./utils/env";
 
 // Accessibility testing in development using axe-core
 // Note: Due to StrictMode compatibility, we use jest-axe for automated testing
 // Manual testing with browser extensions (axe DevTools, WAVE) recommended
-if (import.meta.env.DEV) {
+if (isDev) {
   console.log('🔍 Accessibility monitoring: Use browser DevTools extensions for live testing');
   console.log('   - axe DevTools: https://www.deque.com/axe/devtools/');
   console.log('   - WAVE: https://wave.webaim.org/extension/');
@@ -17,9 +18,9 @@ if (import.meta.env.DEV) {
 }
 
 // Initialize Sentry for production error logging
-if (import.meta.env.PROD && import.meta.env.VITE_SENTRY_DSN) {
+if (isProd && env.VITE_SENTRY_DSN) {
   Sentry.init({
-    dsn: import.meta.env.VITE_SENTRY_DSN,
+    dsn: env.VITE_SENTRY_DSN,
     integrations: [
       Sentry.browserTracingIntegration(),
       Sentry.replayIntegration({
@@ -32,12 +33,12 @@ if (import.meta.env.PROD && import.meta.env.VITE_SENTRY_DSN) {
     // Session Replay
     replaysSessionSampleRate: 0.1, // Sample 10% of sessions
     replaysOnErrorSampleRate: 1.0, // Sample 100% of sessions with errors
-    environment: import.meta.env.MODE,
+    environment: env.MODE,
   });
 }
 
 // Initialize Web Vitals tracking in production
-if (import.meta.env.PROD) {
+if (isProd) {
   initWebVitalsTracking();
 }
 
@@ -52,7 +53,7 @@ root.render(
             <p className="text-muted-foreground">
               We've been notified and are working on a fix. Please try refreshing the page.
             </p>
-            {import.meta.env.DEV && (
+            {isDev && (
               <details className="text-left text-sm">
                 <summary className="cursor-pointer font-medium">Error Details (Dev Only)</summary>
                 <pre className="mt-2 p-4 bg-muted rounded overflow-auto">

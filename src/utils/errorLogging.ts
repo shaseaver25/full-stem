@@ -1,4 +1,5 @@
 import * as Sentry from "@sentry/react";
+import { env, isDev, isProd } from "./env";
 
 /**
  * Log an error to Sentry (production) and console (development)
@@ -7,12 +8,12 @@ import * as Sentry from "@sentry/react";
  */
 export const logError = (error: unknown, context?: string) => {
   // Always log to console in development
-  if (import.meta.env.DEV) {
+  if (isDev) {
     console.error(context ? `[${context}]` : '[Error]', error);
   }
 
   // Send to Sentry in production if configured
-  if (import.meta.env.PROD && import.meta.env.VITE_SENTRY_DSN) {
+  if (isProd && env.VITE_SENTRY_DSN) {
     Sentry.captureException(error, {
       tags: {
         context: context || 'unknown',
@@ -27,7 +28,7 @@ export const logError = (error: unknown, context?: string) => {
  * @param email - The user's email (optional)
  */
 export const setErrorUser = (userId: string, email?: string) => {
-  if (import.meta.env.PROD && import.meta.env.VITE_SENTRY_DSN) {
+  if (isProd && env.VITE_SENTRY_DSN) {
     Sentry.setUser({
       id: userId,
       email,
@@ -39,7 +40,7 @@ export const setErrorUser = (userId: string, email?: string) => {
  * Clear user context (on logout)
  */
 export const clearErrorUser = () => {
-  if (import.meta.env.PROD && import.meta.env.VITE_SENTRY_DSN) {
+  if (isProd && env.VITE_SENTRY_DSN) {
     Sentry.setUser(null);
   }
 };
@@ -55,7 +56,7 @@ export const addBreadcrumb = (
   category: string = 'action',
   level: Sentry.SeverityLevel = 'info'
 ) => {
-  if (import.meta.env.VITE_SENTRY_DSN) {
+  if (env.VITE_SENTRY_DSN) {
     Sentry.addBreadcrumb({
       message,
       category,

@@ -5,15 +5,16 @@
  * for real user monitoring (RUM)
  */
 
-import { onCLS, onFCP, onLCP, onTTFB, onINP, Metric } from 'web-vitals';
+import { onCLS, onFCP, onINP, onLCP, onTTFB, type Metric } from 'web-vitals';
 import { supabase } from '@/integrations/supabase/client';
+import { isDev, isProd } from './env';
 
 /**
  * Send metric to analytics backend
  */
 const sendToAnalytics = async (metric: Metric) => {
   // Log to console in development
-  if (import.meta.env.DEV) {
+  if (isDev) {
     console.log('📊 Web Vital:', {
       name: metric.name,
       value: metric.value,
@@ -107,7 +108,7 @@ export const formatMetricValue = (metric: Metric): string => {
  */
 export const initWebVitalsTracking = () => {
   // Only track in production
-  if (import.meta.env.PROD) {
+  if (isProd) {
     onCLS(sendToAnalytics);
     onFCP(sendToAnalytics);
     onLCP(sendToAnalytics);
