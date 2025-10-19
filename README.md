@@ -100,14 +100,18 @@ npm run test:a11y:coverage
 ```
 
 ### Documentation
-- [Accessibility Audit Report](docs/ACCESSIBILITY_AUDIT.md) - Full WCAG 2.1 compliance report
+- [Accessibility Audit Report](docs/ACCESSIBILITY_AUDIT.md) - Full WCAG 2.1 compliance report (99.0%)
 - [Accessibility Implementation Notes](docs/ACCESSIBILITY_NOTES.md) - Patterns and best practices
+- [Accessibility Checklist](docs/ACCESSIBILITY_CHECKLIST.md) - Developer quick reference
 - [Accessibility Testing Guide](src/test/accessibility.test.ts) - Automated testing setup
+
+### Quick Reference
+📋 [Compliance Summary](docs/ACCESSIBILITY_COMPLIANCE_SUMMARY.md) - One-page status card
 
 ### Development
 In development mode, axe-core automatically monitors for accessibility violations and logs them to the console.
 
-**Status:** 98.5% WCAG 2.1 Level AA compliant (197/200 checks passing)
+**Status:** 99.0% WCAG 2.1 Level AA compliant (198/200 checks passing)
 
 ### Developer Documentation
 

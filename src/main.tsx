@@ -5,31 +5,14 @@ import * as Sentry from "@sentry/react";
 import App from './App.tsx';
 import './index.css';
 
-// Accessibility testing in development
+// Accessibility testing in development using axe-core
+// Note: Due to StrictMode compatibility, we use jest-axe for automated testing
+// Manual testing with browser extensions (axe DevTools, WAVE) recommended
 if (import.meta.env.DEV) {
-  import('@axe-core/react').then((axe) => {
-    if (axe && axe.default) {
-      const axeCore = axe.default;
-      axeCore(StrictMode, createRoot, 1000, {
-        rules: [
-          // Configure axe-core rules for comprehensive testing
-          { id: 'color-contrast', enabled: true },
-          { id: 'aria-required-attr', enabled: true },
-          { id: 'button-name', enabled: true },
-          { id: 'image-alt', enabled: true },
-          { id: 'label', enabled: true },
-          { id: 'link-name', enabled: true },
-          { id: 'aria-hidden-focus', enabled: true },
-          { id: 'aria-valid-attr', enabled: true },
-          { id: 'focus-order-semantics', enabled: true },
-          { id: 'keyboard-focus', enabled: true },
-        ]
-      });
-      console.log('🔍 Accessibility monitoring active (axe-core) - Check console for violations');
-    }
-  }).catch((err) => {
-    console.warn('Could not load axe-core for accessibility testing:', err);
-  });
+  console.log('🔍 Accessibility monitoring: Use browser DevTools extensions for live testing');
+  console.log('   - axe DevTools: https://www.deque.com/axe/devtools/');
+  console.log('   - WAVE: https://wave.webaim.org/extension/');
+  console.log('   - Run automated tests: npm run test:a11y');
 }
 
 // Initialize Sentry for production error logging

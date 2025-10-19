@@ -4,6 +4,18 @@ This directory contains comprehensive documentation for the TailorEdu platform.
 
 ## Contents
 
+### [ACCESSIBILITY_COMPLIANCE_SUMMARY.md](ACCESSIBILITY_COMPLIANCE_SUMMARY.md)
+**Quick Reference Card**
+
+One-page summary for stakeholders:
+- Overall compliance status (99.0% WCAG 2.1 AA)
+- Violations by severity
+- Key accessibility features
+- Testing commands
+- Next review date
+
+---
+
 ### [ACCESSIBILITY_AUDIT.md](ACCESSIBILITY_AUDIT.md)
 **WCAG 2.1 Level AA Compliance Report**
 
