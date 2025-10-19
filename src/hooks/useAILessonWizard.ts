@@ -1,5 +1,14 @@
+/**
+ * AI Lesson Generator Hook
+ * 
+ * Environment Variables:
+ * - Frontend: Uses VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY from .env
+ * - Edge Function: Uses OPENAI_API_KEY from Supabase secrets
+ *   (Configure at: Supabase Dashboard → Project Settings → Edge Functions → Secrets)
+ */
+
 import { useState } from "react";
-import { createClient } from "@supabase/supabase-js";
+import { supabase } from "@/integrations/supabase/client";
 import type { AILesson } from "@/types/aiLesson";
 import { useToast } from "@/hooks/use-toast";
 
@@ -33,13 +42,8 @@ export function useAILessonWizard() {
     setError(null);
 
     try {
-      // Create Supabase client
-      const supabase = createClient(
-        import.meta.env.VITE_SUPABASE_URL!,
-        import.meta.env.VITE_SUPABASE_ANON_KEY!
-      );
-
-      // Call the Edge Function
+      // Call the Edge Function (uses Supabase client configured from .env)
+      // The edge function accesses OPENAI_API_KEY via Supabase secrets (Deno.env.get)
       const { data, error: functionError } = await supabase.functions.invoke(
         "ai-lesson-generator",
         {
