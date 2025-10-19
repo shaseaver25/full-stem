@@ -92,12 +92,48 @@ Sentry.init({
 
 ## Testing
 
-To test Sentry integration:
+### Development Testing
+
+To test Sentry integration in development:
+
+1. Temporarily set `isProd` to `true` in `src/config/sentry.ts` or add your DSN to `.env`
+2. Add a test error in any component:
+   ```typescript
+   throw new Error("Test Sentry integration");
+   ```
+3. Check your Sentry dashboard to confirm the error was captured
+4. Remember to revert the `isProd` change after testing
+
+### Production Testing
+
+To test Sentry integration in production:
 
 1. Build the app for production: `npm run build`
 2. Preview the production build: `npm run preview`
-3. Trigger an error in the app
+3. Trigger an error in the app (e.g., click a button that throws an error)
 4. Check your Sentry dashboard to confirm the error was captured
+
+### Source Maps Upload
+
+To upload source maps for better error debugging:
+
+1. Add Sentry project configuration to your environment:
+   ```bash
+   SENTRY_ORG="your-org-name"
+   SENTRY_PROJECT="your-project-name"
+   SENTRY_AUTH_TOKEN="your-auth-token"
+   ```
+2. Get your auth token from: https://sentry.io/settings/account/api/auth-tokens/
+3. Source maps will be automatically uploaded during production builds
+
+### Verification Checklist
+
+- [ ] Errors appear in Sentry dashboard with full stack traces
+- [ ] Source maps are uploaded and stack traces show original code
+- [ ] User context is set correctly (user ID and email)
+- [ ] Breadcrumbs are captured for debugging context
+- [ ] Session replays are captured for errors
+- [ ] Performance metrics are visible in Sentry
 
 ## Disabling Sentry
 

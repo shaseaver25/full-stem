@@ -2,7 +2,8 @@ import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { AlertTriangle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from './alert';
 import { Button } from './button';
-import { isDev } from '@/utils/env';
+import { isDev, isProd } from '@/utils/env';
+import { logError } from '@/utils/errorLogging';
 
 interface Props {
   children: ReactNode;
@@ -25,10 +26,13 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    // Log error to console in development
+    // Log error to console in development and Sentry in production
     if (isDev) {
       console.error('ErrorBoundary caught an error:', error, errorInfo);
     }
+    
+    // Send to Sentry with React error context
+    logError(error, `ErrorBoundary: ${errorInfo.componentStack || 'Unknown component'}`);
   }
 
   handleReset = () => {
