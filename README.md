@@ -74,11 +74,21 @@ This project is built with:
 
 - **React Query**: Optimized data fetching with caching (5-minute stale time)
 
+### Accessibility Features
+
+- **WCAG 2.1 Level AA Compliant**: Full keyboard navigation and screen reader support
+- **ARIA Labels**: All interactive elements properly labeled
+- **Focus Management**: Focus trapping in modals with proper return behavior
+- **Live Regions**: Dynamic announcements for screen readers
+- **Keyboard Shortcuts**: Esc to close modals, Tab cycling
+- See [ACCESSIBILITY_AUDIT.md](ACCESSIBILITY_AUDIT.md) for detailed compliance report
+
 ### Developer Documentation
 
 - [DEVELOPER_DOCUMENTATION.md](DEVELOPER_DOCUMENTATION.md) - Comprehensive development guide
 - [CODE_STRUCTURE.md](CODE_STRUCTURE.md) - Directory structure and naming conventions
 - [CODE_QUALITY.md](CODE_QUALITY.md) - Code quality standards and ESLint configuration
+- [ACCESSIBILITY_AUDIT.md](ACCESSIBILITY_AUDIT.md) - Accessibility compliance report
 - [IMAGE_OPTIMIZATION.md](IMAGE_OPTIMIZATION.md) - Image optimization utilities
 - [SENTRY_SETUP.md](SENTRY_SETUP.md) - Error monitoring setup
 - [REFACTORING_SUMMARY.md](REFACTORING_SUMMARY.md) - Recent refactoring changes

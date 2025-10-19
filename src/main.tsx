@@ -5,6 +5,28 @@ import * as Sentry from "@sentry/react";
 import App from './App.tsx';
 import './index.css';
 
+// Accessibility testing in development
+if (import.meta.env.DEV) {
+  import('@axe-core/react').then((axe) => {
+    if (axe && axe.default) {
+      const axeCore = axe.default;
+      axeCore(StrictMode, createRoot, 1000, {
+        rules: [
+          // Configure axe-core rules
+          { id: 'color-contrast', enabled: true },
+          { id: 'aria-required-attr', enabled: true },
+          { id: 'button-name', enabled: true },
+          { id: 'image-alt', enabled: true },
+          { id: 'label', enabled: true },
+          { id: 'link-name', enabled: true },
+        ]
+      });
+    }
+  }).catch((err) => {
+    console.warn('Could not load axe-core for accessibility testing:', err);
+  });
+}
+
 // Initialize Sentry for production error logging
 if (import.meta.env.PROD && import.meta.env.VITE_SENTRY_DSN) {
   Sentry.init({

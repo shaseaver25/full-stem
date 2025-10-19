@@ -134,10 +134,13 @@ const CreateClassModal = ({ open, onOpenChange, onClassCreated, createClass }: C
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+      <DialogContent 
+        className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto"
+        aria-describedby="create-class-description"
+      >
         <DialogHeader>
           <DialogTitle>Create New Class</DialogTitle>
-          <DialogDescription>
+          <DialogDescription id="create-class-description">
             Set up a new class with student learning profiles, subject focus, and select from available courses.
           </DialogDescription>
         </DialogHeader>
@@ -275,10 +278,15 @@ const CreateClassModal = ({ open, onOpenChange, onClassCreated, createClass }: C
               variant="outline" 
               onClick={() => onOpenChange(false)}
               disabled={loading}
+              aria-label="Cancel class creation"
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={loading}>
+            <Button 
+              type="submit" 
+              disabled={loading}
+              aria-label={loading ? 'Creating class' : 'Create new class'}
+            >
               {loading ? 'Creating...' : 'Create Class'}
             </Button>
           </DialogFooter>

@@ -66,10 +66,13 @@ export const EditProfileModal = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md bg-background">
+      <DialogContent 
+        className="sm:max-w-md bg-background"
+        aria-describedby="edit-profile-description"
+      >
         <DialogHeader>
           <DialogTitle>Edit Profile</DialogTitle>
-          <DialogDescription>
+          <DialogDescription id="edit-profile-description">
             Update your grade level information
           </DialogDescription>
         </DialogHeader>
@@ -113,10 +116,15 @@ export const EditProfileModal = ({
                 type="button"
                 variant="outline"
                 onClick={() => onOpenChange(false)}
+                aria-label="Cancel profile edit"
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={updateProfile.isPending}>
+              <Button 
+                type="submit" 
+                disabled={updateProfile.isPending}
+                aria-label={updateProfile.isPending ? 'Saving profile changes' : 'Save profile changes'}
+              >
                 {updateProfile.isPending ? 'Saving...' : 'Save Changes'}
               </Button>
             </div>

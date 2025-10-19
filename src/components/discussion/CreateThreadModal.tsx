@@ -2,6 +2,7 @@ import { useState, useRef } from 'react';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogFooter,
@@ -84,9 +85,15 @@ export const CreateThreadModal = ({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+      <DialogContent 
+        className="max-w-3xl max-h-[90vh] overflow-y-auto"
+        aria-describedby="create-thread-description"
+      >
         <DialogHeader>
           <DialogTitle>Create New Discussion Thread</DialogTitle>
+          <DialogDescription id="create-thread-description" className="sr-only">
+            Fill out the form below to create a new discussion thread with a title, body content, and optional file attachments.
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
@@ -127,8 +134,9 @@ export const CreateThreadModal = ({
               variant="outline"
               onClick={() => fileInputRef.current?.click()}
               disabled={files.length >= 5}
+              aria-label={`Attach files (${files.length} of 5 attached)`}
             >
-              <Paperclip className="h-4 w-4 mr-2" />
+              <Paperclip className="h-4 w-4 mr-2" aria-hidden="true" />
               Attach Files ({files.length}/5)
             </Button>
 
@@ -139,13 +147,15 @@ export const CreateThreadModal = ({
                     key={index}
                     className="flex items-center gap-2 px-3 py-1.5 bg-muted rounded-md text-sm"
                   >
-                    <Paperclip className="h-4 w-4" />
+                    <Paperclip className="h-4 w-4" aria-hidden="true" />
                     <span className="max-w-[200px] truncate">{file.name}</span>
                     <button
                       onClick={() => removeFile(index)}
                       className="hover:text-destructive"
+                      aria-label={`Remove ${file.name}`}
+                      type="button"
                     >
-                      <X className="h-4 w-4" />
+                      <X className="h-4 w-4" aria-hidden="true" />
                     </button>
                   </div>
                 ))}
@@ -155,10 +165,19 @@ export const CreateThreadModal = ({
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={onClose} disabled={submitting}>
+          <Button 
+            variant="outline" 
+            onClick={onClose} 
+            disabled={submitting}
+            aria-label="Cancel thread creation"
+          >
             Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={submitting}>
+          <Button 
+            onClick={handleSubmit} 
+            disabled={submitting}
+            aria-label={submitting ? 'Creating thread' : 'Create discussion thread'}
+          >
             {submitting ? 'Creating...' : 'Create Thread'}
           </Button>
         </DialogFooter>

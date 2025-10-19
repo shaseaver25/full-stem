@@ -3,7 +3,7 @@ import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -66,9 +66,15 @@ export const EditClassModal = ({ isOpen, onClose, classData }: EditClassModalPro
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent 
+        className="sm:max-w-[425px]"
+        aria-describedby="edit-class-description"
+      >
         <DialogHeader>
           <DialogTitle>Edit Class Information</DialogTitle>
+          <DialogDescription id="edit-class-description" className="sr-only">
+            Update class details including name, grade level, subject, and school year.
+          </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -138,10 +144,19 @@ export const EditClassModal = ({ isOpen, onClose, classData }: EditClassModalPro
             />
 
             <div className="flex justify-end gap-2 pt-4">
-              <Button type="button" variant="outline" onClick={onClose}>
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={onClose}
+                aria-label="Cancel class edit"
+              >
                 Cancel
               </Button>
-              <Button type="submit" disabled={form.formState.isSubmitting}>
+              <Button 
+                type="submit" 
+                disabled={form.formState.isSubmitting}
+                aria-label={form.formState.isSubmitting ? 'Updating class' : 'Update class information'}
+              >
                 {form.formState.isSubmitting ? 'Updating...' : 'Update Class'}
               </Button>
             </div>

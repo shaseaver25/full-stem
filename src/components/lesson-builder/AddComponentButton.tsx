@@ -39,15 +39,18 @@ export function AddComponentButton({ onSelect }: AddComponentButtonProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="lg" className="w-full">
-          <Plus className="h-5 w-5 mr-2" />
+        <Button size="lg" className="w-full" aria-label="Add lesson component">
+          <Plus className="h-5 w-5 mr-2" aria-hidden="true" />
           Add Component
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+      <DialogContent 
+        className="max-w-3xl max-h-[80vh] overflow-y-auto"
+        aria-describedby="add-component-description"
+      >
         <DialogHeader>
           <DialogTitle>Add Lesson Component</DialogTitle>
-          <DialogDescription>
+          <DialogDescription id="add-component-description">
             Choose a component type to add to your lesson
           </DialogDescription>
         </DialogHeader>
@@ -59,10 +62,19 @@ export function AddComponentButton({ onSelect }: AddComponentButtonProps) {
                 key={comp.type}
                 className="cursor-pointer hover:bg-accent transition-colors"
                 onClick={() => handleSelect(comp.type)}
+                role="button"
+                tabIndex={0}
+                aria-label={`Add ${comp.label} component`}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    handleSelect(comp.type);
+                  }
+                }}
               >
                 <CardContent className="p-4">
                   <div className="flex items-start gap-3">
-                    <div className="p-2 rounded-lg bg-primary/10">
+                    <div className="p-2 rounded-lg bg-primary/10" aria-hidden="true">
                       <Icon className="h-5 w-5 text-primary" />
                     </div>
                     <div className="flex-1">

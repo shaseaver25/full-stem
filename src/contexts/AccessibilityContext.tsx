@@ -15,6 +15,7 @@ interface AccessibilityContextType {
   settings: AccessibilitySettings;
   updateSettings: (updates: Partial<AccessibilitySettings>) => Promise<void>;
   isLoading: boolean;
+  announce: (message: string, priority?: 'polite' | 'assertive') => void;
 }
 
 const defaultSettings: AccessibilitySettings = {
@@ -31,6 +32,8 @@ const AccessibilityContext = createContext<AccessibilityContextType | null>(null
 export function AccessibilityProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<AccessibilitySettings>(defaultSettings);
   const [isLoading, setIsLoading] = useState(true);
+  const [liveRegionMessage, setLiveRegionMessage] = useState('');
+  const [liveRegionPriority, setLiveRegionPriority] = useState<'polite' | 'assertive'>('polite');
   const { toast } = useToast();
 
   // Load settings from Supabase on mount
@@ -122,14 +125,30 @@ export function AccessibilityProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const announce = (message: string, priority: 'polite' | 'assertive' = 'polite') => {
+    setLiveRegionPriority(priority);
+    setLiveRegionMessage(message);
+    // Clear the message after it's been announced
+    setTimeout(() => setLiveRegionMessage(''), 100);
+  };
+
   return (
-    <AccessibilityContext.Provider value={{ settings, updateSettings, isLoading }}>
+    <AccessibilityContext.Provider value={{ settings, updateSettings, isLoading, announce }}>
       <div
         className={`
           ${settings.highContrast ? 'accessibility-high-contrast' : ''}
           ${settings.dyslexiaFont ? 'font-opendyslexic' : ''}
         `}
       >
+        {/* ARIA live regions for screen reader announcements */}
+        <div 
+          role="status" 
+          aria-live={liveRegionPriority} 
+          aria-atomic="true" 
+          className="sr-only"
+        >
+          {liveRegionMessage}
+        </div>
         {children}
       </div>
     </AccessibilityContext.Provider>
