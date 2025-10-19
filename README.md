@@ -64,6 +64,13 @@ This project is built with:
 
 ### Security
 
+- **Rate Limiting**: Client-side rate limiting with intelligent backoff
+  - See [RATE_LIMITING.md](docs/RATE_LIMITING.md) for complete guide
+  - Token bucket + sliding window algorithms
+  - Automatic backoff with jitter on retries
+  - Protection against brute force and abuse
+  - Per-endpoint configurable limits
+
 - **Security Headers**: Comprehensive HTTP security headers protection
   - See [SECURITY_HEADERS.md](docs/SECURITY_HEADERS.md) for complete guide
   - Content Security Policy (CSP) in report-only mode
@@ -146,6 +153,7 @@ In development mode, axe-core automatically monitors for accessibility violation
 - [DEVELOPER_DOCUMENTATION.md](DEVELOPER_DOCUMENTATION.md) - Comprehensive development guide
 - [CODE_STRUCTURE.md](CODE_STRUCTURE.md) - Directory structure and naming conventions
 - [CODE_QUALITY.md](CODE_QUALITY.md) - Code quality standards and ESLint configuration
+- [docs/RATE_LIMITING.md](docs/RATE_LIMITING.md) - Client-side rate limiting and backoff strategies
 - [docs/SECURITY_HEADERS.md](docs/SECURITY_HEADERS.md) - HTTP security headers and CSP configuration
 - [docs/ENV_HARDENING.md](docs/ENV_HARDENING.md) - Environment variable validation and security
 - [docs/ACCESSIBILITY_AUDIT.md](docs/ACCESSIBILITY_AUDIT.md) - WCAG 2.1 AA compliance audit
