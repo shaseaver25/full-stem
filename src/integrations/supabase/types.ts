@@ -2507,6 +2507,42 @@ export type Database = {
         }
         Relationships: []
       }
+      pilot_interest: {
+        Row: {
+          created_at: string | null
+          email: string
+          expected_start: string | null
+          id: string
+          message: string | null
+          name: string
+          organization: string
+          program_interest: string[]
+          role: string
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          expected_start?: string | null
+          id?: string
+          message?: string | null
+          name: string
+          organization: string
+          program_interest: string[]
+          role: string
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          expected_start?: string | null
+          id?: string
+          message?: string | null
+          name?: string
+          organization?: string
+          program_interest?: string[]
+          role?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           allowed_ips: string[] | null
