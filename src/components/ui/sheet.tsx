@@ -1,3 +1,14 @@
+/**
+ * Sheet Component (Drawer)
+ * 
+ * ✅ WCAG 2.1 Level AA Compliant
+ * - Focus trap via Radix Dialog (built-in)
+ * - Escape key closes sheet
+ * - Returns focus to trigger element
+ * - Proper ARIA modal attributes
+ * - Close button with accessible label
+ */
+
 import * as SheetPrimitive from "@radix-ui/react-dialog"
 import { cva, type VariantProps } from "class-variance-authority"
 import { X } from "lucide-react"

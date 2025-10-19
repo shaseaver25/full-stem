@@ -20,6 +20,36 @@ Comprehensive accessibility audit report including:
 
 ---
 
+### [ACCESSIBILITY_NOTES.md](ACCESSIBILITY_NOTES.md)
+**Implementation Patterns and Best Practices**
+
+Practical guide for implementing accessibility features:
+- ARIA labels and descriptions patterns
+- Focus management techniques
+- Keyboard navigation implementation
+- Live regions and dynamic updates
+- Form accessibility patterns
+- Modal and dialog best practices
+- Icon button guidelines
+- Navigation component patterns
+- Testing procedures
+- Known exceptions
+
+---
+
+### [ACCESSIBILITY_CHECKLIST.md](ACCESSIBILITY_CHECKLIST.md)
+**Quick Reference Checklist**
+
+Developer checklist for ensuring accessibility compliance:
+- Pre-development checklist
+- During development checks
+- Testing procedures
+- Common patterns with code examples
+- Resource links
+- Troubleshooting guide
+
+---
+
 ## Testing
 
 ### Accessibility Testing
@@ -54,10 +84,12 @@ See the root directory for additional documentation:
 ## Contributing
 
 When adding new features or components:
-1. Ensure WCAG 2.1 Level AA compliance
-2. Add accessibility tests to `src/test/accessibility-scan.test.tsx`
-3. Include accessibility compliance comment in component header
-4. Update this documentation if needed
+1. Review [ACCESSIBILITY_CHECKLIST.md](ACCESSIBILITY_CHECKLIST.md) before starting
+2. Follow patterns in [ACCESSIBILITY_NOTES.md](ACCESSIBILITY_NOTES.md)
+3. Ensure WCAG 2.1 Level AA compliance
+4. Add accessibility tests to `src/test/accessibility-scan.test.tsx`
+5. Include accessibility compliance comment in component header
+6. Update documentation if introducing new patterns
 
 ---
 

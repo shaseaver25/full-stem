@@ -12,15 +12,20 @@ if (import.meta.env.DEV) {
       const axeCore = axe.default;
       axeCore(StrictMode, createRoot, 1000, {
         rules: [
-          // Configure axe-core rules
+          // Configure axe-core rules for comprehensive testing
           { id: 'color-contrast', enabled: true },
           { id: 'aria-required-attr', enabled: true },
           { id: 'button-name', enabled: true },
           { id: 'image-alt', enabled: true },
           { id: 'label', enabled: true },
           { id: 'link-name', enabled: true },
+          { id: 'aria-hidden-focus', enabled: true },
+          { id: 'aria-valid-attr', enabled: true },
+          { id: 'focus-order-semantics', enabled: true },
+          { id: 'keyboard-focus', enabled: true },
         ]
       });
+      console.log('🔍 Accessibility monitoring active (axe-core) - Check console for violations');
     }
   }).catch((err) => {
     console.warn('Could not load axe-core for accessibility testing:', err);

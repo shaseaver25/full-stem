@@ -1,3 +1,14 @@
+/**
+ * AlertDialog Component
+ * 
+ * ✅ WCAG 2.1 Level AA Compliant
+ * - Focus trap via Radix UI (built-in)
+ * - Escape key closes alert dialog
+ * - Returns focus to trigger element
+ * - Proper ARIA role for alerts
+ * - Action/Cancel buttons clearly differentiated
+ */
+
 import * as React from "react"
 import * as AlertDialogPrimitive from "@radix-ui/react-alert-dialog"
 

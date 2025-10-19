@@ -1,3 +1,13 @@
+/**
+ * Drawer Component
+ * 
+ * ✅ WCAG 2.1 Level AA Compliant
+ * - Focus trap via Vaul library (built-in)
+ * - Escape key closes drawer
+ * - Returns focus to trigger element
+ * - Swipe gestures on mobile
+ */
+
 import * as React from "react"
 import { Drawer as DrawerPrimitive } from "vaul"
 
