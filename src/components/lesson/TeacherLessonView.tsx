@@ -1,312 +1,512 @@
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Clock, Users, BookOpen, Target, CheckCircle, Video, Link, FileText } from 'lucide-react';
+import React, { useState } from "react";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
+import { Edit2, Save, RefreshCw, Check } from "lucide-react";
+import type { AILesson } from "@/types/aiLesson";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface TeacherLessonViewProps {
-  lesson: {
-    id: string;
-    title: string;
-    description?: string;
-    content: any;
-    materials: string[];
-    objectives: string[];
-    duration: number;
-  };
-  activities?: any[];
-  assignments?: any[];
-  resources?: any[];
+  lesson: AILesson;
+  onRegenerate: () => void;
+  onBack: () => void;
 }
 
-const TeacherLessonView: React.FC<TeacherLessonViewProps> = ({ 
-  lesson, 
-  activities = [],
-  assignments = [],
-  resources = []
-}) => {
-  const instructionalContent = lesson.content?.instructional_content || {};
-  const materialsNeeded = lesson.content?.materials_needed || lesson.materials || [];
-  const timingGuide = instructionalContent.timing_guide || {};
-  const differentiation = instructionalContent.differentiation || {};
+export default function TeacherLessonView({ lesson, onRegenerate, onBack }: TeacherLessonViewProps) {
+  const [editedLesson, setEditedLesson] = useState<AILesson>(lesson);
+  const [editingSection, setEditingSection] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const { toast } = useToast();
 
-  const getResourceIcon = (type: string) => {
-    switch (type) {
-      case 'video': return <Video className="h-4 w-4" />;
-      case 'interactive_tool': return <Link className="h-4 w-4" />;
-      case 'document': return <FileText className="h-4 w-4" />;
-      default: return <Link className="h-4 w-4" />;
+  const handleEdit = (section: string) => {
+    setEditingSection(section);
+  };
+
+  const handleSaveSection = () => {
+    setEditingSection(null);
+    toast({
+      title: "Section updated",
+      description: "Your changes have been saved locally.",
+    });
+  };
+
+  const handleSaveLesson = async () => {
+    setIsSaving(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("User not authenticated");
+
+      const { data: teacherProfile } = await supabase
+        .from("teacher_profiles")
+        .select("id")
+        .eq("user_id", user.id)
+        .single();
+
+      if (!teacherProfile) {
+        throw new Error("Teacher profile not found");
+      }
+
+      const { error } = await supabase.from("lessons_generated").insert({
+        teacher_id: teacherProfile.id,
+        topic: editedLesson.meta.topic,
+        grade_level: editedLesson.meta.gradeLevel,
+        subject: editedLesson.meta.subject,
+        lesson_json: editedLesson as any,
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Lesson saved successfully",
+        description: "Your AI-generated lesson has been saved to your library.",
+      });
+    } catch (error) {
+      console.error("Error saving lesson:", error);
+      toast({
+        title: "Failed to save lesson",
+        description: error instanceof Error ? error.message : "Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
     }
   };
 
+  const updateSection = (path: string[], value: any) => {
+    setEditedLesson((prev) => {
+      const updated = JSON.parse(JSON.stringify(prev));
+      let current = updated;
+      for (let i = 0; i < path.length - 1; i++) {
+        current = current[path[i]];
+      }
+      current[path[path.length - 1]] = value;
+      return updated;
+    });
+  };
+
   return (
-    <div className="max-w-6xl mx-auto p-6 space-y-6">
-      {/* Lesson Header */}
+    <div className="max-w-5xl mx-auto space-y-6">
       <Card>
-        <CardHeader>
-          <div className="flex justify-between items-start">
-            <div>
-              <CardTitle className="text-2xl text-primary">{lesson.title}</CardTitle>
-              <p className="text-muted-foreground mt-2">{lesson.description}</p>
-            </div>
-            <div className="flex gap-2">
-              <Badge variant="secondary" className="flex items-center gap-1">
-                <Clock className="h-3 w-3" />
-                {lesson.duration} min
-              </Badge>
-              <Badge variant="outline">Ready to Teach</Badge>
+        <CardHeader className="space-y-2">
+          <div className="flex items-start justify-between">
+            <div className="space-y-1">
+              <CardTitle className="text-3xl">
+                AI-Generated Lesson Plan: {editedLesson.meta.topic}
+              </CardTitle>
+              <div className="flex gap-4 text-sm text-muted-foreground">
+                <span><strong>Subject:</strong> {editedLesson.meta.subject}</span>
+                <span><strong>Grade:</strong> {editedLesson.meta.gradeLevel}</span>
+                <span><strong>Duration:</strong> {editedLesson.meta.durationMinutes} min</span>
+                <span><strong>Reading Level:</strong> {editedLesson.meta.readingLevel}</span>
+              </div>
             </div>
           </div>
         </CardHeader>
-      </Card>
 
-      <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="grid w-full grid-cols-6">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="content">Content</TabsTrigger>
-          <TabsTrigger value="timing">Timing</TabsTrigger>
-          <TabsTrigger value="materials">Materials</TabsTrigger>
-          <TabsTrigger value="activities">Activities</TabsTrigger>
-          <TabsTrigger value="resources">Resources</TabsTrigger>
-        </TabsList>
+        <CardContent>
+          <ScrollArea className="h-[600px] pr-4">
+            <div className="space-y-6">
+              {/* Objectives Section */}
+              <Section
+                title="Learning Objectives"
+                isEditing={editingSection === "objectives"}
+                onEdit={() => handleEdit("objectives")}
+                onSave={handleSaveSection}
+              >
+                {editingSection === "objectives" ? (
+                  <Textarea
+                    value={editedLesson.objectives.join("\n")}
+                    onChange={(e) =>
+                      updateSection(["objectives"], e.target.value.split("\n").filter(Boolean))
+                    }
+                    className="min-h-[100px]"
+                  />
+                ) : (
+                  <ul className="list-disc list-inside space-y-2">
+                    {editedLesson.objectives.map((obj, i) => (
+                      <li key={i} className="text-sm">{obj}</li>
+                    ))}
+                  </ul>
+                )}
+              </Section>
 
-        <TabsContent value="overview" className="space-y-4">
-          <div className="grid md:grid-cols-2 gap-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Target className="h-5 w-5" />
-                  Learning Objectives
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2">
-                  {(instructionalContent.learning_objectives || lesson.objectives || []).map((objective: string, index: number) => (
-                    <li key={index} className="flex items-start gap-2">
-                      <CheckCircle className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
-                      <span className="text-sm">{objective}</span>
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
+              <Separator />
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <BookOpen className="h-5 w-5" />
-                  Key Concepts
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-wrap gap-2">
-                  {(instructionalContent.key_concepts || []).map((concept: string, index: number) => (
-                    <Badge key={index} variant="secondary">{concept}</Badge>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+              {/* Vocabulary Section */}
+              {editedLesson.vocabulary && editedLesson.vocabulary.length > 0 && (
+                <>
+                  <Section
+                    title="Key Vocabulary"
+                    isEditing={editingSection === "vocabulary"}
+                    onEdit={() => handleEdit("vocabulary")}
+                    onSave={handleSaveSection}
+                  >
+                    {editingSection === "vocabulary" ? (
+                      <Textarea
+                        value={editedLesson.vocabulary?.join("\n") || ""}
+                        onChange={(e) =>
+                          updateSection(["vocabulary"], e.target.value.split("\n").filter(Boolean))
+                        }
+                        className="min-h-[100px]"
+                      />
+                    ) : (
+                      <ul className="list-disc list-inside space-y-1">
+                        {editedLesson.vocabulary?.map((term, i) => (
+                          <li key={i} className="text-sm"><strong>{term}</strong></li>
+                        ))}
+                      </ul>
+                    )}
+                  </Section>
+                  <Separator />
+                </>
+              )}
 
-          {instructionalContent.overview && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Lesson Overview</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm leading-relaxed">{instructionalContent.overview}</p>
-              </CardContent>
-            </Card>
-          )}
-        </TabsContent>
+              {/* Materials Section */}
+              <Section
+                title="Materials Needed"
+                isEditing={editingSection === "materials"}
+                onEdit={() => handleEdit("materials")}
+                onSave={handleSaveSection}
+              >
+                {editingSection === "materials" ? (
+                  <Textarea
+                    value={editedLesson.materials.join("\n")}
+                    onChange={(e) =>
+                      updateSection(["materials"], e.target.value.split("\n").filter(Boolean))
+                    }
+                    className="min-h-[100px]"
+                  />
+                ) : (
+                  <ul className="list-disc list-inside space-y-1">
+                    {editedLesson.materials.map((mat, i) => (
+                      <li key={i} className="text-sm">{mat}</li>
+                    ))}
+                  </ul>
+                )}
+              </Section>
 
-        <TabsContent value="content" className="space-y-4">
-          {instructionalContent.teacher_notes && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg text-primary">Teacher Notes & Tips</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm leading-relaxed bg-blue-50 p-4 rounded-lg border-l-4 border-blue-500">
-                  {instructionalContent.teacher_notes}
-                </p>
-              </CardContent>
-            </Card>
-          )}
+              <Separator />
 
-          {instructionalContent.case_studies && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Case Studies to Discuss</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2">
-                  {instructionalContent.case_studies.map((study: string, index: number) => (
-                    <li key={index} className="flex items-start gap-2">
-                      <div className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0" />
-                      <span className="text-sm">{study}</span>
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
-          )}
+              {/* Warm-Up Section */}
+              <Section
+                title={`Warm-Up (${editedLesson.warmup.minutes} minutes)`}
+                isEditing={editingSection === "warmup"}
+                onEdit={() => handleEdit("warmup")}
+                onSave={handleSaveSection}
+              >
+                {editingSection === "warmup" ? (
+                  <Textarea
+                    value={editedLesson.warmup.steps.join("\n")}
+                    onChange={(e) =>
+                      updateSection(["warmup", "steps"], e.target.value.split("\n").filter(Boolean))
+                    }
+                    className="min-h-[100px]"
+                  />
+                ) : (
+                  <ol className="list-decimal list-inside space-y-2">
+                    {editedLesson.warmup.steps.map((step, i) => (
+                      <li key={i} className="text-sm">{step}</li>
+                    ))}
+                  </ol>
+                )}
+              </Section>
 
-          {instructionalContent.tool_demonstrations && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Tool Demonstrations</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid gap-3">
-                  {instructionalContent.tool_demonstrations.map((tool: string, index: number) => (
-                    <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                      <Badge variant="outline">{index + 1}</Badge>
-                      <span className="text-sm font-medium">{tool}</span>
+              <Separator />
+
+              {/* Direct Instruction Section */}
+              <Section
+                title={`Direct Instruction (${editedLesson.directInstruction.minutes} minutes)`}
+                isEditing={editingSection === "directInstruction"}
+                onEdit={() => handleEdit("directInstruction")}
+                onSave={handleSaveSection}
+              >
+                {editingSection === "directInstruction" ? (
+                  <Textarea
+                    value={editedLesson.directInstruction.steps.join("\n")}
+                    onChange={(e) =>
+                      updateSection(["directInstruction", "steps"], e.target.value.split("\n").filter(Boolean))
+                    }
+                    className="min-h-[150px]"
+                  />
+                ) : (
+                  <ol className="list-decimal list-inside space-y-2">
+                    {editedLesson.directInstruction.steps.map((step, i) => (
+                      <li key={i} className="text-sm">{step}</li>
+                    ))}
+                  </ol>
+                )}
+              </Section>
+
+              <Separator />
+
+              {/* Guided Practice Section */}
+              <Section
+                title={`Guided Practice (${editedLesson.guidedPractice.minutes} minutes)`}
+                isEditing={editingSection === "guidedPractice"}
+                onEdit={() => handleEdit("guidedPractice")}
+                onSave={handleSaveSection}
+              >
+                {editingSection === "guidedPractice" ? (
+                  <Textarea
+                    value={editedLesson.guidedPractice.activities.join("\n")}
+                    onChange={(e) =>
+                      updateSection(["guidedPractice", "activities"], e.target.value.split("\n").filter(Boolean))
+                    }
+                    className="min-h-[100px]"
+                  />
+                ) : (
+                  <ul className="list-disc list-inside space-y-2">
+                    {editedLesson.guidedPractice.activities.map((activity, i) => (
+                      <li key={i} className="text-sm">{activity}</li>
+                    ))}
+                  </ul>
+                )}
+              </Section>
+
+              <Separator />
+
+              {/* Independent Practice Section */}
+              <Section
+                title={`Independent Practice (${editedLesson.independentPractice.minutes} minutes)`}
+                isEditing={editingSection === "independentPractice"}
+                onEdit={() => handleEdit("independentPractice")}
+                onSave={handleSaveSection}
+              >
+                {editingSection === "independentPractice" ? (
+                  <Textarea
+                    value={editedLesson.independentPractice.choices.join("\n")}
+                    onChange={(e) =>
+                      updateSection(["independentPractice", "choices"], e.target.value.split("\n").filter(Boolean))
+                    }
+                    className="min-h-[100px]"
+                  />
+                ) : (
+                  <ul className="list-disc list-inside space-y-2">
+                    {editedLesson.independentPractice.choices.map((choice, i) => (
+                      <li key={i} className="text-sm">{choice}</li>
+                    ))}
+                  </ul>
+                )}
+              </Section>
+
+              <Separator />
+
+              {/* Differentiation Section */}
+              <Section
+                title="Differentiation Strategies"
+                isEditing={editingSection === "differentiation"}
+                onEdit={() => handleEdit("differentiation")}
+                onSave={handleSaveSection}
+              >
+                {editingSection === "differentiation" ? (
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-sm font-medium">Struggling Learners:</label>
+                      <Textarea
+                        value={editedLesson.differentiation.struggling.join("\n")}
+                        onChange={(e) =>
+                          updateSection(["differentiation", "struggling"], e.target.value.split("\n").filter(Boolean))
+                        }
+                        className="min-h-[80px] mt-1"
+                      />
                     </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </TabsContent>
-
-        <TabsContent value="timing" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Clock className="h-5 w-5" />
-                Lesson Timing Guide
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {Object.entries(timingGuide).map(([phase, time]) => (
-                  <div key={phase} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                    <span className="font-medium capitalize">{phase.replace('_', ' ')}</span>
-                    <Badge variant="secondary">{time as string}</Badge>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          {differentiation && Object.keys(differentiation).length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Users className="h-5 w-5" />
-                  Differentiation Strategies
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {Object.entries(differentiation).map(([level, strategy]) => (
-                    <div key={level} className="border-l-4 border-primary pl-4">
-                      <h4 className="font-medium capitalize text-primary">{level.replace('_', ' ')}</h4>
-                      <p className="text-sm text-muted-foreground mt-1">{strategy as string}</p>
+                    <div>
+                      <label className="text-sm font-medium">On-Level Learners:</label>
+                      <Textarea
+                        value={editedLesson.differentiation.onLevel.join("\n")}
+                        onChange={(e) =>
+                          updateSection(["differentiation", "onLevel"], e.target.value.split("\n").filter(Boolean))
+                        }
+                        className="min-h-[80px] mt-1"
+                      />
                     </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </TabsContent>
-
-        <TabsContent value="materials" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Required Materials</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-2">
-                {materialsNeeded.map((material: string, index: number) => (
-                  <div key={index} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
-                    <CheckCircle className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
-                    <span className="text-sm">{material}</span>
+                    <div>
+                      <label className="text-sm font-medium">Advanced Learners:</label>
+                      <Textarea
+                        value={editedLesson.differentiation.advanced.join("\n")}
+                        onChange={(e) =>
+                          updateSection(["differentiation", "advanced"], e.target.value.split("\n").filter(Boolean))
+                        }
+                        className="min-h-[80px] mt-1"
+                      />
+                    </div>
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="activities" className="space-y-4">
-          {activities.length > 0 ? (
-            activities.map((activity, index) => (
-              <Card key={activity.id || index}>
-                <CardHeader>
-                  <CardTitle className="text-lg">{activity.title}</CardTitle>
-                  <p className="text-sm text-muted-foreground">{activity.description}</p>
-                </CardHeader>
-                <CardContent>
+                ) : (
                   <div className="space-y-3">
-                    <div className="flex gap-2">
-                      <Badge variant="outline">
-                        {activity.estimated_time || activity.duration || 30} minutes
-                      </Badge>
-                      <Badge variant="secondary">{activity.activity_type || 'Activity'}</Badge>
+                    <div>
+                      <h4 className="text-sm font-semibold mb-1">Struggling Learners:</h4>
+                      <ul className="list-disc list-inside space-y-1 ml-2">
+                        {editedLesson.differentiation.struggling.map((item, i) => (
+                          <li key={i} className="text-sm">{item}</li>
+                        ))}
+                      </ul>
                     </div>
-                    {activity.instructions && (
-                      <div className="p-3 bg-blue-50 rounded-lg">
-                        <p className="text-sm">{activity.instructions}</p>
+                    <div>
+                      <h4 className="text-sm font-semibold mb-1">On-Level Learners:</h4>
+                      <ul className="list-disc list-inside space-y-1 ml-2">
+                        {editedLesson.differentiation.onLevel.map((item, i) => (
+                          <li key={i} className="text-sm">{item}</li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-semibold mb-1">Advanced Learners:</h4>
+                      <ul className="list-disc list-inside space-y-1 ml-2">
+                        {editedLesson.differentiation.advanced.map((item, i) => (
+                          <li key={i} className="text-sm">{item}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                )}
+              </Section>
+
+              <Separator />
+
+              {/* Assessment Section */}
+              <Section
+                title="Formative Assessment"
+                isEditing={editingSection === "formativeAssessment"}
+                onEdit={() => handleEdit("formativeAssessment")}
+                onSave={handleSaveSection}
+              >
+                {editingSection === "formativeAssessment" ? (
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-sm font-medium">Methods:</label>
+                      <Textarea
+                        value={editedLesson.formativeAssessment.methods.join("\n")}
+                        onChange={(e) =>
+                          updateSection(["formativeAssessment", "methods"], e.target.value.split("\n").filter(Boolean))
+                        }
+                        className="min-h-[80px] mt-1"
+                      />
+                    </div>
+                    {editedLesson.formativeAssessment.exitTicket && (
+                      <div>
+                        <label className="text-sm font-medium">Exit Ticket:</label>
+                        <Textarea
+                          value={editedLesson.formativeAssessment.exitTicket}
+                          onChange={(e) =>
+                            updateSection(["formativeAssessment", "exitTicket"], e.target.value)
+                          }
+                          className="min-h-[60px] mt-1"
+                        />
                       </div>
                     )}
                   </div>
-                </CardContent>
-              </Card>
-            ))
-          ) : (
-            <Card>
-              <CardContent className="text-center py-8">
-                <p className="text-muted-foreground">No activities configured for this lesson yet.</p>
-              </CardContent>
-            </Card>
-          )}
-        </TabsContent>
-
-        <TabsContent value="resources" className="space-y-4">
-          {resources.length > 0 ? (
-            <div className="grid gap-4">
-              {resources.map((resource, index) => (
-                <Card key={resource.id || index}>
-                  <CardContent className="p-4">
-                    <div className="flex items-start gap-3">
-                      {getResourceIcon(resource.resource_type)}
-                      <div className="flex-1">
-                        <h4 className="font-medium">{resource.title}</h4>
-                        <p className="text-sm text-muted-foreground mt-1">{resource.description}</p>
-                        {resource.url && (
-                          <a 
-                            href={resource.url} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 text-sm text-primary hover:underline mt-2"
-                          >
-                            <Link className="h-3 w-3" />
-                            Open Resource
-                          </a>
-                        )}
-                        <Badge variant="outline" className="ml-auto">
-                          {resource.resource_type}
-                        </Badge>
-                      </div>
+                ) : (
+                  <div className="space-y-3">
+                    <div>
+                      <h4 className="text-sm font-semibold mb-1">Methods:</h4>
+                      <ul className="list-disc list-inside space-y-1 ml-2">
+                        {editedLesson.formativeAssessment.methods.map((method, i) => (
+                          <li key={i} className="text-sm">{method}</li>
+                        ))}
+                      </ul>
                     </div>
-                  </CardContent>
-                </Card>
-              ))}
+                    {editedLesson.formativeAssessment.exitTicket && (
+                      <div>
+                        <h4 className="text-sm font-semibold mb-1">Exit Ticket:</h4>
+                        <p className="text-sm italic ml-2">{editedLesson.formativeAssessment.exitTicket}</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </Section>
+
+              {/* Teacher Notes */}
+              {editedLesson.teacherNotes && editedLesson.teacherNotes.length > 0 && (
+                <>
+                  <Separator />
+                  <Section
+                    title="Teacher Notes"
+                    isEditing={editingSection === "teacherNotes"}
+                    onEdit={() => handleEdit("teacherNotes")}
+                    onSave={handleSaveSection}
+                  >
+                    {editingSection === "teacherNotes" ? (
+                      <Textarea
+                        value={editedLesson.teacherNotes?.join("\n") || ""}
+                        onChange={(e) =>
+                          updateSection(["teacherNotes"], e.target.value.split("\n").filter(Boolean))
+                        }
+                        className="min-h-[100px]"
+                      />
+                    ) : (
+                      <ul className="list-disc list-inside space-y-1">
+                        {editedLesson.teacherNotes?.map((note, i) => (
+                          <li key={i} className="text-sm">{note}</li>
+                        ))}
+                      </ul>
+                    )}
+                  </Section>
+                </>
+              )}
             </div>
-          ) : (
-            <Card>
-              <CardContent className="text-center py-8">
-                <p className="text-muted-foreground">No resources configured for this lesson yet.</p>
-              </CardContent>
-            </Card>
-          )}
-        </TabsContent>
-      </Tabs>
+          </ScrollArea>
+
+          <div className="mt-6 flex flex-wrap gap-3 items-center justify-between pt-4 border-t">
+            <div className="flex gap-2">
+              <Button onClick={handleSaveLesson} disabled={isSaving} aria-label="Save lesson to library">
+                <Save className="mr-2 h-4 w-4" />
+                {isSaving ? "Saving..." : "Save Lesson"}
+              </Button>
+              <Button variant="outline" onClick={onRegenerate} aria-label="Generate a new version of this lesson">
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Generate Again
+              </Button>
+              <Button variant="ghost" onClick={onBack} aria-label="Go back to edit parameters">
+                Back
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground">Powered by TailorEDU AI</p>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
-};
+}
 
-export default TeacherLessonView;
+interface SectionProps {
+  title: string;
+  isEditing: boolean;
+  onEdit: () => void;
+  onSave: () => void;
+  children: React.ReactNode;
+}
+
+function Section({ title, isEditing, onEdit, onSave, children }: SectionProps) {
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-semibold">{title}</h3>
+        {isEditing ? (
+          <Button
+            size="sm"
+            variant="default"
+            onClick={onSave}
+            aria-label={`Save changes to ${title}`}
+          >
+            <Check className="h-4 w-4 mr-1" />
+            Done
+          </Button>
+        ) : (
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={onEdit}
+            aria-label={`Edit ${title} section`}
+          >
+            <Edit2 className="h-4 w-4 mr-1" />
+            Edit
+          </Button>
+        )}
+      </div>
+      <div>{children}</div>
+    </div>
+  );
+}

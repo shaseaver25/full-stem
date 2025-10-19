@@ -2104,6 +2104,47 @@ export type Database = {
         }
         Relationships: []
       }
+      lessons_generated: {
+        Row: {
+          created_at: string
+          grade_level: string
+          id: string
+          lesson_json: Json
+          subject: string
+          teacher_id: string | null
+          topic: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          grade_level: string
+          id?: string
+          lesson_json: Json
+          subject: string
+          teacher_id?: string | null
+          topic: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          grade_level?: string
+          id?: string
+          lesson_json?: Json
+          subject?: string
+          teacher_id?: string | null
+          topic?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lessons_generated_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       magic_tokens: {
         Row: {
           consumed: boolean

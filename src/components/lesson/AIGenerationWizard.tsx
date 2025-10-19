@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
 import { useAILessonWizard } from "@/hooks/useAILessonWizard";
+import TeacherLessonView from "./TeacherLessonView";
 import type { AILesson } from "@/types/aiLesson";
 
 export default function AIGenerationWizard() {
@@ -124,20 +125,11 @@ export default function AIGenerationWizard() {
       )}
 
       {step === 3 && lesson && (
-        <CardContent className="space-y-4">
-          <h2 className="font-semibold text-lg">Step 3: Lesson Preview</h2>
-          <div className="border rounded-lg p-4 bg-muted/30 overflow-y-auto max-h-[400px]">
-            <pre className="text-xs whitespace-pre-wrap">{JSON.stringify(lesson, null, 2)}</pre>
-          </div>
-          <div className="text-sm text-muted-foreground">
-            Generated via {usage?.provider} • Tokens: {(usage?.inputTokens || 0) + (usage?.outputTokens || 0)} • 
-            Estimated Cost: ${usage?.estimatedCost?.toFixed(4) || "0.0000"}
-          </div>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setStep(2)}>Back</Button>
-            <Button onClick={() => setStep(1)}>Start New Lesson</Button>
-          </div>
-        </CardContent>
+        <TeacherLessonView
+          lesson={lesson}
+          onRegenerate={handleGenerate}
+          onBack={() => setStep(2)}
+        />
       )}
     </Card>
   );
