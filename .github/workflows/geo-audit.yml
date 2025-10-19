@@ -29,6 +29,9 @@ jobs:
       - name: Install serve
         run: npm install -g serve
 
+      - name: Generate provenance hashes
+        run: node scripts/hash-provenance.js
+
       - name: Start server in background
         run: |
           serve -s dist -l 8080 &
@@ -40,6 +43,9 @@ jobs:
 
       - name: Validate schema.org markup
         run: node scripts/schema-validate.js
+
+      - name: Verify provenance integrity
+        run: node scripts/hash-provenance.js --verify dist/index.html
 
       - name: Stop server
         if: always()
@@ -57,6 +63,7 @@ jobs:
             GEO_SCORE.md
             geo-score.json
             schema-validation.json
+            dist/provenance-manifest.json
 
       - name: Comment PR with GEO Score
         if: github.event_name == 'pull_request'

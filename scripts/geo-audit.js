@@ -141,14 +141,110 @@ function checkContextConsistency(html) {
   }
 }
 
+// Check provenance manifest validity
+function checkProvenanceManifest() {
+  const path = require('path');
+  const manifestPath = path.join(process.cwd(), 'dist', 'provenance-manifest.json');
+  
+  if (!fs.existsSync(manifestPath)) {
+    return { score: 0, status: '❌', notes: 'Provenance manifest not found' };
+  }
+  
+  try {
+    const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+    const pageCount = Object.keys(manifest).length;
+    
+    if (pageCount === 0) {
+      return { score: 30, status: '⚠️', notes: 'Manifest exists but is empty' };
+    }
+    
+    // Validate hash format (should be 64 hex characters for SHA-256)
+    const hashes = Object.values(manifest);
+    const validHashes = hashes.filter(h => /^[a-f0-9]{64}$/i.test(h));
+    const validityPercent = (validHashes.length / hashes.length) * 100;
+    
+    if (validityPercent === 100) {
+      return { score: 100, status: '✅', notes: `Valid manifest with ${pageCount} pages tracked` };
+    } else {
+      return { score: 60, status: '⚠️', notes: `${validHashes.length}/${hashes.length} valid hashes` };
+    }
+  } catch (error) {
+    return { score: 20, status: '❌', notes: `Manifest invalid: ${error.message}` };
+  }
+}
+
+// Check hash matches for current page
+async function checkHashMatch(html) {
+  const crypto = require('crypto');
+  const path = require('path');
+  const manifestPath = path.join(process.cwd(), 'dist', 'provenance-manifest.json');
+  
+  if (!fs.existsSync(manifestPath)) {
+    return { score: 0, status: '❌', notes: 'Cannot verify without manifest' };
+  }
+  
+  try {
+    const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+    const indexPath = path.join(process.cwd(), 'dist', 'index.html');
+    
+    if (!fs.existsSync(indexPath)) {
+      return { score: 0, status: '❌', notes: 'index.html not found' };
+    }
+    
+    const actualContent = fs.readFileSync(indexPath, 'utf8');
+    const actualHash = crypto.createHash('sha256').update(actualContent).digest('hex');
+    const expectedHash = manifest['/'];
+    
+    if (!expectedHash) {
+      return { score: 30, status: '⚠️', notes: 'Root page not in manifest' };
+    }
+    
+    if (actualHash === expectedHash) {
+      return { score: 100, status: '✅', notes: 'Hash verified successfully' };
+    } else {
+      return { score: 0, status: '❌', notes: 'Hash mismatch detected' };
+    }
+  } catch (error) {
+    return { score: 20, status: '❌', notes: `Verification error: ${error.message}` };
+  }
+}
+
+// Check AI-readable metadata
+function checkAIReadableMetadata(html) {
+  const requiredMeta = {
+    'ai-readable': /<meta[^>]*name=["']ai-readable["'][^>]*content=["']true["'][^>]*>/i.test(html),
+    'content-provenance': /<meta[^>]*name=["']content-provenance["'][^>]*>/i.test(html),
+    'verification-method': /<meta[^>]*name=["']verification-method["'][^>]*>/i.test(html),
+    'dateModified': /<meta[^>]*name=["']dateModified["'][^>]*>/i.test(html),
+    'creator': /<meta[^>]*name=["']creator["'][^>]*>/i.test(html)
+  };
+  
+  const foundCount = Object.values(requiredMeta).filter(Boolean).length;
+  const totalCount = Object.keys(requiredMeta).length;
+  const percentage = (foundCount / totalCount) * 100;
+  
+  const missingTags = Object.entries(requiredMeta)
+    .filter(([_, found]) => !found)
+    .map(([tag, _]) => tag);
+  
+  if (percentage === 100) {
+    return { score: 100, status: '✅', notes: 'All AI-readable metadata present' };
+  } else if (percentage >= 60) {
+    return { score: percentage, status: '⚠️', notes: `Missing: ${missingTags.join(', ')}` };
+  } else {
+    return { score: percentage, status: '❌', notes: `Only ${foundCount}/${totalCount} metadata tags found` };
+  }
+}
+
 // Calculate overall GEO score
 function calculateGEOScore(checks) {
   const weights = {
-    schema: 0.3,
-    authorship: 0.2,
-    openGraph: 0.2,
-    canonical: 0.1,
-    context: 0.2
+    schema: 0.25,
+    authorship: 0.15,
+    openGraph: 0.15,
+    canonical: 0.10,
+    context: 0.15,
+    provenance: 0.20
   };
   
   const score = (
@@ -156,18 +252,39 @@ function calculateGEOScore(checks) {
     checks.authorship.score * weights.authorship +
     checks.openGraph.score * weights.openGraph +
     checks.canonical.score * weights.canonical +
-    checks.context.score * weights.context
+    checks.context.score * weights.context +
+    (checks.provenance?.score || 0) * weights.provenance
+  );
+  
+  return Math.round(score);
+}
+
+// Calculate provenance score
+function calculateProvenanceScore(checks) {
+  const weights = {
+    manifest: 0.4,
+    hash: 0.3,
+    metadata: 0.3
+  };
+  
+  const score = (
+    checks.manifest.score * weights.manifest +
+    checks.hash.score * weights.hash +
+    checks.metadata.score * weights.metadata
   );
   
   return Math.round(score);
 }
 
 // Generate markdown report
-function generateReport(checks, geoScore) {
+function generateReport(checks, geoScore, provenanceScore) {
   const grade = geoScore >= 90 ? '🏆 Excellent' : 
                 geoScore >= 75 ? '✅ Good' : 
                 geoScore >= 60 ? '⚠️ Needs Improvement' : 
                 '❌ Poor';
+  
+  const provenanceGrade = provenanceScore >= 90 ? '✅' : 
+                          provenanceScore >= 60 ? '⚠️' : '❌';
   
   return `# GEO Audit Report
 
@@ -183,13 +300,28 @@ function generateReport(checks, geoScore) {
 | Canonical & alternate links | ${checks.canonical.status} | ${checks.canonical.notes} |
 | Context consistency | ${checks.context.status} | ${checks.context.notes} |
 
+## Provenance Score: ${provenanceScore}/100 ${provenanceGrade}
+
+| Check | Status | Notes |
+|-------|--------|-------|
+| Provenance manifest valid | ${checks.provenance.manifest.status} | ${checks.provenance.manifest.notes} |
+| Hash match | ${checks.provenance.hash.status} | ${checks.provenance.hash.notes} |
+| AI-readable metadata present | ${checks.provenance.metadata.status} | ${checks.provenance.metadata.notes} |
+
 ## Score Breakdown
 
-- **Schema.org (30%):** ${checks.schema.score}/100
-- **Authorship (20%):** ${checks.authorship.score}/100
-- **OpenGraph (20%):** ${checks.openGraph.score}/100
+### Core GEO Components
+- **Schema.org (25%):** ${checks.schema.score}/100
+- **Authorship (15%):** ${checks.authorship.score}/100
+- **OpenGraph (15%):** ${checks.openGraph.score}/100
 - **Canonical (10%):** ${checks.canonical.score}/100
-- **Context (20%):** ${checks.context.score}/100
+- **Context (15%):** ${checks.context.score}/100
+- **Provenance (20%):** ${checks.provenance.score}/100
+
+### Provenance Components
+- **Manifest (40%):** ${checks.provenance.manifest.score}/100
+- **Hash Match (30%):** ${checks.provenance.hash.score}/100
+- **Metadata (30%):** ${checks.provenance.metadata.score}/100
 
 ## Recommendations
 
@@ -200,9 +332,17 @@ ${checks.authorship.score < 90 ? '- Improve author and organization transparency
 ${checks.openGraph.score < 90 ? '- Complete OpenGraph and Twitter Card metadata\n' : ''}
 ${checks.canonical.score < 90 ? '- Add canonical and alternate link tags\n' : ''}
 ${checks.context.score < 90 ? '- Add entity consistency with sameAs links to verified profiles\n' : ''}
+${checks.provenance.score < 90 ? '- Implement content provenance with hash verification and AI-readable metadata\n' : ''}
 ` : '✅ Site is well-optimized for Generative Engine Optimization!'}
 
-See \`docs/GEO_OPTIMIZATION.md\` for detailed guidance.
+${provenanceScore < 90 ? `
+### Provenance Improvements
+${checks.provenance.manifest.score < 90 ? '- Generate provenance manifest: \`node scripts/hash-provenance.js\`\n' : ''}
+${checks.provenance.hash.score < 90 ? '- Verify hash integrity matches manifest\n' : ''}
+${checks.provenance.metadata.score < 90 ? '- Add ContentProvenance component to all pages\n' : ''}
+` : ''}
+
+See \`docs/GEO_OPTIMIZATION.md\` and \`docs/PROVENANCE_AND_AI_READABILITY.md\` for detailed guidance.
 
 ---
 *Generated: ${new Date().toISOString()}*
@@ -217,7 +357,8 @@ async function main() {
     const html = await fetchHTML(TARGET_URL);
     console.log('✓ Fetched HTML from', TARGET_URL);
     
-    const checks = {
+    // Run core checks
+    const coreChecks = {
       schema: checkSchemaOrgData(html),
       authorship: checkAuthorship(html),
       openGraph: checkOpenGraph(html),
@@ -225,21 +366,49 @@ async function main() {
       context: checkContextConsistency(html)
     };
     
+    // Run provenance checks
+    const provenanceChecks = {
+      manifest: checkProvenanceManifest(),
+      hash: await checkHashMatch(html),
+      metadata: checkAIReadableMetadata(html)
+    };
+    
+    const provenanceScore = calculateProvenanceScore(provenanceChecks);
+    
+    const checks = {
+      ...coreChecks,
+      provenance: {
+        score: provenanceScore,
+        ...provenanceChecks
+      }
+    };
+    
     const geoScore = calculateGEOScore(checks);
     
-    console.log('\n📊 GEO Score:', geoScore, '/100\n');
+    console.log('\n📊 GEO Score:', geoScore, '/100');
+    console.log('🔐 Provenance Score:', provenanceScore, '/100\n');
     
-    const report = generateReport(checks, geoScore);
+    const report = generateReport(checks, geoScore, provenanceScore);
     fs.writeFileSync('GEO_SCORE.md', report);
     console.log('✓ Generated GEO_SCORE.md');
     
     const jsonSummary = {
       score: geoScore,
+      provenanceScore: provenanceScore,
       timestamp: new Date().toISOString(),
-      checks: Object.entries(checks).reduce((acc, [key, val]) => {
-        acc[key] = { score: val.score, status: val.status, notes: val.notes };
-        return acc;
-      }, {})
+      checks: {
+        schema: { score: coreChecks.schema.score, status: coreChecks.schema.status, notes: coreChecks.schema.notes },
+        authorship: { score: coreChecks.authorship.score, status: coreChecks.authorship.status, notes: coreChecks.authorship.notes },
+        openGraph: { score: coreChecks.openGraph.score, status: coreChecks.openGraph.status, notes: coreChecks.openGraph.notes },
+        canonical: { score: coreChecks.canonical.score, status: coreChecks.canonical.status, notes: coreChecks.canonical.notes },
+        context: { score: coreChecks.context.score, status: coreChecks.context.status, notes: coreChecks.context.notes },
+        provenance: {
+          score: provenanceScore,
+          manifest: { score: provenanceChecks.manifest.score, status: provenanceChecks.manifest.status, notes: provenanceChecks.manifest.notes },
+          hash: { score: provenanceChecks.hash.score, status: provenanceChecks.hash.status, notes: provenanceChecks.hash.notes },
+          metadata: { score: provenanceChecks.metadata.score, status: provenanceChecks.metadata.status, notes: provenanceChecks.metadata.notes }
+        }
+      }
     };
     
     fs.writeFileSync('geo-score.json', JSON.stringify(jsonSummary, null, 2));
@@ -249,6 +418,15 @@ async function main() {
     
     if (geoScore < 75) {
       console.warn('⚠️  GEO Score below 75. Review recommendations in GEO_SCORE.md\n');
+    }
+    
+    if (provenanceScore < 90) {
+      console.warn('⚠️  Provenance Score below 90. See GEO_SCORE.md for improvements\n');
+    }
+    
+    // Exit with error if critical checks fail
+    if (geoScore < 60 || provenanceScore < 50) {
+      process.exit(1);
     }
     
   } catch (error) {

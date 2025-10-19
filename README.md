@@ -128,6 +128,14 @@ This project is built with:
   - Entity verification and provenance tracking
   - Optimized for ChatGPT, Perplexity, and Google AI Overviews
 
+- **Content Provenance**: Cryptographically verifiable authorship
+  - See [PROVENANCE_AND_AI_READABILITY.md](docs/PROVENANCE_AND_AI_READABILITY.md) for details
+  - SHA-256 hash verification for all pages
+  - Automated provenance manifest generation
+  - AI-readable metadata tags for trust signals
+  - Build-time hash generation and CI/CD verification
+  - Provenance scoring in GEO audit (target: ≥90/100)
+
 - **Schema.org Structured Data**: Automated JSON-LD injection system
   - See [SCHEMA_IMPLEMENTATION.md](docs/SCHEMA_IMPLEMENTATION.md) for quick start
   - Dynamic schema generation with Supabase integration (`useClassSchema`)
