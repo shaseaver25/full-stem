@@ -120,6 +120,14 @@ This project is built with:
 
 ### AI & Search Optimization
 
+- **Hybrid AI Architecture**: Multi-provider AI system with cost tracking
+  - See [AI_PROVIDER_ARCHITECTURE.md](docs/AI_PROVIDER_ARCHITECTURE.md) for complete guide
+  - Unified provider interface supporting OpenAI, Mixtral, Llama 3, Command R+
+  - Automatic token usage and cost tracking in `ai_lesson_history` table
+  - Admin dashboard with real-time usage analytics
+  - Future-ready for intelligent routing (auto-switch to cheaper models)
+  - Currently active: OpenAI GPT-4o-mini for lesson generation
+
 - **GEO (Generative Engine Optimization)**: AI-friendly metadata and structure
   - See [GEO_OPTIMIZATION.md](docs/GEO_OPTIMIZATION.md) for complete guide
   - Schema.org JSON-LD markup for Organization, Course, and Person types

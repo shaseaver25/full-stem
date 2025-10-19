@@ -213,6 +213,48 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_lesson_history: {
+        Row: {
+          created_at: string
+          estimated_cost: number | null
+          id: string
+          input_tokens: number | null
+          metadata: Json | null
+          model_name: string | null
+          model_provider: string
+          output_tokens: number | null
+          prompt_preview: string | null
+          response_preview: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          estimated_cost?: number | null
+          id?: string
+          input_tokens?: number | null
+          metadata?: Json | null
+          model_name?: string | null
+          model_provider?: string
+          output_tokens?: number | null
+          prompt_preview?: string | null
+          response_preview?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          estimated_cost?: number | null
+          id?: string
+          input_tokens?: number | null
+          metadata?: Json | null
+          model_name?: string | null
+          model_provider?: string
+          output_tokens?: number | null
+          prompt_preview?: string | null
+          response_preview?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       assignment_grades: {
         Row: {
           created_at: string
