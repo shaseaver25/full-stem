@@ -16,7 +16,7 @@ import { SuperAdminBanner, SuperAdminWatermark } from "@/components/admin/SuperA
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { GlobalSchemaMarkup } from "@/components/seo/GlobalSchemaMarkup";
-import { ContentProvenance } from "@/components/metadata/ContentProvenance";
+import { ContentProvenance, ProvenanceBadge } from "@/components/metadata";
 
 // Lazy load all page components for code splitting
 const Index = React.lazy(() => import("./pages/Index"));

@@ -130,11 +130,27 @@ This project is built with:
 
 - **Content Provenance**: Cryptographically verifiable authorship
   - See [PROVENANCE_AND_AI_READABILITY.md](docs/PROVENANCE_AND_AI_READABILITY.md) for details
-  - SHA-256 hash verification for all pages
-  - Automated provenance manifest generation
+  - See [ANTI_THEFT.md](docs/ANTI_THEFT.md) for content protection strategies
+  - SHA-256 hash verification with JWS signatures for all pages
+  - Automated provenance manifest generation at build time
   - AI-readable metadata tags for trust signals
   - Build-time hash generation and CI/CD verification
   - Provenance scoring in GEO audit (target: ≥90/100)
+  
+  **Verification Methods:**
+  ```bash
+  # Generate signed provenance manifest
+  node scripts/hash-provenance-signed.js
+  
+  # Verify a specific page hash
+  node scripts/hash-provenance-signed.js --verify dist/index.html
+  ```
+  
+  **In-Browser Verification:**
+  - Click the "Verify Page" badge (bottom-right corner on public pages)
+  - Verification endpoint: `/functions/v1/provenance-verify?url={path}`
+  - Uses JWS compact signature format with HMAC-SHA256
+  - Public key validation via `TAILOREDU_SIGNING_PUB` secret
 
 - **Schema.org Structured Data**: Automated JSON-LD injection system
   - See [SCHEMA_IMPLEMENTATION.md](docs/SCHEMA_IMPLEMENTATION.md) for quick start
