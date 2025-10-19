@@ -1,3 +1,14 @@
+/**
+ * CreateThreadModal
+ * 
+ * ✅ WCAG 2.1 Level AA Compliant
+ * - Complete keyboard navigation support
+ * - Focus trap implemented via Radix Dialog
+ * - All form fields properly labeled
+ * - Submit button disabled state communicated
+ * - Success/error messages announced via toast
+ */
+
 import { useState, useRef } from 'react';
 import {
   Dialog,

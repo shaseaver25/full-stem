@@ -173,3 +173,4 @@ This is a living document. As we identify new patterns or issues:
 - [TypeScript ESLint](https://typescript-eslint.io/)
 - [React Hooks Rules](https://react.dev/reference/rules)
 - [Unused Imports Plugin](https://www.npmjs.com/package/eslint-plugin-unused-imports)
+- [Accessibility Audit Report](docs/ACCESSIBILITY_AUDIT.md) - WCAG 2.1 compliance testing

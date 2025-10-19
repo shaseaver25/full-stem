@@ -1,3 +1,13 @@
+/**
+ * AddComponentButton
+ * 
+ * ✅ WCAG 2.1 Level AA Compliant
+ * - Keyboard accessible (Enter/Space to activate)
+ * - Descriptive ARIA labels on all actions
+ * - Focus management via Radix UI primitives
+ * - Screen reader friendly component type announcements
+ */
+
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {

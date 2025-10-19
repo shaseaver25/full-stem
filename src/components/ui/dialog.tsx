@@ -1,3 +1,14 @@
+/**
+ * Dialog Component
+ * 
+ * ✅ WCAG 2.1 Level AA Compliant
+ * - Focus trap via Radix UI (built-in)
+ * - Escape key closes dialog
+ * - Returns focus to trigger element
+ * - Proper ARIA modal attributes
+ * - Screen reader announcements via DialogTitle and DialogDescription
+ */
+
 import * as React from "react"
 import * as DialogPrimitive from "@radix-ui/react-dialog"
 import { X } from "lucide-react"

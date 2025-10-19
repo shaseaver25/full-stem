@@ -1,3 +1,15 @@
+/**
+ * EditProfileModal
+ * 
+ * ✅ WCAG 2.1 Level AA Compliant
+ * - Focus trap implemented via useFocusTrap hook
+ * - Escape key closes modal
+ * - Returns focus to trigger element
+ * - All form fields have associated labels
+ * - Descriptive ARIA labels on icon buttons
+ * - Error messages announced to screen readers
+ */
+
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
