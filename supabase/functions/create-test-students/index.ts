@@ -187,6 +187,20 @@ serve(async (req) => {
 
         const studentId = studentRecord.id
 
+        // Initialize student progress (empty record)
+        await supabase
+          .from('student_progress')
+          .upsert({
+            student_id: studentId,
+            lesson_id: null,
+            status: 'not_started',
+            progress_percentage: 0
+          }, {
+            onConflict: 'student_id,lesson_id'
+          })
+        
+        console.log('  ✓ Student progress initialized')
+
         // Assign student role
         const { error: roleError } = await supabase
           .from('user_roles')
