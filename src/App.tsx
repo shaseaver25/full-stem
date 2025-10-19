@@ -15,6 +15,7 @@ import { useFocusModeShortcut } from "@/hooks/useFocusModeShortcut";
 import { SuperAdminBanner, SuperAdminWatermark } from "@/components/admin/SuperAdminBanner";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { GlobalSchemaMarkup } from "@/components/seo/GlobalSchemaMarkup";
 
 // Lazy load all page components for code splitting
 const Index = React.lazy(() => import("./pages/Index"));
@@ -89,6 +90,7 @@ function AppContent() {
 
   return (
     <>
+      <GlobalSchemaMarkup />
       <SuperAdminBanner />
       <Suspense fallback={<LoadingSpinner />}>
         <Routes>

@@ -38,6 +38,9 @@ jobs:
       - name: Run GEO audit
         run: node scripts/geo-audit.js
 
+      - name: Validate schema.org markup
+        run: node scripts/schema-validate.js
+
       - name: Stop server
         if: always()
         run: |
@@ -53,6 +56,7 @@ jobs:
           path: |
             GEO_SCORE.md
             geo-score.json
+            schema-validation.json
 
       - name: Comment PR with GEO Score
         if: github.event_name == 'pull_request'

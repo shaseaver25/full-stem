@@ -141,6 +141,335 @@ Help AI systems verify your organization:
 <link rel="me" href="https://github.com/tailoredu">
 ```
 
+---
+
+## Structured Data Implementation in TailorEDU
+
+TailorEDU uses a modular, React-based system for dynamically injecting schema.org JSON-LD into every page.
+
+### Architecture Overview
+
+```
+src/components/seo/
+  ├── SchemaMarkup.tsx          # Reusable component for JSON-LD injection
+  └── GlobalSchemaMarkup.tsx    # Organization-level schema
+
+src/utils/
+  └── schemaGenerators.ts       # Schema type generators
+
+src/hooks/
+  ├── useClassSchema.ts         # Dynamic Course schema from Supabase
+  └── useBreadcrumbSchema.ts    # Auto-generated breadcrumbs
+```
+
+### Core Components
+
+#### 1. SchemaMarkup Component
+
+The base component that injects structured data into `<head>`:
+
+```tsx
+import { Helmet } from 'react-helmet';
+
+export const SchemaMarkup = ({ json }) => (
+  <Helmet>
+    <script type="application/ld+json">
+      {JSON.stringify(json)}
+    </script>
+  </Helmet>
+);
+```
+
+**Usage:**
+```tsx
+import { SchemaMarkup } from '@/components/seo/SchemaMarkup';
+import { generateCourseSchema } from '@/utils/schemaGenerators';
+
+function ClassPage({ classData }) {
+  const schema = generateCourseSchema({
+    id: classData.id,
+    name: classData.name,
+    description: classData.description,
+    instructor: { name: classData.teacher_name }
+  });
+
+  return (
+    <>
+      <SchemaMarkup json={schema} />
+      {/* Page content */}
+    </>
+  );
+}
+```
+
+#### 2. Schema Generators
+
+Pre-built generators for common schema types:
+
+**Organization Schema:**
+```tsx
+import { generateOrganizationSchema } from '@/utils/schemaGenerators';
+
+const orgSchema = generateOrganizationSchema({
+  name: 'TailorEDU',
+  description: 'Personalized K-12 education platform',
+  sameAs: [
+    'https://twitter.com/tailoredu',
+    'https://linkedin.com/company/tailoredu',
+    'https://github.com/tailoredu'
+  ]
+});
+```
+
+**Course Schema (with Supabase data):**
+```tsx
+import { useClassSchema } from '@/hooks/useClassSchema';
+
+function ClassDetailPage({ classId }) {
+  const courseSchema = useClassSchema(classId);
+
+  return (
+    <>
+      {courseSchema && <SchemaMarkup json={courseSchema} />}
+      {/* Page content */}
+    </>
+  );
+}
+```
+
+**Person Schema (for teachers):**
+```tsx
+import { generatePersonSchema } from '@/utils/schemaGenerators';
+
+const teacherSchema = generatePersonSchema({
+  name: 'Dr. Jane Smith',
+  jobTitle: 'Math Instructor',
+  affiliation: 'TailorEDU',
+  email: 'jane.smith@tailoredu.com'
+});
+```
+
+**BreadcrumbList (automatic):**
+```tsx
+import { useBreadcrumbSchema } from '@/hooks/useBreadcrumbSchema';
+
+function Layout() {
+  const breadcrumbSchema = useBreadcrumbSchema(); // Auto-generated from URL
+
+  return (
+    <>
+      {breadcrumbSchema && <SchemaMarkup json={breadcrumbSchema} />}
+      {/* Layout content */}
+    </>
+  );
+}
+```
+
+#### 3. Dynamic Data Integration
+
+**Fetching real data from Supabase:**
+
+The `useClassSchema` hook demonstrates pulling live data:
+
+```tsx
+// src/hooks/useClassSchema.ts
+export const useClassSchema = (classId) => {
+  const { data } = useQuery({
+    queryKey: ['class-schema', classId],
+    queryFn: async () => {
+      // Fetch class and teacher data
+      const { data: classInfo } = await supabase
+        .from('classes')
+        .select('id, name, description, subject, teacher_id')
+        .eq('id', classId)
+        .maybeSingle();
+
+      // Fetch teacher profile
+      const { data: teacher } = await supabase
+        .from('teacher_profiles')
+        .select('user_id')
+        .eq('id', classInfo.teacher_id)
+        .maybeSingle();
+
+      // Generate schema with real data
+      return generateCourseSchema({
+        id: classInfo.id,
+        name: classInfo.name,
+        description: classInfo.description,
+        instructor: { name: teacher.full_name }
+      });
+    }
+  });
+
+  return data;
+};
+```
+
+**Graceful fallbacks:**
+
+All generators support optional props with sensible defaults:
+
+```tsx
+// Minimal usage (uses defaults)
+const schema = generateOrganizationSchema();
+
+// Full customization
+const schema = generateOrganizationSchema({
+  name: 'Custom Name',
+  logo: 'https://example.com/logo.png',
+  sameAs: ['https://twitter.com/example']
+});
+```
+
+### Implementation Examples
+
+#### Example 1: Organization Schema (Global)
+
+Added to `App.tsx` for site-wide coverage:
+
+```tsx
+import { GlobalSchemaMarkup } from '@/components/seo/GlobalSchemaMarkup';
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <GlobalSchemaMarkup />
+      <Routes>
+        {/* All routes */}
+      </Routes>
+    </BrowserRouter>
+  );
+}
+```
+
+#### Example 2: Course Schema (Class Pages)
+
+Dynamically generated for each class:
+
+```tsx
+import { useClassSchema } from '@/hooks/useClassSchema';
+import { SchemaMarkup } from '@/components/seo/SchemaMarkup';
+
+export function ClassDetailPage({ classId }) {
+  const courseSchema = useClassSchema(classId);
+
+  return (
+    <div>
+      {courseSchema && <SchemaMarkup json={courseSchema} />}
+      <h1>Class Details</h1>
+      {/* Rest of the page */}
+    </div>
+  );
+}
+```
+
+#### Example 3: Multiple Schemas
+
+You can render multiple schema types on a single page:
+
+```tsx
+import { SchemaMarkup } from '@/components/seo/SchemaMarkup';
+import { 
+  generateCourseSchema, 
+  generatePersonSchema,
+  generateBreadcrumbSchema 
+} from '@/utils/schemaGenerators';
+
+export function LessonPage({ lesson, teacher }) {
+  const schemas = [
+    generateCourseSchema({
+      id: lesson.course_id,
+      name: lesson.title,
+      instructor: { name: teacher.name }
+    }),
+    generatePersonSchema({
+      name: teacher.name,
+      jobTitle: 'Instructor',
+      affiliation: 'TailorEDU'
+    }),
+    generateBreadcrumbSchema([
+      { name: 'Home', url: '/' },
+      { name: 'Courses', url: '/courses' },
+      { name: lesson.title, url: `/lessons/${lesson.id}` }
+    ])
+  ];
+
+  return (
+    <>
+      <SchemaMarkup json={schemas} />
+      {/* Page content */}
+    </>
+  );
+}
+```
+
+### Validation & Testing
+
+#### Automated CI Validation
+
+Every commit triggers schema validation via `.github/workflows/geo-audit.yml`:
+
+```yaml
+- name: Validate schema.org markup
+  run: node scripts/schema-validate.js
+```
+
+The validation script (`scripts/schema-validate.js`) checks:
+- ✅ All required properties present
+- ✅ Valid JSON-LD syntax
+- ✅ Correct @context and @type
+- ✅ Schema diversity (multiple types)
+- ✅ Entity consistency (sameAs links)
+
+#### Manual Testing Tools
+
+**Google Rich Results Test:**
+```bash
+# Test a specific URL
+https://search.google.com/test/rich-results?url=YOUR_URL
+```
+
+**Schema.org Validator:**
+```bash
+# Validate JSON-LD structure
+https://validator.schema.org/
+```
+
+**Local Validation:**
+```bash
+# Run validation script locally
+npm run build
+npx serve -s dist -l 8080 &
+node scripts/schema-validate.js
+```
+
+### Best Practices
+
+1. **Always include Organization schema** on every page (via GlobalSchemaMarkup)
+2. **Use dynamic data** from Supabase when available (useClassSchema, etc.)
+3. **Provide fallbacks** for when data isn't available (default instructor names, etc.)
+4. **Validate regularly** using CI/CD pipeline and manual tools
+5. **Keep schemas DRY** by using generator functions instead of hardcoding JSON-LD
+6. **Test with real AI systems** (ChatGPT, Perplexity) to verify discoverability
+
+### Troubleshooting
+
+**Schema not appearing in Rich Results Test?**
+- Verify build output includes `<script type="application/ld+json">` in HTML
+- Check that react-helmet is properly rendering to `<head>`
+- Ensure no JSON syntax errors (run schema-validate.js)
+
+**Multiple schemas conflicting?**
+- Use array syntax in SchemaMarkup: `<SchemaMarkup json={[schema1, schema2]} />`
+- Ensure each schema has unique @id if applicable
+
+**Supabase query failing?**
+- Check RLS policies allow reading class/teacher data
+- Use .maybeSingle() instead of .single() to gracefully handle missing data
+- Always provide fallback values
+
+---
+
 ## Advanced GEO Strategies
 
 ### 1. Content Provenance & Verification

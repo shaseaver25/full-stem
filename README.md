@@ -128,6 +128,14 @@ This project is built with:
   - Entity verification and provenance tracking
   - Optimized for ChatGPT, Perplexity, and Google AI Overviews
 
+- **Schema.org Structured Data**: Automated JSON-LD injection system
+  - See [SCHEMA_IMPLEMENTATION.md](docs/SCHEMA_IMPLEMENTATION.md) for quick start
+  - Dynamic schema generation with Supabase integration (`useClassSchema`)
+  - Auto-generated breadcrumbs based on URL (`useBreadcrumbSchema`)
+  - Reusable SchemaMarkup component with react-helmet
+  - CI validation via `scripts/schema-validate.js`
+  - Support for Organization, Course, Person, LearningResource, and BreadcrumbList schemas
+
 ## Accessibility
 
 TailorEdu achieves full WCAG 2.1 Level AA compliance with comprehensive accessibility features:
@@ -180,6 +188,7 @@ In development mode, axe-core automatically monitors for accessibility violation
 - [docs/SECURITY_POLICIES.md](docs/SECURITY_POLICIES.md) - RLS policies and database security audit
 - [docs/PERFORMANCE_AUDIT.md](docs/PERFORMANCE_AUDIT.md) - Performance optimization audit and benchmarks
 - [docs/GEO_OPTIMIZATION.md](docs/GEO_OPTIMIZATION.md) - Generative Engine Optimization guide
+- [docs/SCHEMA_IMPLEMENTATION.md](docs/SCHEMA_IMPLEMENTATION.md) - Schema.org JSON-LD implementation
 - [IMAGE_OPTIMIZATION.md](IMAGE_OPTIMIZATION.md) - Image optimization utilities
 - [SENTRY_SETUP.md](SENTRY_SETUP.md) - Error monitoring setup
 - [REFACTORING_SUMMARY.md](REFACTORING_SUMMARY.md) - Recent refactoring changes
