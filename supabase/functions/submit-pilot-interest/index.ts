@@ -2,7 +2,7 @@
 // Saves submission to DB, emails your team, and thanks the submitter.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { SmtpClient } from "https://deno.land/x/smtp@0.7.0/mod.ts";
+import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
 
 type Payload = {
   name: string;
@@ -76,28 +76,18 @@ Deno.serve(async (req) => {
     const MAIL_TO = Deno.env.get("MAIL_TO") ?? "info@creatempls.org";
 
     console.log("Connecting to SMTP server...");
-    const client = new SmtpClient();
-
-    try {
-      // Try TLS first
-      await client.connectTLS({
+    const client = new SMTPClient({
+      connection: {
         hostname: MAIL_HOST,
         port: MAIL_PORT,
-        username: MAIL_USER,
-        password: MAIL_PASSWORD,
-      });
-      console.log("Connected with TLS");
-    } catch (tlsError) {
-      console.log("TLS connection failed, trying STARTTLS:", tlsError);
-      // Fallback to STARTTLS
-      await client.connect({
-        hostname: MAIL_HOST,
-        port: MAIL_PORT,
-        username: MAIL_USER,
-        password: MAIL_PASSWORD,
-      });
-      console.log("Connected with STARTTLS");
-    }
+        tls: false,
+        auth: {
+          username: MAIL_USER,
+          password: MAIL_PASSWORD,
+        },
+      },
+    });
+    console.log("SMTP client initialized");
 
     // 1) Internal notification
     console.log("Sending internal notification...");
