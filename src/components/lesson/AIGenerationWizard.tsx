@@ -10,6 +10,8 @@ import type { AILesson } from "@/types/aiLesson";
 
 export default function AIGenerationWizard() {
   const [step, setStep] = useState(1);
+  const [savedLessonId, setSavedLessonId] = useState<string | null>(null);
+  const [selectedClassId, setSelectedClassId] = useState<string>("");
   const [form, setForm] = useState({
     topic: "",
     subject: "",
@@ -127,6 +129,8 @@ export default function AIGenerationWizard() {
       {step === 3 && lesson && (
         <TeacherLessonView
           lesson={lesson}
+          lessonId={savedLessonId || undefined}
+          classId={selectedClassId || undefined}
           onRegenerate={handleGenerate}
           onBack={() => setStep(2)}
         />

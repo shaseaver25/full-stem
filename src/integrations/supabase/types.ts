@@ -1962,6 +1962,51 @@ export type Database = {
           },
         ]
       }
+      lesson_refinements: {
+        Row: {
+          class_id: string | null
+          created_at: string
+          id: string
+          lesson_id: string | null
+          refined_json: Json
+          student_summary: Json | null
+          updated_at: string
+        }
+        Insert: {
+          class_id?: string | null
+          created_at?: string
+          id?: string
+          lesson_id?: string | null
+          refined_json: Json
+          student_summary?: Json | null
+          updated_at?: string
+        }
+        Update: {
+          class_id?: string | null
+          created_at?: string
+          id?: string
+          lesson_id?: string | null
+          refined_json?: Json
+          student_summary?: Json | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lesson_refinements_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lesson_refinements_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "lessons_generated"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lesson_videos: {
         Row: {
           created_at: string

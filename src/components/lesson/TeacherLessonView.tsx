@@ -4,22 +4,30 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { Edit2, Save, RefreshCw, Check } from "lucide-react";
+import { Edit2, Save, RefreshCw, Check, Sparkles, ArrowLeftRight } from "lucide-react";
 import type { AILesson } from "@/types/aiLesson";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useAdaptiveLessonRefinement } from "@/hooks/useAdaptiveLessonRefinement";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 
 interface TeacherLessonViewProps {
   lesson: AILesson;
+  lessonId?: string;
+  classId?: string;
   onRegenerate: () => void;
   onBack: () => void;
 }
 
-export default function TeacherLessonView({ lesson, onRegenerate, onBack }: TeacherLessonViewProps) {
+export default function TeacherLessonView({ lesson, lessonId, classId, onRegenerate, onBack }: TeacherLessonViewProps) {
   const [editedLesson, setEditedLesson] = useState<AILesson>(lesson);
   const [editingSection, setEditingSection] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [viewMode, setViewMode] = useState<"original" | "adapted">("original");
   const { toast } = useToast();
+  const { refineLesson, refinedLesson, usage: refinementUsage, isRefining } = useAdaptiveLessonRefinement();
+
+  const displayLesson = viewMode === "adapted" && refinedLesson ? refinedLesson : editedLesson;
 
   const handleEdit = (section: string) => {
     setEditingSection(section);
@@ -31,6 +39,22 @@ export default function TeacherLessonView({ lesson, onRegenerate, onBack }: Teac
       title: "Section updated",
       description: "Your changes have been saved locally.",
     });
+  };
+
+  const handleRefineForStudents = async () => {
+    if (!lessonId || !classId) {
+      toast({
+        title: "Cannot refine lesson",
+        description: "Lesson must be saved first and class must be selected.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const result = await refineLesson(lessonId, classId);
+    if (result) {
+      setViewMode("adapted");
+    }
   };
 
   const handleSaveLesson = async () => {
@@ -90,20 +114,43 @@ export default function TeacherLessonView({ lesson, onRegenerate, onBack }: Teac
   return (
     <div className="max-w-5xl mx-auto space-y-6">
       <Card>
-        <CardHeader className="space-y-2">
+        <CardHeader className="space-y-3">
           <div className="flex items-start justify-between">
             <div className="space-y-1">
               <CardTitle className="text-3xl">
-                AI-Generated Lesson Plan: {editedLesson.meta.topic}
+                AI-Generated Lesson Plan: {displayLesson.meta.topic}
               </CardTitle>
               <div className="flex gap-4 text-sm text-muted-foreground">
-                <span><strong>Subject:</strong> {editedLesson.meta.subject}</span>
-                <span><strong>Grade:</strong> {editedLesson.meta.gradeLevel}</span>
-                <span><strong>Duration:</strong> {editedLesson.meta.durationMinutes} min</span>
-                <span><strong>Reading Level:</strong> {editedLesson.meta.readingLevel}</span>
+                <span><strong>Subject:</strong> {displayLesson.meta.subject}</span>
+                <span><strong>Grade:</strong> {displayLesson.meta.gradeLevel}</span>
+                <span><strong>Duration:</strong> {displayLesson.meta.durationMinutes} min</span>
+                <span><strong>Reading Level:</strong> {displayLesson.meta.readingLevel}</span>
               </div>
             </div>
           </div>
+          
+          {refinedLesson && (
+            <div className="flex items-center gap-3 pt-2 border-t">
+              <ArrowLeftRight className="h-4 w-4 text-muted-foreground" />
+              <Select value={viewMode} onValueChange={(value: "original" | "adapted") => setViewMode(value)}>
+                <SelectTrigger className="w-[200px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="original">Original Version</SelectItem>
+                  <SelectItem value="adapted">
+                    <span className="flex items-center gap-2">
+                      <Sparkles className="h-3 w-3" />
+                      Adapted for Students
+                    </span>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+              <span className="text-xs text-muted-foreground">
+                {viewMode === "adapted" && "Personalized for your class"}
+              </span>
+            </div>
+          )}
         </CardHeader>
 
         <CardContent>
@@ -116,17 +163,18 @@ export default function TeacherLessonView({ lesson, onRegenerate, onBack }: Teac
                 onEdit={() => handleEdit("objectives")}
                 onSave={handleSaveSection}
               >
-                {editingSection === "objectives" ? (
+{editingSection === "objectives" ? (
                   <Textarea
-                    value={editedLesson.objectives.join("\n")}
+                    value={displayLesson.objectives.join("\n")}
                     onChange={(e) =>
                       updateSection(["objectives"], e.target.value.split("\n").filter(Boolean))
                     }
                     className="min-h-[100px]"
+                    disabled={viewMode === "adapted"}
                   />
                 ) : (
                   <ul className="list-disc list-inside space-y-2">
-                    {editedLesson.objectives.map((obj, i) => (
+                    {displayLesson.objectives.map((obj, i) => (
                       <li key={i} className="text-sm">{obj}</li>
                     ))}
                   </ul>
@@ -136,7 +184,7 @@ export default function TeacherLessonView({ lesson, onRegenerate, onBack }: Teac
               <Separator />
 
               {/* Vocabulary Section */}
-              {editedLesson.vocabulary && editedLesson.vocabulary.length > 0 && (
+              {displayLesson.vocabulary && displayLesson.vocabulary.length > 0 && (
                 <>
                   <Section
                     title="Key Vocabulary"
@@ -146,15 +194,16 @@ export default function TeacherLessonView({ lesson, onRegenerate, onBack }: Teac
                   >
                     {editingSection === "vocabulary" ? (
                       <Textarea
-                        value={editedLesson.vocabulary?.join("\n") || ""}
+                        value={displayLesson.vocabulary?.join("\n") || ""}
                         onChange={(e) =>
                           updateSection(["vocabulary"], e.target.value.split("\n").filter(Boolean))
                         }
                         className="min-h-[100px]"
+                        disabled={viewMode === "adapted"}
                       />
                     ) : (
                       <ul className="list-disc list-inside space-y-1">
-                        {editedLesson.vocabulary?.map((term, i) => (
+                        {displayLesson.vocabulary?.map((term, i) => (
                           <li key={i} className="text-sm"><strong>{term}</strong></li>
                         ))}
                       </ul>
@@ -173,15 +222,16 @@ export default function TeacherLessonView({ lesson, onRegenerate, onBack }: Teac
               >
                 {editingSection === "materials" ? (
                   <Textarea
-                    value={editedLesson.materials.join("\n")}
+                    value={displayLesson.materials.join("\n")}
                     onChange={(e) =>
                       updateSection(["materials"], e.target.value.split("\n").filter(Boolean))
                     }
                     className="min-h-[100px]"
+                    disabled={viewMode === "adapted"}
                   />
                 ) : (
                   <ul className="list-disc list-inside space-y-1">
-                    {editedLesson.materials.map((mat, i) => (
+                    {displayLesson.materials.map((mat, i) => (
                       <li key={i} className="text-sm">{mat}</li>
                     ))}
                   </ul>
@@ -192,22 +242,23 @@ export default function TeacherLessonView({ lesson, onRegenerate, onBack }: Teac
 
               {/* Warm-Up Section */}
               <Section
-                title={`Warm-Up (${editedLesson.warmup.minutes} minutes)`}
+                title={`Warm-Up (${displayLesson.warmup.minutes} minutes)`}
                 isEditing={editingSection === "warmup"}
                 onEdit={() => handleEdit("warmup")}
                 onSave={handleSaveSection}
               >
                 {editingSection === "warmup" ? (
                   <Textarea
-                    value={editedLesson.warmup.steps.join("\n")}
+                    value={displayLesson.warmup.steps.join("\n")}
                     onChange={(e) =>
                       updateSection(["warmup", "steps"], e.target.value.split("\n").filter(Boolean))
                     }
                     className="min-h-[100px]"
+                    disabled={viewMode === "adapted"}
                   />
                 ) : (
                   <ol className="list-decimal list-inside space-y-2">
-                    {editedLesson.warmup.steps.map((step, i) => (
+                    {displayLesson.warmup.steps.map((step, i) => (
                       <li key={i} className="text-sm">{step}</li>
                     ))}
                   </ol>
@@ -218,22 +269,23 @@ export default function TeacherLessonView({ lesson, onRegenerate, onBack }: Teac
 
               {/* Direct Instruction Section */}
               <Section
-                title={`Direct Instruction (${editedLesson.directInstruction.minutes} minutes)`}
+                title={`Direct Instruction (${displayLesson.directInstruction.minutes} minutes)`}
                 isEditing={editingSection === "directInstruction"}
                 onEdit={() => handleEdit("directInstruction")}
                 onSave={handleSaveSection}
               >
                 {editingSection === "directInstruction" ? (
                   <Textarea
-                    value={editedLesson.directInstruction.steps.join("\n")}
+                    value={displayLesson.directInstruction.steps.join("\n")}
                     onChange={(e) =>
                       updateSection(["directInstruction", "steps"], e.target.value.split("\n").filter(Boolean))
                     }
                     className="min-h-[150px]"
+                    disabled={viewMode === "adapted"}
                   />
                 ) : (
                   <ol className="list-decimal list-inside space-y-2">
-                    {editedLesson.directInstruction.steps.map((step, i) => (
+                    {displayLesson.directInstruction.steps.map((step, i) => (
                       <li key={i} className="text-sm">{step}</li>
                     ))}
                   </ol>
@@ -244,22 +296,23 @@ export default function TeacherLessonView({ lesson, onRegenerate, onBack }: Teac
 
               {/* Guided Practice Section */}
               <Section
-                title={`Guided Practice (${editedLesson.guidedPractice.minutes} minutes)`}
+                title={`Guided Practice (${displayLesson.guidedPractice.minutes} minutes)`}
                 isEditing={editingSection === "guidedPractice"}
                 onEdit={() => handleEdit("guidedPractice")}
                 onSave={handleSaveSection}
               >
                 {editingSection === "guidedPractice" ? (
                   <Textarea
-                    value={editedLesson.guidedPractice.activities.join("\n")}
+                    value={displayLesson.guidedPractice.activities.join("\n")}
                     onChange={(e) =>
                       updateSection(["guidedPractice", "activities"], e.target.value.split("\n").filter(Boolean))
                     }
                     className="min-h-[100px]"
+                    disabled={viewMode === "adapted"}
                   />
                 ) : (
                   <ul className="list-disc list-inside space-y-2">
-                    {editedLesson.guidedPractice.activities.map((activity, i) => (
+                    {displayLesson.guidedPractice.activities.map((activity, i) => (
                       <li key={i} className="text-sm">{activity}</li>
                     ))}
                   </ul>
@@ -270,22 +323,23 @@ export default function TeacherLessonView({ lesson, onRegenerate, onBack }: Teac
 
               {/* Independent Practice Section */}
               <Section
-                title={`Independent Practice (${editedLesson.independentPractice.minutes} minutes)`}
+                title={`Independent Practice (${displayLesson.independentPractice.minutes} minutes)`}
                 isEditing={editingSection === "independentPractice"}
                 onEdit={() => handleEdit("independentPractice")}
                 onSave={handleSaveSection}
               >
                 {editingSection === "independentPractice" ? (
                   <Textarea
-                    value={editedLesson.independentPractice.choices.join("\n")}
+                    value={displayLesson.independentPractice.choices.join("\n")}
                     onChange={(e) =>
                       updateSection(["independentPractice", "choices"], e.target.value.split("\n").filter(Boolean))
                     }
                     className="min-h-[100px]"
+                    disabled={viewMode === "adapted"}
                   />
                 ) : (
                   <ul className="list-disc list-inside space-y-2">
-                    {editedLesson.independentPractice.choices.map((choice, i) => (
+                    {displayLesson.independentPractice.choices.map((choice, i) => (
                       <li key={i} className="text-sm">{choice}</li>
                     ))}
                   </ul>
@@ -306,31 +360,34 @@ export default function TeacherLessonView({ lesson, onRegenerate, onBack }: Teac
                     <div>
                       <label className="text-sm font-medium">Struggling Learners:</label>
                       <Textarea
-                        value={editedLesson.differentiation.struggling.join("\n")}
+                        value={displayLesson.differentiation.struggling.join("\n")}
                         onChange={(e) =>
                           updateSection(["differentiation", "struggling"], e.target.value.split("\n").filter(Boolean))
                         }
                         className="min-h-[80px] mt-1"
+                        disabled={viewMode === "adapted"}
                       />
                     </div>
                     <div>
                       <label className="text-sm font-medium">On-Level Learners:</label>
                       <Textarea
-                        value={editedLesson.differentiation.onLevel.join("\n")}
+                        value={displayLesson.differentiation.onLevel.join("\n")}
                         onChange={(e) =>
                           updateSection(["differentiation", "onLevel"], e.target.value.split("\n").filter(Boolean))
                         }
                         className="min-h-[80px] mt-1"
+                        disabled={viewMode === "adapted"}
                       />
                     </div>
                     <div>
                       <label className="text-sm font-medium">Advanced Learners:</label>
                       <Textarea
-                        value={editedLesson.differentiation.advanced.join("\n")}
+                        value={displayLesson.differentiation.advanced.join("\n")}
                         onChange={(e) =>
                           updateSection(["differentiation", "advanced"], e.target.value.split("\n").filter(Boolean))
                         }
                         className="min-h-[80px] mt-1"
+                        disabled={viewMode === "adapted"}
                       />
                     </div>
                   </div>
@@ -339,7 +396,7 @@ export default function TeacherLessonView({ lesson, onRegenerate, onBack }: Teac
                     <div>
                       <h4 className="text-sm font-semibold mb-1">Struggling Learners:</h4>
                       <ul className="list-disc list-inside space-y-1 ml-2">
-                        {editedLesson.differentiation.struggling.map((item, i) => (
+                        {displayLesson.differentiation.struggling.map((item, i) => (
                           <li key={i} className="text-sm">{item}</li>
                         ))}
                       </ul>
@@ -347,7 +404,7 @@ export default function TeacherLessonView({ lesson, onRegenerate, onBack }: Teac
                     <div>
                       <h4 className="text-sm font-semibold mb-1">On-Level Learners:</h4>
                       <ul className="list-disc list-inside space-y-1 ml-2">
-                        {editedLesson.differentiation.onLevel.map((item, i) => (
+                        {displayLesson.differentiation.onLevel.map((item, i) => (
                           <li key={i} className="text-sm">{item}</li>
                         ))}
                       </ul>
@@ -355,7 +412,7 @@ export default function TeacherLessonView({ lesson, onRegenerate, onBack }: Teac
                     <div>
                       <h4 className="text-sm font-semibold mb-1">Advanced Learners:</h4>
                       <ul className="list-disc list-inside space-y-1 ml-2">
-                        {editedLesson.differentiation.advanced.map((item, i) => (
+                        {displayLesson.differentiation.advanced.map((item, i) => (
                           <li key={i} className="text-sm">{item}</li>
                         ))}
                       </ul>
@@ -378,22 +435,24 @@ export default function TeacherLessonView({ lesson, onRegenerate, onBack }: Teac
                     <div>
                       <label className="text-sm font-medium">Methods:</label>
                       <Textarea
-                        value={editedLesson.formativeAssessment.methods.join("\n")}
+                        value={displayLesson.formativeAssessment.methods.join("\n")}
                         onChange={(e) =>
                           updateSection(["formativeAssessment", "methods"], e.target.value.split("\n").filter(Boolean))
                         }
                         className="min-h-[80px] mt-1"
+                        disabled={viewMode === "adapted"}
                       />
                     </div>
-                    {editedLesson.formativeAssessment.exitTicket && (
+                    {displayLesson.formativeAssessment.exitTicket && (
                       <div>
                         <label className="text-sm font-medium">Exit Ticket:</label>
                         <Textarea
-                          value={editedLesson.formativeAssessment.exitTicket}
+                          value={displayLesson.formativeAssessment.exitTicket}
                           onChange={(e) =>
                             updateSection(["formativeAssessment", "exitTicket"], e.target.value)
                           }
                           className="min-h-[60px] mt-1"
+                          disabled={viewMode === "adapted"}
                         />
                       </div>
                     )}
@@ -403,15 +462,15 @@ export default function TeacherLessonView({ lesson, onRegenerate, onBack }: Teac
                     <div>
                       <h4 className="text-sm font-semibold mb-1">Methods:</h4>
                       <ul className="list-disc list-inside space-y-1 ml-2">
-                        {editedLesson.formativeAssessment.methods.map((method, i) => (
+                        {displayLesson.formativeAssessment.methods.map((method, i) => (
                           <li key={i} className="text-sm">{method}</li>
                         ))}
                       </ul>
                     </div>
-                    {editedLesson.formativeAssessment.exitTicket && (
+                    {displayLesson.formativeAssessment.exitTicket && (
                       <div>
                         <h4 className="text-sm font-semibold mb-1">Exit Ticket:</h4>
-                        <p className="text-sm italic ml-2">{editedLesson.formativeAssessment.exitTicket}</p>
+                        <p className="text-sm italic ml-2">{displayLesson.formativeAssessment.exitTicket}</p>
                       </div>
                     )}
                   </div>
@@ -419,7 +478,7 @@ export default function TeacherLessonView({ lesson, onRegenerate, onBack }: Teac
               </Section>
 
               {/* Teacher Notes */}
-              {editedLesson.teacherNotes && editedLesson.teacherNotes.length > 0 && (
+              {displayLesson.teacherNotes && displayLesson.teacherNotes.length > 0 && (
                 <>
                   <Separator />
                   <Section
@@ -451,6 +510,18 @@ export default function TeacherLessonView({ lesson, onRegenerate, onBack }: Teac
 
           <div className="mt-6 flex flex-wrap gap-3 items-center justify-between pt-4 border-t">
             <div className="flex gap-2">
+              {lessonId && classId && !refinedLesson && (
+                <Button 
+                  onClick={handleRefineForStudents} 
+                  disabled={isRefining}
+                  variant="secondary"
+                  aria-label="Refine lesson for your students"
+                >
+                  <Sparkles className="mr-2 h-4 w-4" />
+                  {isRefining ? "Refining..." : "Refine for My Students"}
+                </Button>
+              )}
+              
               <Button onClick={handleSaveLesson} disabled={isSaving} aria-label="Save lesson to library">
                 <Save className="mr-2 h-4 w-4" />
                 {isSaving ? "Saving..." : "Save Lesson"}

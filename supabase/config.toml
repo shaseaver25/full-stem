@@ -84,3 +84,6 @@ verify_jwt = true
 
 [functions.ai-lesson-generator]
 verify_jwt = true
+
+[functions.adaptive-content]
+verify_jwt = true
