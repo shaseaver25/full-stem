@@ -1,6 +1,8 @@
 # Welcome to your Lovable project
 
-[![CI](https://github.com/YOUR_USERNAME/YOUR_REPO/actions/workflows/ci.yml/badge.svg)](https://github.com/YOUR_USERNAME/YOUR_REPO/actions/workflows/ci.yml)
+[![CI](https://github.com/shaseaver25/full-stem/actions/workflows/ci.yml/badge.svg)](https://github.com/shaseaver25/full-stem/actions/workflows/ci.yml)
+[![Security](https://github.com/shaseaver25/full-stem/actions/workflows/security.yml/badge.svg)](https://github.com/shaseaver25/full-stem/actions/workflows/security.yml)
+
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.5-blue.svg)](https://www.typescriptlang.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-20.x-green.svg)](https://nodejs.org/)
 [![pnpm](https://img.shields.io/badge/pnpm-9-orange.svg)](https://pnpm.io/)
