@@ -93,6 +93,7 @@ function AppContent() {
     <>
       <GlobalSchemaMarkup />
       <ContentProvenance />
+      <ProvenanceBadge />
       <SuperAdminBanner />
       <Suspense fallback={<LoadingSpinner />}>
         <Routes>

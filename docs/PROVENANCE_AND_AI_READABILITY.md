@@ -90,55 +90,107 @@ Schema.org `CreativeWork` with provenance:
 }
 ```
 
-## Page Hash Verification
+## Page Hash Verification with Cryptographic Signing
 
 ### How It Works
 
-1. **Build Time**: `hash-provenance.js` script runs during build
+1. **Build Time**: `hash-provenance-signed.js` script runs during build
 2. **Hash Generation**: SHA-256 hash calculated for each HTML page
-3. **Manifest Creation**: `/public/provenance-manifest.json` created with URL → hash mapping
-4. **Runtime Injection**: Component fetches hash and embeds in metadata
+3. **Cryptographic Signing**: Each hash is signed using JWS (JSON Web Signature) with ES256
+4. **Manifest Creation**: `/public/provenance-manifest.json` created with URL → hash + signature mapping
+5. **Runtime Injection**: Component fetches hash and embeds in metadata
+6. **Server Verification**: Edge function verifies signatures on demand
 
-### Provenance Manifest Structure
+### Signed Provenance Manifest Structure
 
 ```json
 {
-  "/": "a3f8c9e2d1b4f7e6a8c2d9f1e3b7c4a6...",
-  "/courses": "b7d3f1e9a2c8d4f6e1b9c3a7d2f8e4...",
-  "/dashboard": "c4a8e2d9f3b7c1e6a4d8f2b9e3c7a1..."
+  "_metadata": {
+    "version": "1.0",
+    "generated": "2025-10-19T10:30:00Z",
+    "issuer": "TailorEDU",
+    "algorithm": "SHA-256",
+    "signatureMethod": "JWS-ES256"
+  },
+  "pages": {
+    "/": {
+      "hash": "a3f8c9e2d1b4f7e6a8c2d9f1e3b7c4a6...",
+      "signature": "eyJhbGc...compact-jws-signature",
+      "date": "2025-10-19T10:30:00Z",
+      "algorithm": "SHA-256",
+      "signatureMethod": "JWS-ES256"
+    },
+    "/courses": {
+      "hash": "b7d3f1e9a2c8d4f6e1b9c3a7d2f8e4...",
+      "signature": "eyJhbGc...compact-jws-signature",
+      "date": "2025-10-19T10:30:00Z",
+      "algorithm": "SHA-256",
+      "signatureMethod": "JWS-ES256"
+    }
+  }
 }
 ```
 
-### Generating Hashes
+### Generating Signed Hashes
 
 Run during build process:
 
 ```bash
-# Generate manifest
+# Generate signed manifest
 npm run build
-node scripts/hash-provenance.js
+node scripts/hash-provenance-signed.js
 
 # Output:
-# 🔐 Generating content provenance manifest...
+# 🔐 Generating signed content provenance manifest...
 # ✅ /
 #    Hash: a3f8c9e2d1b4f7e6...
+#    Signature: eyJhbGciOiJFUzI1NiI...
 # ✅ /courses
 #    Hash: b7d3f1e9a2c8d4f6...
+#    Signature: eyJhbGciOiJFUzI1NiI...
 # 
-# 📝 Provenance manifest generated: dist/provenance-manifest.json
+# 📝 Signed provenance manifest generated: dist/provenance-manifest.json
 # 🔍 Total pages tracked: 12
 ```
 
-### Verifying a Single Page
+### Verifying a Single Page (Build Time)
 
 ```bash
-# Verify specific page
-node scripts/hash-provenance.js --verify dist/index.html
+# Verify specific page against manifest
+node scripts/hash-provenance-signed.js --verify dist/index.html
 
 # Output:
 # 🔍 Verifying: dist/index.html
 # ✅ VERIFIED: Hash matches manifest
 #    Hash: a3f8c9e2d1b4f7e6a8c2d9f1e3b7c4a6...
+#    Signature: eyJhbGciOiJFUzI1NiI...
+#    Date: 2025-10-19T10:30:00Z
+```
+
+### Server-Side Verification (Runtime)
+
+Users can verify pages in real-time using the verification endpoint:
+
+```bash
+# API verification
+curl "https://irxzpsvzlihqitlicoql.supabase.co/functions/v1/provenance-verify?url=/"
+
+# Response:
+{
+  "verified": true,
+  "entry": {
+    "hash": "a3f8c9e2d1b4f7e6...",
+    "signature": "eyJhbGc...",
+    "date": "2025-10-19T10:30:00Z",
+    "algorithm": "SHA-256",
+    "signatureMethod": "JWS-ES256"
+  },
+  "pageUrl": "/",
+  "metadata": {
+    "version": "1.0",
+    "issuer": "TailorEDU"
+  }
+}
 ```
 
 ### Manual Verification
@@ -371,28 +423,84 @@ Track all content modifications:
 - [Schema.org CreativeWork](https://schema.org/CreativeWork)
 - [IPTC Photo Metadata](https://iptc.org/standards/photo-metadata/)
 
+## Key Management & Security
+
+### Private Signing Key
+
+The private key for signing hashes is stored securely:
+
+- **Production**: Supabase secret `TAILOREDU_SIGNING_KEY` (ES256 private key)
+- **Public Key**: Supabase secret `TAILOREDU_SIGNING_PUB` (for verification)
+- **Storage**: Never committed to repository
+- **Access**: Only available to build pipeline and verification endpoint
+
+### Key Rotation
+
+To rotate signing keys:
+
+1. **Generate New Key Pair**:
+```bash
+# Generate ES256 key pair
+openssl ecparam -genkey -name prime256v1 -noout -out private.pem
+openssl ec -in private.pem -pubout -out public.pem
+```
+
+2. **Update Supabase Secrets**:
+   - Update `TAILOREDU_SIGNING_KEY` with new private key
+   - Update `TAILOREDU_SIGNING_PUB` with new public key
+
+3. **Rebuild & Deploy**:
+```bash
+npm run build
+node scripts/hash-provenance-signed.js
+# Deploy with new signatures
+```
+
+4. **Archive Old Keys**: Keep old public keys for historical verification
+
+### Security Best Practices
+
+- ✅ **Private keys** stored in secrets manager only
+- ✅ **Short-lived tokens** for API access
+- ✅ **Watermarks** on all downloaded content
+- ✅ **Access logging** for forensic tracking
+- ❌ **Never** commit private keys to repository
+- ❌ **Never** expose private keys in client-side code
+
 ## Verification Commands Reference
 
 ```bash
-# Generate manifest
-node scripts/hash-provenance.js
+# Generate signed manifest
+node scripts/hash-provenance-signed.js
 
-# Verify single file
-node scripts/hash-provenance.js --verify dist/index.html
+# Verify single file (build time)
+node scripts/hash-provenance-signed.js --verify dist/index.html
+
+# Verify page (runtime via API)
+curl "https://irxzpsvzlihqitlicoql.supabase.co/functions/v1/provenance-verify?url=/"
 
 # Manual hash calculation
 shasum -a 256 dist/index.html
 
-# View manifest
+# View signed manifest
 cat dist/provenance-manifest.json
 
-# Test in browser
+# Test manifest in browser
 curl http://localhost:8080/provenance-manifest.json
 
 # Check metadata in HTML
 curl http://localhost:8080 | grep "ai-readable"
+curl http://localhost:8080 | grep "verification-method"
+
+# Extract signature from manifest
+cat dist/provenance-manifest.json | jq '.pages["/"].signature'
 ```
 
 ---
 
-**Next Steps**: Run `npm run build && node scripts/hash-provenance.js` to generate your first provenance manifest.
+## Related Documentation
+
+- [Anti-Theft & Content Protection Guide](/docs/ANTI_THEFT.md) - Rate limits, watermarking, DMCA
+- [GEO Optimization Guide](/docs/GEO_OPTIMIZATION.md) - AI discovery and structured data
+
+**Next Steps**: Run `npm run build && node scripts/hash-provenance-signed.js` to generate your first signed provenance manifest.

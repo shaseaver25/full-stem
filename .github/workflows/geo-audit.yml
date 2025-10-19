@@ -29,8 +29,10 @@ jobs:
       - name: Install serve
         run: npm install -g serve
 
-      - name: Generate provenance hashes
-        run: node scripts/hash-provenance.js
+      - name: Generate Signed Provenance Hashes
+        run: node scripts/hash-provenance-signed.js
+        env:
+          TAILOREDU_SIGNING_KEY: ${{ secrets.TAILOREDU_SIGNING_KEY }}
 
       - name: Start server in background
         run: |
@@ -44,8 +46,8 @@ jobs:
       - name: Validate schema.org markup
         run: node scripts/schema-validate.js
 
-      - name: Verify provenance integrity
-        run: node scripts/hash-provenance.js --verify dist/index.html
+      - name: Verify Provenance Integrity
+        run: node scripts/hash-provenance-signed.js --verify dist/index.html
 
       - name: Stop server
         if: always()
