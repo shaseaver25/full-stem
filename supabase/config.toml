@@ -81,3 +81,6 @@ verify_jwt = true
 
 [functions.import-students-csv]
 verify_jwt = true
+
+[functions.ai-lesson-generator]
+verify_jwt = true
