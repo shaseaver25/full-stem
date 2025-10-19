@@ -21,6 +21,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { MFARequiredBanner } from '@/components/system/MFARequiredBanner';
 import { useMFAEnforcement } from '@/hooks/useMFAEnforcement';
 import { getMode } from '@/utils/env';
+import { CreateTestStudentsButton } from '@/components/admin/CreateTestStudentsButton';
 
 const DeveloperDashboard = () => {
   const { user } = useAuth();
@@ -126,6 +127,22 @@ const DeveloperDashboard = () => {
                 Use sandbox tables for testing without affecting production data. All changes are isolated and can be reset at any time.
               </AlertDescription>
             </Alert>
+            
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  Test Student Accounts
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  Create mock student accounts for testing the adaptive engine with different reading levels and languages.
+                </p>
+                <CreateTestStudentsButton />
+              </CardContent>
+            </Card>
+            
             <SandboxDataManager isProduction={isProduction} />
           </TabsContent>
 
