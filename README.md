@@ -119,6 +119,7 @@ In development mode, axe-core automatically monitors for accessibility violation
 - [CODE_STRUCTURE.md](CODE_STRUCTURE.md) - Directory structure and naming conventions
 - [CODE_QUALITY.md](CODE_QUALITY.md) - Code quality standards and ESLint configuration
 - [docs/ACCESSIBILITY_AUDIT.md](docs/ACCESSIBILITY_AUDIT.md) - WCAG 2.1 AA compliance audit
+- [docs/SECURITY_POLICIES.md](docs/SECURITY_POLICIES.md) - RLS policies and database security audit
 - [IMAGE_OPTIMIZATION.md](IMAGE_OPTIMIZATION.md) - Image optimization utilities
 - [SENTRY_SETUP.md](SENTRY_SETUP.md) - Error monitoring setup
 - [REFACTORING_SUMMARY.md](REFACTORING_SUMMARY.md) - Recent refactoring changes

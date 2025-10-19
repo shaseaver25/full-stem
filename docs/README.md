@@ -16,6 +16,26 @@ One-page summary for stakeholders:
 
 ---
 
+### [SECURITY_POLICIES.md](SECURITY_POLICIES.md)
+**Row-Level Security Audit Report**
+
+Comprehensive RLS policy audit including:
+- All RLS policies analyzed (73 tables)
+- Violations by severity (Critical, High, Medium)
+- Role-based access matrix (Student, Teacher, Admin, etc.)
+- Security definer function analysis
+- Migration scripts for critical fixes
+- CI/CD integration guide
+- Testing recommendations
+
+**Status:** 78% secure (57/73 tables fully compliant), 3 critical fixes needed
+
+**Quick Reference:** [SECURITY_QUICK_REF.md](SECURITY_QUICK_REF.md)
+
+**Access Matrix:** [RLS_ACCESS_MATRIX.md](RLS_ACCESS_MATRIX.md)
+
+---
+
 ### [ACCESSIBILITY_AUDIT.md](ACCESSIBILITY_AUDIT.md)
 **WCAG 2.1 Level AA Compliance Report**
 
