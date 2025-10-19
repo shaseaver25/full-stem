@@ -176,6 +176,7 @@ This is a living document. As we identify new patterns or issues:
 - [Accessibility Audit Report](docs/ACCESSIBILITY_AUDIT.md) - WCAG 2.1 compliance testing
 - [Accessibility Implementation Notes](docs/ACCESSIBILITY_NOTES.md) - Patterns and best practices
 - [Accessibility Compliance Summary](docs/ACCESSIBILITY_COMPLIANCE_SUMMARY.md) - Quick reference card
+- [Security Headers](docs/SECURITY_HEADERS.md) - HTTP security headers and CSP configuration
 - [Security Policies Audit](docs/SECURITY_POLICIES.md) - RLS policies and database security
 - [Environment Hardening](docs/ENV_HARDENING.md) - Environment variable validation and security
 - [Performance Audit](docs/PERFORMANCE_AUDIT.md) - Database indexes, caching, and optimization strategies
