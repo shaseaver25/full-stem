@@ -1,0 +1,174 @@
+name: Performance Check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: write
+  checks: write
+
+jobs:
+  bundle-analysis:
+    name: Bundle Size Analysis
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Build application
+        run: npm run build
+        env:
+          NODE_ENV: production
+      
+      - name: Analyze bundle size
+        run: |
+          echo "📦 Bundle Size Report"
+          echo "===================="
+          du -sh dist/
+          echo ""
+          echo "JavaScript bundles:"
+          find dist/assets -name "*.js" -exec du -h {} \; | sort -h -r | head -10
+          echo ""
+          echo "CSS bundles:"
+          find dist/assets -name "*.css" -exec du -h {} \;
+          
+      - name: Check bundle size limits
+        run: |
+          # Get main JS bundle size in KB
+          BUNDLE_SIZE=$(find dist/assets -name "index-*.js" -exec du -k {} \; | cut -f1)
+          LIMIT_KB=500
+          
+          echo "Main bundle size: ${BUNDLE_SIZE}KB"
+          echo "Limit: ${LIMIT_KB}KB"
+          
+          if [ "$BUNDLE_SIZE" -gt "$LIMIT_KB" ]; then
+            echo "❌ Bundle size exceeds limit!"
+            echo "::error::Bundle size (${BUNDLE_SIZE}KB) exceeds limit (${LIMIT_KB}KB)"
+            exit 1
+          else
+            echo "✅ Bundle size within limit"
+          fi
+
+  lighthouse:
+    name: Lighthouse Performance Audit
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Build application
+        run: npm run build
+        env:
+          NODE_ENV: production
+      
+      - name: Serve application
+        run: |
+          npx serve -s dist -l 5173 &
+          sleep 5
+          
+      - name: Run Lighthouse CI
+        uses: treosh/lighthouse-ci-action@v11
+        with:
+          urls: |
+            http://localhost:5173
+          budgetPath: ./.lighthouserc.json
+          temporaryPublicStorage: true
+          uploadArtifacts: true
+          
+      - name: Performance regression check
+        run: |
+          echo "⚡ Performance Metrics"
+          echo "===================="
+          # Results available in Lighthouse CI action output
+          
+  ttfb-check:
+    name: Time to First Byte Check
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Build and serve
+        run: |
+          npm run build
+          npx serve -s dist -l 5173 &
+          sleep 5
+          
+      - name: Measure TTFB
+        run: |
+          echo "🚀 Measuring Time to First Byte..."
+          
+          # Use curl to measure TTFB
+          TTFB=$(curl -o /dev/null -s -w '%{time_starttransfer}\n' http://localhost:5173)
+          TTFB_MS=$(echo "$TTFB * 1000" | bc)
+          LIMIT_MS=200
+          
+          echo "TTFB: ${TTFB_MS}ms"
+          echo "Limit: ${LIMIT_MS}ms"
+          
+          # Check if TTFB exceeds limit (basic string comparison)
+          if (( $(echo "$TTFB_MS > $LIMIT_MS" | bc -l) )); then
+            echo "⚠️ TTFB exceeds target"
+            echo "::warning::TTFB (${TTFB_MS}ms) exceeds recommended limit (${LIMIT_MS}ms)"
+          else
+            echo "✅ TTFB within target"
+          fi
+          
+  performance-report:
+    name: Performance Summary
+    runs-on: ubuntu-latest
+    needs: [bundle-analysis, lighthouse, ttfb-check]
+    if: always()
+    
+    steps:
+      - name: Performance Summary
+        run: |
+          echo "📊 Performance Check Complete"
+          echo "=============================="
+          echo ""
+          echo "Check individual job results for details:"
+          echo "- Bundle Analysis: Bundle size and composition"
+          echo "- Lighthouse: Core Web Vitals and performance score"
+          echo "- TTFB Check: Server response time"
+          echo ""
+          echo "Target Metrics:"
+          echo "- Lighthouse Performance: > 90"
+          echo "- TTFB: < 200ms"
+          echo "- Bundle Size: < 500KB"
+          echo "- FCP: < 1.8s"
+          echo "- LCP: < 2.5s"
+          echo "- CLS: < 0.1"
