@@ -64,6 +64,11 @@ This project is built with:
 
 ### Performance Optimizations
 
+- **Database Performance**: Strategic indexes and query optimization
+  - See [PERFORMANCE_AUDIT.md](docs/PERFORMANCE_AUDIT.md) for complete audit
+  - 50+ optimized indexes for critical queries
+  - N+1 query prevention with optimized query builders
+
 - **Image Optimization**: Responsive image loading with automatic srcSet generation
   - See [IMAGE_OPTIMIZATION.md](IMAGE_OPTIMIZATION.md) for detailed usage guide
   - Components: `OptimizedImage`, `useOptimizedImage` hook
@@ -72,7 +77,15 @@ This project is built with:
 - **Error Monitoring**: Sentry integration for production error tracking
   - See [SENTRY_SETUP.md](SENTRY_SETUP.md) for configuration
 
-- **React Query**: Optimized data fetching with caching (5-minute stale time)
+- **React Query**: Optimized data fetching with caching strategies
+  - Stale time: 5 minutes for list queries, 2 minutes for detail queries
+  - Query key factories for consistent cache management
+  - Automatic cache invalidation on mutations
+
+- **Web Vitals Monitoring**: Real user monitoring in production
+  - Tracks LCP, FID, CLS, TTFB, and INP metrics
+  - Automatic logging to console and analytics
+  - Performance budgets enforced in CI/CD
 
 ## Accessibility
 
@@ -120,6 +133,7 @@ In development mode, axe-core automatically monitors for accessibility violation
 - [CODE_QUALITY.md](CODE_QUALITY.md) - Code quality standards and ESLint configuration
 - [docs/ACCESSIBILITY_AUDIT.md](docs/ACCESSIBILITY_AUDIT.md) - WCAG 2.1 AA compliance audit
 - [docs/SECURITY_POLICIES.md](docs/SECURITY_POLICIES.md) - RLS policies and database security audit
+- [docs/PERFORMANCE_AUDIT.md](docs/PERFORMANCE_AUDIT.md) - Performance optimization audit and benchmarks
 - [IMAGE_OPTIMIZATION.md](IMAGE_OPTIMIZATION.md) - Image optimization utilities
 - [SENTRY_SETUP.md](SENTRY_SETUP.md) - Error monitoring setup
 - [REFACTORING_SUMMARY.md](REFACTORING_SUMMARY.md) - Recent refactoring changes

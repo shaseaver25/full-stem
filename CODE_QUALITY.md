@@ -177,3 +177,4 @@ This is a living document. As we identify new patterns or issues:
 - [Accessibility Implementation Notes](docs/ACCESSIBILITY_NOTES.md) - Patterns and best practices
 - [Accessibility Compliance Summary](docs/ACCESSIBILITY_COMPLIANCE_SUMMARY.md) - Quick reference card
 - [Security Policies Audit](docs/SECURITY_POLICIES.md) - RLS policies and database security
+- [Performance Audit](docs/PERFORMANCE_AUDIT.md) - Database indexes, caching, and optimization strategies

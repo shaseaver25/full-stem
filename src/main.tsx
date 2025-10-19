@@ -4,6 +4,7 @@ import { createRoot } from 'react-dom/client';
 import * as Sentry from "@sentry/react";
 import App from './App.tsx';
 import './index.css';
+import { initWebVitalsTracking } from "./utils/webVitals";
 
 // Accessibility testing in development using axe-core
 // Note: Due to StrictMode compatibility, we use jest-axe for automated testing
@@ -33,6 +34,11 @@ if (import.meta.env.PROD && import.meta.env.VITE_SENTRY_DSN) {
     replaysOnErrorSampleRate: 1.0, // Sample 100% of sessions with errors
     environment: import.meta.env.MODE,
   });
+}
+
+// Initialize Web Vitals tracking in production
+if (import.meta.env.PROD) {
+  initWebVitalsTracking();
 }
 
 const root = createRoot(document.getElementById("root")!);
