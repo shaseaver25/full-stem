@@ -57,6 +57,14 @@ const TrialPage = () => {
             <p className="text-xl md:text-2xl text-gray-700 mb-8 max-w-3xl mx-auto leading-relaxed">
               Get early access to personalized lessons--
             </p>
+            
+            <Link 
+              to="/pilot-interest"
+              className="inline-flex items-center justify-center px-8 py-4 text-lg font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-lg transition-all duration-300 hover:scale-105 mb-8"
+            >
+              <Sparkles className="mr-2 h-5 w-5" />
+              Request Pilot Access
+            </Link>
 
             {/* What You'll Get Section */}
             <div className="bg-white/80 backdrop-blur-md rounded-3xl p-8 shadow-xl mb-12 max-w-3xl mx-auto">

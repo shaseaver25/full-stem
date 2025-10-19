@@ -75,6 +75,7 @@ const MFASetup = React.lazy(() => import("./pages/MFASetup"));
 const MFAVerify = React.lazy(() => import("./pages/MFAVerify"));
 const AuthCallback = React.lazy(() => import("./pages/AuthCallback"));
 const DocsViewer = React.lazy(() => import("./pages/DocsViewer"));
+const PilotInterest = React.lazy(() => import("./pages/PilotInterest"));
 
 // Eagerly load these smaller components that are used for route protection
 import ProtectedTeacherRoute from "./components/teacher/ProtectedTeacherRoute";
@@ -187,6 +188,7 @@ function AppContent() {
           } 
         />
         <Route path="/trial" element={<ErrorBoundary><TrialPage /></ErrorBoundary>} />
+        <Route path="/pilot-interest" element={<ErrorBoundary><PilotInterest /></ErrorBoundary>} />
         
         {/* Demo Routes */}
         <Route path="/demo" element={<ErrorBoundary><DemoGate /></ErrorBoundary>} />
