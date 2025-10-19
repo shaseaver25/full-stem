@@ -1,5 +1,10 @@
 # Welcome to your Lovable project
 
+[![CI](https://github.com/YOUR_USERNAME/YOUR_REPO/actions/workflows/ci.yml/badge.svg)](https://github.com/YOUR_USERNAME/YOUR_REPO/actions/workflows/ci.yml)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.5-blue.svg)](https://www.typescriptlang.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-20.x-green.svg)](https://nodejs.org/)
+[![pnpm](https://img.shields.io/badge/pnpm-9-orange.svg)](https://pnpm.io/)
+
 ## Project info
 
 **URL**: https://lovable.dev/projects/6ba0ffd1-9a8e-49f9-9f63-94f86000b68b
@@ -153,6 +158,7 @@ In development mode, axe-core automatically monitors for accessibility violation
 - [DEVELOPER_DOCUMENTATION.md](DEVELOPER_DOCUMENTATION.md) - Comprehensive development guide
 - [CODE_STRUCTURE.md](CODE_STRUCTURE.md) - Directory structure and naming conventions
 - [CODE_QUALITY.md](CODE_QUALITY.md) - Code quality standards and ESLint configuration
+- [docs/CI_CHEATSHEET.md](docs/CI_CHEATSHEET.md) - CI/CD pipeline and troubleshooting guide
 - [docs/RATE_LIMITING.md](docs/RATE_LIMITING.md) - Client-side rate limiting and backoff strategies
 - [docs/SECURITY_HEADERS.md](docs/SECURITY_HEADERS.md) - HTTP security headers and CSP configuration
 - [docs/ENV_HARDENING.md](docs/ENV_HARDENING.md) - Environment variable validation and security
