@@ -74,6 +74,7 @@ const SystemDashboard = React.lazy(() => import("./pages/SystemDashboard"));
 const MFASetup = React.lazy(() => import("./pages/MFASetup"));
 const MFAVerify = React.lazy(() => import("./pages/MFAVerify"));
 const AuthCallback = React.lazy(() => import("./pages/AuthCallback"));
+const DocsViewer = React.lazy(() => import("./pages/DocsViewer"));
 
 // Eagerly load these smaller components that are used for route protection
 import ProtectedTeacherRoute from "./components/teacher/ProtectedTeacherRoute";
@@ -215,6 +216,9 @@ function AppContent() {
         
         {/* Demo Showcase */}
         <Route path="/demo-showcase" element={<ErrorBoundary><DemoShowcase /></ErrorBoundary>} />
+        
+        {/* Documentation */}
+        <Route path="/docs/ux-testing" element={<ErrorBoundary><DocsViewer /></ErrorBoundary>} />
         
         {/* Parent Portal */}
         <Route 
