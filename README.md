@@ -2,6 +2,7 @@
 
 [![CI](https://github.com/shaseaver25/full-stem/actions/workflows/ci.yml/badge.svg)](https://github.com/shaseaver25/full-stem/actions/workflows/ci.yml)
 [![Security](https://github.com/shaseaver25/full-stem/actions/workflows/security.yml/badge.svg)](https://github.com/shaseaver25/full-stem/actions/workflows/security.yml)
+[![Accessibility & Performance](https://github.com/shaseaver25/full-stem/actions/workflows/accessibility.yml/badge.svg)](https://github.com/shaseaver25/full-stem/actions/workflows/accessibility.yml)
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.5-blue.svg)](https://www.typescriptlang.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-20.x-green.svg)](https://nodejs.org/)

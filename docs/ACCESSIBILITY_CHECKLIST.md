@@ -82,8 +82,20 @@ Quick reference checklist for ensuring accessibility compliance when developing 
 
 ## Testing
 
-### Automated Testing
+### Automated Testing (CI/CD)
 
+Our GitHub Actions workflow automatically runs on every push and PR:
+
+- **Lighthouse CI**: Tests performance, accessibility, best practices, and SEO
+- **axe-core CLI**: Critical accessibility issue detection
+
+**Minimum Thresholds (enforced in CI):**
+- ✅ Accessibility: ≥90
+- ⚡ Performance: ≥80
+- ✨ Best Practices: ≥90
+- 🔍 SEO: ≥90
+
+**Local Testing:**
 - [ ] Run `npm run test:a11y` and fix all violations
 - [ ] Check browser console for axe-core warnings (dev mode)
 - [ ] Run Lighthouse accessibility audit (90+ score)
