@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -29,6 +30,7 @@ interface RosterManagementProps {
 }
 
 export function RosterManagement({ classId, maxStudents }: RosterManagementProps) {
+  const navigate = useNavigate();
   const [enrollDialogOpen, setEnrollDialogOpen] = useState(false);
   const [importModalOpen, setImportModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -235,9 +237,12 @@ export function RosterManagement({ classId, maxStudents }: RosterManagementProps
                     </AvatarFallback>
                   </Avatar>
                   <div>
-                    <div className="font-medium">
+                    <button
+                      onClick={() => navigate(`/teacher/students/${classStudent.student_id}`)}
+                      className="font-medium hover:underline text-left"
+                    >
                       {classStudent.student.first_name} {classStudent.student.last_name}
-                    </div>
+                    </button>
                      {classStudent.student.user_id && (
                        <div className="text-sm text-muted-foreground">
                          ID: {classStudent.student.user_id.substring(0, 8)}...
