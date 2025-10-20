@@ -22,16 +22,16 @@ This is the **fastest way** to set up demo accounts when starting from scratch, 
 Navigate to `/advanced-admin` → **Demo Accounts** tab and click "Create Demo Accounts" button.
 *Note: Requires admin or super_admin login*
 
-**All demo accounts use password:** `Test1234!`
+**Demo account passwords vary by role:**
 
 | Role | Email | Password | Dashboard Route |
 |------|-------|----------|-----------------|
-| Student | student@test.com | Test1234! | /dashboard/student |
-| Teacher | teacher@test.com | Test1234! | /teacher/dashboard |
-| Parent | parent@test.com | Test1234! | /dashboard/parent |
-| Admin | admin@test.com | Test1234! | /admin/dashboard |
-| Super Admin | superadmin@test.com | Test1234! | /super-admin |
-| Developer | developer@test.com | Test1234! | /dev |
+| Student | student@test.com | Student123! | /dashboard/student |
+| Teacher | teacher@test.com | Teacher123! | /teacher/dashboard |
+| Parent | parent@test.com | Parent123! | /dashboard/parent |
+| Admin | admin@test.com | Admin123! | /admin/dashboard |
+| Super Admin | superadmin@test.com | Admin123! | /super-admin |
+| Developer | developer@test.com | Dev123! | /dev |
 
 ### Method 3: Seed Legacy Demo Data (Alternative)
 
@@ -58,7 +58,7 @@ Navigate to `/advanced-admin` → **Demo Accounts** tab and click "Create Demo A
 1. Navigate to `/auth` or `/teacher/auth`
 2. Log in with:
    - Email: `teacher@test.com`
-   - Password: `Test1234!`
+   - Password: `Teacher123!`
 3. Should redirect to `/teacher/dashboard`
 4. Navigate to `/dashboard/teacher/analytics`
 
@@ -85,7 +85,7 @@ Navigate to `/advanced-admin` → **Demo Accounts** tab and click "Create Demo A
 2. Navigate to `/auth`
 3. Log in with:
    - Email: `student@test.com`
-   - Password: `Test1234!`
+   - Password: `Student123!`
 4. Should redirect to `/dashboard/student`
 5. **Attempt unauthorized access:** Navigate to `/dashboard/admin/analytics`
 6. **Attempt unauthorized access:** Navigate to `/dashboard/teacher/analytics`
@@ -117,7 +117,7 @@ Navigate to `/advanced-admin` → **Demo Accounts** tab and click "Create Demo A
 2. Navigate to `/auth`
 3. Log in with:
    - Email: `parent@test.com`
-   - Password: `Test1234!`
+   - Password: `Parent123!`
 4. Navigate to `/dashboard/parent`
 
 **Expected Results:**
@@ -141,7 +141,7 @@ Navigate to `/advanced-admin` → **Demo Accounts** tab and click "Create Demo A
 2. Navigate to `/auth`
 3. Log in with:
    - Email: `admin@test.com`
-   - Password: `Test1234!`
+   - Password: `Admin123!`
 4. Navigate to `/dashboard/admin/analytics`
 5. Test access to:
    - `/admin/dashboard`
