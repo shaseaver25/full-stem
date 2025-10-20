@@ -33,6 +33,14 @@ export default function Header({ onDemoClick, onRequestClick }: HeaderProps) {
           <a href="#platform" className="hover:text-slate-700">Platform</a>
           <a href="#serve" className="hover:text-slate-700">Who We Serve</a>
           <a href="#contact" className="hover:text-slate-700">Contact</a>
+          {user && (
+            <button 
+              onClick={() => redirectToRoleDashboard(user.id, navigate)} 
+              className="hover:text-slate-700 font-medium"
+            >
+              Dashboard
+            </button>
+          )}
         </div>
         <div className="hidden md:flex items-center gap-3">
           {!user && (
