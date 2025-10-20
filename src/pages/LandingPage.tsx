@@ -8,6 +8,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { motion } from "framer-motion"
 import Header from "@/components/layout/Header"
 import Footer from "@/components/layout/Footer"
+import { supabase } from "@/integrations/supabase/client"
+import { useToast } from "@/hooks/use-toast"
 
 const fadeUp = {
   initial: { opacity: 0, y: 24 },
@@ -19,11 +21,86 @@ const fadeUp = {
 export default function LandingPage() {
   const [demoOpen, setDemoOpen] = React.useState(false)
   const [requestOpen, setRequestOpen] = React.useState(false)
+  const [demoLoading, setDemoLoading] = React.useState(false)
+  const [accessLoading, setAccessLoading] = React.useState(false)
+  const { toast } = useToast()
 
   // Force light mode for landing page
   React.useEffect(() => {
     document.documentElement.classList.remove('dark')
   }, [])
+
+  const handleDemoSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    setDemoLoading(true)
+
+    const formData = new FormData(e.currentTarget)
+    const payload = {
+      name: formData.get('name') as string,
+      email: formData.get('email') as string,
+      organization: formData.get('organization') as string,
+      message: formData.get('message') as string,
+    }
+
+    try {
+      const { error } = await supabase.functions.invoke('submit-demo-request', {
+        body: payload,
+      })
+
+      if (error) throw error
+
+      toast({
+        title: "Demo request submitted!",
+        description: "We'll be in touch shortly to schedule your demo.",
+      })
+      setDemoOpen(false)
+      e.currentTarget.reset()
+    } catch (error) {
+      console.error('Error submitting demo request:', error)
+      toast({
+        title: "Something went wrong",
+        description: "Please try again or contact us directly.",
+        variant: "destructive",
+      })
+    } finally {
+      setDemoLoading(false)
+    }
+  }
+
+  const handleAccessSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    setAccessLoading(true)
+
+    const formData = new FormData(e.currentTarget)
+    const payload = {
+      email: formData.get('email') as string,
+      role: formData.get('role') as string,
+    }
+
+    try {
+      const { error } = await supabase.functions.invoke('submit-access-request', {
+        body: payload,
+      })
+
+      if (error) throw error
+
+      toast({
+        title: "You're on the list!",
+        description: "We'll be in touch with access details soon.",
+      })
+      setRequestOpen(false)
+      e.currentTarget.reset()
+    } catch (error) {
+      console.error('Error submitting access request:', error)
+      toast({
+        title: "Something went wrong",
+        description: "Please try again or contact us directly.",
+        variant: "destructive",
+      })
+    } finally {
+      setAccessLoading(false)
+    }
+  }
 
   return (
     <div className="min-h-screen bg-white text-foreground">
@@ -159,21 +236,15 @@ export default function LandingPage() {
           <DialogHeader>
             <DialogTitle>Book a Demo</DialogTitle>
           </DialogHeader>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault()
-              // TODO: wire to backend/edge function or marketing tool
-              setDemoOpen(false)
-              alert("Thanks! We'll follow up shortly.")
-            }}
-            className="space-y-3"
-          >
-            <Input placeholder="Your name" required />
-            <Input type="email" placeholder="Work email" required />
-            <Input placeholder="Organization / School" />
-            <Textarea placeholder="What would you like to focus on?" rows={4} />
+          <form onSubmit={handleDemoSubmit} className="space-y-3">
+            <Input name="name" placeholder="Your name" required />
+            <Input name="email" type="email" placeholder="Work email" required />
+            <Input name="organization" placeholder="Organization / School" />
+            <Textarea name="message" placeholder="What would you like to focus on?" rows={4} />
             <DialogFooter>
-              <Button type="submit">Request Demo</Button>
+              <Button type="submit" disabled={demoLoading}>
+                {demoLoading ? "Submitting..." : "Request Demo"}
+              </Button>
             </DialogFooter>
           </form>
         </DialogContent>
@@ -185,19 +256,13 @@ export default function LandingPage() {
           <DialogHeader>
             <DialogTitle>Request Access</DialogTitle>
           </DialogHeader>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault()
-              // TODO: wire to backend/edge function or waitlist service
-              setRequestOpen(false)
-              alert("You're on the list! We'll be in touch.")
-            }}
-            className="space-y-3"
-          >
-            <Input type="email" placeholder="Work email" required />
-            <Input placeholder="Role (e.g., Director, Teacher, HR)" />
+          <form onSubmit={handleAccessSubmit} className="space-y-3">
+            <Input name="email" type="email" placeholder="Work email" required />
+            <Input name="role" placeholder="Role (e.g., Director, Teacher, HR)" />
             <DialogFooter>
-              <Button type="submit">Join Waitlist</Button>
+              <Button type="submit" disabled={accessLoading}>
+                {accessLoading ? "Submitting..." : "Join Waitlist"}
+              </Button>
             </DialogFooter>
           </form>
         </DialogContent>

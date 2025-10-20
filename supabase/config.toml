@@ -105,3 +105,9 @@ verify_jwt = true
 
 [functions.ai-class-digest]
 verify_jwt = true
+
+[functions.submit-demo-request]
+verify_jwt = false
+
+[functions.submit-access-request]
+verify_jwt = false
