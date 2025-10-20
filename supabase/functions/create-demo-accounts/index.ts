@@ -84,11 +84,12 @@ serve(async (req) => {
         let userId: string;
 
         if (userExists) {
-          console.log(`User ${account.email} already exists, updating...`);
+          console.log(`User ${account.email} already exists, updating password and metadata...`);
           userId = userExists.id;
           
-          // Update user metadata
+          // Update user password and metadata
           await supabase.auth.admin.updateUserById(userId, {
+            password: account.password,
             user_metadata: { ...account.metadata, role: account.role }
           });
         } else {
