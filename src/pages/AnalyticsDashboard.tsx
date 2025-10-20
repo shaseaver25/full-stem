@@ -29,13 +29,13 @@ const AnalyticsDashboard: React.FC = () => {
 
   useEffect(() => {
     const fetchClasses = async () => {
-      if (!user) return;
+      if (!profile?.id) return;
 
       try {
         const { data, error } = await supabase
           .from('classes')
           .select('*')
-          .eq('teacher_id', user.id)
+          .eq('teacher_id', profile.id)
           .order('name');
 
         if (error) throw error;
@@ -53,7 +53,7 @@ const AnalyticsDashboard: React.FC = () => {
     };
 
     fetchClasses();
-  }, [user]);
+  }, [profile?.id]);
 
   const header = (
     <div className="flex items-center gap-4">
