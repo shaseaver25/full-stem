@@ -21,7 +21,7 @@ export default function LandingPage() {
   const [requestOpen, setRequestOpen] = React.useState(false)
 
   return (
-    <div className="min-h-screen bg-white text-slate-900">
+    <div className="min-h-screen bg-background text-foreground">
       <Header 
         onDemoClick={() => setDemoOpen(true)} 
         onRequestClick={() => setRequestOpen(true)}
@@ -38,11 +38,11 @@ export default function LandingPage() {
             <h1 className="text-4xl md:text-6xl font-semibold tracking-tight">
               Empowering Humans to Learn and Work Intelligently with AI.
             </h1>
-            <p className="mt-5 text-lg text-slate-700">
+            <p className="mt-5 text-lg text-muted-foreground">
               TailoredU delivers adaptive AI-powered learning and workforce upskilling for educators, organizations, and teams.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <Button onClick={() => setDemoOpen(true)} className="bg-teal-500 hover:bg-teal-600">Book a Demo</Button>
+              <Button onClick={() => setDemoOpen(true)}>Book a Demo</Button>
               <Button variant="outline" onClick={() => setRequestOpen(true)}>Request Access</Button>
             </div>
           </motion.div>
@@ -59,17 +59,17 @@ export default function LandingPage() {
             <h2 className="text-3xl md:text-4xl font-semibold tracking-tight">
               The Skills Gap Isn't the Problem — It's How We Train.
             </h2>
-            <p className="mt-4 text-slate-700">
+            <p className="mt-4 text-muted-foreground">
               Traditional training and PD struggle to keep pace with AI-driven work. Access is uneven, content is static, and outcomes are unclear.
             </p>
-            <p className="mt-3 text-slate-700">
+            <p className="mt-3 text-muted-foreground">
               TailoredU closes the loop with personalized AI coaching, accessible tools, and adaptive pathways that evolve with every learner and team.
             </p>
           </motion.div>
           <motion.div {...fadeUp} className="mt-10 grid md:grid-cols-2 gap-6">
             <Card>
               <CardHeader><CardTitle>Old Model</CardTitle></CardHeader>
-              <CardContent className="space-y-2 text-slate-700">
+              <CardContent className="space-y-2 text-muted-foreground">
                 <p>One-size-fits-all content</p>
                 <p>Manual tracking and slow feedback</p>
                 <p>Low accessibility and limited languages</p>
@@ -77,7 +77,7 @@ export default function LandingPage() {
             </Card>
             <Card>
               <CardHeader><CardTitle>Tailored Learning</CardTitle></CardHeader>
-              <CardContent className="space-y-2 text-slate-700">
+              <CardContent className="space-y-2 text-muted-foreground">
                 <p>AI-powered personalization by role and goal</p>
                 <p>Goal-based feedback loops and insights</p>
                 <p>Built-in accessibility: TTS, translation, adaptive reading</p>
@@ -104,7 +104,7 @@ export default function LandingPage() {
                 <CardHeader>
                   <CardTitle className="text-lg">{f.title}</CardTitle>
                 </CardHeader>
-                <CardContent className="text-slate-700">{f.desc}</CardContent>
+                <CardContent className="text-muted-foreground">{f.desc}</CardContent>
               </Card>
             ))}
           </motion.div>
@@ -125,7 +125,7 @@ export default function LandingPage() {
             ].map((a) => (
               <Card key={a.title} className="rounded-2xl">
                 <CardHeader><CardTitle className="text-lg">{a.title}</CardTitle></CardHeader>
-                <CardContent className="text-slate-700">{a.desc}</CardContent>
+                <CardContent className="text-muted-foreground">{a.desc}</CardContent>
               </Card>
             ))}
           </motion.div>
@@ -139,7 +139,7 @@ export default function LandingPage() {
             <h3 className="text-2xl md:text-3xl font-semibold tracking-tight">See TailoredU in Action.</h3>
             <p className="mt-2 text-white/90 max-w-2xl">Discover how personalized AI learning can transform your classroom or organization.</p>
             <div className="mt-6 flex flex-wrap gap-3">
-              <Button variant="secondary" onClick={() => setDemoOpen(true)} className="text-slate-900">Schedule a Demo</Button>
+              <Button variant="secondary" onClick={() => setDemoOpen(true)}>Schedule a Demo</Button>
               <Button variant="outline" onClick={() => setRequestOpen(true)} className="bg-white/10 hover:bg-white/20 border-white text-white">Request Access</Button>
             </div>
           </motion.div>
@@ -168,7 +168,7 @@ export default function LandingPage() {
             <Input placeholder="Organization / School" />
             <Textarea placeholder="What would you like to focus on?" rows={4} />
             <DialogFooter>
-              <Button type="submit" className="bg-teal-500 hover:bg-teal-600">Request Demo</Button>
+              <Button type="submit">Request Demo</Button>
             </DialogFooter>
           </form>
         </DialogContent>
@@ -192,7 +192,7 @@ export default function LandingPage() {
             <Input type="email" placeholder="Work email" required />
             <Input placeholder="Role (e.g., Director, Teacher, HR)" />
             <DialogFooter>
-              <Button type="submit" className="bg-teal-500 hover:bg-teal-600">Join Waitlist</Button>
+              <Button type="submit">Join Waitlist</Button>
             </DialogFooter>
           </form>
         </DialogContent>

@@ -8,14 +8,14 @@ export default function Footer() {
           <div className="h-7 w-7 rounded-lg bg-gradient-to-tr from-teal-400 via-sky-400 to-purple-500" />
           <span className="font-medium">TailoredU</span>
         </div>
-        <p className="text-sm text-slate-600 text-center md:text-left">
+        <p className="text-sm text-muted-foreground text-center md:text-left">
           TailoredU — Empowering people to learn, adapt, and grow with AI.
         </p>
-        <div className="text-sm text-slate-600 flex items-center gap-4">
-          <a href="/auth" className="hover:text-slate-800">Login</a>
-          <a href="#" className="hover:text-slate-800">Privacy</a>
-          <a href="#" className="hover:text-slate-800">Terms</a>
-          <a href="#contact" className="hover:text-slate-800">Contact</a>
+        <div className="text-sm text-muted-foreground flex items-center gap-4">
+          <a href="/auth" className="hover:text-foreground transition-colors">Login</a>
+          <a href="#" className="hover:text-foreground transition-colors">Privacy</a>
+          <a href="#" className="hover:text-foreground transition-colors">Terms</a>
+          <a href="#contact" className="hover:text-foreground transition-colors">Contact</a>
         </div>
       </div>
     </footer>
