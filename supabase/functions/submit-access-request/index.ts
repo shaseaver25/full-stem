@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { SmtpClient } from "https://deno.land/x/smtp@v0.7.0/mod.ts";
+import { Resend } from "npm:resend@2.0.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.0";
 
 const corsHeaders = {
@@ -49,61 +49,57 @@ serve(async (req) => {
 
     console.log('Access request saved to database:', dbData.id);
 
-    // Setup SMTP client
-    const smtpHost = 'smtp-mail.outlook.com';
-    const smtpPort = 587;
-    const smtpUsername = Deno.env.get('MAIL_USER');
-    const smtpPassword = Deno.env.get('MAIL_PASSWORD');
-    const mailTo = Deno.env.get('MAIL_TO') || smtpUsername;
-
-    if (!smtpUsername || !smtpPassword) {
-      throw new Error('SMTP credentials not configured');
+    // Initialize Resend
+    const resendApiKey = Deno.env.get('RESEND_API_KEY');
+    if (!resendApiKey) {
+      throw new Error('RESEND_API_KEY not configured');
     }
 
-    const client = new SmtpClient();
-    await client.connectTLS({
-      hostname: smtpHost,
-      port: smtpPort,
-      username: smtpUsername,
-      password: smtpPassword,
-    });
+    const resend = new Resend(resendApiKey);
+    const adminEmail = Deno.env.get('MAIL_TO') || Deno.env.get('MAIL_USER');
+
+    if (!adminEmail) {
+      throw new Error('Admin email not configured');
+    }
 
     // Send notification email to admin
-    await client.send({
-      from: smtpUsername,
-      to: mailTo!,
+    const { error: adminEmailError } = await resend.emails.send({
+      from: 'TailoredU <onboarding@resend.dev>',
+      to: [adminEmail],
       subject: `New Access Request from ${payload.email}`,
-      content: `
-New access request received:
-
-Email: ${payload.email}
-Role: ${payload.role || 'Not provided'}
-
-Submitted at: ${new Date().toLocaleString()}
-      `.trim(),
+      html: `
+        <h2>New Access Request</h2>
+        <p><strong>Email:</strong> ${payload.email}</p>
+        <p><strong>Role:</strong> ${payload.role || 'Not provided'}</p>
+        <p><strong>Submitted at:</strong> ${new Date().toLocaleString()}</p>
+      `,
     });
+
+    if (adminEmailError) {
+      console.error('Failed to send admin email:', adminEmailError);
+    } else {
+      console.log('Admin notification email sent');
+    }
 
     // Send confirmation email to submitter
-    await client.send({
-      from: smtpUsername,
-      to: payload.email,
+    const { error: confirmEmailError } = await resend.emails.send({
+      from: 'TailoredU <onboarding@resend.dev>',
+      to: [payload.email],
       subject: "You're on the list! - TailoredU",
-      content: `
-Hi there,
-
-Thank you for your interest in TailoredU! You're now on our waitlist for early access.
-
-We'll be in touch soon with updates about your access and next steps.
-
-In the meantime, learn more about TailoredU at https://tailoredu.com
-
-Best regards,
-The TailoredU Team
-      `.trim(),
+      html: `
+        <h2>Thank you for your interest!</h2>
+        <p>Thank you for your interest in TailoredU! You're now on our waitlist for early access.</p>
+        <p>We'll be in touch soon with updates about your access and next steps.</p>
+        <p>In the meantime, learn more about TailoredU at <a href="https://tailoredu.com">tailoredu.com</a></p>
+        <p>Best regards,<br>The TailoredU Team</p>
+      `,
     });
 
-    await client.close();
-    console.log('Emails sent successfully');
+    if (confirmEmailError) {
+      console.error('Failed to send confirmation email:', confirmEmailError);
+    } else {
+      console.log('Confirmation email sent');
+    }
 
     return new Response(
       JSON.stringify({ success: true, id: dbData.id }),
