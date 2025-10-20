@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -547,12 +548,17 @@ interface StudentCardProps {
 }
 
 const StudentCard: React.FC<StudentCardProps> = ({ student, onEdit, onDelete }) => {
+  const navigate = useNavigate();
+  
   return (
     <Card>
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div>
-            <CardTitle className="text-base">
+              <CardTitle 
+                className="text-base hover:text-primary cursor-pointer transition-colors"
+                onClick={() => navigate(`/teacher/students/${student.id}`)}
+              >
               {student.first_name} {student.last_name}
             </CardTitle>
             <p className="text-sm text-muted-foreground">{student.grade_level}</p>

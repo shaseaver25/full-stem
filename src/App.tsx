@@ -58,6 +58,7 @@ const DemoStart = React.lazy(() => import("./pages/DemoStart"));
 const DemoShowcase = React.lazy(() => import("./pages/DemoShowcase"));
 const NewStudentDashboard = React.lazy(() => import("./pages/student/StudentDashboard"));
 const TeacherFeedbackDashboard = React.lazy(() => import("./pages/teacher/TeacherFeedbackDashboard"));
+const StudentDetailPage = React.lazy(() => import("./pages/teacher/StudentDetailPage"));
 const LearningGeniusSurveyPage = React.lazy(() => import("./pages/LearningGeniusSurveyPage"));
 const JoinClassPage = React.lazy(() => import("./pages/JoinClassPage"));
 const MyClassesPage = React.lazy(() => import("./pages/classes/MyClassesPage"));
@@ -462,6 +463,16 @@ function AppContent() {
             <ErrorBoundary>
               <ProtectedTeacherRoute requireOnboarding={true}>
                 <BuildClassPage />
+              </ProtectedTeacherRoute>
+            </ErrorBoundary>
+          } 
+        />
+        <Route 
+          path="/teacher/students/:studentId" 
+          element={
+            <ErrorBoundary>
+              <ProtectedTeacherRoute requireOnboarding={true}>
+                <StudentDetailPage />
               </ProtectedTeacherRoute>
             </ErrorBoundary>
           } 
