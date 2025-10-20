@@ -356,7 +356,7 @@ export type Database = {
             foreignKeyName: "assignment_submissions_assignment_id_fkey"
             columns: ["assignment_id"]
             isOneToOne: false
-            referencedRelation: "assignments"
+            referencedRelation: "class_assignments_new"
             referencedColumns: ["id"]
           },
         ]

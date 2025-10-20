@@ -38,9 +38,7 @@ export const useAssignmentGradebook = () => {
           submission_id,
           assignment_submissions!inner(
             user_id,
-            assignments!inner(
-              title
-            )
+            assignment_id
           )
         `)
         .eq('grader_user_id', user.id)
@@ -57,11 +55,20 @@ export const useAssignmentGradebook = () => {
 
       if (profilesError) throw profilesError;
 
+      // Get assignment titles
+      const assignmentIds = data?.map(grade => grade.assignment_submissions.assignment_id) || [];
+      const { data: assignments, error: assignmentsError } = await supabase
+        .from('class_assignments_new')
+        .select('id, title')
+        .in('id', assignmentIds);
+
+      if (assignmentsError) throw assignmentsError;
+
       // Transform data to match our interface
       const transformedGrades: AssignmentGradeRow[] = data?.map(grade => ({
         id: grade.id,
         student_name: profiles?.find(p => p.id === grade.assignment_submissions.user_id)?.full_name || 'Unknown Student',
-        assignment_title: grade.assignment_submissions.assignments.title,
+        assignment_title: assignments?.find(a => a.id === grade.assignment_submissions.assignment_id)?.title || 'Unknown Assignment',
         grade: grade.grade,
         feedback: grade.feedback,
         graded_at: new Date(grade.graded_at).toLocaleString(),

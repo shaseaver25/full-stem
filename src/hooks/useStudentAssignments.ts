@@ -32,19 +32,13 @@ export const useStudentAssignments = () => {
           id,
           assignment_id,
           status,
-          submitted_at,
-          assignments!inner(
-            id,
-            title,
-            instructions,
-            lesson_id
-          )
+          submitted_at
         `)
         .eq('user_id', user.id);
 
       if (error) throw error;
 
-      // Get class assignments to get scheduling info
+      // Get class assignments to get scheduling info and assignment details
       const assignmentIds = submissions?.map(s => s.assignment_id) || [];
       if (assignmentIds.length === 0) return [];
 
@@ -52,6 +46,8 @@ export const useStudentAssignments = () => {
         .from('class_assignments_new')
         .select(`
           id,
+          title,
+          instructions,
           due_at,
           release_at,
           options,
@@ -79,8 +75,8 @@ export const useStudentAssignments = () => {
         return {
           id: submission.id,
           assignment_id: submission.assignment_id,
-          title: submission.assignments.title,
-          instructions: submission.assignments.instructions,
+          title: classAssignment?.title || 'Unknown Assignment',
+          instructions: classAssignment?.instructions || '',
           due_at: classAssignment?.due_at || null,
           release_at: classAssignment?.release_at || null,
           status: submission.status as any,
