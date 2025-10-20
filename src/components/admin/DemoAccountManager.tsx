@@ -15,12 +15,12 @@ interface DemoAccount {
 }
 
 const DEMO_ACCOUNTS: DemoAccount[] = [
-  { email: 'student@test.com', password: 'Test1234!', role: 'Student', dashboard: '/dashboard/student' },
-  { email: 'teacher@test.com', password: 'Test1234!', role: 'Teacher', dashboard: '/teacher/dashboard' },
-  { email: 'parent@test.com', password: 'Test1234!', role: 'Parent', dashboard: '/dashboard/parent' },
-  { email: 'admin@test.com', password: 'Test1234!', role: 'Admin', dashboard: '/admin/dashboard' },
-  { email: 'superadmin@test.com', password: 'Test1234!', role: 'Super Admin', dashboard: '/super-admin' },
-  { email: 'developer@test.com', password: 'Test1234!', role: 'Developer', dashboard: '/dev' }
+  { email: 'student@test.com', password: 'Student123!', role: 'Student', dashboard: '/dashboard/student' },
+  { email: 'teacher@test.com', password: 'Teacher123!', role: 'Teacher', dashboard: '/teacher/dashboard' },
+  { email: 'parent@test.com', password: 'Parent123!', role: 'Parent', dashboard: '/dashboard/parent' },
+  { email: 'admin@test.com', password: 'Admin123!', role: 'Admin', dashboard: '/admin/dashboard' },
+  { email: 'superadmin@test.com', password: 'Admin123!', role: 'Super Admin', dashboard: '/super-admin' },
+  { email: 'developer@test.com', password: 'Dev123!', role: 'Developer', dashboard: '/dev' }
 ];
 
 interface AccountResult {
@@ -209,7 +209,7 @@ export const DemoAccountManager = () => {
             </h4>
             <p className="text-sm text-muted-foreground">
               These are TEST accounts only. Never use these credentials in production. 
-              All accounts use the same password (Test1234!) for testing convenience.
+              Each account has a unique password shown in the table above.
             </p>
           </div>
         </div>

@@ -17,42 +17,42 @@ interface DemoAccount {
 const DEMO_ACCOUNTS: DemoAccount[] = [
   {
     email: 'student@test.com',
-    password: 'Test1234!',
+    password: 'Student123!',
     role: 'student',
     fullName: 'Demo Student',
     metadata: { first_name: 'Demo', last_name: 'Student', grade_level: '10' }
   },
   {
     email: 'teacher@test.com',
-    password: 'Test1234!',
+    password: 'Teacher123!',
     role: 'teacher',
     fullName: 'Demo Teacher',
     metadata: { first_name: 'Demo', last_name: 'Teacher' }
   },
   {
     email: 'parent@test.com',
-    password: 'Test1234!',
+    password: 'Parent123!',
     role: 'parent',
     fullName: 'Demo Parent',
     metadata: { first_name: 'Demo', last_name: 'Parent' }
   },
   {
     email: 'admin@test.com',
-    password: 'Test1234!',
+    password: 'Admin123!',
     role: 'admin',
     fullName: 'Demo Admin',
     metadata: { first_name: 'Demo', last_name: 'Admin' }
   },
   {
     email: 'superadmin@test.com',
-    password: 'Test1234!',
+    password: 'Admin123!',
     role: 'super_admin',
     fullName: 'Demo Super Admin',
     metadata: { first_name: 'Demo', last_name: 'SuperAdmin' }
   },
   {
     email: 'developer@test.com',
-    password: 'Test1234!',
+    password: 'Dev123!',
     role: 'developer',
     fullName: 'Demo Developer',
     metadata: { first_name: 'Demo', last_name: 'Developer' }

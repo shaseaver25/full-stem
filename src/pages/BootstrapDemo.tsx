@@ -78,7 +78,7 @@ export default function BootstrapDemo() {
                   </div>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  All accounts will use the password: <code className="bg-muted px-2 py-1 rounded">Test1234!</code>
+                  Passwords: <code className="bg-muted px-2 py-1 rounded">Student123!</code>, <code className="bg-muted px-2 py-1 rounded">Teacher123!</code>, <code className="bg-muted px-2 py-1 rounded">Parent123!</code>, <code className="bg-muted px-2 py-1 rounded">Admin123!</code>, <code className="bg-muted px-2 py-1 rounded">Dev123!</code>
                 </p>
               </div>
 
