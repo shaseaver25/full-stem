@@ -2,6 +2,7 @@ import React from "react"
 import { Button } from "@/components/ui/button"
 import { useNavigate } from "react-router-dom"
 import { useAuth } from "@/contexts/AuthContext"
+import { redirectToRoleDashboard } from "@/utils/roleRedirect"
 
 interface HeaderProps {
   onDemoClick?: () => void
@@ -14,7 +15,7 @@ export default function Header({ onDemoClick, onRequestClick }: HeaderProps) {
 
   const handleLogin = () => {
     if (user) {
-      navigate("/dashboard")
+      redirectToRoleDashboard(user.id, navigate)
     } else {
       navigate("/auth")
     }
