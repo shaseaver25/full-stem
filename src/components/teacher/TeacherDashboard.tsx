@@ -2,15 +2,13 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Users, BookOpen, ClipboardList } from 'lucide-react';
 import { useTeacherProfileSimplified } from '@/hooks/useTeacherProfileSimplified';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import Header from '@/components/Header';
-import { MetricsOverview } from './dashboard/MetricsOverview';
 import { ClassesList } from './dashboard/ClassesList';
 import { QuickActions } from './dashboard/QuickActions';
-import { AnalyticsPreview } from './dashboard/AnalyticsPreview';
 
 interface DashboardData {
   activeClasses: number;
@@ -180,39 +178,79 @@ const TeacherDashboard = () => {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       <Header />
       <div className="container mx-auto p-6 space-y-6">
-        {/* Welcome Header */}
-        <div>
-          <h1 className="text-3xl font-bold">Welcome back, {profile?.school_name || 'Teacher'}!</h1>
-          <p className="text-muted-foreground mt-1">
-            Here's what's happening with your classes today
-          </p>
-        </div>
-
-        {/* Metrics Overview */}
-        <MetricsOverview
-          totalStudents={dashboardData.totalStudents}
-          assignmentsDueThisWeek={dashboardData.assignmentsDueThisWeek}
-          averageEngagement={dashboardData.averageEngagement}
-        />
-
-        {/* Main Content Grid */}
-        <div className="grid gap-6 lg:grid-cols-3">
-          {/* Classes List - Takes 2 columns */}
-          <div className="lg:col-span-2">
-            <ClassesList classes={dashboardData.classes} loading={loading} />
+        {/* Welcome Header with Inline Metrics */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold">Welcome back, {profile?.school_name || 'Teacher'}!</h1>
+              <p className="text-muted-foreground mt-1">
+                Here's what's happening with your classes today
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <Button onClick={() => navigate('/build-class')}>
+                <BookOpen className="h-4 w-4 mr-2" />
+                Create Class
+              </Button>
+              <Button variant="outline" onClick={() => navigate('/teacher/analytics')}>
+                View Analytics
+              </Button>
+            </div>
           </div>
 
-          {/* Quick Actions - Takes 1 column */}
-          <div>
-            <QuickActions />
+          {/* Compact Metrics Bar */}
+          <div className="flex gap-4 text-sm">
+            <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg shadow-sm">
+              <Users className="h-4 w-4 text-blue-600" />
+              <span className="font-semibold">{dashboardData.totalStudents}</span>
+              <span className="text-muted-foreground">students</span>
+            </div>
+            <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg shadow-sm">
+              <ClipboardList className="h-4 w-4 text-orange-600" />
+              <span className="font-semibold">{dashboardData.assignmentsDueThisWeek}</span>
+              <span className="text-muted-foreground">due this week</span>
+            </div>
+            <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg shadow-sm">
+              <BookOpen className="h-4 w-4 text-green-600" />
+              <span className="font-semibold">{dashboardData.averageEngagement}%</span>
+              <span className="text-muted-foreground">avg. engagement</span>
+            </div>
           </div>
         </div>
 
-        {/* Analytics Preview */}
-        <AnalyticsPreview
-          completionTrend={dashboardData.completionTrend}
-          classAverages={dashboardData.classAverages}
-        />
+        {/* Main Classes Section */}
+        <ClassesList classes={dashboardData.classes} loading={loading} />
+
+        {/* Quick Actions & Analytics Row */}
+        <div className="grid gap-6 lg:grid-cols-2">
+          <QuickActions />
+          <Card>
+            <CardHeader>
+              <CardTitle>Recent Activity</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {dashboardData.completionTrend.slice(0, 3).map((item, i) => (
+                  <div key={i} className="flex items-center justify-between py-2 border-b last:border-0">
+                    <span className="text-sm text-muted-foreground">{item.date}</span>
+                    <div className="flex items-center gap-2">
+                      <div className="h-2 w-24 bg-gray-200 rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-green-500 rounded-full" 
+                          style={{ width: `${item.completion}%` }}
+                        />
+                      </div>
+                      <span className="text-sm font-medium">{item.completion}%</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <Button variant="link" className="w-full mt-4" onClick={() => navigate('/teacher/analytics')}>
+                View Full Analytics →
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );
