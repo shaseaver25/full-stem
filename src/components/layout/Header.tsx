@@ -10,12 +10,13 @@ interface HeaderProps {
 }
 
 export default function Header({ onDemoClick, onRequestClick }: HeaderProps) {
-  const { user } = useAuth()
+  const { user, signOut } = useAuth()
   const navigate = useNavigate()
 
-  const handleLogin = () => {
+  const handleAuthAction = async () => {
     if (user) {
-      redirectToRoleDashboard(user.id, navigate)
+      await signOut()
+      navigate("/")
     } else {
       navigate("/auth")
     }
@@ -41,13 +42,13 @@ export default function Header({ onDemoClick, onRequestClick }: HeaderProps) {
               <Button onClick={onDemoClick} className="bg-teal-500 hover:bg-teal-600">Book a Demo</Button>
             </>
           )}
-          <Button variant="outline" onClick={handleLogin}>
-            Login
+          <Button variant="outline" onClick={handleAuthAction}>
+            {user ? "Logout" : "Login"}
           </Button>
         </div>
         <div className="md:hidden">
-          <Button variant="outline" onClick={handleLogin}>
-            Login
+          <Button variant="outline" onClick={handleAuthAction}>
+            {user ? "Logout" : "Login"}
           </Button>
         </div>
       </nav>
