@@ -75,6 +75,32 @@ const TeacherDashboard = () => {
         0
       );
 
+      // Calculate assignments due this week
+      const today = new Date();
+      const startOfWeek = new Date(today);
+      startOfWeek.setDate(today.getDate() - today.getDay()); // Sunday
+      startOfWeek.setHours(0, 0, 0, 0);
+      
+      const endOfWeek = new Date(startOfWeek);
+      endOfWeek.setDate(startOfWeek.getDate() + 7);
+      endOfWeek.setHours(23, 59, 59, 999);
+
+      const classIds = classes?.map(c => c.id) || [];
+      let assignmentsDueCount = 0;
+
+      if (classIds.length > 0) {
+        const { count, error: assignmentsError } = await supabase
+          .from('class_assignments_new')
+          .select('*', { count: 'exact', head: true })
+          .in('class_id', classIds)
+          .gte('due_at', startOfWeek.toISOString())
+          .lte('due_at', endOfWeek.toISOString());
+
+        if (!assignmentsError) {
+          assignmentsDueCount = count || 0;
+        }
+      }
+
       // Mock data for other metrics (replace with real queries)
       const completionTrend = [
         { date: 'Mon', completion: 75 },
@@ -92,7 +118,7 @@ const TeacherDashboard = () => {
       setDashboardData({
         activeClasses: classes?.length || 0,
         totalStudents,
-        assignmentsDueThisWeek: 0, // TODO: Calculate from assignments
+        assignmentsDueThisWeek: assignmentsDueCount,
         averageEngagement: 82, // TODO: Calculate from activity
         unreadMessages: 0, // TODO: Calculate from messages
         classes: classesWithCounts,
