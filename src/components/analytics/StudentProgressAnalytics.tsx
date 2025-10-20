@@ -71,22 +71,81 @@ const StudentProgressAnalytics: React.FC<{ classId: string }> = ({ classId }) =>
     try {
       setLoading(true);
       
-      // Fetch student progress data
-      const { data: progressData, error: progressError } = await supabase
-        .from('student_progress')
+      // Fetch enrolled students for this class
+      const { data: enrolledStudents, error: enrollmentError } = await supabase
+        .from('class_students')
         .select(`
-          *,
-          students!inner(id, first_name, last_name, class_id)
+          student_id,
+          students!inner(
+            id,
+            first_name,
+            last_name,
+            user_id
+          )
         `)
-        .eq('students.class_id', classId);
+        .eq('class_id', classId)
+        .eq('status', 'active');
 
-      if (progressError) throw progressError;
+      if (enrollmentError) throw enrollmentError;
 
-      // Fetch grades data - table removed, using empty array
-      const gradesData: any[] = [];
+      if (!enrolledStudents || enrolledStudents.length === 0) {
+        setAnalytics([]);
+        setClassAnalytics({
+          class_id: classId,
+          class_name: 'Current Class',
+          total_students: 0,
+          average_progress: 0,
+          completion_rate: 0,
+          engagement_metrics: { high: 0, medium: 0, low: 0 }
+        });
+        setLoading(false);
+        return;
+      }
+
+      // Get all assignments for this class
+      const { data: assignments, error: assignmentsError } = await supabase
+        .from('class_assignments_new')
+        .select('id')
+        .eq('class_id', classId);
+
+      if (assignmentsError) throw assignmentsError;
+
+      const assignmentIds = assignments?.map(a => a.id) || [];
+      
+      // Fetch submission data for all students
+      let submissionsData: any[] = [];
+      if (assignmentIds.length > 0) {
+        const { data: subs, error: subsError } = await supabase
+          .from('assignment_submissions')
+          .select('*')
+          .in('assignment_id', assignmentIds);
+
+        if (!subsError) {
+          submissionsData = subs || [];
+        }
+      }
+
+      // Fetch grades data
+      let gradesData: any[] = [];
+      const submissionIds = submissionsData.map(s => s.id);
+      if (submissionIds.length > 0) {
+        const { data: grades, error: gradesError } = await supabase
+          .from('assignment_grades')
+          .select('*')
+          .in('submission_id', submissionIds);
+
+        if (!gradesError) {
+          gradesData = grades || [];
+        }
+      }
 
       // Process analytics data
-      const studentAnalytics = processStudentAnalytics(progressData || [], gradesData || []);
+      const studentAnalytics = processStudentAnalytics(
+        enrolledStudents, 
+        submissionsData, 
+        gradesData,
+        assignmentIds.length
+      );
       setAnalytics(studentAnalytics);
 
       // Calculate class-level analytics
@@ -105,54 +164,62 @@ const StudentProgressAnalytics: React.FC<{ classId: string }> = ({ classId }) =>
     }
   };
 
-  const processStudentAnalytics = (progressData: any[], gradesData: any[]): StudentAnalytics[] => {
-    const studentMap = new Map();
-
-    progressData.forEach(progress => {
-      const studentId = progress.student_id;
-      const studentName = `${progress.students.first_name} ${progress.students.last_name}`;
+  const processStudentAnalytics = (
+    enrolledStudents: any[], 
+    submissionsData: any[], 
+    gradesData: any[],
+    totalAssignments: number
+  ): StudentAnalytics[] => {
+    return enrolledStudents.map(enrollment => {
+      const student = enrollment.students;
+      const studentId = student.id;
+      const studentName = `${student.first_name} ${student.last_name}`;
       
-      if (!studentMap.has(studentId)) {
-        studentMap.set(studentId, {
-          student_id: studentId,
-          student_name: studentName,
-          total_lessons: 0,
-          completed_lessons: 0,
-          time_spent: 0,
-          last_activity: progress.updated_at,
-          grades: []
-        });
-      }
+      // Get submissions for this student
+      const studentSubmissions = submissionsData.filter(s => s.user_id === student.user_id);
+      const completedSubmissions = studentSubmissions.filter(s => 
+        s.status === 'submitted' || s.status === 'graded'
+      );
 
-      const student = studentMap.get(studentId);
-      student.total_lessons += 1;
-      if (progress.status === 'completed') {
-        student.completed_lessons += 1;
-      }
-      student.time_spent += progress.time_spent || 0;
-      
-      if (new Date(progress.updated_at) > new Date(student.last_activity)) {
-        student.last_activity = progress.updated_at;
-      }
+      // Get grades for this student's submissions
+      const studentGrades = gradesData.filter(g => 
+        studentSubmissions.some(s => s.id === g.submission_id)
+      );
+
+      const avgGrade = studentGrades.length > 0
+        ? Math.round(studentGrades.reduce((sum, g) => sum + (g.grade || 0), 0) / studentGrades.length)
+        : 0;
+
+      const progressPercentage = totalAssignments > 0
+        ? Math.round((completedSubmissions.length / totalAssignments) * 100)
+        : 0;
+
+      // Calculate last activity
+      const lastActivity = studentSubmissions.length > 0
+        ? studentSubmissions.reduce((latest, s) => 
+            new Date(s.updated_at) > new Date(latest) ? s.updated_at : latest
+          , studentSubmissions[0].updated_at)
+        : new Date().toISOString();
+
+      const engagementScore = calculateEngagementScore({
+        progress_percentage: progressPercentage,
+        grades: studentGrades.map(g => g.grade || 0),
+        time_spent: 0, // We don't track time yet
+        last_activity: lastActivity
+      });
+
+      return {
+        student_id: studentId,
+        student_name: studentName,
+        total_lessons: totalAssignments,
+        completed_lessons: completedSubmissions.length,
+        progress_percentage: progressPercentage,
+        average_grade: avgGrade,
+        time_spent: 0, // Not tracked yet
+        last_activity: lastActivity,
+        engagement_score: engagementScore
+      };
     });
-
-    // Add grades data
-    gradesData.forEach(grade => {
-      const student = studentMap.get(grade.student_id);
-      if (student) {
-        student.grades.push(grade.percentage || 0);
-      }
-    });
-
-    // Calculate final metrics
-    return Array.from(studentMap.values()).map(student => ({
-      ...student,
-      progress_percentage: student.total_lessons > 0 ? 
-        Math.round((student.completed_lessons / student.total_lessons) * 100) : 0,
-      average_grade: student.grades.length > 0 ? 
-        Math.round(student.grades.reduce((a: number, b: number) => a + b, 0) / student.grades.length) : 0,
-      engagement_score: calculateEngagementScore(student)
-    }));
   };
 
   const calculateEngagementScore = (student: any): number => {
