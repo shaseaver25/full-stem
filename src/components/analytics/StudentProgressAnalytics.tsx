@@ -74,15 +74,7 @@ const StudentProgressAnalytics: React.FC<{ classId: string }> = ({ classId }) =>
       // Fetch enrolled students for this class
       const { data: enrolledStudents, error: enrollmentError } = await supabase
         .from('class_students')
-        .select(`
-          student_id,
-          students!inner(
-            id,
-            first_name,
-            last_name,
-            user_id
-          )
-        `)
+        .select('student_id')
         .eq('class_id', classId)
         .eq('status', 'active');
 
@@ -102,6 +94,15 @@ const StudentProgressAnalytics: React.FC<{ classId: string }> = ({ classId }) =>
         return;
       }
 
+      // Get student details
+      const studentIds = enrolledStudents.map(e => e.student_id);
+      const { data: studentsData, error: studentsError } = await supabase
+        .from('students')
+        .select('id, first_name, last_name, user_id')
+        .in('id', studentIds);
+
+      if (studentsError) throw studentsError;
+
       // Get all assignments for this class
       const { data: assignments, error: assignmentsError } = await supabase
         .from('class_assignments_new')
@@ -114,14 +115,18 @@ const StudentProgressAnalytics: React.FC<{ classId: string }> = ({ classId }) =>
       
       // Fetch submission data for all students
       let submissionsData: any[] = [];
-      if (assignmentIds.length > 0) {
-        const { data: subs, error: subsError } = await supabase
-          .from('assignment_submissions')
-          .select('*')
-          .in('assignment_id', assignmentIds);
+      if (assignmentIds.length > 0 && studentsData) {
+        const userIds = studentsData.map(s => s.user_id).filter(Boolean);
+        if (userIds.length > 0) {
+          const { data: subs, error: subsError } = await supabase
+            .from('assignment_submissions')
+            .select('*')
+            .in('assignment_id', assignmentIds)
+            .in('user_id', userIds);
 
-        if (!subsError) {
-          submissionsData = subs || [];
+          if (!subsError) {
+            submissionsData = subs || [];
+          }
         }
       }
 
@@ -141,8 +146,8 @@ const StudentProgressAnalytics: React.FC<{ classId: string }> = ({ classId }) =>
 
       // Process analytics data
       const studentAnalytics = processStudentAnalytics(
-        enrolledStudents, 
-        submissionsData, 
+        studentsData || [],
+        submissionsData,
         gradesData,
         assignmentIds.length
       );
@@ -165,13 +170,12 @@ const StudentProgressAnalytics: React.FC<{ classId: string }> = ({ classId }) =>
   };
 
   const processStudentAnalytics = (
-    enrolledStudents: any[], 
+    studentsData: any[],
     submissionsData: any[], 
     gradesData: any[],
     totalAssignments: number
   ): StudentAnalytics[] => {
-    return enrolledStudents.map(enrollment => {
-      const student = enrollment.students;
+    return studentsData.map(student => {
       const studentId = student.id;
       const studentName = `${student.first_name} ${student.last_name}`;
       
