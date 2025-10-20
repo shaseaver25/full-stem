@@ -8,8 +8,10 @@ import { ArrowLeft, BookOpen, Users, ClipboardList, MessageSquare, Calendar, Clo
 import { useClass, useClassAssignments } from '@/hooks/useClassManagement';
 import { RosterManagement } from '@/components/teacher/RosterManagement';
 import { AssignmentWizard } from '@/components/teacher/AssignmentWizard';
-import { format } from 'date-fns';
+import { format, startOfToday } from 'date-fns';
 import Header from '@/components/Header';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function ClassDetailPage() {
   const { classId, id } = useParams<{ classId?: string; id?: string }>();
@@ -41,6 +43,40 @@ export default function ClassDetailPage() {
 
   const { data: classData, isLoading: classLoading } = useClass(resolvedClassId);
   const { data: assignments = [], isLoading: assignmentsLoading } = useClassAssignments(resolvedClassId);
+
+  // Fetch student count
+  const { data: studentCount = 0 } = useQuery({
+    queryKey: ['class-student-count', resolvedClassId],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from('class_students')
+        .select('*', { count: 'exact', head: true })
+        .eq('class_id', resolvedClassId)
+        .eq('status', 'active');
+      
+      if (error) throw error;
+      return count || 0;
+    },
+    enabled: !!resolvedClassId,
+  });
+
+  // Fetch recent submissions count (today)
+  const { data: recentSubmissions = 0 } = useQuery({
+    queryKey: ['recent-submissions', resolvedClassId],
+    queryFn: async () => {
+      const today = startOfToday().toISOString();
+      
+      const { count, error } = await supabase
+        .from('assignment_submissions')
+        .select('*, assignment:class_assignments_new!inner(class_id)', { count: 'exact', head: true })
+        .eq('assignment.class_id', resolvedClassId)
+        .gte('submitted_at', today);
+      
+      if (error) throw error;
+      return count || 0;
+    },
+    enabled: !!resolvedClassId,
+  });
 
   if (classLoading) {
     return <div>Loading...</div>;
@@ -148,7 +184,7 @@ export default function ClassDetailPage() {
                 <Users className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">0</div>
+                <div className="text-2xl font-bold">{studentCount}</div>
                 <p className="text-xs text-muted-foreground">
                   {classData.max_students ? `of ${classData.max_students} max` : 'No limit set'}
                 </p>
@@ -176,7 +212,7 @@ export default function ClassDetailPage() {
                 <Calendar className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">0</div>
+                <div className="text-2xl font-bold">{recentSubmissions}</div>
                 <p className="text-xs text-muted-foreground">submissions today</p>
               </CardContent>
             </Card>
