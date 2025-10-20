@@ -33,9 +33,10 @@ export const ClassOverviewHeader = ({ classId }: ClassOverviewHeaderProps) => {
     queryKey: ['studentCount', classId],
     queryFn: async () => {
       const { count, error } = await supabase
-        .from('students')
+        .from('class_students')
         .select('*', { count: 'exact', head: true })
-        .eq('class_id', classId);
+        .eq('class_id', classId)
+        .eq('status', 'active');
 
       if (error) throw error;
       return count || 0;
