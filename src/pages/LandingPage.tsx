@@ -6,6 +6,8 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { motion } from "framer-motion"
+import Header from "@/components/layout/Header"
+import Footer from "@/components/layout/Footer"
 
 const fadeUp = {
   initial: { opacity: 0, y: 24 },
@@ -20,28 +22,10 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-white text-slate-900">
-      {/* Top Nav */}
-      <header className="sticky top-0 z-50 backdrop-blur supports-[backdrop-filter]:bg-white/60 bg-white/80 border-b">
-        <nav className="mx-auto max-w-7xl px-4 py-3 flex items-center justify-between">
-          <a href="#" className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-xl bg-gradient-to-tr from-teal-400 via-sky-400 to-purple-500" />
-            <span className="font-semibold tracking-tight">TailoredU</span>
-          </a>
-          <div className="hidden md:flex items-center gap-6 text-sm">
-            <a href="#problem" className="hover:text-slate-700">Why TailoredU</a>
-            <a href="#platform" className="hover:text-slate-700">Platform</a>
-            <a href="#serve" className="hover:text-slate-700">Who We Serve</a>
-            <a href="#contact" className="hover:text-slate-700">Contact</a>
-          </div>
-          <div className="hidden md:flex items-center gap-3">
-            <Button variant="outline" onClick={() => setRequestOpen(true)}>Request Access</Button>
-            <Button onClick={() => setDemoOpen(true)} className="bg-teal-500 hover:bg-teal-600">Book a Demo</Button>
-          </div>
-          <div className="md:hidden">
-            <Button variant="outline" onClick={() => setDemoOpen(true)}>Demo</Button>
-          </div>
-        </nav>
-      </header>
+      <Header 
+        onDemoClick={() => setDemoOpen(true)} 
+        onRequestClick={() => setRequestOpen(true)}
+      />
 
       {/* Hero */}
       <section id="hero" className="relative overflow-hidden">
@@ -162,23 +146,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t">
-        <div className="mx-auto max-w-7xl px-4 py-10 flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <div className="h-7 w-7 rounded-lg bg-gradient-to-tr from-teal-400 via-sky-400 to-purple-500" />
-            <span className="font-medium">TailoredU</span>
-          </div>
-          <p className="text-sm text-slate-600 text-center md:text-left">
-            TailoredU — Empowering people to learn, adapt, and grow with AI.
-          </p>
-          <div className="text-sm text-slate-600 flex items-center gap-4">
-            <a href="#" className="hover:text-slate-800">Privacy</a>
-            <a href="#" className="hover:text-slate-800">Terms</a>
-            <a href="#" className="hover:text-slate-800">Contact</a>
-          </div>
-        </div>
-      </footer>
+      <Footer />
 
       {/* Demo Modal */}
       <Dialog open={demoOpen} onOpenChange={setDemoOpen}>
