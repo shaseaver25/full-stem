@@ -38,8 +38,8 @@ export default function Header({ onDemoClick, onRequestClick }: HeaderProps) {
         <div className="hidden md:flex items-center gap-3">
           {!user && (
             <>
-              <Button variant="outline" onClick={onRequestClick} className="border-gray-300 text-gray-900 hover:bg-gray-50">Request Access</Button>
-              <Button onClick={onDemoClick} className="bg-teal-600 hover:bg-teal-700 text-white">Book a Demo</Button>
+              <button onClick={onRequestClick} className="h-10 px-4 py-2 bg-white text-gray-900 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors font-medium text-sm">Request Access</button>
+              <button onClick={onDemoClick} className="h-10 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-md transition-colors font-medium text-sm">Book a Demo</button>
             </>
           )}
           <button 
