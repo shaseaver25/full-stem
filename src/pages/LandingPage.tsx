@@ -20,15 +20,20 @@ export default function LandingPage() {
   const [demoOpen, setDemoOpen] = React.useState(false)
   const [requestOpen, setRequestOpen] = React.useState(false)
 
+  // Force light mode for landing page
+  React.useEffect(() => {
+    document.documentElement.classList.remove('dark')
+  }, [])
+
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen bg-white text-foreground">
       <Header 
         onDemoClick={() => setDemoOpen(true)} 
         onRequestClick={() => setRequestOpen(true)}
       />
 
       {/* Hero */}
-      <section id="hero" className="relative overflow-hidden">
+      <section id="hero" className="relative overflow-hidden bg-background">
         <div aria-hidden className="pointer-events-none absolute inset-0">
           <div className="absolute -top-24 -left-24 h-80 w-80 rounded-full blur-3xl bg-teal-300/30" />
           <div className="absolute top-24 right-0 h-96 w-96 rounded-full blur-3xl bg-purple-300/30" />
@@ -53,7 +58,7 @@ export default function LandingPage() {
       </section>
 
       {/* Problem → Solution */}
-      <section id="problem" className="border-t">
+      <section id="problem" className="border-t bg-background">
         <div className="mx-auto max-w-7xl px-4 py-16 md:py-20">
           <motion.div {...fadeUp} className="max-w-3xl">
             <h2 className="text-3xl md:text-4xl font-semibold tracking-tight">
@@ -67,7 +72,7 @@ export default function LandingPage() {
             </p>
           </motion.div>
           <motion.div {...fadeUp} className="mt-10 grid md:grid-cols-2 gap-6">
-            <Card>
+            <Card className="bg-card">
               <CardHeader><CardTitle>Old Model</CardTitle></CardHeader>
               <CardContent className="space-y-2 text-muted-foreground">
                 <p>One-size-fits-all content</p>
@@ -75,7 +80,7 @@ export default function LandingPage() {
                 <p>Low accessibility and limited languages</p>
               </CardContent>
             </Card>
-            <Card>
+            <Card className="bg-card">
               <CardHeader><CardTitle>Tailored Learning</CardTitle></CardHeader>
               <CardContent className="space-y-2 text-muted-foreground">
                 <p>AI-powered personalization by role and goal</p>
@@ -88,7 +93,7 @@ export default function LandingPage() {
       </section>
 
       {/* Platform Overview */}
-      <section id="platform" className="border-t">
+      <section id="platform" className="border-t bg-background">
         <div className="mx-auto max-w-7xl px-4 py-16 md:py-20">
           <motion.h2 {...fadeUp} className="text-3xl md:text-4xl font-semibold tracking-tight">
             A Smarter Learning Experience, Built for Everyone.
@@ -100,7 +105,7 @@ export default function LandingPage() {
               { title: "Educator AI PD Toolkit", desc: "Train teachers and trainers to teach with AI confidently." },
               { title: "Accessible by Design", desc: "Multi-language, text-to-speech, and adaptive reading." },
             ].map((f) => (
-              <Card key={f.title} className="rounded-2xl">
+              <Card key={f.title} className="rounded-2xl bg-card">
                 <CardHeader>
                   <CardTitle className="text-lg">{f.title}</CardTitle>
                 </CardHeader>
@@ -112,7 +117,7 @@ export default function LandingPage() {
       </section>
 
       {/* Who We Serve */}
-      <section id="serve" className="border-t">
+      <section id="serve" className="border-t bg-background">
         <div className="mx-auto max-w-7xl px-4 py-16 md:py-20">
           <motion.h2 {...fadeUp} className="text-3xl md:text-4xl font-semibold tracking-tight">
             Built for Learning. Designed for Scale.
@@ -123,7 +128,7 @@ export default function LandingPage() {
               { title: "Workforce Programs", desc: "Upskill and reskill employees with adaptive AI training." },
               { title: "Training Providers", desc: "Deliver tailored programs with smart insights at scale." },
             ].map((a) => (
-              <Card key={a.title} className="rounded-2xl">
+              <Card key={a.title} className="rounded-2xl bg-card">
                 <CardHeader><CardTitle className="text-lg">{a.title}</CardTitle></CardHeader>
                 <CardContent className="text-muted-foreground">{a.desc}</CardContent>
               </Card>
@@ -133,7 +138,7 @@ export default function LandingPage() {
       </section>
 
       {/* CTA Block */}
-      <section id="contact" className="border-t">
+      <section id="contact" className="border-t bg-background">
         <div className="mx-auto max-w-7xl px-4 py-16 md:py-20">
           <motion.div {...fadeUp} className="rounded-3xl bg-gradient-to-tr from-teal-400 via-sky-400 to-purple-500 p-8 md:p-12 text-white">
             <h3 className="text-2xl md:text-3xl font-semibold tracking-tight">See TailoredU in Action.</h3>
