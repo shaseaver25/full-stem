@@ -173,7 +173,7 @@ export default function LandingPage() {
       <section id="platform" className="border-t bg-white">
         <div className="mx-auto max-w-7xl px-4 py-16 md:py-20">
           <motion.h2 {...fadeUp} className="text-3xl md:text-4xl font-semibold tracking-tight text-gray-900">
-            A Smarter Learning Experience, Built for Everyone.
+            A Smarter Learning Experience. Custom Built for You.
           </motion.h2>
           <motion.div {...fadeUp} className="mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
             {[
