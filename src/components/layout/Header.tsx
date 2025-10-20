@@ -23,31 +23,31 @@ export default function Header({ onDemoClick, onRequestClick }: HeaderProps) {
   }
 
   return (
-    <header className="sticky top-0 z-50 backdrop-blur supports-[backdrop-filter]:bg-background/60 bg-background/80 border-b">
+    <header className="sticky top-0 z-50 backdrop-blur bg-white/80 border-b border-gray-200">
       <nav className="mx-auto max-w-7xl px-4 py-3 flex items-center justify-between">
         <a href="/" className="flex items-center gap-2">
           <div className="h-8 w-8 rounded-xl bg-gradient-to-tr from-teal-400 via-sky-400 to-purple-500" />
-          <span className="font-semibold tracking-tight">TailoredU</span>
+          <span className="font-semibold tracking-tight text-gray-900">TailoredU</span>
         </a>
-        <div className="hidden md:flex items-center gap-6 text-sm">
-          <a href="#problem" className="hover:text-primary transition-colors">Why TailoredU</a>
-          <a href="#platform" className="hover:text-primary transition-colors">Platform</a>
-          <a href="#serve" className="hover:text-primary transition-colors">Who We Serve</a>
-          <a href="#contact" className="hover:text-primary transition-colors">Contact</a>
+        <div className="hidden md:flex items-center gap-6 text-sm text-gray-600">
+          <a href="#problem" className="hover:text-teal-600 transition-colors">Why TailoredU</a>
+          <a href="#platform" className="hover:text-teal-600 transition-colors">Platform</a>
+          <a href="#serve" className="hover:text-teal-600 transition-colors">Who We Serve</a>
+          <a href="#contact" className="hover:text-teal-600 transition-colors">Contact</a>
         </div>
         <div className="hidden md:flex items-center gap-3">
           {!user && (
             <>
-              <Button variant="outline" onClick={onRequestClick}>Request Access</Button>
-              <Button onClick={onDemoClick}>Book a Demo</Button>
+              <Button variant="outline" onClick={onRequestClick} className="border-gray-300 text-gray-900 hover:bg-gray-50">Request Access</Button>
+              <Button onClick={onDemoClick} className="bg-teal-600 hover:bg-teal-700 text-white">Book a Demo</Button>
             </>
           )}
-          <Button variant="outline" onClick={handleAuthAction}>
+          <Button variant="outline" onClick={handleAuthAction} className="border-gray-300 text-gray-900 hover:bg-gray-50">
             {user ? "Logout" : "Login"}
           </Button>
         </div>
         <div className="md:hidden">
-          <Button variant="outline" onClick={handleAuthAction}>
+          <Button variant="outline" onClick={handleAuthAction} className="border-gray-300 text-gray-900 hover:bg-gray-50">
             {user ? "Logout" : "Login"}
           </Button>
         </div>

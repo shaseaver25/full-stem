@@ -124,8 +124,8 @@ export default function LandingPage() {
               TailoredU delivers adaptive AI-powered learning and workforce upskilling for educators, organizations, and teams.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <Button onClick={() => setDemoOpen(true)}>Book a Demo</Button>
-              <Button variant="outline" onClick={() => setRequestOpen(true)}>Request Access</Button>
+              <Button onClick={() => setDemoOpen(true)} className="bg-teal-600 hover:bg-teal-700 text-white">Book a Demo</Button>
+              <Button variant="outline" onClick={() => setRequestOpen(true)} className="border-gray-300 text-gray-900 hover:bg-gray-50">Request Access</Button>
             </div>
           </motion.div>
           <motion.div {...fadeUp} className="mt-12">
@@ -221,7 +221,7 @@ export default function LandingPage() {
             <h3 className="text-2xl md:text-3xl font-semibold tracking-tight">See TailoredU in Action.</h3>
             <p className="mt-2 text-white/90 max-w-2xl">Discover how personalized AI learning can transform your classroom or organization.</p>
             <div className="mt-6 flex flex-wrap gap-3">
-              <Button variant="secondary" onClick={() => setDemoOpen(true)}>Schedule a Demo</Button>
+              <Button onClick={() => setDemoOpen(true)} className="bg-white text-teal-600 hover:bg-gray-50">Schedule a Demo</Button>
               <Button variant="outline" onClick={() => setRequestOpen(true)} className="bg-white/10 hover:bg-white/20 border-white text-white">Request Access</Button>
             </div>
           </motion.div>
@@ -242,7 +242,7 @@ export default function LandingPage() {
             <Input name="organization" placeholder="Organization / School" />
             <Textarea name="message" placeholder="What would you like to focus on?" rows={4} />
             <DialogFooter>
-              <Button type="submit" disabled={demoLoading}>
+              <Button type="submit" disabled={demoLoading} className="bg-teal-600 hover:bg-teal-700 text-white">
                 {demoLoading ? "Submitting..." : "Request Demo"}
               </Button>
             </DialogFooter>
@@ -260,7 +260,7 @@ export default function LandingPage() {
             <Input name="email" type="email" placeholder="Work email" required />
             <Input name="role" placeholder="Role (e.g., Director, Teacher, HR)" />
             <DialogFooter>
-              <Button type="submit" disabled={accessLoading}>
+              <Button type="submit" disabled={accessLoading} className="bg-teal-600 hover:bg-teal-700 text-white">
                 {accessLoading ? "Submitting..." : "Join Waitlist"}
               </Button>
             </DialogFooter>
