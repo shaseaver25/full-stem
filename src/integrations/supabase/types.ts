@@ -886,6 +886,62 @@ export type Database = {
           },
         ]
       }
+      class_weekly_digests: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          class_id: string
+          created_at: string | null
+          id: string
+          payload_json: Json
+          posted_to_feed: boolean | null
+          sent_to_parents: boolean | null
+          teacher_approved: boolean | null
+          updated_at: string | null
+          variant: string
+          week_end: string
+          week_start: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          class_id: string
+          created_at?: string | null
+          id?: string
+          payload_json?: Json
+          posted_to_feed?: boolean | null
+          sent_to_parents?: boolean | null
+          teacher_approved?: boolean | null
+          updated_at?: string | null
+          variant: string
+          week_end: string
+          week_start: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          class_id?: string
+          created_at?: string | null
+          id?: string
+          payload_json?: Json
+          posted_to_feed?: boolean | null
+          sent_to_parents?: boolean | null
+          teacher_approved?: boolean | null
+          updated_at?: string | null
+          variant?: string
+          week_end?: string
+          week_start?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "class_weekly_digests_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       classes: {
         Row: {
           class_code: string | null

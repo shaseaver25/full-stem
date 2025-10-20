@@ -102,3 +102,6 @@ verify_jwt = true
 
 [functions.ai-weekly-digest]
 verify_jwt = true
+
+[functions.ai-class-digest]
+verify_jwt = true
