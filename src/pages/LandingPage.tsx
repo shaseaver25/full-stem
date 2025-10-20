@@ -103,24 +103,24 @@ export default function LandingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white text-foreground">
+    <div className="min-h-screen bg-white text-gray-900">
       <Header 
         onDemoClick={() => setDemoOpen(true)} 
         onRequestClick={() => setRequestOpen(true)}
       />
 
       {/* Hero */}
-      <section id="hero" className="relative overflow-hidden bg-background">
+      <section id="hero" className="relative overflow-hidden bg-white">
         <div aria-hidden className="pointer-events-none absolute inset-0">
           <div className="absolute -top-24 -left-24 h-80 w-80 rounded-full blur-3xl bg-teal-300/30" />
           <div className="absolute top-24 right-0 h-96 w-96 rounded-full blur-3xl bg-purple-300/30" />
         </div>
         <div className="mx-auto max-w-7xl px-4 py-20 md:py-28">
           <motion.div {...fadeUp} className="max-w-3xl">
-            <h1 className="text-4xl md:text-6xl font-semibold tracking-tight">
+            <h1 className="text-4xl md:text-6xl font-semibold tracking-tight text-gray-900">
               Empowering Humans to Learn and Work Intelligently with AI.
             </h1>
-            <p className="mt-5 text-lg text-muted-foreground">
+            <p className="mt-5 text-lg text-gray-600">
               TailoredU delivers adaptive AI-powered learning and workforce upskilling for educators, organizations, and teams.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
@@ -135,31 +135,31 @@ export default function LandingPage() {
       </section>
 
       {/* Problem → Solution */}
-      <section id="problem" className="border-t bg-background">
+      <section id="problem" className="border-t bg-gray-50">
         <div className="mx-auto max-w-7xl px-4 py-16 md:py-20">
           <motion.div {...fadeUp} className="max-w-3xl">
-            <h2 className="text-3xl md:text-4xl font-semibold tracking-tight">
+            <h2 className="text-3xl md:text-4xl font-semibold tracking-tight text-gray-900">
               The Skills Gap Isn't the Problem — It's How We Train.
             </h2>
-            <p className="mt-4 text-muted-foreground">
+            <p className="mt-4 text-gray-600">
               Traditional training and PD struggle to keep pace with AI-driven work. Access is uneven, content is static, and outcomes are unclear.
             </p>
-            <p className="mt-3 text-muted-foreground">
+            <p className="mt-3 text-gray-600">
               TailoredU closes the loop with personalized AI coaching, accessible tools, and adaptive pathways that evolve with every learner and team.
             </p>
           </motion.div>
           <motion.div {...fadeUp} className="mt-10 grid md:grid-cols-2 gap-6">
-            <Card className="bg-card">
-              <CardHeader><CardTitle>Old Model</CardTitle></CardHeader>
-              <CardContent className="space-y-2 text-muted-foreground">
+            <Card className="bg-white border-gray-200">
+              <CardHeader><CardTitle className="text-gray-900">Old Model</CardTitle></CardHeader>
+              <CardContent className="space-y-2 text-gray-600">
                 <p>One-size-fits-all content</p>
                 <p>Manual tracking and slow feedback</p>
                 <p>Low accessibility and limited languages</p>
               </CardContent>
             </Card>
-            <Card className="bg-card">
-              <CardHeader><CardTitle>Tailored Learning</CardTitle></CardHeader>
-              <CardContent className="space-y-2 text-muted-foreground">
+            <Card className="bg-white border-gray-200">
+              <CardHeader><CardTitle className="text-gray-900">Tailored Learning</CardTitle></CardHeader>
+              <CardContent className="space-y-2 text-gray-600">
                 <p>AI-powered personalization by role and goal</p>
                 <p>Goal-based feedback loops and insights</p>
                 <p>Built-in accessibility: TTS, translation, adaptive reading</p>
@@ -170,9 +170,9 @@ export default function LandingPage() {
       </section>
 
       {/* Platform Overview */}
-      <section id="platform" className="border-t bg-background">
+      <section id="platform" className="border-t bg-white">
         <div className="mx-auto max-w-7xl px-4 py-16 md:py-20">
-          <motion.h2 {...fadeUp} className="text-3xl md:text-4xl font-semibold tracking-tight">
+          <motion.h2 {...fadeUp} className="text-3xl md:text-4xl font-semibold tracking-tight text-gray-900">
             A Smarter Learning Experience, Built for Everyone.
           </motion.h2>
           <motion.div {...fadeUp} className="mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
@@ -182,11 +182,11 @@ export default function LandingPage() {
               { title: "Educator AI PD Toolkit", desc: "Train teachers and trainers to teach with AI confidently." },
               { title: "Accessible by Design", desc: "Multi-language, text-to-speech, and adaptive reading." },
             ].map((f) => (
-              <Card key={f.title} className="rounded-2xl bg-card">
+              <Card key={f.title} className="rounded-2xl bg-white border-gray-200">
                 <CardHeader>
-                  <CardTitle className="text-lg">{f.title}</CardTitle>
+                  <CardTitle className="text-lg text-gray-900">{f.title}</CardTitle>
                 </CardHeader>
-                <CardContent className="text-muted-foreground">{f.desc}</CardContent>
+                <CardContent className="text-gray-600">{f.desc}</CardContent>
               </Card>
             ))}
           </motion.div>
@@ -194,9 +194,9 @@ export default function LandingPage() {
       </section>
 
       {/* Who We Serve */}
-      <section id="serve" className="border-t bg-background">
+      <section id="serve" className="border-t bg-gray-50">
         <div className="mx-auto max-w-7xl px-4 py-16 md:py-20">
-          <motion.h2 {...fadeUp} className="text-3xl md:text-4xl font-semibold tracking-tight">
+          <motion.h2 {...fadeUp} className="text-3xl md:text-4xl font-semibold tracking-tight text-gray-900">
             Built for Learning. Designed for Scale.
           </motion.h2>
           <motion.div {...fadeUp} className="mt-10 grid gap-6 md:grid-cols-3">
@@ -205,9 +205,9 @@ export default function LandingPage() {
               { title: "Workforce Programs", desc: "Upskill and reskill employees with adaptive AI training." },
               { title: "Training Providers", desc: "Deliver tailored programs with smart insights at scale." },
             ].map((a) => (
-              <Card key={a.title} className="rounded-2xl bg-card">
-                <CardHeader><CardTitle className="text-lg">{a.title}</CardTitle></CardHeader>
-                <CardContent className="text-muted-foreground">{a.desc}</CardContent>
+              <Card key={a.title} className="rounded-2xl bg-white border-gray-200">
+                <CardHeader><CardTitle className="text-lg text-gray-900">{a.title}</CardTitle></CardHeader>
+                <CardContent className="text-gray-600">{a.desc}</CardContent>
               </Card>
             ))}
           </motion.div>
@@ -215,7 +215,7 @@ export default function LandingPage() {
       </section>
 
       {/* CTA Block */}
-      <section id="contact" className="border-t bg-background">
+      <section id="contact" className="border-t bg-white">
         <div className="mx-auto max-w-7xl px-4 py-16 md:py-20">
           <motion.div {...fadeUp} className="rounded-3xl bg-gradient-to-tr from-teal-400 via-sky-400 to-purple-500 p-8 md:p-12 text-white">
             <h3 className="text-2xl md:text-3xl font-semibold tracking-tight">See TailoredU in Action.</h3>
