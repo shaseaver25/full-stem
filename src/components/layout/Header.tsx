@@ -33,14 +33,6 @@ export default function Header({ onDemoClick, onRequestClick }: HeaderProps) {
           <a href="#platform" className="hover:text-slate-700">Platform</a>
           <a href="#serve" className="hover:text-slate-700">Who We Serve</a>
           <a href="#contact" className="hover:text-slate-700">Contact</a>
-          {user && (
-            <button 
-              onClick={() => redirectToRoleDashboard(user.id, navigate)} 
-              className="hover:text-slate-700 font-medium"
-            >
-              Dashboard
-            </button>
-          )}
         </div>
         <div className="hidden md:flex items-center gap-3">
           {!user && (
@@ -49,13 +41,13 @@ export default function Header({ onDemoClick, onRequestClick }: HeaderProps) {
               <Button onClick={onDemoClick} className="bg-teal-500 hover:bg-teal-600">Book a Demo</Button>
             </>
           )}
-          <Button variant={user ? "default" : "outline"} onClick={handleLogin}>
-            {user ? "Go to Dashboard" : "Login"}
+          <Button variant="outline" onClick={handleLogin}>
+            Login
           </Button>
         </div>
         <div className="md:hidden">
           <Button variant="outline" onClick={handleLogin}>
-            {user ? "Dashboard" : "Login"}
+            Login
           </Button>
         </div>
       </nav>
