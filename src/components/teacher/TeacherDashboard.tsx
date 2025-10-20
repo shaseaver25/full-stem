@@ -190,11 +190,9 @@ const TeacherDashboard = () => {
 
         {/* Metrics Overview */}
         <MetricsOverview
-          activeClasses={dashboardData.activeClasses}
           totalStudents={dashboardData.totalStudents}
           assignmentsDueThisWeek={dashboardData.assignmentsDueThisWeek}
           averageEngagement={dashboardData.averageEngagement}
-          unreadMessages={dashboardData.unreadMessages}
         />
 
         {/* Main Content Grid */}

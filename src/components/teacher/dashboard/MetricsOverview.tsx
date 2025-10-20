@@ -1,27 +1,22 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Users, BookOpen, ClipboardList, Mail } from 'lucide-react';
+import { Users, BookOpen, ClipboardList } from 'lucide-react';
 
 interface MetricsOverviewProps {
-  activeClasses: number;
   totalStudents: number;
   assignmentsDueThisWeek: number;
   averageEngagement: number;
-  unreadMessages: number;
 }
 
 export const MetricsOverview = ({
-  activeClasses,
   totalStudents,
   assignmentsDueThisWeek,
-  averageEngagement,
-  unreadMessages
+  averageEngagement
 }: MetricsOverviewProps) => {
   const metrics = [
     {
-      title: 'Active Classes',
-      value: activeClasses,
-      subtitle: `${totalStudents} students enrolled`,
+      title: 'Total Students',
+      value: totalStudents,
+      subtitle: 'Across all classes',
       icon: Users,
       color: 'text-blue-600',
       bgColor: 'bg-blue-50'
@@ -41,20 +36,11 @@ export const MetricsOverview = ({
       icon: BookOpen,
       color: 'text-green-600',
       bgColor: 'bg-green-50'
-    },
-    {
-      title: 'Messages',
-      value: unreadMessages,
-      subtitle: 'Unread',
-      icon: Mail,
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-50',
-      badge: unreadMessages > 0
     }
   ];
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
       {metrics.map((metric) => {
         const Icon = metric.icon;
         return (
@@ -68,12 +54,7 @@ export const MetricsOverview = ({
               </div>
             </CardHeader>
             <CardContent>
-              <div className="flex items-baseline gap-2">
-                <div className="text-2xl font-bold">{metric.value}</div>
-                {metric.badge && (
-                  <Badge variant="destructive" className="text-xs">New</Badge>
-                )}
-              </div>
+              <div className="text-2xl font-bold">{metric.value}</div>
               <p className="text-xs text-muted-foreground mt-1">
                 {metric.subtitle}
               </p>
