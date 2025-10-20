@@ -42,14 +42,20 @@ export default function Header({ onDemoClick, onRequestClick }: HeaderProps) {
               <Button onClick={onDemoClick} className="bg-teal-600 hover:bg-teal-700 text-white">Book a Demo</Button>
             </>
           )}
-          <Button variant="outline" onClick={handleAuthAction} className="border-gray-300 !text-gray-900 !bg-white hover:!bg-gray-50">
+          <button 
+            onClick={handleAuthAction} 
+            className="h-10 px-4 py-2 bg-white text-gray-900 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors font-medium text-sm"
+          >
             {user ? "Logout" : "Login"}
-          </Button>
+          </button>
         </div>
         <div className="md:hidden">
-          <Button variant="outline" onClick={handleAuthAction} className="border-gray-300 !text-gray-900 !bg-white hover:!bg-gray-50">
+          <button 
+            onClick={handleAuthAction} 
+            className="h-10 px-4 py-2 bg-white text-gray-900 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors font-medium text-sm"
+          >
             {user ? "Logout" : "Login"}
-          </Button>
+          </button>
         </div>
       </nav>
     </header>
