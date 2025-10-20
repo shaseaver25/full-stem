@@ -20,6 +20,7 @@ import { ContentProvenance, ProvenanceBadge } from "@/components/metadata";
 
 // Lazy load all page components for code splitting
 const Index = React.lazy(() => import("./pages/Index"));
+const LandingPage = React.lazy(() => import("./pages/LandingPage"));
 const Auth = React.lazy(() => import("./pages/Auth"));
 const TrialPage = React.lazy(() => import("./components/TrialPage"));
 const ExcelCourse = React.lazy(() => import("./pages/ExcelCourse"));
@@ -100,7 +101,7 @@ function AppContent() {
       <SuperAdminBanner />
       <Suspense fallback={<LoadingSpinner />}>
         <Routes>
-        <Route path="/" element={<ErrorBoundary><Index /></ErrorBoundary>} />
+        <Route path="/" element={<ErrorBoundary><LandingPage /></ErrorBoundary>} />
         <Route path="/bootstrap" element={<ErrorBoundary><BootstrapDemo /></ErrorBoundary>} />
         <Route path="/auth" element={<ErrorBoundary><Auth /></ErrorBoundary>} />
         <Route path="/auth/callback" element={<ErrorBoundary><AuthCallback /></ErrorBoundary>} />
