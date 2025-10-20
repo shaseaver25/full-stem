@@ -13,6 +13,7 @@ import { StudentGoalsSection } from '@/components/teacher/student-detail/Student
 import { StudentInsightsSection } from '@/components/teacher/student-detail/StudentInsightsSection';
 import { StudentReflectionsSection } from '@/components/teacher/student-detail/StudentReflectionsSection';
 import { StudentPerformanceChart } from '@/components/teacher/student-detail/StudentPerformanceChart';
+import { WeeklyDigestSection } from '@/components/teacher/student-detail/WeeklyDigestSection';
 
 interface Student {
   id: string;
@@ -327,8 +328,12 @@ export default function StudentDetailPage() {
               <StudentGoalsSection studentId={studentId!} />
             </TabsContent>
 
-            <TabsContent value="insights">
+            <TabsContent value="insights" className="space-y-6">
               <StudentInsightsSection studentId={studentId!} />
+              <WeeklyDigestSection 
+                studentId={studentId!}
+                studentName={`${student.first_name} ${student.last_name}`}
+              />
             </TabsContent>
 
             <TabsContent value="reflections">

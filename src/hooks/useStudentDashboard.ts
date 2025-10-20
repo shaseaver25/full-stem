@@ -261,3 +261,25 @@ export function useRefreshInsights() {
     },
   });
 }
+
+// Hook for weekly digest
+export function useWeeklyDigest(studentId: string | undefined) {
+  return useQuery({
+    queryKey: ['weekly-digest', studentId],
+    queryFn: async () => {
+      if (!studentId) return null;
+      
+      const { data, error } = await supabase
+        .from('weekly_digests')
+        .select('*')
+        .eq('student_id', studentId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (error && error.code !== 'PGRST116') throw error;
+      return data;
+    },
+    enabled: !!studentId,
+  });
+}

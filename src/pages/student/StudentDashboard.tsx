@@ -9,6 +9,7 @@ import { StudentInsightsPanel } from '@/components/student/StudentInsightsPanel'
 import { StudentGoalsSection } from '@/components/student/StudentGoalsSection';
 import { StudentReflectionJournal } from '@/components/student/StudentReflectionJournal';
 import { StudentAssignmentsList } from '@/components/student/StudentAssignmentsList';
+import { WeeklyDigestBanner } from '@/components/student/WeeklyDigestBanner';
 import {
   useStudentProfile,
   useStudentInsights,
@@ -18,6 +19,7 @@ import {
   useStudentStats,
   useUpdateGoalStatus,
   useRefreshInsights,
+  useWeeklyDigest,
 } from '@/hooks/useStudentDashboard';
 
 export default function StudentDashboard() {
@@ -28,6 +30,7 @@ export default function StudentDashboard() {
   const { data: reflections = [] } = useStudentReflections(profile?.id);
   const { data: assignments = [] } = useStudentAssignments(user?.id);
   const { data: stats } = useStudentStats(profile?.id, user?.id);
+  const { data: weeklyDigest } = useWeeklyDigest(profile?.id);
   const updateGoalStatus = useUpdateGoalStatus();
   const refreshInsights = useRefreshInsights();
 
@@ -87,6 +90,14 @@ export default function StudentDashboard() {
           languagePreference={profile.language_preference}
           iepAccommodations={profile.iep_accommodations}
         />
+
+        {/* Weekly Digest Banner */}
+        {weeklyDigest && (
+          <WeeklyDigestBanner 
+            digest={weeklyDigest}
+            studentName={profile.first_name}
+          />
+        )}
 
         {/* AI Learning Insights */}
         <StudentInsightsPanel

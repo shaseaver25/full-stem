@@ -3371,6 +3371,62 @@ export type Database = {
         }
         Relationships: []
       }
+      weekly_digests: {
+        Row: {
+          ai_note_text: string
+          approved_at: string | null
+          approved_by: string | null
+          created_at: string | null
+          id: string
+          is_read: boolean | null
+          next_focus_text: string
+          student_id: string
+          summary_text: string
+          teacher_approved: boolean | null
+          updated_at: string | null
+          week_end: string
+          week_start: string
+        }
+        Insert: {
+          ai_note_text: string
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          next_focus_text: string
+          student_id: string
+          summary_text: string
+          teacher_approved?: boolean | null
+          updated_at?: string | null
+          week_end: string
+          week_start: string
+        }
+        Update: {
+          ai_note_text?: string
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          next_focus_text?: string
+          student_id?: string
+          summary_text?: string
+          teacher_approved?: boolean | null
+          updated_at?: string | null
+          week_end?: string
+          week_start?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "weekly_digests_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
