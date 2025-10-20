@@ -213,6 +213,48 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_feedback_history: {
+        Row: {
+          created_at: string | null
+          feedback_text: string
+          feedback_type: string
+          goal_id: string | null
+          id: string
+          student_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          feedback_text: string
+          feedback_type: string
+          goal_id?: string | null
+          id?: string
+          student_id: string
+        }
+        Update: {
+          created_at?: string | null
+          feedback_text?: string
+          feedback_type?: string
+          goal_id?: string | null
+          id?: string
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_feedback_history_goal_id_fkey"
+            columns: ["goal_id"]
+            isOneToOne: false
+            referencedRelation: "student_goals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_feedback_history_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ai_lesson_history: {
         Row: {
           created_at: string
@@ -2664,6 +2706,47 @@ export type Database = {
           },
         ]
       }
+      student_goals: {
+        Row: {
+          ai_generated: boolean | null
+          created_at: string | null
+          goal_text: string
+          id: string
+          status: string
+          student_id: string
+          target_date: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          ai_generated?: boolean | null
+          created_at?: string | null
+          goal_text: string
+          id?: string
+          status?: string
+          student_id: string
+          target_date?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          ai_generated?: boolean | null
+          created_at?: string | null
+          goal_text?: string
+          id?: string
+          status?: string
+          student_id?: string
+          target_date?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_goals_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       student_parent_relationships: {
         Row: {
           can_receive_communications: boolean | null
@@ -2789,6 +2872,48 @@ export type Database = {
           },
           {
             foreignKeyName: "student_progress_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      student_reflections: {
+        Row: {
+          created_at: string | null
+          goal_id: string | null
+          id: string
+          prompt_question: string | null
+          reflection_text: string
+          student_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          goal_id?: string | null
+          id?: string
+          prompt_question?: string | null
+          reflection_text: string
+          student_id: string
+        }
+        Update: {
+          created_at?: string | null
+          goal_id?: string | null
+          id?: string
+          prompt_question?: string | null
+          reflection_text?: string
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_reflections_goal_id_fkey"
+            columns: ["goal_id"]
+            isOneToOne: false
+            referencedRelation: "student_goals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_reflections_student_id_fkey"
             columns: ["student_id"]
             isOneToOne: false
             referencedRelation: "students"

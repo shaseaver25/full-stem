@@ -90,3 +90,12 @@ verify_jwt = true
 
 [functions.submit-pilot-interest]
 verify_jwt = false
+
+[functions.ai-insights]
+verify_jwt = true
+
+[functions.ai-goals]
+verify_jwt = true
+
+[functions.ai-reflection]
+verify_jwt = true
