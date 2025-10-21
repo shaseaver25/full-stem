@@ -2,6 +2,7 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import * as Sentry from "@sentry/react";
+import { ThemeProvider } from "next-themes";
 import App from './App.tsx';
 import './index.css';
 import { initWebVitalsTracking } from "./utils/webVitals";
@@ -29,34 +30,36 @@ if (isProd) {
 const root = createRoot(document.getElementById("root")!);
 root.render(
   <StrictMode>
-    <Sentry.ErrorBoundary 
-      fallback={({ error, resetError }) => (
-        <div className="min-h-screen flex items-center justify-center bg-background p-4">
-          <div className="max-w-md w-full space-y-4 text-center">
-            <h1 className="text-2xl font-bold text-destructive">Something went wrong</h1>
-            <p className="text-muted-foreground">
-              We've been notified and are working on a fix. Please try refreshing the page.
-            </p>
-            {isDev && (
-              <details className="text-left text-sm">
-                <summary className="cursor-pointer font-medium">Error Details (Dev Only)</summary>
-                <pre className="mt-2 p-4 bg-muted rounded overflow-auto">
-                  {error?.toString()}
-                </pre>
-              </details>
-            )}
-            <button 
-              onClick={resetError}
-              className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
-            >
-              Try Again
-            </button>
+    <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
+      <Sentry.ErrorBoundary 
+        fallback={({ error, resetError }) => (
+          <div className="min-h-screen flex items-center justify-center bg-background p-4">
+            <div className="max-w-md w-full space-y-4 text-center">
+              <h1 className="text-2xl font-bold text-destructive">Something went wrong</h1>
+              <p className="text-muted-foreground">
+                We've been notified and are working on a fix. Please try refreshing the page.
+              </p>
+              {isDev && (
+                <details className="text-left text-sm">
+                  <summary className="cursor-pointer font-medium">Error Details (Dev Only)</summary>
+                  <pre className="mt-2 p-4 bg-muted rounded overflow-auto">
+                    {error?.toString()}
+                  </pre>
+                </details>
+              )}
+              <button 
+                onClick={resetError}
+                className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
+              >
+                Try Again
+              </button>
+            </div>
           </div>
-        </div>
-      )}
-      showDialog={false}
-    >
-      <App />
-    </Sentry.ErrorBoundary>
+        )}
+        showDialog={false}
+      >
+        <App />
+      </Sentry.ErrorBoundary>
+    </ThemeProvider>
   </StrictMode>
 );
