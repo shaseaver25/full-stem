@@ -42,6 +42,16 @@ const TeacherDashboard = () => {
     }
   }, [profile?.id]);
 
+  // Debug theme
+  useEffect(() => {
+    console.log('🎨 TeacherDashboard theme debug:', {
+      htmlClassList: document.documentElement.classList.toString(),
+      bodyClassList: document.body.classList.toString(),
+      hasDarkClass: document.documentElement.classList.contains('dark'),
+      backgroundStyle: window.getComputedStyle(document.body).backgroundColor
+    });
+  }, []);
+
   const fetchDashboardData = async () => {
     if (!profile?.id) return;
 

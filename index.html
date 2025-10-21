@@ -32,6 +32,16 @@
     
     <!-- OpenDyslexic Font for Accessibility -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/opendyslexic@1.0.3/opendyslexic-regular.min.css">
+    
+    <!-- Force light mode - prevent dark mode flash -->
+    <script>
+      // Remove dark class and force light mode before React loads
+      document.documentElement.classList.remove('dark');
+      // Clear any stored theme preference
+      try {
+        localStorage.removeItem('theme');
+      } catch (e) {}
+    </script>
   </head>
 
   <body>
