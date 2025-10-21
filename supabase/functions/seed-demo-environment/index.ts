@@ -257,6 +257,182 @@ serve(async (req) => {
 
     console.log('✅ Lesson 2 created:', lesson2.id);
 
+    // 6b. Create Lesson 3: AI and You - Interactive Demo Lesson
+    console.log('📚 Creating Lesson 3: AI and You - Interactive Demo Lesson');
+    const { data: lesson3, error: lesson3Error } = await supabase
+      .from('lessons')
+      .insert({
+        class_id: classId,
+        title: 'AI and You – Interactive Demo Lesson',
+        description: 'A comprehensive demonstration of all TailorEDU lesson capabilities including read-aloud, translation, and adjustable reading levels.',
+        objectives: [
+          'Explore AI fundamentals through interactive content',
+          'Experience personalized learning features',
+          'Practice coding, reflection, and critical thinking'
+        ],
+        materials: ['Computer', 'Internet access', 'Code editor'],
+        duration: 45,
+        order_index: 3,
+        desmos_enabled: false
+      })
+      .select()
+      .single();
+
+    if (lesson3Error) {
+      console.error('Error creating lesson 3:', lesson3Error);
+      throw lesson3Error;
+    }
+
+    console.log('✅ Lesson 3 created:', lesson3.id);
+
+    // 6c. Create comprehensive lesson components for "AI and You"
+    console.log('📝 Creating lesson components for AI and You...');
+    const components = [
+      {
+        lesson_id: lesson3.id,
+        component_type: 'instructions',
+        order: 0,
+        enabled: true,
+        read_aloud: true,
+        language_code: 'en',
+        content: {
+          title: 'Welcome to AI and You',
+          text: 'Artificial Intelligence lets computers learn patterns and make decisions. You see AI when you use a voice assistant or get song suggestions.',
+          readingLevels: {
+            'below-grade': 'AI means machines that can learn. They help people do things like talk to computers or drive cars.',
+            'on-grade': 'Artificial Intelligence lets computers learn patterns and make decisions. You see AI when you use a voice assistant or get song suggestions.',
+            'above-grade': 'Artificial Intelligence systems use data and algorithms to simulate reasoning and adaptation, enabling automation of cognitive tasks.'
+          }
+        }
+      },
+      {
+        lesson_id: lesson3.id,
+        component_type: 'video',
+        order: 1,
+        enabled: true,
+        content: {
+          title: 'What is AI?',
+          videoUrl: 'https://www.youtube.com/watch?v=2ePf9rue1Ao',
+          description: 'Watch this introduction to artificial intelligence'
+        }
+      },
+      {
+        lesson_id: lesson3.id,
+        component_type: 'formativeCheck',
+        order: 2,
+        enabled: true,
+        content: {
+          title: 'Check Your Understanding',
+          questions: [
+            {
+              question: 'What does AI stand for?',
+              options: ['Automated Intelligence', 'Artificial Intelligence', 'Advanced Internet', 'Analytical Integration'],
+              correctAnswer: 1,
+              feedback: 'Correct! AI stands for Artificial Intelligence.'
+            },
+            {
+              question: 'Which of these uses AI?',
+              options: ['Voice assistants', 'Recommendation systems', 'Self-driving cars', 'All of the above'],
+              correctAnswer: 3,
+              feedback: 'Great job! All of these technologies use AI.'
+            },
+            {
+              question: 'How does AI learn?',
+              options: ['By following strict rules', 'By analyzing data patterns', 'By human programming only', 'It cannot learn'],
+              correctAnswer: 1,
+              feedback: 'Excellent! AI learns by analyzing patterns in data.'
+            }
+          ]
+        }
+      },
+      {
+        lesson_id: lesson3.id,
+        component_type: 'codingEditor',
+        order: 3,
+        enabled: true,
+        content: {
+          title: 'Build a Simple Chatbot',
+          instructions: 'Create a simple chatbot that responds to "Hello"',
+          starterCode: '# Create a chatbot\ndef chatbot(message):\n    # Your code here\n    pass\n\n# Test it\nprint(chatbot("Hello"))',
+          language: 'python',
+          expectedOutput: 'Hi there! How can I help you today?'
+        }
+      },
+      {
+        lesson_id: lesson3.id,
+        component_type: 'activity',
+        order: 4,
+        enabled: true,
+        read_aloud: true,
+        content: {
+          title: 'Short Answer: AI Impact',
+          prompt: 'Describe one benefit and one risk of AI.',
+          instructions: 'Write 2-3 sentences explaining your thoughts.',
+          type: 'text'
+        }
+      },
+      {
+        lesson_id: lesson3.id,
+        component_type: 'reflection',
+        order: 5,
+        enabled: true,
+        read_aloud: true,
+        content: {
+          title: 'Personal Reflection',
+          prompt: 'How might AI change the way you learn?',
+          instructions: 'Think about your learning experiences and write your thoughts.'
+        }
+      },
+      {
+        lesson_id: lesson3.id,
+        component_type: 'assignment',
+        order: 6,
+        enabled: true,
+        content: {
+          title: 'Upload Your Work',
+          instructions: 'Upload a screenshot or document showing an example of AI you found.',
+          allowedFileTypes: ['pdf', 'jpg', 'jpeg', 'png', 'doc', 'docx'],
+          maxFiles: 1
+        }
+      },
+      {
+        lesson_id: lesson3.id,
+        component_type: 'resources',
+        order: 7,
+        enabled: true,
+        content: {
+          title: 'Additional Resources',
+          resources: [
+            { title: 'AI for Everyone Course', url: 'https://www.coursera.org/learn/ai-for-everyone', type: 'external' },
+            { title: 'Machine Learning Basics', url: 'https://www.youtube.com/watch?v=ukzFI9rgwfU', type: 'video' },
+            { title: 'Ethics in AI', url: 'https://ethics.fast.ai/', type: 'reading' }
+          ]
+        }
+      },
+      {
+        lesson_id: lesson3.id,
+        component_type: 'discussion',
+        order: 8,
+        enabled: true,
+        content: {
+          title: 'Class Discussion',
+          prompt: 'What ethical considerations should we keep in mind when developing AI?',
+          guidelines: 'Be respectful, support your ideas with examples, and engage with your classmates.'
+        }
+      }
+    ];
+
+    const { error: componentsError } = await supabase
+      .from('lesson_components')
+      .insert(components);
+
+    if (componentsError) {
+      console.error('Error creating lesson components:', componentsError);
+      throw componentsError;
+    }
+
+    console.log('✅ Created 9 lesson components for AI and You');
+
     // 7. Create Assignment 1
     console.log('📋 Creating Assignment 1: Intro to AI Reflection');
     const dueDate1 = new Date('2025-10-30');
@@ -480,7 +656,7 @@ serve(async (req) => {
             id: classId,
             name: 'AI Foundations: Exploring the Future of Technology'
           },
-          lessons: [lesson1.id, lesson2.id],
+          lessons: [lesson1.id, lesson2.id, lesson3.id],
           assignments: [assignment1.id, assignment2.id],
           submissions: [submission1.id, submission2.id],
           grades: { assignment1: '18/20 (90%)', assignment2: '46/50 (92%)' }
