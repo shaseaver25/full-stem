@@ -10,6 +10,7 @@ import { StudentGoalsSection } from '@/components/student/StudentGoalsSection';
 import { StudentReflectionJournal } from '@/components/student/StudentReflectionJournal';
 import { StudentAssignmentsList } from '@/components/student/StudentAssignmentsList';
 import { WeeklyDigestBanner } from '@/components/student/WeeklyDigestBanner';
+import { StudentClassesSection } from '@/components/student/StudentClassesSection';
 import {
   useStudentProfile,
   useStudentInsights,
@@ -98,6 +99,9 @@ export default function StudentDashboard() {
             studentName={profile.first_name}
           />
         )}
+
+        {/* My Classes Section */}
+        <StudentClassesSection />
 
         {/* AI Learning Insights */}
         <StudentInsightsPanel
