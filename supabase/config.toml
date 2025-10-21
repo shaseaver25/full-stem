@@ -111,3 +111,13 @@ verify_jwt = false
 
 [functions.submit-access-request]
 verify_jwt = false
+
+[functions.seed-demo-environment]
+verify_jwt = true
+
+[functions.create-demo-class]
+verify_jwt = true
+
+[functions.create-test-students]
+verify_jwt = true
+

@@ -6,8 +6,9 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { seedDemoStatusUrl, seedDemoSeedUrl, seedDemoWipeUrl } from '@/integrations/supabase/functions';
-import { Database, Users, GraduationCap, FileText, MessageCircle, Bell, BarChart3, Trash2, Zap, Lightbulb } from 'lucide-react';
+import { Database, Users, GraduationCap, FileText, MessageCircle, Bell, BarChart3, Trash2, Zap, Lightbulb, Sprout } from 'lucide-react';
 import { useCreateDemoClass } from '@/hooks/useCreateDemoClass';
+import { useSeedDemoEnvironment } from '@/hooks/useSeedDemoEnvironment';
 
 interface DemoDataCounts {
   teachers?: number;
@@ -26,6 +27,7 @@ const DemoDataManagement = () => {
   const [dataCounts, setDataCounts] = useState<DemoDataCounts>({});
   const { toast } = useToast();
   const { mutate: createDemoClass, isPending: isCreatingClass } = useCreateDemoClass();
+  const { mutate: seedDemoEnvironment, isPending: isSeedingEnvironment } = useSeedDemoEnvironment();
 
   const handleCheckStatus = async () => {
     try {
@@ -163,7 +165,43 @@ const DemoDataManagement = () => {
         </Button>
       </div>
 
-      <div className="grid md:grid-cols-3 gap-6">
+      <div className="grid md:grid-cols-4 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Sprout className="h-5 w-5 text-green-500" />
+              Seed Full Environment
+            </CardTitle>
+            <CardDescription>
+              Complete demo setup with authentication-ready accounts
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="text-sm text-muted-foreground">
+              <p><strong>Creates:</strong></p>
+              <ul className="list-disc list-inside space-y-1 mt-2">
+                <li>Teacher: Dr. Alicia Navarro</li>
+                <li>Student: Jordan Lee</li>
+                <li>"AI Foundations" class</li>
+                <li>2 Complete lessons</li>
+                <li>2 Assignments with submissions</li>
+                <li>Grades (90%, 92%)</li>
+                <li>Goals & reflections</li>
+                <li>Progress tracking</li>
+              </ul>
+            </div>
+            
+            <Button 
+              onClick={() => seedDemoEnvironment()} 
+              disabled={isSeedingEnvironment}
+              className="w-full"
+              variant="default"
+            >
+              {isSeedingEnvironment ? 'Seeding...' : 'Seed Environment'}
+            </Button>
+          </CardContent>
+        </Card>
+
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
