@@ -6,7 +6,8 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { seedDemoStatusUrl, seedDemoSeedUrl, seedDemoWipeUrl } from '@/integrations/supabase/functions';
-import { Database, Users, GraduationCap, FileText, MessageCircle, Bell, BarChart3, Trash2, Zap } from 'lucide-react';
+import { Database, Users, GraduationCap, FileText, MessageCircle, Bell, BarChart3, Trash2, Zap, Lightbulb } from 'lucide-react';
+import { useCreateDemoClass } from '@/hooks/useCreateDemoClass';
 
 interface DemoDataCounts {
   teachers?: number;
@@ -24,6 +25,7 @@ const DemoDataManagement = () => {
   const [lastSeeded, setLastSeeded] = useState<string | null>(null);
   const [dataCounts, setDataCounts] = useState<DemoDataCounts>({});
   const { toast } = useToast();
+  const { mutate: createDemoClass, isPending: isCreatingClass } = useCreateDemoClass();
 
   const handleCheckStatus = async () => {
     try {
@@ -161,7 +163,42 @@ const DemoDataManagement = () => {
         </Button>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-6">
+      <div className="grid md:grid-cols-3 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Lightbulb className="h-5 w-5 text-yellow-500" />
+              Create Demo Class
+            </CardTitle>
+            <CardDescription>
+              Create a complete showcase class with teacher, student, lessons, and graded work
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="text-sm text-muted-foreground">
+              <p><strong>Creates:</strong></p>
+              <ul className="list-disc list-inside space-y-1 mt-2">
+                <li>1 Teacher: Dr. Alicia Navarro</li>
+                <li>1 Student: Jordan Lee</li>
+                <li>"AI Foundations" class</li>
+                <li>2 Interactive lessons</li>
+                <li>2 Graded assignments (90%, 92%)</li>
+                <li>Reflections & goals</li>
+                <li>Progress tracking</li>
+              </ul>
+            </div>
+            
+            <Button 
+              onClick={() => createDemoClass()} 
+              disabled={isCreatingClass}
+              className="w-full"
+              variant="default"
+            >
+              {isCreatingClass ? 'Creating...' : 'Create Demo Class'}
+            </Button>
+          </CardContent>
+        </Card>
+
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
