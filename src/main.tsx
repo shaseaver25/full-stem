@@ -3,6 +3,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import * as Sentry from "@sentry/react";
 import { ThemeProvider } from "next-themes";
+import { ThemeEnforcer } from './components/ThemeEnforcer';
 import App from './App.tsx';
 import './index.css';
 import { initWebVitalsTracking } from "./utils/webVitals";
@@ -30,26 +31,27 @@ if (isProd) {
 const root = createRoot(document.getElementById("root")!);
 root.render(
   <StrictMode>
-    <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
+    <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} forcedTheme="light">
+      <ThemeEnforcer />
       <Sentry.ErrorBoundary 
         fallback={({ error, resetError }) => (
-          <div className="min-h-screen flex items-center justify-center bg-background p-4">
+          <div className="min-h-screen flex items-center justify-center bg-white p-4">
             <div className="max-w-md w-full space-y-4 text-center">
-              <h1 className="text-2xl font-bold text-destructive">Something went wrong</h1>
-              <p className="text-muted-foreground">
+              <h1 className="text-2xl font-bold text-red-600">Something went wrong</h1>
+              <p className="text-gray-600">
                 We've been notified and are working on a fix. Please try refreshing the page.
               </p>
               {isDev && (
                 <details className="text-left text-sm">
                   <summary className="cursor-pointer font-medium">Error Details (Dev Only)</summary>
-                  <pre className="mt-2 p-4 bg-muted rounded overflow-auto">
+                  <pre className="mt-2 p-4 bg-gray-100 rounded overflow-auto">
                     {error?.toString()}
                   </pre>
                 </details>
               )}
               <button 
                 onClick={resetError}
-                className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
               >
                 Try Again
               </button>

@@ -91,8 +91,24 @@
     @apply border-border;
   }
 
+  /* Force light mode - prevent any dark mode styles */
+  html {
+    color-scheme: light !important;
+  }
+
+  html.dark {
+    color-scheme: light !important;
+  }
+
   body {
     @apply bg-background text-foreground;
+    background-color: hsl(0 0% 100%) !important;
+  }
+
+  /* Override dark mode if it somehow gets applied */
+  .dark body {
+    background-color: hsl(0 0% 100%) !important;
+    color: hsl(215 20% 20%) !important;
   }
 }
 
