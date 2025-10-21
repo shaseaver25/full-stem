@@ -1,4 +1,5 @@
 import React from "react"
+import { Link } from "react-router-dom"
 
 export default function Footer() {
   return (
@@ -12,7 +13,7 @@ export default function Footer() {
           TailoredU — Empowering people to learn, adapt, and grow with AI.
         </p>
         <div className="text-sm text-muted-foreground flex items-center gap-4">
-          <a href="/auth" className="hover:text-foreground transition-colors">Login</a>
+          <Link to="/auth" className="hover:text-foreground transition-colors">Login</Link>
           <a href="#" className="hover:text-foreground transition-colors">Privacy</a>
           <a href="#" className="hover:text-foreground transition-colors">Terms</a>
           <a href="#contact" className="hover:text-foreground transition-colors">Contact</a>

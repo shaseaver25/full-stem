@@ -1,6 +1,6 @@
 import React from "react"
 import { Button } from "@/components/ui/button"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, Link } from "react-router-dom"
 import { useAuth } from "@/contexts/AuthContext"
 import { redirectToRoleDashboard } from "@/utils/roleRedirect"
 
@@ -25,10 +25,10 @@ export default function Header({ onDemoClick, onRequestClick }: HeaderProps) {
   return (
     <header className="sticky top-0 z-50 backdrop-blur bg-white/80 border-b border-gray-200">
       <nav className="mx-auto max-w-7xl px-4 py-3 flex items-center justify-between">
-        <a href="/" className="flex items-center gap-2">
+        <Link to="/" className="flex items-center gap-2">
           <div className="h-8 w-8 rounded-xl bg-gradient-to-tr from-teal-400 via-sky-400 to-purple-500" />
           <span className="font-semibold tracking-tight text-gray-900">TailoredU</span>
-        </a>
+        </Link>
         <div className="hidden md:flex items-center gap-6 text-sm text-gray-600">
           <a href="#problem" className="hover:text-teal-600 transition-colors">Why TailoredU</a>
           <a href="#platform" className="hover:text-teal-600 transition-colors">Platform</a>
