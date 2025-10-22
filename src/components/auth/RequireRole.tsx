@@ -19,11 +19,13 @@ const RequireRole = ({ children, allowedRoles }: RequireRoleProps) => {
   useEffect(() => {
     const checkUserRole = async () => {
       if (!user) {
+        console.log('[RequireRole] No user found');
         setChecking(false);
         return;
       }
 
       try {
+        console.log('[RequireRole] Checking roles for user:', user.id);
         // Fetch all user roles from database
         const { data, error } = await supabase
           .from('user_roles')
@@ -31,19 +33,24 @@ const RequireRole = ({ children, allowedRoles }: RequireRoleProps) => {
           .eq('user_id', user.id);
 
         if (error) {
-          console.error('Error fetching user roles:', error);
+          console.error('[RequireRole] Error fetching user roles:', error);
           setUserRole(null);
         } else if (data && data.length > 0) {
+          console.log('[RequireRole] Roles found:', data);
           // Priority order: developer > super_admin > system_admin > admin > teacher > parent > student
           const rolePriority: UserRole[] = ['developer', 'super_admin', 'system_admin', 'admin', 'teacher', 'parent', 'student'];
           const userRoles = data.map(r => r.role as UserRole);
           const highestRole = rolePriority.find(role => userRoles.includes(role)) || userRoles[0];
+          console.log('[RequireRole] Highest role:', highestRole);
+          console.log('[RequireRole] Allowed roles:', allowedRoles);
+          console.log('[RequireRole] Has access:', allowedRoles.includes(highestRole) || highestRole === 'developer');
           setUserRole(highestRole);
         } else {
+          console.log('[RequireRole] No roles found for user');
           setUserRole(null);
         }
       } catch (error) {
-        console.error('Error checking user role:', error);
+        console.error('[RequireRole] Error checking user role:', error);
         setUserRole(null);
       } finally {
         setChecking(false);
@@ -51,7 +58,7 @@ const RequireRole = ({ children, allowedRoles }: RequireRoleProps) => {
     };
 
     checkUserRole();
-  }, [user]);
+  }, [user, allowedRoles]);
 
   // Show loading state
   if (authLoading || checking) {
