@@ -8,12 +8,14 @@ import {
   useStudentStats,
   useWeeklyDigest,
 } from '@/hooks/useStudentDashboard';
+import { useStudentClasses } from '@/hooks/useStudentClasses';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Loader2, BookOpen, Target, TrendingUp, Calendar } from 'lucide-react';
+import { Loader2, BookOpen, Target, TrendingUp, Calendar, GraduationCap } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Link } from 'react-router-dom';
+import Header from '@/components/Header';
 
 export default function StudentDashboard() {
   const { user } = useAuth();
@@ -28,6 +30,7 @@ export default function StudentDashboard() {
   const { data: assignments } = useStudentAssignments(user?.id);
   const { data: stats } = useStudentStats(profile?.id, user?.id);
   const { data: digest } = useWeeklyDigest(profile?.id);
+  const { data: classes } = useStudentClasses();
 
   if (profileLoading) {
     return (
@@ -53,8 +56,10 @@ export default function StudentDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-background p-8">
-      <div className="max-w-7xl mx-auto space-y-8">
+    <>
+      <Header />
+      <div className="min-h-screen bg-background p-8">
+        <div className="max-w-7xl mx-auto space-y-8">
         {/* Header */}
         <div>
           <h1 className="text-4xl font-bold mb-2">
@@ -117,6 +122,56 @@ export default function StudentDashboard() {
             </Card>
           </div>
         )}
+
+        {/* My Classes */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <GraduationCap className="h-5 w-5" />
+                My Classes
+              </CardTitle>
+              <Button asChild variant="outline" size="sm">
+                <Link to="/classes/my-classes">View All</Link>
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {classes && classes.length > 0 ? (
+              <div className="space-y-4">
+                {classes.slice(0, 3).map((enrollment) => {
+                  const classData = enrollment.classes;
+                  const teacherName = enrollment.teacher
+                    ? `${enrollment.teacher.first_name || ''} ${enrollment.teacher.last_name || ''}`.trim()
+                    : 'TailorEDU Instructor';
+                  
+                  return (
+                    <div key={enrollment.id} className="flex items-center justify-between pb-4 border-b last:border-0">
+                      <div className="flex-1">
+                        <p className="font-medium">{classData.name}</p>
+                        <p className="text-sm text-muted-foreground">{teacherName}</p>
+                        {classData.subject && (
+                          <p className="text-xs text-muted-foreground mt-1">{classData.subject}</p>
+                        )}
+                      </div>
+                      <Button asChild variant="ghost" size="sm">
+                        <Link to={`/classes/${classData.id}`}>View</Link>
+                      </Button>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <GraduationCap className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground mb-4">You haven't joined any classes yet</p>
+                <Button asChild>
+                  <Link to="/classes/join">Join a Class</Link>
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Recent Assignments */}
@@ -251,5 +306,6 @@ export default function StudentDashboard() {
         </div>
       </div>
     </div>
+    </>
   );
 }
