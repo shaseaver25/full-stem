@@ -37,8 +37,8 @@ const TeacherAuth = () => {
           .maybeSingle();
         
         if (roleData) {
-          console.log('User authenticated with teacher role, redirecting to dashboard');
-          redirectToRoleDashboard(user.id, navigate);
+          console.log('User authenticated with teacher role, redirecting to teacher dashboard');
+          navigate('/teacher/dashboard');
         }
       }
     };
