@@ -20,7 +20,7 @@ const RequireRole = ({ children, allowedRoles }: RequireRoleProps) => {
     const checkUserRole = async () => {
       if (!user) {
         console.log('[RequireRole] No user found');
-        setChecking(false);
+        // Don't set checking to false - let authLoading handle it
         return;
       }
 
