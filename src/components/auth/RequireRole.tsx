@@ -72,8 +72,11 @@ const RequireRole = ({ children, allowedRoles }: RequireRoleProps) => {
     return <Navigate to="/" replace />;
   }
 
+  // Developer role has universal access to all routes
+  const isDeveloper = userRole === 'developer';
+  
   // Check if user's role is in the allowed roles
-  const hasAccess = allowedRoles.includes(userRole);
+  const hasAccess = isDeveloper || allowedRoles.includes(userRole);
 
   // Access denied - redirect to 403 page
   if (!hasAccess) {

@@ -21,15 +21,23 @@ export const getUserRole = async (userId: string): Promise<UserRole | null> => {
     const { data, error } = await supabase
       .from('user_roles')
       .select('role')
-      .eq('user_id', userId)
-      .single();
+      .eq('user_id', userId);
     
     if (error) {
       console.error('Error fetching user role:', error);
       return null;
     }
     
-    return data?.role as UserRole;
+    if (!data || data.length === 0) {
+      return null;
+    }
+    
+    // Priority order: developer > super_admin > system_admin > admin > teacher > parent > student
+    const rolePriority: UserRole[] = ['developer', 'super_admin', 'system_admin', 'admin', 'teacher', 'parent', 'student'];
+    const userRoles = data.map(r => r.role as UserRole);
+    const highestRole = rolePriority.find(role => userRoles.includes(role)) || userRoles[0];
+    
+    return highestRole;
   } catch (error) {
     console.error('Error in getUserRole:', error);
     return null;
