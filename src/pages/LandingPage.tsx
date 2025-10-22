@@ -1,113 +1,113 @@
 /* eslint-disable react/no-unescaped-entities */
-import React from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
-import { motion } from "framer-motion"
-import Header from "@/components/layout/Header"
-import Footer from "@/components/layout/Footer"
-import { supabase } from "@/integrations/supabase/client"
-import { useToast } from "@/hooks/use-toast"
-
+import React from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { motion } from "framer-motion";
+import Header from "@/components/layout/Header";
+import Footer from "@/components/layout/Footer";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 const fadeUp = {
-  initial: { opacity: 0, y: 24 },
-  whileInView: { opacity: 1, y: 0 },
-  transition: { duration: 0.6 },
-  viewport: { once: true, amount: 0.25 }
-}
-
+  initial: {
+    opacity: 0,
+    y: 24
+  },
+  whileInView: {
+    opacity: 1,
+    y: 0
+  },
+  transition: {
+    duration: 0.6
+  },
+  viewport: {
+    once: true,
+    amount: 0.25
+  }
+};
 export default function LandingPage() {
-  const [demoOpen, setDemoOpen] = React.useState(false)
-  const [requestOpen, setRequestOpen] = React.useState(false)
-  const [demoLoading, setDemoLoading] = React.useState(false)
-  const [accessLoading, setAccessLoading] = React.useState(false)
-  const { toast } = useToast()
+  const [demoOpen, setDemoOpen] = React.useState(false);
+  const [requestOpen, setRequestOpen] = React.useState(false);
+  const [demoLoading, setDemoLoading] = React.useState(false);
+  const [accessLoading, setAccessLoading] = React.useState(false);
+  const {
+    toast
+  } = useToast();
 
   // Force light mode for landing page
   React.useEffect(() => {
-    document.documentElement.classList.remove('dark')
-  }, [])
-
+    document.documentElement.classList.remove('dark');
+  }, []);
   const handleDemoSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    setDemoLoading(true)
-
-    const formData = new FormData(e.currentTarget)
+    e.preventDefault();
+    setDemoLoading(true);
+    const formData = new FormData(e.currentTarget);
     const payload = {
       name: formData.get('name') as string,
       email: formData.get('email') as string,
       organization: formData.get('organization') as string,
-      message: formData.get('message') as string,
-    }
-
+      message: formData.get('message') as string
+    };
     try {
-      const { error } = await supabase.functions.invoke('submit-demo-request', {
-        body: payload,
-      })
-
-      if (error) throw error
-
+      const {
+        error
+      } = await supabase.functions.invoke('submit-demo-request', {
+        body: payload
+      });
+      if (error) throw error;
       toast({
         title: "Demo request submitted!",
-        description: "We'll be in touch shortly to schedule your demo.",
-      })
-      setDemoOpen(false)
-      e.currentTarget.reset()
+        description: "We'll be in touch shortly to schedule your demo."
+      });
+      setDemoOpen(false);
+      e.currentTarget.reset();
     } catch (error) {
-      console.error('Error submitting demo request:', error)
+      console.error('Error submitting demo request:', error);
       toast({
         title: "Something went wrong",
         description: "Please try again or contact us directly.",
-        variant: "destructive",
-      })
+        variant: "destructive"
+      });
     } finally {
-      setDemoLoading(false)
+      setDemoLoading(false);
     }
-  }
-
+  };
   const handleAccessSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    setAccessLoading(true)
-
-    const formData = new FormData(e.currentTarget)
+    e.preventDefault();
+    setAccessLoading(true);
+    const formData = new FormData(e.currentTarget);
     const payload = {
       email: formData.get('email') as string,
-      role: formData.get('role') as string,
-    }
-
+      role: formData.get('role') as string
+    };
     try {
-      const { error } = await supabase.functions.invoke('submit-access-request', {
-        body: payload,
-      })
-
-      if (error) throw error
-
+      const {
+        error
+      } = await supabase.functions.invoke('submit-access-request', {
+        body: payload
+      });
+      if (error) throw error;
       toast({
         title: "You're on the list!",
-        description: "We'll be in touch with access details soon.",
-      })
-      setRequestOpen(false)
-      e.currentTarget.reset()
+        description: "We'll be in touch with access details soon."
+      });
+      setRequestOpen(false);
+      e.currentTarget.reset();
     } catch (error) {
-      console.error('Error submitting access request:', error)
+      console.error('Error submitting access request:', error);
       toast({
         title: "Something went wrong",
         description: "Please try again or contact us directly.",
-        variant: "destructive",
-      })
+        variant: "destructive"
+      });
     } finally {
-      setAccessLoading(false)
+      setAccessLoading(false);
     }
-  }
-
-  return (
-    <div className="min-h-screen bg-white text-gray-900">
-      <Header 
-        onDemoClick={() => setDemoOpen(true)} 
-        onRequestClick={() => setRequestOpen(true)}
-      />
+  };
+  return <div className="min-h-screen bg-white text-gray-900">
+      <Header onDemoClick={() => setDemoOpen(true)} onRequestClick={() => setRequestOpen(true)} />
 
       {/* Hero */}
       <section id="hero" className="relative overflow-hidden bg-white">
@@ -117,9 +117,7 @@ export default function LandingPage() {
         </div>
         <div className="mx-auto max-w-7xl px-4 py-20 md:py-28">
           <motion.div {...fadeUp} className="max-w-3xl">
-            <h1 className="text-4xl md:text-6xl font-semibold tracking-tight text-gray-900">
-              Empowering Humans to Learn and Work Intelligently with AI.
-            </h1>
+            <h1 className="text-4xl md:text-6xl font-semibold tracking-tight text-gray-900">Empowering Educators and Students to Learn and Work Intelligently with AI.</h1>
             <p className="mt-5 text-lg text-gray-600">
               TailoredU delivers adaptive AI-powered learning and workforce upskilling for educators, organizations, and teams.
             </p>
@@ -176,19 +174,24 @@ export default function LandingPage() {
             A Smarter Learning Experience. Customizable for Everyone.
           </motion.h2>
           <motion.div {...fadeUp} className="mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-            {[
-              { title: "AI-Powered Personalization", desc: "Learns from pace, goals, and role to adapt content and feedback." },
-              { title: "Workforce Readiness Modules", desc: "Hands-on pathways aligned to 21st-century skills." },
-              { title: "Educator AI PD Toolkit", desc: "Train teachers and trainers to teach with AI confidently." },
-              { title: "Accessible by Design", desc: "Multi-language, text-to-speech, and adaptive reading." },
-            ].map((f) => (
-              <Card key={f.title} className="rounded-2xl bg-white border-gray-200">
+            {[{
+            title: "AI-Powered Personalization",
+            desc: "Learns from pace, goals, and role to adapt content and feedback."
+          }, {
+            title: "Workforce Readiness Modules",
+            desc: "Hands-on pathways aligned to 21st-century skills."
+          }, {
+            title: "Educator AI PD Toolkit",
+            desc: "Train teachers and trainers to teach with AI confidently."
+          }, {
+            title: "Accessible by Design",
+            desc: "Multi-language, text-to-speech, and adaptive reading."
+          }].map(f => <Card key={f.title} className="rounded-2xl bg-white border-gray-200">
                 <CardHeader>
                   <CardTitle className="text-lg text-gray-900">{f.title}</CardTitle>
                 </CardHeader>
                 <CardContent className="text-gray-600">{f.desc}</CardContent>
-              </Card>
-            ))}
+              </Card>)}
           </motion.div>
         </div>
       </section>
@@ -200,16 +203,19 @@ export default function LandingPage() {
             Built for Learning. Designed for Scale.
           </motion.h2>
           <motion.div {...fadeUp} className="mt-10 grid gap-6 md:grid-cols-3">
-            {[
-              { title: "Schools & Districts", desc: "Equip educators and students for AI-driven futures." },
-              { title: "Workforce Programs", desc: "Upskill and reskill employees with adaptive AI training." },
-              { title: "Training Providers", desc: "Deliver tailored programs with smart insights at scale." },
-            ].map((a) => (
-              <Card key={a.title} className="rounded-2xl bg-white border-gray-200">
+            {[{
+            title: "Schools & Districts",
+            desc: "Equip educators and students for AI-driven futures."
+          }, {
+            title: "Workforce Programs",
+            desc: "Upskill and reskill employees with adaptive AI training."
+          }, {
+            title: "Training Providers",
+            desc: "Deliver tailored programs with smart insights at scale."
+          }].map(a => <Card key={a.title} className="rounded-2xl bg-white border-gray-200">
                 <CardHeader><CardTitle className="text-lg text-gray-900">{a.title}</CardTitle></CardHeader>
                 <CardContent className="text-gray-600">{a.desc}</CardContent>
-              </Card>
-            ))}
+              </Card>)}
           </motion.div>
         </div>
       </section>
@@ -267,6 +273,5 @@ export default function LandingPage() {
           </form>
         </DialogContent>
       </Dialog>
-    </div>
-  )
+    </div>;
 }
