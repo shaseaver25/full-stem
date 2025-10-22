@@ -22,17 +22,18 @@ const ProtectedAdminRoute = ({ children }: ProtectedAdminRouteProps) => {
       }
 
       try {
-        // Check if user has admin role using the has_role function
-        const { data, error } = await supabase.rpc('has_role', {
-          _user_id: user.id,
-          _role: 'admin'
-        });
+        // Check if user has admin, super_admin, or developer role
+        const { data: rolesData, error: rolesError } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', user.id)
+          .in('role', ['admin', 'super_admin', 'developer']);
 
-        if (error) {
-          console.error('Error checking admin role:', error);
+        if (rolesError) {
+          console.error('Error checking admin role:', rolesError);
           setIsAdmin(false);
         } else {
-          setIsAdmin(data === true);
+          setIsAdmin(rolesData && rolesData.length > 0);
         }
       } catch (error) {
         console.error('Error checking admin role:', error);

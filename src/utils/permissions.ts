@@ -121,18 +121,7 @@ export const getAllowedRoutes = (role: UserRole | null): string[] => {
       '/preferences',
       '/teacher/build-class',
     ],
-    super_admin: [
-      '/super-admin',
-      '/admin/dashboard',
-      '/admin/ai-course-builder',
-      '/admin/course-editor',
-      '/admin/build-class',
-      '/admin/advanced',
-      '/dashboard/admin/analytics',
-      '/content',
-      '/preferences',
-      '/teacher/build-class',
-    ],
+    super_admin: ['*'], // Full access to all routes
     system_admin: [
       '/system-dashboard',
       '/admin/advanced',

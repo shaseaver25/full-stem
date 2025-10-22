@@ -2,6 +2,7 @@ import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTeacherProfileSimplified } from '@/hooks/useTeacherProfileSimplified';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ProtectedTeacherRouteProps {
   children: React.ReactNode;
@@ -14,6 +15,37 @@ const ProtectedTeacherRoute: React.FC<ProtectedTeacherRouteProps> = ({
 }) => {
   const { user, loading: authLoading } = useAuth();
   const { profile, loading: profileLoading } = useTeacherProfileSimplified();
+  const [isElevatedRole, setIsElevatedRole] = React.useState<boolean | null>(null);
+
+  // Check for elevated roles (super_admin or developer)
+  React.useEffect(() => {
+    const checkElevatedRole = async () => {
+      if (!user) {
+        setIsElevatedRole(false);
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', user.id)
+          .in('role', ['super_admin', 'developer']);
+
+        if (error) {
+          console.error('Error checking elevated role:', error);
+          setIsElevatedRole(false);
+        } else {
+          setIsElevatedRole(data && data.length > 0);
+        }
+      } catch (error) {
+        console.error('Error checking elevated role:', error);
+        setIsElevatedRole(false);
+      }
+    };
+
+    checkElevatedRole();
+  }, [user]);
 
   console.log('ProtectedTeacherRoute Debug:', {
     user: !!user,
@@ -21,11 +53,12 @@ const ProtectedTeacherRoute: React.FC<ProtectedTeacherRouteProps> = ({
     requireOnboarding,
     authLoading,
     profileLoading,
+    isElevatedRole,
     currentPath: window.location.pathname
   });
 
   // Show loading while auth or profile is loading
-  if (authLoading || profileLoading) {
+  if (authLoading || profileLoading || isElevatedRole === null) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
@@ -37,6 +70,12 @@ const ProtectedTeacherRoute: React.FC<ProtectedTeacherRouteProps> = ({
   if (!user) {
     console.log('No user, redirecting to auth');
     return <Navigate to="/teacher/auth" replace />;
+  }
+
+  // Super admins and developers have full access to all teacher routes
+  if (isElevatedRole) {
+    console.log('Elevated role (super_admin/developer) - granting access');
+    return <>{children}</>;
   }
 
   const currentPath = window.location.pathname;

@@ -22,19 +22,18 @@ const ProtectedParentRoute = ({ children }: ProtectedParentRouteProps) => {
       }
 
       try {
-        // Check if user has parent role in user_roles table
+        // Check if user has parent, super_admin, or developer role
         const { data, error } = await supabase
           .from('user_roles')
           .select('role')
           .eq('user_id', user.id)
-          .eq('role', 'parent')
-          .maybeSingle();
+          .in('role', ['parent', 'super_admin', 'developer']);
 
         if (error) {
           console.error('Error checking parent role:', error);
           setIsParent(false);
         } else {
-          setIsParent(data !== null);
+          setIsParent(data && data.length > 0);
         }
       } catch (error) {
         console.error('Error checking parent role:', error);
