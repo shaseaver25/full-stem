@@ -4,6 +4,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Navigate } from 'react-router-dom';
 import Header from '@/components/Header';
+import { supabase } from '@/integrations/supabase/client';
+import { useEffect, useState } from 'react';
 import { StudentDashboardHeader } from '@/components/student/StudentDashboardHeader';
 import { StudentInsightsPanel } from '@/components/student/StudentInsightsPanel';
 import { StudentGoalsSection } from '@/components/student/StudentGoalsSection';
@@ -25,6 +27,7 @@ import {
 
 export default function StudentDashboard() {
   const { user } = useAuth();
+  const [isElevatedRole, setIsElevatedRole] = useState<boolean | null>(null);
   const { data: profile, isLoading: profileLoading } = useStudentProfile();
   const { data: insights = [], isLoading: insightsLoading } = useStudentInsights(profile?.id);
   const { data: goals = [] } = useStudentGoals(profile?.id);
@@ -35,11 +38,41 @@ export default function StudentDashboard() {
   const updateGoalStatus = useUpdateGoalStatus();
   const refreshInsights = useRefreshInsights();
 
+  // Check for elevated roles (super_admin or developer)
+  useEffect(() => {
+    const checkElevatedRole = async () => {
+      if (!user) {
+        setIsElevatedRole(false);
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', user.id)
+          .in('role', ['super_admin', 'developer']);
+
+        if (error) {
+          console.error('Error checking elevated role:', error);
+          setIsElevatedRole(false);
+        } else {
+          setIsElevatedRole(data && data.length > 0);
+        }
+      } catch (error) {
+        console.error('Error checking elevated role:', error);
+        setIsElevatedRole(false);
+      }
+    };
+
+    checkElevatedRole();
+  }, [user]);
+
   if (!user) {
     return <Navigate to="/login" replace />;
   }
 
-  if (profileLoading) {
+  if (profileLoading || isElevatedRole === null) {
     return (
       <div className="min-h-screen bg-background">
         <Header />
@@ -54,7 +87,8 @@ export default function StudentDashboard() {
     );
   }
 
-  if (!profile) {
+  // Allow elevated roles to view without a profile
+  if (!profile && !isElevatedRole) {
     return (
       <div className="min-h-screen bg-background">
         <Header />
@@ -68,6 +102,38 @@ export default function StudentDashboard() {
                 <Button onClick={() => window.location.href = '/'}>
                   Go Home
                 </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  // Super admins/developers viewing without profile - show admin view
+  if (!profile && isElevatedRole) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="container mx-auto p-6 max-w-7xl">
+          <Card>
+            <CardContent className="pt-6">
+              <div className="text-center space-y-4">
+                <h2 className="text-2xl font-bold">Student Dashboard (Admin View)</h2>
+                <p className="text-muted-foreground">
+                  You are viewing this page as a super admin/developer without a student profile.
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  To see the full student experience, you would need a student profile assigned to your account.
+                </p>
+                <div className="flex justify-center gap-4">
+                  <Button onClick={() => window.location.href = '/dev'}>
+                    Go to Developer Dashboard
+                  </Button>
+                  <Button variant="outline" onClick={() => window.location.href = '/'}>
+                    Go Home
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>
