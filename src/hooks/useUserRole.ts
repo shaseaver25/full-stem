@@ -50,9 +50,15 @@ export const useUserRole = () => {
     fetchUserRole();
 
     // Set up real-time subscription for role changes
-    // Create a unique channel for each hook instance to avoid subscription conflicts
     if (user?.id) {
-      // Use a random ID to ensure each hook instance gets its own channel
+      // Cleanup any existing subscription first
+      if (channelRef.current) {
+        channelRef.current.unsubscribe();
+        supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
+      }
+
+      // Create a unique channel for each hook instance
       const uniqueId = Math.random().toString(36).substring(7);
       const channelName = `user_role_${user.id}_${uniqueId}`;
       const channel = supabase.channel(channelName);
@@ -77,16 +83,15 @@ export const useUserRole = () => {
           }
         )
         .subscribe();
-
-      return () => {
-        if (channelRef.current) {
-          supabase.removeChannel(channelRef.current);
-          channelRef.current = null;
-        }
-      };
     }
 
-    return () => {};
+    return () => {
+      if (channelRef.current) {
+        channelRef.current.unsubscribe();
+        supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
+      }
+    };
   }, [user]);
 
   return { role, loading };
