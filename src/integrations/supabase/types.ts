@@ -481,7 +481,7 @@ export type Database = {
           actor_user_id: string
           created_at: string
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           payload_hash: string | null
           reason: string | null
           resource: string
@@ -494,7 +494,7 @@ export type Database = {
           actor_user_id: string
           created_at?: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           payload_hash?: string | null
           reason?: string | null
           resource: string
@@ -507,7 +507,7 @@ export type Database = {
           actor_user_id?: string
           created_at?: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           payload_hash?: string | null
           reason?: string | null
           resource?: string
@@ -1950,7 +1950,7 @@ export type Database = {
           id: string
           impersonated_role: string | null
           impersonated_user_id: string | null
-          ip_address: unknown | null
+          ip_address: unknown
           session_end: string | null
           session_start: string
           user_agent: string | null
@@ -1962,7 +1962,7 @@ export type Database = {
           id?: string
           impersonated_role?: string | null
           impersonated_user_id?: string | null
-          ip_address?: unknown | null
+          ip_address?: unknown
           session_end?: string | null
           session_start?: string
           user_agent?: string | null
@@ -1974,7 +1974,7 @@ export type Database = {
           id?: string
           impersonated_role?: string | null
           impersonated_user_id?: string | null
-          ip_address?: unknown | null
+          ip_address?: unknown
           session_end?: string | null
           session_start?: string
           user_agent?: string | null
@@ -2423,7 +2423,7 @@ export type Database = {
           action: string
           created_at: string
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           success: boolean
           user_agent: string | null
           user_id: string
@@ -2432,7 +2432,7 @@ export type Database = {
           action: string
           created_at?: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           success: boolean
           user_agent?: string | null
           user_id: string
@@ -2441,7 +2441,7 @@ export type Database = {
           action?: string
           created_at?: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           success?: boolean
           user_agent?: string | null
           user_id?: string
@@ -2479,21 +2479,21 @@ export type Database = {
         Row: {
           attempted_at: string
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           success: boolean
           user_id: string
         }
         Insert: {
           attempted_at?: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           success?: boolean
           user_id: string
         }
         Update: {
           attempted_at?: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           success?: boolean
           user_id?: string
         }
@@ -3100,7 +3100,7 @@ export type Database = {
         Row: {
           created_at: string
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           reason: string | null
           updated_at: string
           user_id: string
@@ -3112,7 +3112,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           reason?: string | null
           updated_at?: string
           user_id: string
@@ -3124,7 +3124,7 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           reason?: string | null
           updated_at?: string
           user_id?: string
@@ -3548,10 +3548,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      calculate_letter_grade: {
-        Args: { percentage: number }
-        Returns: string
-      }
+      calculate_letter_grade: { Args: { percentage: number }; Returns: string }
       can_manage_student: {
         Args: { _student_id: string; _user_id: string }
         Returns: boolean
@@ -3560,18 +3557,9 @@ export type Database = {
         Args: { _student_id: string; _user_id: string }
         Returns: boolean
       }
-      cleanup_old_mfa_attempts: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      cleanup_old_tts_cache: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      decrypt_mfa_secret: {
-        Args: { uid: string }
-        Returns: string
-      }
+      cleanup_old_mfa_attempts: { Args: never; Returns: undefined }
+      cleanup_old_tts_cache: { Args: never; Returns: undefined }
+      decrypt_mfa_secret: { Args: { uid: string }; Returns: string }
       decrypt_token: {
         Args: { provider_param: string; user_id_param: string }
         Returns: string
@@ -3580,18 +3568,9 @@ export type Database = {
         Args: { secret_text: string; uid: string }
         Returns: undefined
       }
-      encrypt_token: {
-        Args: { token_text: string }
-        Returns: string
-      }
-      generate_class_code: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      get_student_id_for_user: {
-        Args: { _user_id: string }
-        Returns: string
-      }
+      encrypt_token: { Args: { token_text: string }; Returns: string }
+      generate_class_code: { Args: never; Returns: string }
+      get_student_id_for_user: { Args: { _user_id: string }; Returns: string }
       global_search: {
         Args: { org_name?: string; search_query: string; user_role?: string }
         Returns: {
@@ -3616,18 +3595,9 @@ export type Database = {
         }
         Returns: boolean
       }
-      is_developer: {
-        Args: { _user_id?: string }
-        Returns: boolean
-      }
-      is_super_admin: {
-        Args: { _user_id?: string }
-        Returns: boolean
-      }
-      is_system_admin: {
-        Args: { _user_id?: string }
-        Returns: boolean
-      }
+      is_developer: { Args: { _user_id?: string }; Returns: boolean }
+      is_super_admin: { Args: { _user_id?: string }; Returns: boolean }
+      is_system_admin: { Args: { _user_id?: string }; Returns: boolean }
       is_teacher_of_class: {
         Args: { _class_id: string; _user_id: string }
         Returns: boolean
@@ -3636,17 +3606,22 @@ export type Database = {
         Args: { _student_id: string; _teacher_user_id: string }
         Returns: boolean
       }
-      refresh_system_metrics: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      reset_dev_sandbox: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      rpc_assign_lesson_to_class: {
-        Args:
-          | {
+      refresh_system_metrics: { Args: never; Returns: undefined }
+      reset_dev_sandbox: { Args: never; Returns: undefined }
+      rpc_assign_lesson_to_class:
+        | {
+            Args: {
+              p_class_id: string
+              p_component_ids: string[]
+              p_due_at: string
+              p_lesson_id: string
+              p_options?: Json
+              p_release_at?: string
+            }
+            Returns: string
+          }
+        | {
+            Args: {
               p_class_id: string
               p_component_ids: string[]
               p_description?: string
@@ -3658,16 +3633,8 @@ export type Database = {
               p_rubric?: string
               p_title?: string
             }
-          | {
-              p_class_id: string
-              p_component_ids: string[]
-              p_due_at: string
-              p_lesson_id: string
-              p_options?: Json
-              p_release_at?: string
-            }
-        Returns: string
-      }
+            Returns: string
+          }
       rpc_backfill_assignments_for_student: {
         Args: { p_class_id: string; p_student_id: string }
         Returns: undefined
@@ -3676,14 +3643,8 @@ export type Database = {
         Args: { p_class_id: string; p_student_ids: string[] }
         Returns: undefined
       }
-      seed_dev_sandbox_data: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      user_enrolled_class_ids: {
-        Args: { _user_id: string }
-        Returns: string[]
-      }
+      seed_dev_sandbox_data: { Args: never; Returns: undefined }
+      user_enrolled_class_ids: { Args: { _user_id: string }; Returns: string[] }
       user_enrolled_in_class: {
         Args: { _class_id: string; _user_id: string }
         Returns: boolean
