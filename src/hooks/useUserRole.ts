@@ -25,17 +25,19 @@ export const useUserRole = () => {
         const { data, error } = await supabase
           .from('user_roles')
           .select('role')
-          .eq('user_id', user.id)
-          .single();
+          .eq('user_id', user.id);
 
         if (error) {
-          // Only log error if it's not a "no rows" error (user might not have role yet)
-          if (error.code !== 'PGRST116') {
-            console.error('Error fetching user role:', error);
-          }
+          console.error('Error fetching user role:', error);
           setRole(null);
+        } else if (data && data.length > 0) {
+          // If user has multiple roles, prioritize in this order
+          const rolePriority: UserRole[] = ['developer', 'super_admin', 'admin', 'teacher', 'parent', 'student'];
+          const userRoles = data.map(r => r.role as UserRole);
+          const highestRole = rolePriority.find(r => userRoles.includes(r)) || userRoles[0];
+          setRole(highestRole);
         } else {
-          setRole(data?.role as UserRole);
+          setRole(null);
         }
       } catch (error) {
         console.error('Error in useUserRole:', error);
