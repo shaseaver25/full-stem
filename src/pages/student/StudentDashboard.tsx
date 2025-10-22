@@ -29,7 +29,13 @@ export default function StudentDashboard() {
   console.log('[StudentDashboard] Component mounting');
   const { user } = useAuth();
   const [isElevatedRole, setIsElevatedRole] = useState<boolean | null>(null);
-  const { data: profile, isLoading: profileLoading } = useStudentProfile();
+  const { data: profile, isLoading: profileLoading, error: profileError } = useStudentProfile();
+  
+  console.log('[StudentDashboard] Profile state:', { 
+    profileLoading, 
+    hasProfile: !!profile,
+    profileError: profileError?.message 
+  });
   const { data: insights = [], isLoading: insightsLoading } = useStudentInsights(profile?.id);
   const { data: goals = [] } = useStudentGoals(profile?.id);
   const { data: reflections = [] } = useStudentReflections(profile?.id);
@@ -43,10 +49,12 @@ export default function StudentDashboard() {
   useEffect(() => {
     const checkElevatedRole = async () => {
       if (!user) {
+        console.log('[StudentDashboard] No user for elevated role check');
         setIsElevatedRole(false);
         return;
       }
 
+      console.log('[StudentDashboard] Checking elevated role for user:', user.id);
       try {
         const { data, error } = await supabase
           .from('user_roles')
@@ -55,13 +63,15 @@ export default function StudentDashboard() {
           .in('role', ['super_admin', 'developer']);
 
         if (error) {
-          console.error('Error checking elevated role:', error);
+          console.error('[StudentDashboard] Error checking elevated role:', error);
           setIsElevatedRole(false);
         } else {
-          setIsElevatedRole(data && data.length > 0);
+          const isElevated = data && data.length > 0;
+          console.log('[StudentDashboard] Elevated role check result:', { roles: data, isElevated });
+          setIsElevatedRole(isElevated);
         }
       } catch (error) {
-        console.error('Error checking elevated role:', error);
+        console.error('[StudentDashboard] Exception checking elevated role:', error);
         setIsElevatedRole(false);
       }
     };
