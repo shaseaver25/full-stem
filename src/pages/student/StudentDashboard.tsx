@@ -69,10 +69,19 @@ export default function StudentDashboard() {
   }, [user]);
 
   if (!user) {
-    return <Navigate to="/login" replace />;
+    console.log('[StudentDashboard] No user, redirecting to /auth');
+    return <Navigate to="/auth" replace />;
   }
 
+  console.log('[StudentDashboard] State:', { 
+    profileLoading, 
+    isElevatedRole, 
+    hasProfile: !!profile,
+    profileId: profile?.id 
+  });
+
   if (profileLoading || isElevatedRole === null) {
+    console.log('[StudentDashboard] Loading...');
     return (
       <div className="min-h-screen bg-background">
         <Header />
@@ -89,6 +98,7 @@ export default function StudentDashboard() {
 
   // Allow elevated roles to view without a profile
   if (!profile && !isElevatedRole) {
+    console.log('[StudentDashboard] No profile and not elevated role');
     return (
       <div className="min-h-screen bg-background">
         <Header />
@@ -112,6 +122,7 @@ export default function StudentDashboard() {
 
   // Super admins/developers viewing without profile - show admin view
   if (!profile && isElevatedRole) {
+    console.log('[StudentDashboard] Elevated role without profile - showing admin view');
     return (
       <div className="min-h-screen bg-background">
         <Header />
@@ -143,6 +154,8 @@ export default function StudentDashboard() {
   }
 
   const completedGoals = goals.filter(g => g.status === 'completed');
+
+  console.log('[StudentDashboard] Rendering full dashboard with profile:', profile?.id);
 
   return (
     <div className="min-h-screen bg-background">
