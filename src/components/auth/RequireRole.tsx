@@ -71,11 +71,13 @@ const RequireRole = ({ children, allowedRoles }: RequireRoleProps) => {
 
   // Not authenticated - redirect to login
   if (!user) {
+    console.log('[RequireRole] Redirecting to /auth - no user');
     return <Navigate to="/auth" state={{ from: location }} replace />;
   }
 
   // No role found - redirect to home
   if (!userRole) {
+    console.log('[RequireRole] Redirecting to / - no role found');
     return <Navigate to="/" replace />;
   }
 
@@ -87,10 +89,12 @@ const RequireRole = ({ children, allowedRoles }: RequireRoleProps) => {
 
   // Access denied - redirect to 403 page
   if (!hasAccess) {
+    console.log('[RequireRole] Redirecting to /access-denied - no access');
     return <Navigate to="/access-denied" state={{ from: location.pathname, userRole }} replace />;
   }
 
   // User has access - render children
+  console.log('[RequireRole] Rendering children - access granted');
   return <>{children}</>;
 };
 
