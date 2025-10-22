@@ -24,18 +24,23 @@ const RequireRole = ({ children, allowedRoles }: RequireRoleProps) => {
       }
 
       try {
-        // Fetch user role from database
+        // Fetch all user roles from database
         const { data, error } = await supabase
           .from('user_roles')
           .select('role')
-          .eq('user_id', user.id)
-          .single();
+          .eq('user_id', user.id);
 
         if (error) {
-          console.error('Error fetching user role:', error);
+          console.error('Error fetching user roles:', error);
           setUserRole(null);
+        } else if (data && data.length > 0) {
+          // Priority order: developer > super_admin > system_admin > admin > teacher > parent > student
+          const rolePriority: UserRole[] = ['developer', 'super_admin', 'system_admin', 'admin', 'teacher', 'parent', 'student'];
+          const userRoles = data.map(r => r.role as UserRole);
+          const highestRole = rolePriority.find(role => userRoles.includes(role)) || userRoles[0];
+          setUserRole(highestRole);
         } else {
-          setUserRole(data?.role as UserRole);
+          setUserRole(null);
         }
       } catch (error) {
         console.error('Error checking user role:', error);
