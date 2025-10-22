@@ -20,16 +20,35 @@ import DemoModeIndicator from '@/components/DemoModeIndicator';
 import RoleAwareNavigation from '@/components/RoleAwareNavigation';
 import { GlobalSearch } from '@/components/navigation/GlobalSearch';
 import { NotificationsPanel } from '@/components/teacher/dashboard/NotificationsPanel';
-import { Menu } from 'lucide-react';
+import { Menu, LogOut } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 const Header = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isSigningOut, setIsSigningOut] = useState(false);
 
   const handleSignOut = async () => {
-    await signOut();
-    navigate('/');
+    try {
+      setIsSigningOut(true);
+      await signOut();
+      toast({
+        title: 'Signed Out',
+        description: 'You have been successfully signed out.',
+      });
+      navigate('/');
+    } catch (error) {
+      console.error('Sign out error:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to sign out. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSigningOut(false);
+    }
   };
 
   const closeMobileMenu = () => {
@@ -68,8 +87,14 @@ const Header = () => {
                 >
                   Preferences
                 </Link>
-                <Button onClick={handleSignOut} variant="outline" className="hidden md:flex">
-                  Sign Out
+                <Button 
+                  onClick={handleSignOut} 
+                  variant="outline" 
+                  className="hidden md:flex gap-2"
+                  disabled={isSigningOut}
+                >
+                  <LogOut className="h-4 w-4" />
+                  {isSigningOut ? 'Signing Out...' : 'Sign Out'}
                 </Button>
               </>
             ) : (
@@ -104,8 +129,14 @@ const Header = () => {
                       >
                         Preferences
                       </Link>
-                      <Button onClick={() => { handleSignOut(); closeMobileMenu(); }} variant="outline" className="mx-3">
-                        Sign Out
+                      <Button 
+                        onClick={() => { handleSignOut(); closeMobileMenu(); }} 
+                        variant="outline" 
+                        className="mx-3 gap-2"
+                        disabled={isSigningOut}
+                      >
+                        <LogOut className="h-4 w-4" />
+                        {isSigningOut ? 'Signing Out...' : 'Sign Out'}
                       </Button>
                     </>
                   ) : (
