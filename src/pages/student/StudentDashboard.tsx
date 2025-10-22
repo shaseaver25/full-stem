@@ -26,6 +26,7 @@ import {
 } from '@/hooks/useStudentDashboard';
 
 export default function StudentDashboard() {
+  console.log('[StudentDashboard] Component mounting');
   const { user } = useAuth();
   const [isElevatedRole, setIsElevatedRole] = useState<boolean | null>(null);
   const { data: profile, isLoading: profileLoading } = useStudentProfile();
