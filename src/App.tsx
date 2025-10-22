@@ -113,7 +113,7 @@ function AppContent() {
           path="/dashboard/student" 
           element={
             <ErrorBoundary>
-              <RequireRole allowedRoles={['student']}>
+              <RequireRole allowedRoles={['student', 'super_admin', 'developer']}>
                 <NewStudentDashboard />
               </RequireRole>
             </ErrorBoundary>
@@ -123,7 +123,7 @@ function AppContent() {
           path="/quiz/learning-genius" 
           element={
             <ErrorBoundary>
-              <RequireRole allowedRoles={['student']}>
+              <RequireRole allowedRoles={['student', 'super_admin', 'developer']}>
                 <LearningGeniusSurveyPage />
               </RequireRole>
             </ErrorBoundary>
@@ -133,7 +133,7 @@ function AppContent() {
           path="/classes/join" 
           element={
             <ErrorBoundary>
-              <RequireRole allowedRoles={['student']}>
+              <RequireRole allowedRoles={['student', 'super_admin', 'developer']}>
                 <JoinClassPage />
               </RequireRole>
             </ErrorBoundary>
@@ -143,7 +143,7 @@ function AppContent() {
           path="/classes/my-classes" 
           element={
             <ErrorBoundary>
-              <RequireRole allowedRoles={['student']}>
+              <RequireRole allowedRoles={['student', 'super_admin', 'developer']}>
                 <MyClassesPage />
               </RequireRole>
             </ErrorBoundary>
@@ -153,7 +153,7 @@ function AppContent() {
           path="/classes/:id" 
           element={
             <ErrorBoundary>
-              <RequireRole allowedRoles={['student', 'teacher']}>
+              <RequireRole allowedRoles={['student', 'teacher', 'super_admin', 'developer']}>
                 <RoleAwareClassDetailPage />
               </RequireRole>
             </ErrorBoundary>
@@ -163,7 +163,7 @@ function AppContent() {
           path="/assignments" 
           element={
             <ErrorBoundary>
-              <RequireRole allowedRoles={['student']}>
+              <RequireRole allowedRoles={['student', 'super_admin', 'developer']}>
                 <AssignmentsListPage />
               </RequireRole>
             </ErrorBoundary>
@@ -173,7 +173,7 @@ function AppContent() {
           path="/assignments/:id" 
           element={
             <ErrorBoundary>
-              <RequireRole allowedRoles={['student']}>
+              <RequireRole allowedRoles={['student', 'super_admin', 'developer']}>
                 <AssignmentDetailPage />
               </RequireRole>
             </ErrorBoundary>
@@ -183,7 +183,7 @@ function AppContent() {
           path="/grades" 
           element={
             <ErrorBoundary>
-              <RequireRole allowedRoles={['student']}>
+              <RequireRole allowedRoles={['student', 'super_admin', 'developer']}>
                 <MyGradesPage />
               </RequireRole>
             </ErrorBoundary>
@@ -229,7 +229,7 @@ function AppContent() {
           path="/parent" 
           element={
             <ErrorBoundary>
-              <RequireRole allowedRoles={['parent']}>
+              <RequireRole allowedRoles={['parent', 'super_admin', 'developer']}>
                 <ParentPortalPage />
               </RequireRole>
             </ErrorBoundary>
@@ -359,7 +359,7 @@ function AppContent() {
           path="/student" 
           element={
             <ErrorBoundary>
-              <RequireRole allowedRoles={['student']}>
+              <RequireRole allowedRoles={['student', 'super_admin', 'developer']}>
                 <StudentDashboard />
               </RequireRole>
             </ErrorBoundary>
@@ -369,7 +369,7 @@ function AppContent() {
           path="/student/assignments/:id" 
           element={
             <ErrorBoundary>
-              <RequireRole allowedRoles={['student']}>
+              <RequireRole allowedRoles={['student', 'super_admin', 'developer']}>
                 <StudentAssignmentDetail />
               </RequireRole>
             </ErrorBoundary>
@@ -379,7 +379,7 @@ function AppContent() {
           path="/student/assignments/:id/submit" 
           element={
             <ErrorBoundary>
-              <RequireRole allowedRoles={['student']}>
+              <RequireRole allowedRoles={['student', 'super_admin', 'developer']}>
                 <StudentAssignmentSubmit />
               </RequireRole>
             </ErrorBoundary>
