@@ -1,43 +1,20 @@
 import { supabase } from "@/integrations/supabase/client";
-
-export type UserRole = 'student' | 'teacher' | 'parent' | 'admin' | 'super_admin' | 'system_admin' | 'developer';
-
-export const getRoleDashboardPath = (role: UserRole): string => {
-  const rolePaths: Record<UserRole, string> = {
-    student: '/dashboard/student',
-    teacher: '/teacher/dashboard',
-    parent: '/dashboard/parent',
-    admin: '/dashboard/admin/analytics',
-    super_admin: '/super-admin',
-    system_admin: '/system-dashboard',
-    developer: '/dev'
-  };
-  
-  return rolePaths[role] || '/';
-};
+import { getRoleDashboardPath, type UserRole } from "./roleUtils";
 
 export const getUserRole = async (userId: string): Promise<UserRole | null> => {
   try {
     const { data, error } = await supabase
-      .from('user_roles')
+      .from('profiles')
       .select('role')
-      .eq('user_id', userId);
+      .eq('id', userId)
+      .single();
     
     if (error) {
       console.error('Error fetching user role:', error);
       return null;
     }
     
-    if (!data || data.length === 0) {
-      return null;
-    }
-    
-    // Priority order: developer > super_admin > system_admin > admin > teacher > parent > student
-    const rolePriority: UserRole[] = ['developer', 'super_admin', 'system_admin', 'admin', 'teacher', 'parent', 'student'];
-    const userRoles = data.map(r => r.role as UserRole);
-    const highestRole = rolePriority.find(role => userRoles.includes(role)) || userRoles[0];
-    
-    return highestRole;
+    return data?.role as UserRole || null;
   } catch (error) {
     console.error('Error in getUserRole:', error);
     return null;
@@ -45,33 +22,14 @@ export const getUserRole = async (userId: string): Promise<UserRole | null> => {
 };
 
 export const redirectToRoleDashboard = async (userId: string, navigate: (path: string) => void) => {
-  // Check if user logged in through teacher portal - this takes priority
-  const isTeacherPortalLogin = localStorage.getItem('teacherPortalLogin') === 'true';
-  
-  if (isTeacherPortalLogin) {
-    console.log('🎓 Teacher portal login detected, navigating to teacher dashboard');
-    navigate('/teacher/dashboard');
-    return;
-  }
-
-  // Retry logic to wait for role to be assigned (especially for new OAuth users)
-  let role: UserRole | null = null;
-  let attempts = 0;
-  const maxAttempts = 5;
-  
-  while (!role && attempts < maxAttempts) {
-    role = await getUserRole(userId);
-    
-    if (!role) {
-      await new Promise(resolve => setTimeout(resolve, 500));
-      attempts++;
-    }
-  }
+  const role = await getUserRole(userId);
   
   if (role) {
     const dashboardPath = getRoleDashboardPath(role);
+    console.log(`Redirecting ${role} to ${dashboardPath}`);
     navigate(dashboardPath);
   } else {
+    console.log('No role found, redirecting to home');
     navigate('/');
   }
 };

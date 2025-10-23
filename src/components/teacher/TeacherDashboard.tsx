@@ -42,21 +42,7 @@ const TeacherDashboard = () => {
     }
   }, [profile?.id]);
 
-  // Prevent redirects away from teacher dashboard and clear flag after mount
-  useEffect(() => {
-    const isTeacherPortalLogin = localStorage.getItem('teacherPortalLogin') === 'true';
-    const currentPath = window.location.pathname;
-    
-    if (isTeacherPortalLogin && currentPath.includes('/admin')) {
-      navigate('/teacher/dashboard', { replace: true });
-      return;
-    }
-    
-    if (isTeacherPortalLogin && currentPath === '/teacher/dashboard') {
-      console.log('🧹 Clearing teacherPortalLogin flag after successful teacher dashboard load');
-      localStorage.removeItem('teacherPortalLogin');
-    }
-  }, [navigate]);
+  // No special logic needed - single role system handles routing
 
   const fetchDashboardData = async () => {
     if (!profile?.id) return;

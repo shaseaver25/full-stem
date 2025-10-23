@@ -20,18 +20,16 @@ const TeacherAuth = () => {
   const navigate = useNavigate();
   const hasNavigated = useRef(false);
 
-  // If already logged in as teacher, redirect to dashboard (only once)
   useEffect(() => {
     const checkTeacherRole = async () => {
       if (user && !hasNavigated.current) {
-        const { data: roleData } = await supabase
-          .from('user_roles')
+        const { data } = await supabase
+          .from('profiles')
           .select('role')
-          .eq('user_id', user.id)
-          .eq('role', 'teacher')
-          .maybeSingle();
+          .eq('id', user.id)
+          .single();
         
-        if (roleData) {
+        if (data?.role === 'teacher') {
           hasNavigated.current = true;
           navigate('/teacher/dashboard', { replace: true });
         }
@@ -43,10 +41,6 @@ const TeacherAuth = () => {
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Set flag synchronously before sign-in
-    localStorage.setItem('teacherPortalLogin', 'true');
-    
     setLoading(true);
     setError('');
 
@@ -55,9 +49,7 @@ const TeacherAuth = () => {
     if (error) {
       setError(error.message);
       setLoading(false);
-      localStorage.removeItem('teacherPortalLogin');
     } else {
-      // Always redirect to teacher dashboard when logging in through teacher portal
       if (!hasNavigated.current) {
         hasNavigated.current = true;
         navigate('/teacher/dashboard', { replace: true });

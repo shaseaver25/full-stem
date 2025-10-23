@@ -26,20 +26,11 @@ const Auth = () => {
   const location = useLocation();
   const { toast } = useToast();
 
-  // Redirect if already logged in - but allow manual navigation to specific routes
   useEffect(() => {
-    const isTeacherPortalLogin = localStorage.getItem('teacherPortalLogin') === 'true';
-    
-    // If teacher portal login flag is set, skip redirect logic
-    if (isTeacherPortalLogin) {
-      return;
-    }
-    
-    // Only redirect if on auth page and NOT teacher portal login
-    if (user && location.pathname === '/auth') {
+    if (user) {
       redirectToRoleDashboard(user.id, navigate);
     }
-  }, [user, navigate, location]);
+  }, [user, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -81,17 +81,8 @@ const AuthCallback = () => {
         });
       }
 
-      // STRENGTHENED FLAG CHECK: Teacher portal login takes absolute priority
-      const isTeacherPortalLogin = localStorage.getItem('teacherPortalLogin') === 'true';
-      console.log('🔍 AuthCallback checking teacherPortalLogin flag:', isTeacherPortalLogin);
-      
-      if (isTeacherPortalLogin) {
-        console.log('🎓 Teacher portal login detected - navigating directly to teacher dashboard');
-        navigate('/teacher/dashboard', { replace: true });
-      } else {
-        console.log('📍 Regular login - redirecting to role-based dashboard');
-        await redirectToRoleDashboard(session.user.id, navigate);
-      }
+      console.log('✅ Authentication successful, redirecting to role dashboard');
+      await redirectToRoleDashboard(session.user.id, navigate);
     };
 
     handleCallback();

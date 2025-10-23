@@ -2713,6 +2713,7 @@ export type Database = {
           mfa_enabled: boolean | null
           mfa_secret: string | null
           mfa_secret_enc: string | null
+          role: string | null
           updated_at: string
         }
         Insert: {
@@ -2726,6 +2727,7 @@ export type Database = {
           mfa_enabled?: boolean | null
           mfa_secret?: string | null
           mfa_secret_enc?: string | null
+          role?: string | null
           updated_at?: string
         }
         Update: {
@@ -2739,6 +2741,7 @@ export type Database = {
           mfa_enabled?: boolean | null
           mfa_secret?: string | null
           mfa_secret_enc?: string | null
+          role?: string | null
           updated_at?: string
         }
         Relationships: []

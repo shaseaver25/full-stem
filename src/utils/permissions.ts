@@ -1,4 +1,4 @@
-import { UserRole } from './roleRedirect';
+import type { UserRole } from '@/utils/roleUtils';
 import { LucideIcon, LayoutDashboard, Sparkles, FileEdit, BookOpen, FolderOpen, BarChart3, Settings, Plus, GraduationCap, Users, Home, ClipboardList } from 'lucide-react';
 
 export interface NavigationItem {

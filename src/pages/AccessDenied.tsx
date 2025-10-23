@@ -2,7 +2,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ShieldAlert, Home, ArrowLeft } from 'lucide-react';
-import { getRoleDashboardPath, UserRole } from '@/utils/roleRedirect';
+import { getRoleDashboardPath, type UserRole } from '@/utils/roleUtils';
 
 const AccessDenied = () => {
   const navigate = useNavigate();

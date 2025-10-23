@@ -1,15 +1,24 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
-import { useImpersonation } from '@/contexts/ImpersonationContext';
+import { useUserRole } from '@/hooks/useUserRole';
+import { Loader2 } from 'lucide-react';
 
 interface DeveloperRouteProps {
   children: React.ReactNode;
 }
 
 const DeveloperRoute: React.FC<DeveloperRouteProps> = ({ children }) => {
-  const { isDeveloper } = useImpersonation();
+  const { role, loading } = useUserRole();
 
-  if (!isDeveloper) {
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (role !== 'developer') {
     return <Navigate to="/" replace />;
   }
 

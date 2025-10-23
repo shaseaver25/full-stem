@@ -1,17 +1,21 @@
-import { useEffect, useState, useRef } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { UserRole } from '@/utils/roleRedirect';
+import { useAuth } from '@/contexts/AuthContext';
+import type { UserRole } from '@/utils/roleUtils';
 
 /**
  * Hook to fetch and manage user role
  * Returns the user's role from the database
  */
-export const useUserRole = () => {
+interface UseUserRoleReturn {
+  role: UserRole | null;
+  loading: boolean;
+}
+
+export const useUserRole = (): UseUserRoleReturn => {
   const { user } = useAuth();
   const [role, setRole] = useState<UserRole | null>(null);
   const [loading, setLoading] = useState(true);
-  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
   useEffect(() => {
     const fetchUserRole = async () => {
@@ -23,24 +27,19 @@ export const useUserRole = () => {
 
       try {
         const { data, error } = await supabase
-          .from('user_roles')
+          .from('profiles')
           .select('role')
-          .eq('user_id', user.id);
+          .eq('id', user.id)
+          .single();
 
         if (error) {
           console.error('Error fetching user role:', error);
           setRole(null);
-        } else if (data && data.length > 0) {
-          // If user has multiple roles, prioritize in this order
-          const rolePriority: UserRole[] = ['developer', 'super_admin', 'admin', 'teacher', 'parent', 'student'];
-          const userRoles = data.map(r => r.role as UserRole);
-          const highestRole = rolePriority.find(r => userRoles.includes(r)) || userRoles[0];
-          setRole(highestRole);
         } else {
-          setRole(null);
+          setRole(data?.role as UserRole || null);
         }
       } catch (error) {
-        console.error('Error in useUserRole:', error);
+        console.error('Error in fetchUserRole:', error);
         setRole(null);
       } finally {
         setLoading(false);
@@ -49,48 +48,27 @@ export const useUserRole = () => {
 
     fetchUserRole();
 
-    // Set up real-time subscription for role changes
-    if (user?.id) {
-      // Cleanup any existing subscription first
-      if (channelRef.current) {
-        channelRef.current.unsubscribe();
-        supabase.removeChannel(channelRef.current);
-        channelRef.current = null;
-      }
-
-      // Create a unique channel for each hook instance
-      const uniqueId = Math.random().toString(36).substring(7);
-      const channelName = `user_role_${user.id}_${uniqueId}`;
-      const channel = supabase.channel(channelName);
-      channelRef.current = channel;
-      
-      channel
-        .on(
-          'postgres_changes',
-          {
-            event: '*',
-            schema: 'public',
-            table: 'user_roles',
-            filter: `user_id=eq.${user.id}`,
-          },
-          (payload) => {
-            console.log('Role change detected:', payload);
-            if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
-              setRole((payload.new as any).role as UserRole);
-            } else if (payload.eventType === 'DELETE') {
-              setRole(null);
-            }
+    // Subscribe to role changes
+    const subscription = supabase
+      .channel('profile-role-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'profiles',
+          filter: `id=eq.${user?.id}`
+        },
+        (payload) => {
+          if (payload.new && 'role' in payload.new) {
+            setRole(payload.new.role as UserRole);
           }
-        )
-        .subscribe();
-    }
+        }
+      )
+      .subscribe();
 
     return () => {
-      if (channelRef.current) {
-        channelRef.current.unsubscribe();
-        supabase.removeChannel(channelRef.current);
-        channelRef.current = null;
-      }
+      subscription.unsubscribe();
     };
   }, [user]);
 
