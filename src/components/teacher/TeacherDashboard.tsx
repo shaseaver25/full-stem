@@ -42,20 +42,18 @@ const TeacherDashboard = () => {
     }
   }, [profile?.id]);
 
-  // DEFENSIVE: Prevent any redirects away from teacher dashboard when logged in via teacher portal
+  // Prevent redirects away from teacher dashboard and clear flag after mount
   useEffect(() => {
     const isTeacherPortalLogin = localStorage.getItem('teacherPortalLogin') === 'true';
     const currentPath = window.location.pathname;
     
     if (isTeacherPortalLogin && currentPath.includes('/admin')) {
-      console.log('🛑 Detected redirect to admin path from teacher portal. Re-routing to teacher dashboard.');
       navigate('/teacher/dashboard', { replace: true });
       return;
     }
     
-    // Clear the flag after confirming we're on the right page
     if (isTeacherPortalLogin && currentPath === '/teacher/dashboard') {
-      console.log('🧹 Teacher Dashboard: Clearing teacherPortalLogin flag after mount');
+      console.log('🧹 Clearing teacherPortalLogin flag after successful teacher dashboard load');
       localStorage.removeItem('teacherPortalLogin');
     }
   }, [navigate]);

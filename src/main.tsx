@@ -9,13 +9,6 @@ import './index.css';
 import { initWebVitalsTracking } from "./utils/webVitals";
 import { isDev, isProd } from "./utils/env";
 import { initSentry } from "./config/sentry";
-import { installRedirectTracer } from "./debug/redirectTracer";
-
-// Install redirect tracer for debugging navigation issues
-// Remove this after confirming teacher portal login works correctly
-if (isDev) {
-  installRedirectTracer();
-}
 
 // Accessibility testing in development using axe-core
 // Note: Due to StrictMode compatibility, we use jest-axe for automated testing

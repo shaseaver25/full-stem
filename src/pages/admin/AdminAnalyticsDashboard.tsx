@@ -61,7 +61,7 @@ const AdminAnalyticsDashboard = () => {
           class_students!inner(student_id),
           class_assignments_new!inner(
             id,
-            assignments!inner(
+            published_assignments!inner(
               id,
               title,
               assignment_submissions!inner(
@@ -140,7 +140,7 @@ const AdminAnalyticsDashboard = () => {
         teacherStats.totalStudents += classItem.class_students?.length || 0;
 
         classItem.class_assignments_new?.forEach((assignment: any) => {
-          assignment.assignments?.forEach((assignmentDetail: any) => {
+          assignment.published_assignments?.forEach((assignmentDetail: any) => {
             const submissions = assignmentDetail.assignment_submissions || [];
             teacherStats.totalSubmissions += submissions.length;
             totalSubmissions += submissions.length;

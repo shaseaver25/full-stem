@@ -32,7 +32,6 @@ const TeacherAuth = () => {
           .maybeSingle();
         
         if (roleData) {
-          console.log('Teacher already logged in, redirecting to teacher dashboard');
           hasNavigated.current = true;
           navigate('/teacher/dashboard', { replace: true });
         }
@@ -45,31 +44,22 @@ const TeacherAuth = () => {
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // CRITICAL: Set flag synchronously BEFORE any async operations
-    // This ensures AuthContext sees the flag when onAuthStateChange fires
-    console.log('🎓 Setting teacherPortalLogin flag before sign in');
+    // Set flag synchronously before sign-in
     localStorage.setItem('teacherPortalLogin', 'true');
     
     setLoading(true);
     setError('');
 
-    console.log('Attempting sign in with email:', email);
-
     const { error } = await signIn(email, password);
     
     if (error) {
-      console.error('Sign in error:', error);
       setError(error.message);
       setLoading(false);
-      // Clear the flag on error so future logins work correctly
       localStorage.removeItem('teacherPortalLogin');
     } else {
-      console.log('Sign in successful, navigating to teacher dashboard');
-      
       // Always redirect to teacher dashboard when logging in through teacher portal
       if (!hasNavigated.current) {
         hasNavigated.current = true;
-        // Use replace: true to prevent back button from going to auth page
         navigate('/teacher/dashboard', { replace: true });
       }
     }

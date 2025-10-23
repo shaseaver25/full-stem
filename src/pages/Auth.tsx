@@ -28,19 +28,15 @@ const Auth = () => {
 
   // Redirect if already logged in - but allow manual navigation to specific routes
   useEffect(() => {
-    // STRENGTHENED FLAG CHECK: Check teacher portal flag FIRST before any other conditions
     const isTeacherPortalLogin = localStorage.getItem('teacherPortalLogin') === 'true';
-    console.log('📄 Auth.tsx useEffect:', { hasUser: !!user, pathname: location.pathname, isTeacherPortalLogin });
     
-    // If teacher portal login flag is set, DO NOT redirect at all
+    // If teacher portal login flag is set, skip redirect logic
     if (isTeacherPortalLogin) {
-      console.log('🎓 Auth.tsx detected teacherPortalLogin flag - skipping any redirect logic');
       return;
     }
     
     // Only redirect if on auth page and NOT teacher portal login
     if (user && location.pathname === '/auth') {
-      console.log('📄 Auth.tsx calling redirectToRoleDashboard');
       redirectToRoleDashboard(user.id, navigate);
     }
   }, [user, navigate, location]);
@@ -90,9 +86,6 @@ const Auth = () => {
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
     try {
-      console.log('🔐 Initiating Google OAuth sign-in with Drive access...');
-      console.log('📋 Requesting scopes: email profile openid https://www.googleapis.com/auth/drive.file');
-      
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
@@ -106,17 +99,13 @@ const Auth = () => {
       });
 
       if (error) {
-        console.error('❌ Google OAuth error:', error);
         toast({
           title: "Error",
           description: error.message,
           variant: "destructive"
         });
-      } else {
-        console.log('✅ Redirecting to Google for authentication...');
       }
     } catch (error) {
-      console.error('❌ Exception during Google sign-in:', error);
       toast({
         title: "Error",
         description: "Failed to initiate Google sign-in. Please try again.",

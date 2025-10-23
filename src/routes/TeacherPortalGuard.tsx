@@ -17,9 +17,8 @@ export default function TeacherPortalGuard() {
     const path = location.pathname;
     const isTeacherArea = path === '/teacher/dashboard' || path.startsWith('/teacher');
 
-    // Hard rule: while the flag is set, do not allow leaving /teacher/*
+    // While the flag is set, do not allow leaving /teacher/* area
     if (!isTeacherArea) {
-      console.log('🛡️ TeacherPortalGuard: blocking navigation to', path, '→ forcing /teacher/dashboard');
       navigate('/teacher/dashboard', { replace: true });
     }
   }, [location, navigate]);

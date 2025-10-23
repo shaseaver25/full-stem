@@ -45,12 +45,11 @@ export const getUserRole = async (userId: string): Promise<UserRole | null> => {
 };
 
 export const redirectToRoleDashboard = async (userId: string, navigate: (path: string) => void) => {
-  // CRITICAL: Check if user logged in through teacher portal - this takes ABSOLUTE PRIORITY
+  // Check if user logged in through teacher portal - this takes priority
   const isTeacherPortalLogin = localStorage.getItem('teacherPortalLogin') === 'true';
-  console.log('🔍 redirectToRoleDashboard called:', { userId, isTeacherPortalLogin });
   
   if (isTeacherPortalLogin) {
-    console.log('🎓 Teacher portal login detected, navigating to teacher dashboard and skipping role-based redirect');
+    console.log('🎓 Teacher portal login detected, navigating to teacher dashboard');
     navigate('/teacher/dashboard');
     return;
   }
@@ -64,19 +63,15 @@ export const redirectToRoleDashboard = async (userId: string, navigate: (path: s
     role = await getUserRole(userId);
     
     if (!role) {
-      console.log(`⏳ Waiting for role assignment... (attempt ${attempts + 1}/${maxAttempts})`);
-      await new Promise(resolve => setTimeout(resolve, 500)); // Wait 500ms between attempts
+      await new Promise(resolve => setTimeout(resolve, 500));
       attempts++;
     }
   }
   
   if (role) {
-    console.log(`✅ Role found: ${role}, redirecting...`);
     const dashboardPath = getRoleDashboardPath(role);
     navigate(dashboardPath);
   } else {
-    console.warn('⚠️ No role found after retries, redirecting to home');
-    // Default fallback if no role found after all retries
     navigate('/');
   }
 };
