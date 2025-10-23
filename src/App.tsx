@@ -87,6 +87,7 @@ import DeveloperRoute from "./components/developer/DeveloperRoute";
 import RequireRole from "./components/auth/RequireRole";
 import { StudentSignupForm } from "@/components/auth/student/StudentSignupForm";
 import { AdminOnboarding } from "@/components/admin/AdminOnboarding";
+import TeacherPortalGuard from "@/routes/TeacherPortalGuard";
 
 // Component that enables keyboard shortcut
 function AppContent() {
@@ -562,6 +563,7 @@ const App: React.FC = () => {
                   <Toaster />
                   <Sonner />
                   <BrowserRouter>
+                    <TeacherPortalGuard />
                     <div className="min-h-screen bg-background">
                       <AppContent />
                       <AccessibilityToolbar />
