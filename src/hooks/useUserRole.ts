@@ -11,6 +11,7 @@ export const useUserRole = () => {
   const [roles, setRoles] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const isSubscribedRef = useRef(false);
 
   useEffect(() => {
     if (!user?.id) {
@@ -39,11 +40,19 @@ export const useUserRole = () => {
 
     fetchUserRoles();
 
+    // Prevent duplicate subscriptions in React Strict Mode
+    if (isSubscribedRef.current) {
+      console.log('⏭️ Skipping duplicate subscription attempt');
+      return;
+    }
+
     // Clean up any existing channel before creating a new one
     if (channelRef.current) {
       supabase.removeChannel(channelRef.current).catch(() => {});
       channelRef.current = null;
     }
+
+    isSubscribedRef.current = true;
 
     // Subscribe to real-time updates with unique channel per user
     const channelName = `user-role-changes-${user.id}-${Date.now()}`;
@@ -76,6 +85,7 @@ export const useUserRole = () => {
         supabase.removeChannel(channelRef.current).catch(() => {});
         channelRef.current = null;
       }
+      isSubscribedRef.current = false;
     };
   }, [user?.id]);
 
