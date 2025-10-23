@@ -145,7 +145,7 @@ const LearningGeniusSurveyPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 py-8">
+    <div className="min-h-screen bg-white py-8">
       <div className="container mx-auto px-4">
         {currentView === 'intro' && renderIntro()}
         {currentView === 'survey' && (

@@ -40,7 +40,7 @@ const AdminDashboard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
+      <div className="min-h-screen bg-white">
         <Header />
         <div className="flex items-center justify-center min-h-[60vh]">
           <div className="text-lg">Loading...</div>
@@ -64,7 +64,7 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
+    <div className="min-h-screen bg-white">
       <Header />
       
       <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">

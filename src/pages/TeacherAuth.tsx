@@ -68,7 +68,7 @@ const TeacherAuth = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-white flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="flex items-center justify-between mb-8">
           <Link to="/" className="flex items-center text-sm text-gray-600 hover:text-gray-800">

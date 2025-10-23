@@ -121,7 +121,7 @@ const TeacherOnboarding = () => {
   // Show loading spinner while checking onboarding status
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+      <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
           <p className="text-gray-600">Loading...</p>
@@ -131,7 +131,7 @@ const TeacherOnboarding = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="min-h-screen bg-white">
       <Header />
       <div className="max-w-2xl mx-auto p-4">
         <Card className="shadow-xl">

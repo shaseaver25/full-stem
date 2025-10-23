@@ -10,7 +10,7 @@ const ComponentsPage = () => {
   const sampleText = `Welcome to our enhanced reading experience! This is a demonstration of our advanced text-to-speech capabilities. The system uses cutting-edge AI voices to provide natural-sounding narration with real-time word highlighting. You can adjust the playback speed, choose different voices, and even download the transcript. This technology helps students of all reading levels engage with content more effectively. The highlighting feature helps track progress and improve reading comprehension. Try clicking the play button to experience this innovative learning tool in action!`;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
+    <div className="min-h-screen bg-white">
       <Header />
       <div className="max-w-6xl mx-auto px-4 py-8">
         <div className="mb-8">
