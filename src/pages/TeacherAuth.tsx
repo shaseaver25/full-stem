@@ -44,14 +44,16 @@ const TeacherAuth = () => {
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // CRITICAL: Set flag synchronously BEFORE any async operations
+    // This ensures AuthContext sees the flag when onAuthStateChange fires
+    console.log('🎓 Setting teacherPortalLogin flag before sign in');
+    sessionStorage.setItem('teacherPortalLogin', 'true');
+    
     setLoading(true);
     setError('');
 
     console.log('Attempting sign in with email:', email);
-
-    // Set flag to indicate teacher portal login
-    console.log('🎓 Setting teacherPortalLogin flag before sign in');
-    sessionStorage.setItem('teacherPortalLogin', 'true');
 
     const { error } = await signIn(email, password);
     
