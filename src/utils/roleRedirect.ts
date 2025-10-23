@@ -45,6 +45,13 @@ export const getUserRole = async (userId: string): Promise<UserRole | null> => {
 };
 
 export const redirectToRoleDashboard = async (userId: string, navigate: (path: string) => void) => {
+  // Check if user logged in through teacher portal
+  const isTeacherPortalLogin = sessionStorage.getItem('teacherPortalLogin') === 'true';
+  if (isTeacherPortalLogin) {
+    console.log('🎓 Teacher portal login detected, skipping role-based redirect');
+    return;
+  }
+
   // Retry logic to wait for role to be assigned (especially for new OAuth users)
   let role: UserRole | null = null;
   let attempts = 0;

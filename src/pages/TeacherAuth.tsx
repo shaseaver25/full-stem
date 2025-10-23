@@ -49,18 +49,24 @@ const TeacherAuth = () => {
 
     console.log('Attempting sign in with email:', email);
 
+    // Set flag to indicate teacher portal login
+    sessionStorage.setItem('teacherPortalLogin', 'true');
+
     const { error } = await signIn(email, password);
     
     if (error) {
       console.error('Sign in error:', error);
       setError(error.message);
       setLoading(false);
+      sessionStorage.removeItem('teacherPortalLogin');
     } else {
-      console.log('Sign in successful');
+      console.log('Sign in successful, navigating to teacher dashboard');
       
       // Always redirect to teacher dashboard when logging in through teacher portal
       if (!hasNavigated.current) {
         hasNavigated.current = true;
+        // Clear the flag after a short delay to ensure navigation completes
+        setTimeout(() => sessionStorage.removeItem('teacherPortalLogin'), 100);
         navigate('/teacher/dashboard', { replace: true });
       }
     }
