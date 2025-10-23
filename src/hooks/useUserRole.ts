@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -10,6 +10,7 @@ export const useUserRole = () => {
   const { user } = useAuth();
   const [roles, setRoles] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
   useEffect(() => {
     if (!user?.id) {
@@ -38,9 +39,16 @@ export const useUserRole = () => {
 
     fetchUserRoles();
 
+    // Clean up any existing channel before creating a new one
+    if (channelRef.current) {
+      supabase.removeChannel(channelRef.current).catch(() => {});
+      channelRef.current = null;
+    }
+
     // Subscribe to real-time updates with unique channel per user
-    const channelName = `user-role-changes-${user.id}`;
+    const channelName = `user-role-changes-${user.id}-${Date.now()}`;
     const channel = supabase.channel(channelName);
+    channelRef.current = channel;
     
     // Set up subscription with error handling
     channel
@@ -60,13 +68,16 @@ export const useUserRole = () => {
       .subscribe((status) => {
         if (status === 'SUBSCRIBED') {
           console.log('✅ Role subscription active');
+        } else if (status === 'CHANNEL_ERROR') {
+          console.error('❌ Role subscription error');
         }
       });
 
     return () => {
-      supabase.removeChannel(channel).catch(() => {
-        // Ignore cleanup errors
-      });
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current).catch(() => {});
+        channelRef.current = null;
+      }
     };
   }, [user?.id]);
 
