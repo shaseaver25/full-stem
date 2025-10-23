@@ -82,8 +82,14 @@ const AuthCallback = () => {
       }
 
       // Redirect to role-based dashboard
-      console.log('🔀 Redirecting to dashboard...');
-      redirectToRoleDashboard(session.user.id, navigate);
+      // Skip redirect if user logged in through teacher portal
+      const isTeacherPortalLogin = sessionStorage.getItem('teacherPortalLogin') === 'true';
+      if (!isTeacherPortalLogin) {
+        console.log('🔀 Redirecting to dashboard...');
+        redirectToRoleDashboard(session.user.id, navigate);
+      } else {
+        console.log('🎓 Teacher portal login detected in callback, skipping redirect');
+      }
     };
 
     handleCallback();

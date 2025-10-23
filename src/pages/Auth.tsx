@@ -28,7 +28,9 @@ const Auth = () => {
 
   // Redirect if already logged in - but allow manual navigation to specific routes
   useEffect(() => {
-    if (user && location.pathname === '/auth') {
+    // Skip redirect if user logged in through teacher portal
+    const isTeacherPortalLogin = sessionStorage.getItem('teacherPortalLogin') === 'true';
+    if (user && location.pathname === '/auth' && !isTeacherPortalLogin) {
       redirectToRoleDashboard(user.id, navigate);
     }
   }, [user, navigate, location]);
