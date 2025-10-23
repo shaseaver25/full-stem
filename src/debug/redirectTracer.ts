@@ -2,11 +2,12 @@
  * Debugging utility to trace all navigation/redirect operations.
  * Helps identify hidden redirect sources by logging all history API calls.
  * 
+ * Only patches history.pushState and history.replaceState (window.location is read-only).
  * Install once at app startup to monitor all redirects.
  * Remove after debugging is complete.
  */
 export function installRedirectTracer() {
-  console.log('🔍 Redirect tracer installed - monitoring all navigation events');
+  console.log('🔍 Redirect tracer installed - monitoring navigation events');
 
   // Patch history.pushState
   const origPush = history.pushState;
@@ -26,27 +27,8 @@ export function installRedirectTracer() {
     return origReplace.apply(this, args);
   };
 
-  // Patch window.location.assign
-  const origAssign = window.location.assign.bind(window.location);
-  window.location.assign = (url: string | URL) => {
-    const trace = new Error().stack?.split('\n').slice(2, 4).join('\n') || 'unknown';
-    console.log('🧭 location.assign →', url, '\n  Called from:', trace);
-    origAssign(url);
-  };
-
-  // Patch window.location.href setter
-  let currentHref = window.location.href;
-  Object.defineProperty(window.location, 'href', {
-    get: () => currentHref,
-    set: (url: string) => {
-      const trace = new Error().stack?.split('\n').slice(2, 4).join('\n') || 'unknown';
-      console.log('🧭 location.href =', url, '\n  Called from:', trace);
-      currentHref = url;
-      window.location.assign(url);
-    }
-  });
-
-  console.log('✅ Redirect tracer active - all navigation will be logged');
+  console.log('✅ Redirect tracer active - React Router navigation will be logged');
+  console.log('   Note: Direct window.location changes cannot be traced (browser restriction)');
 }
 
 /**
