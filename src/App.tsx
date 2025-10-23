@@ -56,6 +56,7 @@ const AICourseBuilderPage = React.lazy(() => import("./pages/AICourseBuilderPage
 const DemoGate = React.lazy(() => import("./pages/DemoGate"));
 const DemoStart = React.lazy(() => import("./pages/DemoStart"));
 const DemoShowcase = React.lazy(() => import("./pages/DemoShowcase"));
+const StudentDashboard = React.lazy(() => import("./pages/student/StudentDashboard"));
 const TeacherFeedbackDashboard = React.lazy(() => import("./pages/teacher/TeacherFeedbackDashboard"));
 const StudentDetailPage = React.lazy(() => import("./pages/teacher/StudentDetailPage"));
 const LearningGeniusSurveyPage = React.lazy(() => import("./pages/LearningGeniusSurveyPage"));
@@ -107,6 +108,16 @@ function AppContent() {
         <Route path="/auth/verify-mfa" element={<ErrorBoundary><MFAVerify /></ErrorBoundary>} />
         <Route path="/signup/student" element={<ErrorBoundary><StudentSignupForm /></ErrorBoundary>} />
         <Route path="/access-denied" element={<ErrorBoundary><AccessDenied /></ErrorBoundary>} />
+        <Route 
+          path="/dashboard/student" 
+          element={
+            <ErrorBoundary>
+              <RequireRole allowedRoles={['student', 'super_admin', 'developer']}>
+                <StudentDashboard />
+              </RequireRole>
+            </ErrorBoundary>
+          } 
+        />
         <Route 
           path="/quiz/learning-genius"
           element={
