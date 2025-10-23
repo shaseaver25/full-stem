@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -10,8 +10,6 @@ export const useUserRole = () => {
   const { user } = useAuth();
   const [roles, setRoles] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
-  const isSubscribedRef = useRef(false);
 
   useEffect(() => {
     if (!user?.id) {
@@ -40,57 +38,9 @@ export const useUserRole = () => {
 
     fetchUserRoles();
 
-    // Clean up any existing channel before creating a new one
-    if (channelRef.current) {
-      console.log('🧹 Cleaning up existing channel');
-      supabase.removeChannel(channelRef.current).catch(() => {});
-      channelRef.current = null;
-    }
-
-    // Prevent duplicate subscriptions in React Strict Mode
-    if (isSubscribedRef.current) {
-      console.log('⏭️ Skipping duplicate subscription attempt');
-      return;
-    }
-
-    // Subscribe to real-time updates with unique channel per user
-    const channelName = `user-role-changes-${user.id}-${Date.now()}`;
-    const channel = supabase.channel(channelName);
-    
-    // Set ref BEFORE subscribing to ensure cleanup works in Strict Mode
-    channelRef.current = channel;
-    isSubscribedRef.current = true;
-    
-    channel
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'user_roles',
-          filter: `user_id=eq.${user.id}`,
-        },
-        () => {
-          console.log('🔁 Role change detected, refetching roles');
-          fetchUserRoles();
-        }
-      )
-      .subscribe((status) => {
-        if (status === 'SUBSCRIBED') {
-          console.log('✅ Role subscription active');
-        } else if (status === 'CHANNEL_ERROR') {
-          console.error('❌ Role subscription error');
-          isSubscribedRef.current = false;
-        }
-      });
-
-    return () => {
-      if (channelRef.current) {
-        supabase.removeChannel(channelRef.current).catch(() => {});
-        channelRef.current = null;
-      }
-      isSubscribedRef.current = false;
-    };
+    // Note: Real-time subscriptions disabled to prevent React Strict Mode issues
+    // Roles will be fetched on mount and when user changes
+    // If real-time updates are needed, implement at component level instead
   }, [user?.id]);
 
   return { roles, isLoading };
