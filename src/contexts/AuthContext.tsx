@@ -65,18 +65,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Set up auth state listener for subsequent changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        // CRITICAL: Check teacher portal flag FIRST to avoid interference
-        const isTeacherPortalLogin = typeof window !== 'undefined' 
-          && localStorage.getItem('teacherPortalLogin') === 'true';
-        
-        if (isTeacherPortalLogin) {
-          console.log('🎓 AuthContext onAuthStateChange: teacherPortalLogin flag detected - minimal processing only');
-          // Only set essential state, skip all role checks and async operations
-          setSession(session);
-          setUser(session?.user ?? null);
-          return;
-        }
-        
         // Skip the initial SIGNED_IN event to avoid race condition
         if (isInitialLoad && event === 'SIGNED_IN') {
           return;

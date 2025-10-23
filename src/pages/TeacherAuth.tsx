@@ -24,12 +24,12 @@ const TeacherAuth = () => {
     const checkTeacherRole = async () => {
       if (user && !hasNavigated.current) {
         const { data } = await supabase
-          .from('profiles')
+          .from('user_roles')
           .select('role')
-          .eq('id', user.id)
-          .single();
+          .eq('user_id', user.id);
         
-        if (data?.role === 'teacher') {
+        const roles = data?.map(r => r.role) || [];
+        if (roles.includes('teacher')) {
           hasNavigated.current = true;
           navigate('/teacher/dashboard', { replace: true });
         }
