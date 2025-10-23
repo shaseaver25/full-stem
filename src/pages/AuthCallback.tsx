@@ -82,7 +82,7 @@ const AuthCallback = () => {
       }
 
       // STRENGTHENED FLAG CHECK: Teacher portal login takes absolute priority
-      const isTeacherPortalLogin = sessionStorage.getItem('teacherPortalLogin') === 'true';
+      const isTeacherPortalLogin = localStorage.getItem('teacherPortalLogin') === 'true';
       console.log('🔍 AuthCallback checking teacherPortalLogin flag:', isTeacherPortalLogin);
       
       if (isTeacherPortalLogin) {

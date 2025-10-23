@@ -48,7 +48,7 @@ const TeacherAuth = () => {
     // CRITICAL: Set flag synchronously BEFORE any async operations
     // This ensures AuthContext sees the flag when onAuthStateChange fires
     console.log('🎓 Setting teacherPortalLogin flag before sign in');
-    sessionStorage.setItem('teacherPortalLogin', 'true');
+    localStorage.setItem('teacherPortalLogin', 'true');
     
     setLoading(true);
     setError('');
@@ -62,7 +62,7 @@ const TeacherAuth = () => {
       setError(error.message);
       setLoading(false);
       // Clear the flag on error so future logins work correctly
-      sessionStorage.removeItem('teacherPortalLogin');
+      localStorage.removeItem('teacherPortalLogin');
     } else {
       console.log('Sign in successful, navigating to teacher dashboard');
       

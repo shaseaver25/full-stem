@@ -10,7 +10,7 @@ export default function TeacherPortalGuard() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const isTeacherPortalLogin = sessionStorage.getItem('teacherPortalLogin') === 'true';
+    const isTeacherPortalLogin = localStorage.getItem('teacherPortalLogin') === 'true';
 
     if (!isTeacherPortalLogin) return;
 

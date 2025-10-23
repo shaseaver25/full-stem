@@ -67,7 +67,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       (event, session) => {
         // CRITICAL: Check teacher portal flag FIRST to avoid interference
         const isTeacherPortalLogin = typeof window !== 'undefined' 
-          && sessionStorage.getItem('teacherPortalLogin') === 'true';
+          && localStorage.getItem('teacherPortalLogin') === 'true';
         
         if (isTeacherPortalLogin) {
           console.log('🎓 AuthContext onAuthStateChange: teacherPortalLogin flag detected - minimal processing only');

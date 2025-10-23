@@ -16,7 +16,7 @@ const ProtectedAdminRoute = ({ children }: ProtectedAdminRouteProps) => {
   useEffect(() => {
     const checkAdminRole = async () => {
       // DEFENSIVE: Prevent admin route access if logged in via teacher portal
-      const isTeacherPortalLogin = sessionStorage.getItem('teacherPortalLogin') === 'true';
+      const isTeacherPortalLogin = localStorage.getItem('teacherPortalLogin') === 'true';
       if (isTeacherPortalLogin) {
         console.log('🛑 ProtectedAdminRoute: Teacher portal login detected, denying admin access');
         setIsAdmin(false);

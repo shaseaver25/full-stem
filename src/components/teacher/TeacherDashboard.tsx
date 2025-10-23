@@ -44,7 +44,7 @@ const TeacherDashboard = () => {
 
   // DEFENSIVE: Prevent any redirects away from teacher dashboard when logged in via teacher portal
   useEffect(() => {
-    const isTeacherPortalLogin = sessionStorage.getItem('teacherPortalLogin') === 'true';
+    const isTeacherPortalLogin = localStorage.getItem('teacherPortalLogin') === 'true';
     const currentPath = window.location.pathname;
     
     if (isTeacherPortalLogin && currentPath.includes('/admin')) {
@@ -56,7 +56,7 @@ const TeacherDashboard = () => {
     // Clear the flag after confirming we're on the right page
     if (isTeacherPortalLogin && currentPath === '/teacher/dashboard') {
       console.log('🧹 Teacher Dashboard: Clearing teacherPortalLogin flag after mount');
-      sessionStorage.removeItem('teacherPortalLogin');
+      localStorage.removeItem('teacherPortalLogin');
     }
   }, [navigate]);
 

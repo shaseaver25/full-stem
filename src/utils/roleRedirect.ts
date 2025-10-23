@@ -46,7 +46,7 @@ export const getUserRole = async (userId: string): Promise<UserRole | null> => {
 
 export const redirectToRoleDashboard = async (userId: string, navigate: (path: string) => void) => {
   // CRITICAL: Check if user logged in through teacher portal - this takes ABSOLUTE PRIORITY
-  const isTeacherPortalLogin = sessionStorage.getItem('teacherPortalLogin') === 'true';
+  const isTeacherPortalLogin = localStorage.getItem('teacherPortalLogin') === 'true';
   console.log('🔍 redirectToRoleDashboard called:', { userId, isTeacherPortalLogin });
   
   if (isTeacherPortalLogin) {
