@@ -47,11 +47,8 @@ export const useUserRole = () => {
 
     // Subscribe to real-time updates with unique channel per user
     const channelName = `user-role-changes-${user.id}-${Date.now()}`;
-    const channel = supabase.channel(channelName);
-    channelRef.current = channel;
-    
-    // Set up subscription with error handling
-    channel
+    const channel = supabase
+      .channel(channelName)
       .on(
         'postgres_changes',
         {
@@ -68,6 +65,7 @@ export const useUserRole = () => {
       .subscribe((status) => {
         if (status === 'SUBSCRIBED') {
           console.log('✅ Role subscription active');
+          channelRef.current = channel;
         } else if (status === 'CHANNEL_ERROR') {
           console.error('❌ Role subscription error');
         }
