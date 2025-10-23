@@ -29,7 +29,6 @@ const PowerPointCourse = React.lazy(() => import("./pages/PowerPointCourse"));
 const OutlookCourse = React.lazy(() => import("./pages/OutlookCourse"));
 const LessonPage = React.lazy(() => import("./pages/LessonPage"));
 const UserPreferences = React.lazy(() => import("./pages/UserPreferences"));
-const StudentDashboard = React.lazy(() => import("./pages/student/index"));
 const StudentAssignmentDetail = React.lazy(() => import("./pages/student/assignments/[id]/index"));
 const StudentAssignmentSubmit = React.lazy(() => import("./pages/student/assignments/[id]/submit"));
 const TeacherAssignmentDetail = React.lazy(() => import("./pages/teacher/assignments/[assignmentId]/index"));
@@ -57,7 +56,6 @@ const AICourseBuilderPage = React.lazy(() => import("./pages/AICourseBuilderPage
 const DemoGate = React.lazy(() => import("./pages/DemoGate"));
 const DemoStart = React.lazy(() => import("./pages/DemoStart"));
 const DemoShowcase = React.lazy(() => import("./pages/DemoShowcase"));
-const NewStudentDashboard = React.lazy(() => import("./pages/student/StudentDashboard"));
 const TeacherFeedbackDashboard = React.lazy(() => import("./pages/teacher/TeacherFeedbackDashboard"));
 const StudentDetailPage = React.lazy(() => import("./pages/teacher/StudentDetailPage"));
 const LearningGeniusSurveyPage = React.lazy(() => import("./pages/LearningGeniusSurveyPage"));
@@ -110,17 +108,7 @@ function AppContent() {
         <Route path="/signup/student" element={<ErrorBoundary><StudentSignupForm /></ErrorBoundary>} />
         <Route path="/access-denied" element={<ErrorBoundary><AccessDenied /></ErrorBoundary>} />
         <Route 
-          path="/dashboard/student" 
-          element={
-            <ErrorBoundary>
-              <RequireRole allowedRoles={['student', 'super_admin', 'developer']}>
-                <NewStudentDashboard />
-              </RequireRole>
-            </ErrorBoundary>
-          } 
-        />
-        <Route 
-          path="/quiz/learning-genius" 
+          path="/quiz/learning-genius"
           element={
             <ErrorBoundary>
               <RequireRole allowedRoles={['student', 'super_admin', 'developer']}>
@@ -356,17 +344,7 @@ function AppContent() {
 
         {/* Student Routes */}
         <Route 
-          path="/student" 
-          element={
-            <ErrorBoundary>
-              <RequireRole allowedRoles={['student', 'super_admin', 'developer']}>
-                <StudentDashboard />
-              </RequireRole>
-            </ErrorBoundary>
-          } 
-        />
-        <Route 
-          path="/student/assignments/:id" 
+          path="/student/assignments/:id"
           element={
             <ErrorBoundary>
               <RequireRole allowedRoles={['student', 'super_admin', 'developer']}>

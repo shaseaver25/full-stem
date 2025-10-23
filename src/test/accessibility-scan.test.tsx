@@ -7,7 +7,6 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 // Components to test
 import Index from '@/pages/Index';
 import Auth from '@/pages/Auth';
-import StudentDashboard from '@/pages/student/StudentDashboard';
 import TeacherDashboard from '@/components/teacher/TeacherDashboard';
 import { AccessibilityProvider } from '@/contexts/AccessibilityContext';
 import { AuthProvider } from '@/contexts/AuthContext';
@@ -39,12 +38,6 @@ describe('Accessibility Scan - Critical Routes', () => {
 
   it('Auth page should have no accessibility violations', async () => {
     const { container } = render(<Auth />, { wrapper: AllTheProviders });
-    const results = await axe(container);
-    expect(results.violations).toHaveLength(0);
-  });
-
-  it('Student Dashboard should have no accessibility violations', async () => {
-    const { container } = render(<StudentDashboard />, { wrapper: AllTheProviders });
     const results = await axe(container);
     expect(results.violations).toHaveLength(0);
   });
