@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, User, BookOpen, GraduationCap, Languages, Brain, Settings, Target, Sparkles, MessageSquare, TrendingUp } from 'lucide-react';
+import { ArrowLeft, User, BookOpen, GraduationCap, Languages, Brain, Settings, Target, Sparkles, MessageSquare, TrendingUp, Mail, Users } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import Header from '@/components/Header';
 import { StudentGoalsSection } from '@/components/teacher/student-detail/StudentGoalsSection';
@@ -14,6 +14,7 @@ import { StudentInsightsSection } from '@/components/teacher/student-detail/Stud
 import { StudentReflectionsSection } from '@/components/teacher/student-detail/StudentReflectionsSection';
 import { StudentPerformanceChart } from '@/components/teacher/student-detail/StudentPerformanceChart';
 import { WeeklyDigestSection } from '@/components/teacher/student-detail/WeeklyDigestSection';
+import { useStudentPreferences } from '@/hooks/useStudentPreferences';
 
 interface Student {
   id: string;
@@ -60,6 +61,8 @@ export default function StudentDetailPage() {
     },
     enabled: !!studentId,
   });
+
+  const { data: preferences, isLoading: preferencesLoading } = useStudentPreferences(studentId);
 
   const { data: enrollments, isLoading: enrollmentsLoading } = useQuery({
     queryKey: ['student-enrollments', studentId],
@@ -293,6 +296,80 @@ export default function StudentDetailPage() {
                 ) : (
                   <p className="text-muted-foreground text-center py-4">
                     Not enrolled in any classes
+                  </p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Account & Parent Information Card */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Mail className="h-5 w-5" />
+                Contact Information
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Student Email */}
+              <div className="p-4 bg-muted/50 rounded-lg">
+                <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-1">
+                  <Mail className="h-4 w-4" />
+                  Student Email
+                </div>
+                {preferencesLoading ? (
+                  <Skeleton className="h-5 w-64" />
+                ) : (
+                  <p className="text-base font-medium">
+                    {preferences?.student_email || 'Not available'}
+                  </p>
+                )}
+              </div>
+
+              {/* Parent Information */}
+              <div className="p-4 bg-muted/50 rounded-lg">
+                <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-3">
+                  <Users className="h-4 w-4" />
+                  Parent/Guardian Information
+                </div>
+                {preferencesLoading ? (
+                  <Skeleton className="h-20 w-full" />
+                ) : preferences?.parents && preferences.parents.length > 0 ? (
+                  <div className="space-y-3">
+                    {preferences.parents.map((parent, index) => (
+                      <div key={parent.id} className="space-y-1">
+                        <div className="flex items-center justify-between">
+                          <p className="font-medium">
+                            {parent.first_name} {parent.last_name}
+                          </p>
+                          {parent.relationship_type && (
+                            <Badge variant="outline" className="text-xs">
+                              {parent.relationship_type}
+                            </Badge>
+                          )}
+                        </div>
+                        {parent.email && (
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <Mail className="h-3 w-3" />
+                            <a href={`mailto:${parent.email}`} className="hover:underline">
+                              {parent.email}
+                            </a>
+                          </div>
+                        )}
+                        {parent.phone_number && (
+                          <p className="text-sm text-muted-foreground">
+                            Phone: {parent.phone_number}
+                          </p>
+                        )}
+                        {index < preferences.parents.length - 1 && (
+                          <Separator className="mt-3" />
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    No parent/guardian information on file
                   </p>
                 )}
               </div>
