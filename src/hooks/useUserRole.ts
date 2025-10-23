@@ -38,9 +38,10 @@ export const useUserRole = () => {
 
     fetchUserRoles();
 
-    // Subscribe to real-time updates
+    // Subscribe to real-time updates with unique channel per user
+    const channelName = `user-role-changes-${user.id}`;
     const channel = supabase
-      .channel('user-role-changes')
+      .channel(channelName)
       .on(
         'postgres_changes',
         {
@@ -50,6 +51,7 @@ export const useUserRole = () => {
           filter: `user_id=eq.${user.id}`,
         },
         () => {
+          console.log('🔁 Role change detected, refetching roles');
           fetchUserRoles();
         }
       )
