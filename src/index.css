@@ -110,12 +110,6 @@
     background-color: hsl(0 0% 100%) !important;
     color: hsl(215 20% 20%) !important;
   }
-
-  /* Force white background on all gradient backgrounds */
-  [class*="bg-gradient"] {
-    background: hsl(0 0% 100%) !important;
-    background-image: none !important;
-  }
 }
 
 /* Accessibility: High Contrast Mode */

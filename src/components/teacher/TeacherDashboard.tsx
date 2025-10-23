@@ -175,7 +175,7 @@ const TeacherDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="min-h-screen bg-white">
       <Header />
       <div className="container mx-auto p-6 space-y-6">
         {/* Welcome Header with Inline Metrics */}
