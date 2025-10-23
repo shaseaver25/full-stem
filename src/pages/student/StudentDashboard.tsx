@@ -164,29 +164,34 @@ export default function StudentDashboard() {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {classes.slice(0, 3).map((enrollment) => (
-                    <Link
-                      key={enrollment.id}
-                      to={`/classes/${enrollment.class_id}`}
-                      className="block p-3 rounded-lg border hover:bg-accent transition-colors"
-                    >
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex-1 min-w-0">
-                          <h4 className="font-medium truncate">{enrollment.classes.name}</h4>
-                          {enrollment.classes.subject && (
-                            <Badge variant="outline" className="mt-1">
-                              {enrollment.classes.subject}
-                            </Badge>
+                  {classes.slice(0, 3).map((enrollment) => {
+                    // Skip enrollments with missing class data
+                    if (!enrollment.classes) return null;
+                    
+                    return (
+                      <Link
+                        key={enrollment.id}
+                        to={`/classes/${enrollment.class_id}`}
+                        className="block p-3 rounded-lg border hover:bg-accent transition-colors"
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-medium truncate">{enrollment.classes.name}</h4>
+                            {enrollment.classes.subject && (
+                              <Badge variant="outline" className="mt-1">
+                                {enrollment.classes.subject}
+                              </Badge>
+                            )}
+                          </div>
+                          {enrollment.teacher && (
+                            <p className="text-xs text-muted-foreground whitespace-nowrap">
+                              {enrollment.teacher.first_name} {enrollment.teacher.last_name}
+                            </p>
                           )}
                         </div>
-                        {enrollment.teacher && (
-                          <p className="text-xs text-muted-foreground whitespace-nowrap">
-                            {enrollment.teacher.first_name} {enrollment.teacher.last_name}
-                          </p>
-                        )}
-                      </div>
-                    </Link>
-                  ))}
+                      </Link>
+                    );
+                  })}
                 </div>
               )}
             </CardContent>
