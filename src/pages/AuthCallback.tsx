@@ -81,14 +81,16 @@ const AuthCallback = () => {
         });
       }
 
-      // Redirect to role-based dashboard
-      // Skip redirect if user logged in through teacher portal
+      // STRENGTHENED FLAG CHECK: Teacher portal login takes absolute priority
       const isTeacherPortalLogin = sessionStorage.getItem('teacherPortalLogin') === 'true';
-      if (!isTeacherPortalLogin) {
-        console.log('🔀 Redirecting to dashboard...');
-        redirectToRoleDashboard(session.user.id, navigate);
+      console.log('🔍 AuthCallback checking teacherPortalLogin flag:', isTeacherPortalLogin);
+      
+      if (isTeacherPortalLogin) {
+        console.log('🎓 Teacher portal login detected - navigating directly to teacher dashboard');
+        navigate('/teacher/dashboard', { replace: true });
       } else {
-        console.log('🎓 Teacher portal login detected in callback, skipping redirect');
+        console.log('📍 Regular login - redirecting to role-based dashboard');
+        await redirectToRoleDashboard(session.user.id, navigate);
       }
     };
 

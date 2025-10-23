@@ -28,11 +28,18 @@ const Auth = () => {
 
   // Redirect if already logged in - but allow manual navigation to specific routes
   useEffect(() => {
-    // Skip redirect if user logged in through teacher portal
+    // STRENGTHENED FLAG CHECK: Check teacher portal flag FIRST before any other conditions
     const isTeacherPortalLogin = sessionStorage.getItem('teacherPortalLogin') === 'true';
     console.log('📄 Auth.tsx useEffect:', { hasUser: !!user, pathname: location.pathname, isTeacherPortalLogin });
     
-    if (user && location.pathname === '/auth' && !isTeacherPortalLogin) {
+    // If teacher portal login flag is set, DO NOT redirect at all
+    if (isTeacherPortalLogin) {
+      console.log('🎓 Auth.tsx detected teacherPortalLogin flag - skipping any redirect logic');
+      return;
+    }
+    
+    // Only redirect if on auth page and NOT teacher portal login
+    if (user && location.pathname === '/auth') {
       console.log('📄 Auth.tsx calling redirectToRoleDashboard');
       redirectToRoleDashboard(user.id, navigate);
     }

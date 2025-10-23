@@ -59,6 +59,7 @@ const TeacherAuth = () => {
       console.error('Sign in error:', error);
       setError(error.message);
       setLoading(false);
+      // Clear the flag on error so future logins work correctly
       sessionStorage.removeItem('teacherPortalLogin');
     } else {
       console.log('Sign in successful, navigating to teacher dashboard');
@@ -66,7 +67,7 @@ const TeacherAuth = () => {
       // Always redirect to teacher dashboard when logging in through teacher portal
       if (!hasNavigated.current) {
         hasNavigated.current = true;
-        // Don't clear the flag here - let the teacher dashboard clear it after mounting
+        // Use replace: true to prevent back button from going to auth page
         navigate('/teacher/dashboard', { replace: true });
       }
     }
