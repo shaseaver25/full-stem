@@ -65,8 +65,7 @@ const TeacherAuth = () => {
       // Always redirect to teacher dashboard when logging in through teacher portal
       if (!hasNavigated.current) {
         hasNavigated.current = true;
-        // Clear the flag after a short delay to ensure navigation completes
-        setTimeout(() => sessionStorage.removeItem('teacherPortalLogin'), 100);
+        // Don't clear the flag here - let the teacher dashboard clear it after mounting
         navigate('/teacher/dashboard', { replace: true });
       }
     }

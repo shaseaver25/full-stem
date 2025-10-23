@@ -42,6 +42,15 @@ const TeacherDashboard = () => {
     }
   }, [profile?.id]);
 
+  // Clear the teacher portal login flag once we've successfully loaded the dashboard
+  useEffect(() => {
+    const flag = sessionStorage.getItem('teacherPortalLogin');
+    if (flag === 'true') {
+      console.log('🎓 Teacher dashboard mounted, clearing portal login flag');
+      sessionStorage.removeItem('teacherPortalLogin');
+    }
+  }, []);
+
   const fetchDashboardData = async () => {
     if (!profile?.id) return;
 
