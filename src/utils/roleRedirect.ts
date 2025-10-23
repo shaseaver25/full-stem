@@ -1,35 +1,37 @@
-import { supabase } from "@/integrations/supabase/client";
-import { getRoleDashboardPath, type UserRole } from "./roleUtils";
+import { supabase } from '@/integrations/supabase/client';
+import { getRoleDashboardPath, UserRole, ROLE_RANK } from './roleUtils';
 
-export const getUserRole = async (userId: string): Promise<UserRole | null> => {
+export const redirectUserByRole = async (userId: string, navigate: (path: string) => void) => {
   try {
     const { data, error } = await supabase
-      .from('profiles')
+      .from('user_roles')
       .select('role')
-      .eq('id', userId)
-      .single();
+      .eq('user_id', userId);
+
+    if (error) throw error;
+
+    // Get highest priority role
+    const roles = (data?.map(r => r.role) || []) as UserRole[];
     
-    if (error) {
-      console.error('Error fetching user role:', error);
-      return null;
+    if (roles.length === 0) {
+      console.log('No roles found, redirecting to home');
+      navigate('/');
+      return;
     }
     
-    return data?.role as UserRole || null;
-  } catch (error) {
-    console.error('Error in getUserRole:', error);
-    return null;
-  }
-};
+    const highestRole = roles.reduce((highest, current) => {
+      return ROLE_RANK[current] > ROLE_RANK[highest] ? current : highest;
+    }, roles[0]);
 
-export const redirectToRoleDashboard = async (userId: string, navigate: (path: string) => void) => {
-  const role = await getUserRole(userId);
-  
-  if (role) {
-    const dashboardPath = getRoleDashboardPath(role);
-    console.log(`Redirecting ${role} to ${dashboardPath}`);
-    navigate(dashboardPath);
-  } else {
-    console.log('No role found, redirecting to home');
+    const path = getRoleDashboardPath(highestRole);
+    
+    console.log(`Redirecting ${highestRole} to ${path}`);
+    navigate(path);
+  } catch (error) {
+    console.error('Error in redirectUserByRole:', error);
     navigate('/');
   }
 };
+
+// Alias for backwards compatibility
+export const redirectToRoleDashboard = redirectUserByRole;

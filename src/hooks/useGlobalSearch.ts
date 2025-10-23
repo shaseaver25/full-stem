@@ -14,8 +14,16 @@ export interface SearchResult {
 
 export const useGlobalSearch = () => {
   const [searchQuery, setSearchQuery] = useState('');
-  const { role } = useUserRole();
+  const { roles } = useUserRole();
   const { profile: adminProfile } = useAdminProfile();
+  
+  // Get highest role for search permissions
+  const role = roles.length > 0 ? roles.reduce((highest, current) => {
+    const ROLE_RANK: Record<string, number> = {
+      student: 1, parent: 2, teacher: 3, admin: 4, system_admin: 5, super_admin: 6, developer: 7
+    };
+    return (ROLE_RANK[current] || 0) > (ROLE_RANK[highest] || 0) ? current : highest;
+  }, roles[0]) : 'student';
 
   const { data: results, isLoading } = useQuery({
     queryKey: ['global-search', searchQuery, role],
@@ -24,7 +32,7 @@ export const useGlobalSearch = () => {
 
       const { data, error } = await supabase.rpc('global_search', {
         search_query: searchQuery,
-        user_role: role || 'student',
+        user_role: role,
         org_name: adminProfile?.organization_name || null,
       });
 

@@ -4,9 +4,9 @@ import TeacherClassDetailPage from '@/pages/ClassDetailPage';
 import StudentClassDetailPage from '@/pages/classes/ClassDetailPage';
 
 export default function RoleAwareClassDetailPage() {
-  const { role, loading } = useUserRole();
+  const { roles, isLoading } = useUserRole();
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -15,12 +15,12 @@ export default function RoleAwareClassDetailPage() {
   }
 
   // Show teacher version for teachers
-  if (role === 'teacher') {
+  if (roles.includes('teacher')) {
     return <TeacherClassDetailPage />;
   }
 
   // Show student version for students
-  if (role === 'student') {
+  if (roles.includes('student')) {
     return <StudentClassDetailPage />;
   }
 

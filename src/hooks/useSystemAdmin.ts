@@ -12,10 +12,10 @@ interface SystemAdminProfile {
 
 export const useSystemAdmin = () => {
   const { user } = useAuth();
-  const { role } = useUserRole();
+  const { roles } = useUserRole();
   const navigate = useNavigate();
 
-  const isSystemAdmin = role === 'system_admin' || role === 'developer';
+  const isSystemAdmin = roles.includes('system_admin') || roles.includes('developer');
 
   // Fetch system admin profile details
   const { data: profile, isLoading } = useQuery({

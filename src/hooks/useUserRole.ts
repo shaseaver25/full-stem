@@ -1,76 +1,64 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import type { UserRole } from '@/utils/roleUtils';
 
 /**
- * Hook to fetch and manage user role
- * Returns the user's role from the database
+ * Hook to fetch and manage user roles from the user_roles table
+ * Returns all roles the user has
  */
-interface UseUserRoleReturn {
-  role: UserRole | null;
-  loading: boolean;
-}
-
-export const useUserRole = (): UseUserRoleReturn => {
+export const useUserRole = () => {
   const { user } = useAuth();
-  const [role, setRole] = useState<UserRole | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [roles, setRoles] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const fetchUserRole = async () => {
-      if (!user) {
-        setRole(null);
-        setLoading(false);
-        return;
-      }
+    if (!user?.id) {
+      setRoles([]);
+      setIsLoading(false);
+      return;
+    }
 
+    const fetchUserRoles = async () => {
       try {
         const { data, error } = await supabase
-          .from('profiles')
+          .from('user_roles')
           .select('role')
-          .eq('id', user.id)
-          .single();
+          .eq('user_id', user.id);
 
-        if (error) {
-          console.error('Error fetching user role:', error);
-          setRole(null);
-        } else {
-          setRole(data?.role as UserRole || null);
-        }
+        if (error) throw error;
+        
+        setRoles(data?.map(r => r.role) || []);
       } catch (error) {
-        console.error('Error in fetchUserRole:', error);
-        setRole(null);
+        console.error('Error fetching user roles:', error);
+        setRoles([]);
       } finally {
-        setLoading(false);
+        setIsLoading(false);
       }
     };
 
-    fetchUserRole();
+    fetchUserRoles();
 
-    // Subscribe to role changes
-    const subscription = supabase
-      .channel('profile-role-changes')
+    // Subscribe to real-time updates
+    const channel = supabase
+      .channel('user-role-changes')
       .on(
         'postgres_changes',
         {
-          event: 'UPDATE',
+          event: '*',
           schema: 'public',
-          table: 'profiles',
-          filter: `id=eq.${user?.id}`
+          table: 'user_roles',
+          filter: `user_id=eq.${user.id}`,
         },
-        (payload) => {
-          if (payload.new && 'role' in payload.new) {
-            setRole(payload.new.role as UserRole);
-          }
+        () => {
+          fetchUserRoles();
         }
       )
       .subscribe();
 
     return () => {
-      subscription.unsubscribe();
+      supabase.removeChannel(channel);
     };
-  }, [user]);
+  }, [user?.id]);
 
-  return { role, loading };
+  return { roles, isLoading };
 };

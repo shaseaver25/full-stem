@@ -26,8 +26,16 @@ interface UseActivityLogOptions {
 
 export const useActivityLog = (options: UseActivityLogOptions = {}) => {
   const { user } = useAuth();
-  const { role } = useUserRole();
+  const { roles } = useUserRole();
   const { timeFilter = 'all', roleFilter, limit = 100 } = options;
+  
+  // Get highest role for permissions
+  const role = roles.length > 0 ? roles.reduce((highest, current) => {
+    const ROLE_RANK: Record<string, number> = {
+      student: 1, parent: 2, teacher: 3, admin: 4, system_admin: 5, super_admin: 6, developer: 7
+    };
+    return (ROLE_RANK[current] || 0) > (ROLE_RANK[highest] || 0) ? current : highest;
+  }, roles[0]) : null;
 
   const { data: activities, isLoading, refetch } = useQuery({
     queryKey: ['activity-log', timeFilter, roleFilter, user?.id, role],

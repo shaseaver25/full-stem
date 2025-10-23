@@ -12,7 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
  */
 export const useMFAEnforcement = () => {
   const { user } = useAuth();
-  const { role } = useUserRole();
+  const { roles } = useUserRole();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -30,14 +30,14 @@ export const useMFAEnforcement = () => {
       if (error) throw error;
       return data;
     },
-    enabled: !!user && (role === 'developer' || role === 'system_admin'),
+    enabled: !!user && (roles.includes('developer') || roles.includes('system_admin')),
   });
 
   useEffect(() => {
-    if (!user || !role) return;
+    if (!user || roles.length === 0) return;
 
     // Check if role requires MFA
-    const requiresMFA = role === 'developer' || role === 'system_admin';
+    const requiresMFA = roles.includes('developer') || roles.includes('system_admin');
     
     // Skip enforcement on MFA pages
     const isMFAPage = location.pathname.startsWith('/auth/setup-mfa') || 
@@ -67,10 +67,10 @@ export const useMFAEnforcement = () => {
         navigate('/auth/verify-mfa');
       }
     }
-  }, [user, role, profile, navigate, location]);
+  }, [user, roles, profile, navigate, location]);
 
   return {
-    requiresMFA: role === 'developer' || role === 'system_admin',
+    requiresMFA: roles.includes('developer') || roles.includes('system_admin'),
     mfaEnabled: profile?.mfa_enabled ?? false,
     mfaVerified: user?.app_metadata?.mfa_verified ?? false,
   };

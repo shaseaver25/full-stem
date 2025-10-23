@@ -19,19 +19,27 @@ interface RoleAwareNavigationProps {
 }
 
 const RoleAwareNavigation = ({ onLinkClick, variant = 'desktop' }: RoleAwareNavigationProps) => {
-  const { role, loading } = useUserRole();
+  const { roles, isLoading } = useUserRole();
   
   // Safely check for impersonation context without throwing
   const impersonationContext = useContext(ImpersonationContext);
   const isDeveloper = impersonationContext?.isDeveloper ?? false;
   
   // Don't render navigation items while loading
-  if (loading) {
+  if (isLoading) {
     return null;
   }
   
-  const navigationItems = getPrimaryNavigationForRole(role);
-  const navigationGroups = getNavigationGroupsForRole(role);
+  // Get highest role for navigation
+  const role = roles.length > 0 ? roles.reduce((highest, current) => {
+    const ROLE_RANK: Record<string, number> = {
+      student: 1, parent: 2, teacher: 3, admin: 4, system_admin: 5, super_admin: 6, developer: 7
+    };
+    return (ROLE_RANK[current] || 0) > (ROLE_RANK[highest] || 0) ? current : highest;
+  }, roles[0]) : null;
+  
+  const navigationItems = getPrimaryNavigationForRole(role as any);
+  const navigationGroups = getNavigationGroupsForRole(role as any);
   
   const baseClasses = variant === 'desktop' || variant === 'menubar'
     ? 'text-gray-500 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium'

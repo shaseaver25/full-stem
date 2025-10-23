@@ -19,10 +19,18 @@ import Header from '@/components/Header';
 
 export default function StudentDashboard() {
   const { user } = useAuth();
-  const { role } = useUserRole();
+  const { roles } = useUserRole();
+  
+  // Get highest role for display
+  const role = roles.length > 0 ? roles.reduce((highest, current) => {
+    const ROLE_RANK: Record<string, number> = {
+      student: 1, parent: 2, teacher: 3, admin: 4, system_admin: 5, super_admin: 6, developer: 7
+    };
+    return (ROLE_RANK[current] || 0) > (ROLE_RANK[highest] || 0) ? current : highest;
+  }, roles[0]) : null;
   
   // Check if viewing as elevated role
-  const isElevatedRole = role === 'super_admin' || role === 'developer' || role === 'admin';
+  const isElevatedRole = roles.some(r => ['super_admin', 'developer', 'admin'].includes(r));
   
   const { data: profile, isLoading: profileLoading } = useStudentProfile();
   const { data: insights } = useStudentInsights(profile?.id);

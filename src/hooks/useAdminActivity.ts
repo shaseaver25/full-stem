@@ -25,8 +25,11 @@ export const useAdminActivity = (timeFilter: 'today' | 'week' | 'all' = 'all') =
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { role } = useUserRole();
+  const { roles } = useUserRole();
   const { profile: adminProfile } = useAdminProfile();
+  
+  // Check if user has admin-level permissions
+  const hasAdminAccess = roles.some(r => ['admin', 'super_admin', 'developer'].includes(r));
 
   // Fetch activity logs from unified activity_log table
   const { data: activities, isLoading } = useQuery({
@@ -55,7 +58,7 @@ export const useAdminActivity = (timeFilter: 'today' | 'week' | 'all' = 'all') =
       if (error) throw error;
       return data as ActivityLog[];
     },
-    enabled: !!user && (role === 'admin' || role === 'super_admin' || role === 'developer'),
+    enabled: !!user && hasAdminAccess,
   });
 
   // Log activity mutation

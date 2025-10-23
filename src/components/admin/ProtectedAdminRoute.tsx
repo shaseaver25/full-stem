@@ -11,7 +11,7 @@ interface ProtectedAdminRouteProps {
 
 const ProtectedAdminRoute: React.FC<ProtectedAdminRouteProps> = ({ children }) => {
   const { user, loading: authLoading } = useAuth();
-  const [userRole, setUserRole] = useState<UserRole | null>(null);
+  const [userRoles, setUserRoles] = useState<UserRole[]>([]);
   const [checking, setChecking] = useState(true);
 
   useEffect(() => {
@@ -23,20 +23,19 @@ const ProtectedAdminRoute: React.FC<ProtectedAdminRouteProps> = ({ children }) =
 
       try {
         const { data, error } = await supabase
-          .from('profiles')
+          .from('user_roles')
           .select('role')
-          .eq('id', user.id)
-          .single();
+          .eq('user_id', user.id);
 
         if (error) {
-          console.error('Error fetching user role:', error);
-          setUserRole(null);
+          console.error('Error fetching user roles:', error);
+          setUserRoles([]);
         } else {
-          setUserRole(data?.role as UserRole || null);
+          setUserRoles((data?.map(r => r.role) || []) as UserRole[]);
         }
       } catch (error) {
         console.error('Error checking admin access:', error);
-        setUserRole(null);
+        setUserRoles([]);
       } finally {
         setChecking(false);
       }
@@ -59,8 +58,8 @@ const ProtectedAdminRoute: React.FC<ProtectedAdminRouteProps> = ({ children }) =
     return <Navigate to="/auth" replace />;
   }
 
-  // Check if user has admin-level permissions
-  const isAdmin = hasPermission(userRole, 'admin');
+  // Check if user has admin-level permissions (admin role or higher)
+  const isAdmin = userRoles.some(role => hasPermission(role, 'admin'));
 
   if (!isAdmin) {
     return (

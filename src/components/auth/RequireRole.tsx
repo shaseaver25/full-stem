@@ -12,7 +12,7 @@ interface RequireRoleProps {
 
 const RequireRole: React.FC<RequireRoleProps> = ({ children, allowedRoles }) => {
   const { user, loading: authLoading } = useAuth();
-  const [userRole, setUserRole] = useState<UserRole | null>(null);
+  const [userRoles, setUserRoles] = useState<UserRole[]>([]);
   const [checking, setChecking] = useState(true);
 
   useEffect(() => {
@@ -24,20 +24,19 @@ const RequireRole: React.FC<RequireRoleProps> = ({ children, allowedRoles }) => 
 
       try {
         const { data, error } = await supabase
-          .from('profiles')
+          .from('user_roles')
           .select('role')
-          .eq('id', user.id)
-          .single();
+          .eq('user_id', user.id);
 
         if (error) {
-          console.error('Error fetching user role:', error);
-          setUserRole(null);
+          console.error('Error fetching user roles:', error);
+          setUserRoles([]);
         } else {
-          setUserRole(data?.role as UserRole || null);
+          setUserRoles((data?.map(r => r.role) || []) as UserRole[]);
         }
       } catch (error) {
-        console.error('Error checking user role:', error);
-        setUserRole(null);
+        console.error('Error checking user roles:', error);
+        setUserRoles([]);
       } finally {
         setChecking(false);
       }
@@ -60,21 +59,21 @@ const RequireRole: React.FC<RequireRoleProps> = ({ children, allowedRoles }) => 
     return <Navigate to="/auth" replace />;
   }
 
-  if (!userRole) {
-    console.warn('User has no role assigned');
+  if (userRoles.length === 0) {
+    console.warn('User has no roles assigned');
     return <Navigate to="/" replace />;
   }
 
   // Developer has access to everything
-  if (userRole === 'developer') {
+  if (userRoles.includes('developer')) {
     return <>{children}</>;
   }
 
-  // Check if user's role is in the allowed roles list
-  const hasAccess = allowedRoles.includes(userRole);
+  // Check if user has any of the allowed roles
+  const hasAccess = userRoles.some(role => allowedRoles.includes(role));
 
   if (!hasAccess) {
-    console.warn(`Access denied: User role "${userRole}" not in allowed roles:`, allowedRoles);
+    console.warn(`Access denied: User roles "${userRoles.join(', ')}" not in allowed roles:`, allowedRoles);
     return <Navigate to="/access-denied" replace />;
   }
 
