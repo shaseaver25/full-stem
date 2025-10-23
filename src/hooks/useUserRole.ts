@@ -40,24 +40,28 @@ export const useUserRole = () => {
 
     fetchUserRoles();
 
+    // Clean up any existing channel before creating a new one
+    if (channelRef.current) {
+      console.log('🧹 Cleaning up existing channel');
+      supabase.removeChannel(channelRef.current).catch(() => {});
+      channelRef.current = null;
+    }
+
     // Prevent duplicate subscriptions in React Strict Mode
     if (isSubscribedRef.current) {
       console.log('⏭️ Skipping duplicate subscription attempt');
       return;
     }
 
-    // Clean up any existing channel before creating a new one
-    if (channelRef.current) {
-      supabase.removeChannel(channelRef.current).catch(() => {});
-      channelRef.current = null;
-    }
-
-    isSubscribedRef.current = true;
-
     // Subscribe to real-time updates with unique channel per user
     const channelName = `user-role-changes-${user.id}-${Date.now()}`;
-    const channel = supabase
-      .channel(channelName)
+    const channel = supabase.channel(channelName);
+    
+    // Set ref BEFORE subscribing to ensure cleanup works in Strict Mode
+    channelRef.current = channel;
+    isSubscribedRef.current = true;
+    
+    channel
       .on(
         'postgres_changes',
         {
@@ -74,9 +78,9 @@ export const useUserRole = () => {
       .subscribe((status) => {
         if (status === 'SUBSCRIBED') {
           console.log('✅ Role subscription active');
-          channelRef.current = channel;
         } else if (status === 'CHANNEL_ERROR') {
           console.error('❌ Role subscription error');
+          isSubscribedRef.current = false;
         }
       });
 
