@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -9,7 +9,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, GraduationCap, ArrowLeft } from 'lucide-react';
-import { redirectToRoleDashboard } from '@/utils/roleRedirect';
 import { supabase } from '@/integrations/supabase/client';
 
 const TeacherAuth = () => {
@@ -20,15 +19,10 @@ const TeacherAuth = () => {
   const { signIn, user } = useAuth();
   const navigate = useNavigate();
 
-  // Use ref to prevent multiple redirect attempts
-  const hasCheckedRole = React.useRef(false);
-  
+  // If already logged in as teacher, redirect to dashboard
   useEffect(() => {
-    const checkAndRedirect = async () => {
-      if (user && !hasCheckedRole.current) {
-        hasCheckedRole.current = true;
-        
-        // Check if user has a teacher role before redirecting
+    const checkTeacherRole = async () => {
+      if (user) {
         const { data: roleData } = await supabase
           .from('user_roles')
           .select('role')
@@ -37,13 +31,13 @@ const TeacherAuth = () => {
           .maybeSingle();
         
         if (roleData) {
-          console.log('User authenticated with teacher role, redirecting to teacher dashboard');
+          console.log('Teacher already logged in, redirecting to teacher dashboard');
           navigate('/teacher/dashboard');
         }
       }
     };
     
-    checkAndRedirect();
+    checkTeacherRole();
   }, [user, navigate]);
 
   const handleSignIn = async (e: React.FormEvent) => {
