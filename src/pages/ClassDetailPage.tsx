@@ -327,7 +327,11 @@ export default function ClassDetailPage() {
                           <span>•</span>
                           <span>0/0 submitted</span>
                         </div>
-                        <Button variant="outline" size="sm">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => navigate(`/teacher/assignments/${assignment.id}`)}
+                        >
                           View Details
                         </Button>
                       </div>
