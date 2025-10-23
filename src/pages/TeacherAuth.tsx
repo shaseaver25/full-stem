@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -18,11 +18,12 @@ const TeacherAuth = () => {
   const [error, setError] = useState('');
   const { signIn, user } = useAuth();
   const navigate = useNavigate();
+  const hasNavigated = useRef(false);
 
-  // If already logged in as teacher, redirect to dashboard
+  // If already logged in as teacher, redirect to dashboard (only once)
   useEffect(() => {
     const checkTeacherRole = async () => {
-      if (user) {
+      if (user && !hasNavigated.current) {
         const { data: roleData } = await supabase
           .from('user_roles')
           .select('role')
@@ -32,7 +33,8 @@ const TeacherAuth = () => {
         
         if (roleData) {
           console.log('Teacher already logged in, redirecting to teacher dashboard');
-          navigate('/teacher/dashboard');
+          hasNavigated.current = true;
+          navigate('/teacher/dashboard', { replace: true });
         }
       }
     };
@@ -56,13 +58,10 @@ const TeacherAuth = () => {
     } else {
       console.log('Sign in successful');
       
-      // Check if this is first login (requires preferences setup)
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user?.user_metadata?.requires_onboarding) {
-        navigate('/preferences');
-      } else {
-        // Redirect to teacher dashboard
-        navigate('/teacher/dashboard');
+      // Always redirect to teacher dashboard when logging in through teacher portal
+      if (!hasNavigated.current) {
+        hasNavigated.current = true;
+        navigate('/teacher/dashboard', { replace: true });
       }
     }
   };
