@@ -40,8 +40,10 @@ export const useUserRole = () => {
 
     // Subscribe to real-time updates with unique channel per user
     const channelName = `user-role-changes-${user.id}`;
-    const channel = supabase
-      .channel(channelName)
+    const channel = supabase.channel(channelName);
+    
+    // Set up subscription with error handling
+    channel
       .on(
         'postgres_changes',
         {
@@ -55,10 +57,16 @@ export const useUserRole = () => {
           fetchUserRoles();
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          console.log('✅ Role subscription active');
+        }
+      });
 
     return () => {
-      supabase.removeChannel(channel);
+      supabase.removeChannel(channel).catch(() => {
+        // Ignore cleanup errors
+      });
     };
   }, [user?.id]);
 
