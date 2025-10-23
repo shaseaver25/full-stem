@@ -13,6 +13,8 @@ export const redirectUserByRole = async (userId: string, navigate: (path: string
     // Get highest priority role
     const roles = (data?.map(r => r.role) || []) as UserRole[];
     
+    console.log('Roles fetched for user:', roles);
+    
     if (roles.length === 0) {
       console.log('No roles found, redirecting to home');
       navigate('/');
@@ -23,6 +25,8 @@ export const redirectUserByRole = async (userId: string, navigate: (path: string
       return ROLE_RANK[current] > ROLE_RANK[highest] ? current : highest;
     }, roles[0]);
 
+    console.log('Highest role selected:', highestRole);
+    
     const path = getRoleDashboardPath(highestRole);
     
     console.log(`Redirecting ${highestRole} to ${path}`);
