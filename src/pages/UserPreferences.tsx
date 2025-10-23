@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useForm } from 'react-hook-form';
-import { ArrowLeft, Settings, Volume2, Globe, BookOpen, Gauge } from 'lucide-react';
+import { ArrowLeft, Settings, Volume2, Globe, BookOpen, Gauge, Mail, Users } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,7 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
 import { useAuth } from '@/contexts/AuthContext';
 import { AccessibilityToggle } from '@/components/ui/AccessibilityToggle';
+import { useStudentParents } from '@/hooks/useStudentParents';
 
 interface PreferencesFormData {
   preferredLanguage: string;
@@ -25,6 +26,7 @@ interface PreferencesFormData {
 const UserPreferences = () => {
   const { user } = useAuth();
   const { preferences, loading, saving, savePreferences } = useUserPreferences();
+  const { data: parents = [], isLoading: parentsLoading } = useStudentParents();
 
   const form = useForm<PreferencesFormData>({
     defaultValues: {
@@ -89,6 +91,70 @@ const UserPreferences = () => {
 
         {/* User Preferences Content */}
         <div className="max-w-2xl mx-auto px-4 py-8 space-y-6">
+          {/* Student & Parent Information */}
+          <Card className="shadow-lg">
+            <CardHeader>
+              <div className="mx-auto bg-primary/10 w-16 h-16 rounded-full flex items-center justify-center mb-4">
+                <Users className="h-8 w-8 text-primary" />
+              </div>
+              <CardTitle className="text-2xl font-bold text-center">Account Information</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Student Email */}
+              <div className="p-4 bg-muted/50 rounded-lg">
+                <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-1">
+                  <Mail className="h-4 w-4" />
+                  Student Email
+                </div>
+                <p className="text-base font-medium">{user?.email || 'Not available'}</p>
+              </div>
+
+              {/* Parent Information */}
+              <div className="p-4 bg-muted/50 rounded-lg">
+                <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-3">
+                  <Users className="h-4 w-4" />
+                  Parent/Guardian Information
+                </div>
+                {parentsLoading ? (
+                  <p className="text-sm text-muted-foreground">Loading parent information...</p>
+                ) : parents.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No parent/guardian information on file</p>
+                ) : (
+                  <div className="space-y-3">
+                    {parents.map((parent, index) => (
+                      <div key={parent.id} className="space-y-1">
+                        <div className="flex items-center justify-between">
+                          <p className="font-medium">
+                            {parent.first_name} {parent.last_name}
+                          </p>
+                          {parent.relationship_type && (
+                            <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded">
+                              {parent.relationship_type}
+                            </span>
+                          )}
+                        </div>
+                        {parent.email && (
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <Mail className="h-3 w-3" />
+                            {parent.email}
+                          </div>
+                        )}
+                        {parent.phone_number && (
+                          <p className="text-sm text-muted-foreground">
+                            Phone: {parent.phone_number}
+                          </p>
+                        )}
+                        {index < parents.length - 1 && (
+                          <div className="border-t pt-3 mt-3" />
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Accessibility Settings */}
           <AccessibilityToggle />
 
