@@ -47,6 +47,12 @@ const ProtectedTeacherRoute: React.FC<ProtectedTeacherRouteProps> = ({
     checkElevatedRole();
   }, [user]);
 
+  // DEFENSIVE: Check teacher portal flag to prevent unwanted redirects
+  const isTeacherPortalLogin = React.useMemo(
+    () => sessionStorage.getItem('teacherPortalLogin') === 'true',
+    []
+  );
+
   console.log('ProtectedTeacherRoute Debug:', {
     user: !!user,
     profile,
@@ -54,6 +60,7 @@ const ProtectedTeacherRoute: React.FC<ProtectedTeacherRouteProps> = ({
     authLoading,
     profileLoading,
     isElevatedRole,
+    isTeacherPortalLogin,
     currentPath: window.location.pathname
   });
 

@@ -45,12 +45,13 @@ export const getUserRole = async (userId: string): Promise<UserRole | null> => {
 };
 
 export const redirectToRoleDashboard = async (userId: string, navigate: (path: string) => void) => {
-  // Check if user logged in through teacher portal
+  // CRITICAL: Check if user logged in through teacher portal - this takes ABSOLUTE PRIORITY
   const isTeacherPortalLogin = sessionStorage.getItem('teacherPortalLogin') === 'true';
   console.log('🔍 redirectToRoleDashboard called:', { userId, isTeacherPortalLogin });
   
   if (isTeacherPortalLogin) {
-    console.log('🎓 Teacher portal login detected, skipping role-based redirect');
+    console.log('🎓 Teacher portal login detected, navigating to teacher dashboard and skipping role-based redirect');
+    navigate('/teacher/dashboard');
     return;
   }
 

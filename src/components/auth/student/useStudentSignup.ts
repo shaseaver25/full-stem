@@ -56,7 +56,11 @@ export const useStudentSignup = () => {
 
       // Redirect after a short delay to allow toast to display
       setTimeout(() => {
-        if (data.user) {
+        // Check teacher portal flag before redirecting
+        const isTeacherPortalLogin = sessionStorage.getItem('teacherPortalLogin') === 'true';
+        if (isTeacherPortalLogin) {
+          navigate('/teacher/dashboard');
+        } else if (data.user) {
           redirectToRoleDashboard(data.user.id, navigate);
         } else {
           navigate('/dashboard/student');
