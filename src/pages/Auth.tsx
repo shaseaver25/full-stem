@@ -30,7 +30,10 @@ const Auth = () => {
   useEffect(() => {
     // Skip redirect if user logged in through teacher portal
     const isTeacherPortalLogin = sessionStorage.getItem('teacherPortalLogin') === 'true';
+    console.log('📄 Auth.tsx useEffect:', { hasUser: !!user, pathname: location.pathname, isTeacherPortalLogin });
+    
     if (user && location.pathname === '/auth' && !isTeacherPortalLogin) {
+      console.log('📄 Auth.tsx calling redirectToRoleDashboard');
       redirectToRoleDashboard(user.id, navigate);
     }
   }, [user, navigate, location]);

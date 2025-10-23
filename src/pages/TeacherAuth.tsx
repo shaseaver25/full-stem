@@ -50,6 +50,7 @@ const TeacherAuth = () => {
     console.log('Attempting sign in with email:', email);
 
     // Set flag to indicate teacher portal login
+    console.log('🎓 Setting teacherPortalLogin flag before sign in');
     sessionStorage.setItem('teacherPortalLogin', 'true');
 
     const { error } = await signIn(email, password);
