@@ -33,12 +33,19 @@ export const useOneDriveAuth = () => {
 
       console.log('📍 Stored return URL:', returnUrl);
 
+      // Store a flag to identify this as an OneDrive connection attempt
+      sessionStorage.setItem('onedrive_link_attempt', 'true');
+      
       // Initiate Microsoft OAuth with OneDrive scopes
-      const { error } = await supabase.auth.linkIdentity({
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'azure',
         options: {
           redirectTo: `${window.location.origin}/auth/callback`,
-          scopes: 'Files.ReadWrite offline_access User.Read'
+          scopes: 'Files.ReadWrite offline_access User.Read',
+          skipBrowserRedirect: false,
+          queryParams: {
+            prompt: 'consent'
+          }
         }
       });
 
