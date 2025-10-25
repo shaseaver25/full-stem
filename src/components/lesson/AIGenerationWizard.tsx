@@ -36,6 +36,7 @@ export default function AIGenerationWizard({
     componentTypes: [] as string[],
   });
   const [isSaving, setIsSaving] = useState(false);
+  const [selectedComponents, setSelectedComponents] = useState<number[]>([]);
   const { generateLesson, lesson, isGenerating } = useAILessonWizard();
   const { toast } = useToast();
 
@@ -46,7 +47,20 @@ export default function AIGenerationWizard({
   async function handleGenerate() {
     await generateLesson(form);
     setStep(3);
+    // Select all components by default
+    if (lesson) {
+      const components = convertAILessonToComponents(lesson);
+      setSelectedComponents(components.map((_, idx) => idx));
+    }
   }
+
+  // Update selected components when lesson changes
+  React.useEffect(() => {
+    if (lesson && step === 3) {
+      const components = convertAILessonToComponents(lesson);
+      setSelectedComponents(components.map((_, idx) => idx));
+    }
+  }, [lesson, step]);
 
   const convertAILessonToComponents = (aiLesson: AILesson): any[] => {
     const components: any[] = [];
@@ -179,13 +193,25 @@ export default function AIGenerationWizard({
       return;
     }
 
+    if (selectedComponents.length === 0) {
+      toast({
+        title: 'No Components Selected',
+        description: 'Please select at least one component to add',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setIsSaving(true);
 
     try {
-      const components = convertAILessonToComponents(lesson);
+      const allComponents = convertAILessonToComponents(lesson);
       
-      // Add lesson_id to all components
-      const componentsToInsert = components.map(comp => ({
+      // Filter to only selected components
+      const selectedComps = allComponents.filter((_, idx) => selectedComponents.includes(idx));
+      
+      // Add lesson_id to selected components
+      const componentsToInsert = selectedComps.map(comp => ({
         ...comp,
         lesson_id: lessonId,
       }));
@@ -208,6 +234,7 @@ export default function AIGenerationWizard({
       
       // Reset wizard
       setStep(1);
+      setSelectedComponents([]);
       setForm({
         topic: "",
         subject: "",
@@ -235,17 +262,57 @@ export default function AIGenerationWizard({
 
     const components = convertAILessonToComponents(lesson);
 
+    const toggleComponent = (idx: number) => {
+      setSelectedComponents(prev => 
+        prev.includes(idx) 
+          ? prev.filter(i => i !== idx)
+          : [...prev, idx]
+      );
+    };
+
+    const toggleAll = () => {
+      if (selectedComponents.length === components.length) {
+        setSelectedComponents([]);
+      } else {
+        setSelectedComponents(components.map((_, idx) => idx));
+      }
+    };
+
     return (
       <div className="space-y-4">
-        <p className="text-sm text-muted-foreground">
-          AI generated {components.length} components. Review them below:
-        </p>
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-muted-foreground">
+            AI generated {components.length} components. Select which ones to add:
+          </p>
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={toggleAll}
+          >
+            {selectedComponents.length === components.length ? 'Deselect All' : 'Select All'}
+          </Button>
+        </div>
 
         <div className="space-y-3 max-h-96 overflow-y-auto">
           {components.map((comp, idx) => (
-            <div key={idx} className="border rounded-lg p-4 bg-card hover:border-primary/50 transition-colors">
+            <div 
+              key={idx} 
+              className={`border rounded-lg p-4 bg-card transition-colors cursor-pointer ${
+                selectedComponents.includes(idx) 
+                  ? 'border-primary ring-2 ring-primary/20' 
+                  : 'hover:border-primary/50'
+              }`}
+              onClick={() => toggleComponent(idx)}
+            >
               <div className="flex items-start justify-between mb-2">
                 <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={selectedComponents.includes(idx)}
+                    onChange={() => toggleComponent(idx)}
+                    onClick={(e) => e.stopPropagation()}
+                    className="rounded border-input"
+                  />
                   <Badge variant={comp.is_assignable ? "default" : "outline"}>
                     {comp.component_type}
                   </Badge>
@@ -256,10 +323,10 @@ export default function AIGenerationWizard({
               </div>
               
               {comp.content.title && (
-                <h4 className="font-semibold mb-2">{comp.content.title}</h4>
+                <h4 className="font-semibold mb-2 ml-6">{comp.content.title}</h4>
               )}
               
-              <div className="text-sm text-muted-foreground line-clamp-3">
+              <div className="text-sm text-muted-foreground line-clamp-3 ml-6">
                 {comp.content.text?.substring(0, 150) || 
                  comp.content.body?.substring(0, 150)?.replace(/<[^>]*>/g, '') || 
                  comp.content.prompt?.substring(0, 150) || 
@@ -271,6 +338,10 @@ export default function AIGenerationWizard({
             </div>
           ))}
         </div>
+
+        <p className="text-xs text-muted-foreground">
+          {selectedComponents.length} of {components.length} components selected
+        </p>
       </div>
     );
   };
@@ -495,7 +566,7 @@ export default function AIGenerationWizard({
             <div className="flex gap-2 pt-4 border-t">
               <Button 
                 onClick={handleSaveComponents} 
-                disabled={isSaving || !lessonId}
+                disabled={isSaving || !lessonId || selectedComponents.length === 0}
               >
                 {isSaving ? (
                   <>
@@ -505,7 +576,7 @@ export default function AIGenerationWizard({
                 ) : (
                   <>
                     <CheckCircle className="h-4 w-4 mr-2" />
-                    Add to Lesson
+                    Add Selected to Lesson ({selectedComponents.length})
                   </>
                 )}
               </Button>
