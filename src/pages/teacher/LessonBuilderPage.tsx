@@ -290,6 +290,7 @@ export default function LessonBuilderPage() {
                     title={title}
                     objectives={objectives}
                     components={components}
+                    lessonId={lessonId}
                     onUpdateComponent={handleUpdateComponent}
                   />
                 ) : (

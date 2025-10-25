@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import { Pencil, Check, X } from 'lucide-react';
+import { DiscussionComponent } from '@/components/lesson/DiscussionComponent';
 
 interface LessonComponent {
   component_type: string;
@@ -19,6 +20,7 @@ interface LessonPreviewProps {
   title: string;
   objectives: string[];
   components: LessonComponent[];
+  lessonId?: string;
   onUpdateComponent?: (index: number, updates: Partial<LessonComponent>) => void;
 }
 
@@ -35,7 +37,7 @@ const componentTypeLabels: Record<string, string> = {
   resources: 'Resources',
 };
 
-export function LessonPreview({ title, objectives, components, onUpdateComponent }: LessonPreviewProps) {
+export function LessonPreview({ title, objectives, components, lessonId, onUpdateComponent }: LessonPreviewProps) {
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editContent, setEditContent] = useState<any>({});
 
@@ -253,11 +255,14 @@ export function LessonPreview({ title, objectives, components, onUpdateComponent
                     </div>
                   </div>
                 )}
-                {component.component_type === 'discussion' && (
-                  <div className="bg-accent/50 p-4 rounded">
-                    <p className="font-medium mb-2">Discussion Prompt:</p>
-                    <p>{component.content.prompt}</p>
-                  </div>
+                {component.component_type === 'discussion' && lessonId && (
+                  <DiscussionComponent
+                    componentId={component.content.id || `component-${index}`}
+                    lessonId={lessonId}
+                    lessonTitle={title}
+                    lessonContent={objectives.join('. ')}
+                    isTeacher={true}
+                  />
                 )}
                 {component.component_type === 'instructions' && (
                   <SafeHtml html={component.content.text || ''} />
