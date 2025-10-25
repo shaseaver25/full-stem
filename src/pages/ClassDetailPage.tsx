@@ -294,7 +294,7 @@ export default function ClassDetailPage() {
               {lessons.map((lesson, index) => (
                 <Link
                   key={lesson.id}
-                  to={`/teacher/classes/${resolvedClassId}/lessons/${lesson.id}`}
+                  to={`/class-lesson/${lesson.id}`}
                   className="group"
                 >
                   <Card className="h-full transition-all hover:shadow-lg hover:border-primary">
