@@ -14,8 +14,8 @@ export default function RoleAwareClassDetailPage() {
     );
   }
 
-  // Show teacher version for teachers
-  if (roles.includes('teacher')) {
+  // Show teacher version for teachers and developers
+  if (roles.includes('teacher') || roles.includes('developer') || roles.includes('super_admin')) {
     return <TeacherClassDetailPage />;
   }
 
