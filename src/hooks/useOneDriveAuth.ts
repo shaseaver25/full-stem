@@ -34,28 +34,22 @@ export const useOneDriveAuth = () => {
 
       console.log('📍 Stored return URL:', returnUrl);
 
-      // Initiate Microsoft OAuth with linkIdentity to preserve current session
-      const { error } = await supabase.auth.linkIdentity({
-        provider: 'azure',
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
-          scopes: 'Files.ReadWrite offline_access User.Read',
-          queryParams: {
-            prompt: 'consent'
-          }
-        }
-      });
-      if (error) {
-        console.error('❌ Microsoft OAuth error:', error);
-        toast({
-          title: 'Connection Failed',
-          description: error.message || 'Failed to connect to OneDrive. Please try again.',
-          variant: 'destructive'
-        });
-        return { success: false };
-      }
+      // Open OAuth window
+      const clientId = '8350983d-f94c-4357-8741-e83e576a49dc';
+      const redirectUri = 'https://irxzpsvzlihqitlicoql.supabase.co/auth/v1/callback';
+      const scopes = 'Files.ReadWrite offline_access User.Read';
+      
+      const authUrl = `https://login.microsoftonline.com/common/oauth2/v2.0/authorize?` +
+        `client_id=${clientId}` +
+        `&response_type=code` +
+        `&redirect_uri=${encodeURIComponent(redirectUri)}` +
+        `&response_mode=query` +
+        `&scope=${encodeURIComponent(scopes)}` +
+        `&state=${encodeURIComponent(returnUrl)}`;
 
-      console.log('✅ Microsoft OAuth initiated successfully');
+      console.log('🔗 Redirecting to Microsoft OAuth...');
+      window.location.href = authUrl;
+      
       return { success: true };
     } catch (error) {
       console.error('❌ Error during Microsoft sign-in:', error);
