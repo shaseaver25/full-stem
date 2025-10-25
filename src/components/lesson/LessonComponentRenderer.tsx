@@ -4,6 +4,7 @@ import InlineReadAloud from '@/components/InlineReadAloud';
 import { LessonComponent } from '@/hooks/useLessonComponents';
 import { FileText, Video, Code, MessageSquare, CheckSquare } from 'lucide-react';
 import { DiscussionComponent } from './DiscussionComponent';
+import { DriveAttachmentsList } from '@/components/drive/DriveAttachmentsList';
 
 interface LessonComponentRendererProps {
   component: LessonComponent;
@@ -67,6 +68,15 @@ export function LessonComponentRenderer({
       {read_aloud && textContent && (
         <div className="mt-4 pt-4 border-t">
           <InlineReadAloud text={textContent.replace(/<[^>]*>/g, '')} language={language_code || 'en'} />
+        </div>
+      )}
+      {id && (
+        <div className="mt-4 pt-4 border-t border-border">
+          <DriveAttachmentsList
+            componentId={id}
+            showEmbeds={true}
+            canDelete={false}
+          />
         </div>
       )}
     </div>
