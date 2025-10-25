@@ -75,15 +75,30 @@ const AuthCallback = () => {
 
         if (!mounted) return;
 
-        toast({
-          title: "Welcome!",
-          description: "Redirecting to your dashboard...",
-        });
-
-        console.log('✅ Authentication successful, redirecting...');
+        // Check if there's a stored return location (for Drive OAuth linking)
+        const returnTo = sessionStorage.getItem('oauth_return_to');
         
-        // Use replace to prevent back button issues
-        await redirectToRoleDashboard(session.user.id, (path) => navigate(path, { replace: true }));
+        if (returnTo) {
+          console.log('📍 Returning to stored location:', returnTo);
+          sessionStorage.removeItem('oauth_return_to');
+          
+          toast({
+            title: "Google Drive Connected!",
+            description: "You can now attach files from your Drive.",
+          });
+          
+          navigate(returnTo, { replace: true });
+        } else {
+          toast({
+            title: "Welcome!",
+            description: "Redirecting to your dashboard...",
+          });
+
+          console.log('✅ Authentication successful, redirecting...');
+          
+          // Use replace to prevent back button issues
+          await redirectToRoleDashboard(session.user.id, (path) => navigate(path, { replace: true }));
+        }
       } catch (err) {
         console.error('❌ Unexpected error in auth callback:', err);
         if (mounted) {

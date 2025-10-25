@@ -1,9 +1,60 @@
-import { useEffect } from 'react';
+import { useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
 export const useGoogleAuth = () => {
   const { toast } = useToast();
+
+  const signInWithGoogle = useCallback(async () => {
+    console.log('🔐 Initiating Google OAuth for Drive access...');
+    
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+
+      // Store current location to return after OAuth
+      const returnTo = window.location.pathname + window.location.search;
+      sessionStorage.setItem('oauth_return_to', returnTo);
+      console.log('📍 Stored return location:', returnTo);
+
+      // Use linkIdentity to add Google OAuth to existing account
+      const { data, error } = await supabase.auth.linkIdentity({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+          scopes: 'email profile openid https://www.googleapis.com/auth/drive.file',
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent'
+          }
+        }
+      });
+
+      if (error) {
+        console.error('❌ Failed to link Google identity:', error);
+        toast({
+          title: "Connection Failed",
+          description: "Could not connect to Google Drive. Please try again.",
+          variant: "destructive"
+        });
+        return { success: false, error };
+      }
+
+      console.log('✅ Google identity link initiated:', data);
+      return { success: true, data };
+    } catch (err) {
+      console.error('❌ Error during Google sign-in:', err);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive"
+      });
+      return { success: false, error: err };
+    }
+  }, [toast]);
 
   useEffect(() => {
     console.log('🔧 useGoogleAuth hook initialized');
@@ -17,8 +68,9 @@ export const useGoogleAuth = () => {
           provider: session?.user?.app_metadata?.provider
         });
 
-        if (event === 'SIGNED_IN' && session?.provider_token) {
-          console.log('🔐 Google OAuth sign-in detected with provider token');
+        // Handle Google OAuth sign-in or identity linking
+        if ((event === 'SIGNED_IN' || event === 'USER_UPDATED') && session?.provider_token) {
+          console.log('🔐 Google OAuth detected with provider token');
           console.log('📊 Session details:', {
             userId: session.user.id,
             email: session.user.email,
@@ -66,8 +118,8 @@ export const useGoogleAuth = () => {
               variant: "destructive"
             });
           }
-        } else if (event === 'SIGNED_IN' && !session?.provider_token) {
-          console.log('ℹ️ Standard sign-in without OAuth provider token');
+        } else if ((event === 'SIGNED_IN' || event === 'USER_UPDATED') && !session?.provider_token) {
+          console.log('ℹ️ Auth event without OAuth provider token');
         }
       }
     );
@@ -78,5 +130,7 @@ export const useGoogleAuth = () => {
     };
   }, [toast]);
 
-  return null;
+  return {
+    signInWithGoogle
+  };
 };

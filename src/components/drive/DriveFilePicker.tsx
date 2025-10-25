@@ -6,6 +6,8 @@ import { getValidDriveToken, hasDriveAccess } from '@/utils/googleDrive';
 import { DriveReauthorization } from './DriveReauthorization';
 import { supabase } from '@/integrations/supabase/client';
 import { env } from '@/utils/env';
+import { useGoogleAuth } from '@/hooks/useGoogleAuth';
+import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 
 interface DriveFile {
   id: string;
@@ -32,7 +34,10 @@ export function DriveFilePicker({
   const [isLoading, setIsLoading] = useState(false);
   const [pickerLoaded, setPickerLoaded] = useState(false);
   const [needsAuth, setNeedsAuth] = useState(false);
+  const [showConnectDialog, setShowConnectDialog] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(false);
   const { toast } = useToast();
+  const { signInWithGoogle } = useGoogleAuth();
 
   useEffect(() => {
     // Check if user has Drive access
@@ -72,6 +77,24 @@ export function DriveFilePicker({
     loadGooglePicker();
   }, [toast]);
 
+  const handleConnectDrive = async () => {
+    setIsConnecting(true);
+    console.log('🔗 Connecting to Google Drive...');
+    
+    const result = await signInWithGoogle();
+    
+    setIsConnecting(false);
+    
+    if (result.success) {
+      setShowConnectDialog(false);
+      toast({
+        title: "Success",
+        description: "Google Drive connection initiated. You'll be redirected to complete the authorization.",
+      });
+      // The OAuth flow will redirect the user, and when they return, tokens will be stored
+    }
+  };
+
   const openPicker = async () => {
     if (!pickerLoaded) {
       toast({
@@ -81,6 +104,17 @@ export function DriveFilePicker({
       return;
     }
 
+    // Check if user has valid Drive token before loading
+    console.log('🔍 Checking Drive access before opening picker...');
+    const hasAccess = await hasDriveAccess();
+    
+    if (!hasAccess) {
+      console.log('⚠️ No Drive access detected, prompting for connection...');
+      setShowConnectDialog(true);
+      return;
+    }
+
+    console.log('✅ Drive access confirmed, proceeding with picker...');
     setIsLoading(true);
 
     try {
@@ -94,17 +128,7 @@ export function DriveFilePicker({
 
       if (!accessToken) {
         console.error('❌ No valid access token available');
-        console.log('💡 Possible causes:');
-        console.log('  1. User not signed in with Google');
-        console.log('  2. Drive scope not granted during OAuth');
-        console.log('  3. Token expired and refresh failed');
-        
-        setNeedsAuth(true);
-        toast({
-          title: 'Authentication Required',
-          description: 'Please sign in with Google to access Drive files.',
-          variant: 'destructive'
-        });
+        setShowConnectDialog(true);
         setIsLoading(false);
         return;
       }
@@ -176,25 +200,71 @@ export function DriveFilePicker({
   }
 
   return (
-    <Button
-      type="button"
-      variant={variant}
-      size={size}
-      onClick={openPicker}
-      disabled={disabled || isLoading || !pickerLoaded}
-    >
-      {isLoading ? (
-        <>
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          Loading...
-        </>
-      ) : (
-        <>
-          <FolderOpen className="mr-2 h-4 w-4" />
-          Attach from Drive
-        </>
-      )}
-    </Button>
+    <>
+      <div className="space-y-2">
+        <Button
+          type="button"
+          variant={variant}
+          size={size}
+          onClick={openPicker}
+          disabled={disabled || isLoading || !pickerLoaded}
+        >
+          {isLoading ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Loading...
+            </>
+          ) : (
+            <>
+              <FolderOpen className="mr-2 h-4 w-4" />
+              Attach from Drive
+            </>
+          )}
+        </Button>
+        <p className="text-xs text-muted-foreground">
+          You can use your school or personal Google account to attach files.
+        </p>
+      </div>
+
+      {/* Google Drive Connection Dialog */}
+      <AlertDialog open={showConnectDialog} onOpenChange={setShowConnectDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Connect to Google Drive</AlertDialogTitle>
+            <AlertDialogDescription className="space-y-2">
+              <p>You're not currently connected to Google Drive.</p>
+              <p>Sign in with your Google account to link your Drive and attach files to lessons.</p>
+              <p className="text-xs text-muted-foreground">
+                This works with both school and personal Gmail accounts.
+              </p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowConnectDialog(false)}
+              disabled={isConnecting}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleConnectDrive}
+              disabled={isConnecting}
+              className="gap-2"
+            >
+              {isConnecting ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Connecting...
+                </>
+              ) : (
+                'Connect Google Drive'
+              )}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
 
