@@ -72,8 +72,13 @@ export const useOneDriveAuth = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if ((event === 'SIGNED_IN' || event === 'USER_UPDATED') && session) {
-          // Check if we have a Microsoft provider token
-          if (session.provider_token && session.user.app_metadata.provider === 'azure') {
+          // Check if we have a Microsoft/Azure identity linked
+          const hasAzureIdentity = session.user.identities?.some(
+            identity => identity.provider === 'azure'
+          );
+          
+          // Check if we have a Microsoft provider token (from linkIdentity)
+          if (session.provider_token && hasAzureIdentity) {
             console.log('📥 Microsoft OAuth tokens detected, storing...');
             
             try {
