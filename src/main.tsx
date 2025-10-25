@@ -30,7 +30,7 @@ if (isProd) {
 const root = createRoot(document.getElementById("root")!);
 root.render(
   <StrictMode>
-    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+    <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
       <Sentry.ErrorBoundary
         fallback={({ error, resetError }) => (
           <div className="min-h-screen flex items-center justify-center bg-white p-4">
