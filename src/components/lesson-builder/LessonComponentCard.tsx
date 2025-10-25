@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import { GripVertical, Trash2, ChevronDown, ChevronUp, Copy } from 'lucide-react';
 import { DraggableProvidedDragHandleProps } from 'react-beautiful-dnd';
@@ -15,9 +16,11 @@ import { Separator } from '@/components/ui/separator';
 interface LessonComponent {
   id?: string;
   component_type: string;
+  title?: string;
   content: any;
   order: number;
   enabled: boolean;
+  is_assignable: boolean;
   reading_level?: number;
   language_code: string;
   read_aloud: boolean;
@@ -340,6 +343,24 @@ export function LessonComponentCard({
       {isExpanded && (
         <CardContent className="space-y-4">
           {renderFields()}
+          
+          <Separator className="my-4" />
+          
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id={`assignable-${index}`}
+              checked={component.is_assignable || false}
+              onCheckedChange={(checked) => 
+                onUpdate(index, { is_assignable: checked as boolean })
+              }
+            />
+            <label
+              htmlFor={`assignable-${index}`}
+              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+            >
+              Mark as Assignable (appears in Assignments tab)
+            </label>
+          </div>
           
           <Separator className="my-4" />
           

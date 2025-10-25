@@ -11,7 +11,7 @@ import { useLessonData } from '@/hooks/useLessonData';
 import { useLiveTranslation } from '@/hooks/useLiveTranslation';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
 import { useToast } from '@/hooks/use-toast';
-import LessonComponentRenderer from './LessonComponentRenderer';
+import { LessonComponentRenderer } from './LessonComponentRenderer';
 import InlineReadAloud from '@/components/InlineReadAloud';
 import DesmosSection from './DesmosSection';
 

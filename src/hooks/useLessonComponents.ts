@@ -4,13 +4,14 @@ import { supabase } from '@/integrations/supabase/client';
 export interface LessonComponent {
   id: string;
   lesson_id: string;
-  component_type: 'video' | 'instructions' | 'assignment' | 'activity' | 'resources' | 'discussion' | 'reflection' | 'formativeCheck' | 'rubric' | 'codingEditor' | 'aiAssistant' | 'peerReview' | 'checklist' | 'liveDemo' | 'slides';
+  component_type: string;
   content: any;
   reading_level?: number;
   language_code: string;
   read_aloud: boolean;
   order: number;
   enabled: boolean;
+  is_assignable: boolean;
   created_at: string;
   updated_at: string;
 }

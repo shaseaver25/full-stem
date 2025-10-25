@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { AlertCircle, BookOpen, Clock, Users, ArrowLeft, Play, Target, CheckCircle, GraduationCap } from 'lucide-react';
+import { AlertCircle, BookOpen, Clock, Users, ArrowLeft, Play, Target, CheckCircle, GraduationCap, FileText, ClipboardCheck } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -43,12 +43,24 @@ interface Activity {
   resources?: string[];
 }
 
+interface LessonComponent {
+  id: string;
+  component_type: string;
+  content: any;
+  order: number;
+  enabled: boolean;
+  is_assignable: boolean;
+  reading_level?: number;
+  language_code: string;
+  read_aloud: boolean;
+}
+
 const ClassLessonPage = () => {
   const { lessonId } = useParams<{ lessonId: string }>();
   const navigate = useNavigate();
   const [expandedActivities, setExpandedActivities] = useState<string[]>([]);
 
-  // Fetch lesson with activities
+  // Fetch lesson with activities and components
   const { data: lesson, isLoading, error } = useQuery({
     queryKey: ['classLesson', lessonId],
     queryFn: async () => {
@@ -57,7 +69,8 @@ const ClassLessonPage = () => {
         .select(`
           *,
           classes (name, grade_level, subject),
-          activities (*)
+          activities (*),
+          lesson_components (*)
         `)
         .eq('id', lessonId)
         .single();
@@ -123,12 +136,37 @@ const ClassLessonPage = () => {
     );
   }
 
-  const { content, activities, classes: classInfo } = lesson;
+  const { content, activities, classes: classInfo, lesson_components } = lesson;
   
   // Safely cast the content to our expected structure
   const lessonContent = (typeof content === 'object' ? content : {}) as LessonContent;
   const typedActivities = activities as Activity[];
   const instructionalContent = lessonContent?.instructional_content;
+  
+  // Separate lesson components by is_assignable flag
+  const components = (lesson_components || []) as LessonComponent[];
+  const lessonComponents = components
+    .filter(c => !c.is_assignable && c.enabled)
+    .sort((a, b) => a.order - b.order);
+  const assignmentComponents = components
+    .filter(c => c.is_assignable && c.enabled)
+    .sort((a, b) => a.order - b.order);
+  
+  // Component type labels for display
+  const componentTypeLabels: Record<string, string> = {
+    slides: 'PowerPoint/Slides',
+    page: 'Page',
+    video: 'Multimedia',
+    discussion: 'Discussion',
+    codingEditor: 'Coding IDE',
+    desmos: 'Desmos Activity',
+    activity: 'Activity',
+    assignment: 'Assignment',
+    assessment: 'Assessment',
+    reflection: 'Reflection',
+    instructions: 'Instructions',
+    resources: 'Resources',
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
@@ -195,11 +233,18 @@ const ClassLessonPage = () => {
         )}
 
         {/* Main Content Tabs */}
-        <Tabs defaultValue="student" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 max-w-md mx-auto">
-            <TabsTrigger value="student" className="flex items-center gap-2">
+        <Tabs defaultValue="lesson" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-3 max-w-2xl mx-auto">
+            <TabsTrigger value="lesson" className="flex items-center gap-2">
               <BookOpen className="h-4 w-4" />
-              Student View
+              Lesson Content
+            </TabsTrigger>
+            <TabsTrigger value="assignments" className="flex items-center gap-2">
+              <ClipboardCheck className="h-4 w-4" />
+              Assignments
+              {assignmentComponents.length > 0 && (
+                <Badge variant="secondary" className="ml-1">{assignmentComponents.length}</Badge>
+              )}
             </TabsTrigger>
             <TabsTrigger value="teacher" className="flex items-center gap-2">
               <GraduationCap className="h-4 w-4" />
@@ -207,34 +252,67 @@ const ClassLessonPage = () => {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="student" className="space-y-6">
-            {/* Student Lesson Content */}
+          <TabsContent value="lesson" className="space-y-6">
+            {/* Lesson Components */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <BookOpen className="h-5 w-5" />
+                  <FileText className="h-5 w-5" />
                   Lesson Content
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                {instructionalContent?.overview && (
-                  <div className="space-y-4">
-                    <div className="prose prose-sm max-w-none bg-background p-6 rounded-lg border shadow-sm">
-                      <div className="whitespace-pre-wrap leading-relaxed">
-                        {instructionalContent.overview}
+                {lessonComponents.length > 0 ? (
+                  <div className="space-y-6">
+                    {lessonComponents.map((component) => (
+                      <div key={component.id} className="border rounded-lg p-4 bg-card">
+                        <div className="flex items-start justify-between mb-3">
+                          <div>
+                            <Badge variant="outline" className="mb-2">
+                              {componentTypeLabels[component.component_type] || component.component_type}
+                            </Badge>
+                            {component.content?.title && (
+                              <h4 className="font-semibold text-lg">{component.content.title}</h4>
+                            )}
+                          </div>
+                        </div>
+                        
+                        <div className="prose prose-sm max-w-none dark:prose-invert">
+                          {component.content?.body && (
+                            <div dangerouslySetInnerHTML={{ __html: component.content.body }} />
+                          )}
+                          {component.content?.text && (
+                            <div className="whitespace-pre-wrap">{component.content.text}</div>
+                          )}
+                          {component.content?.prompt && (
+                            <div className="italic text-muted-foreground">{component.content.prompt}</div>
+                          )}
+                          {component.content?.url && (
+                            <div className="mt-2">
+                              <a href={component.content.url} target="_blank" rel="noopener noreferrer" 
+                                 className="text-primary hover:underline">
+                                View Resource →
+                              </a>
+                            </div>
+                          )}
+                        </div>
+                        
+                        {component.read_aloud && (component.content?.body || component.content?.text) && (
+                          <div className="mt-4">
+                            <InlineReadAloud 
+                              text={component.content.body || component.content.text} 
+                              language={component.language_code || 'en'} 
+                            />
+                          </div>
+                        )}
                       </div>
-                    </div>
-                    <div className="mt-4">
-                      <InlineReadAloud text={instructionalContent.overview} language="en" />
-                    </div>
+                    ))}
                   </div>
-                )}
-                
-                {!instructionalContent?.overview && (
-                  <div className="text-center py-8 text-gray-500">
-                    <BookOpen className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                    <p>Lesson content is being prepared...</p>
-                    <p className="text-sm mt-2">Switch to Teacher Materials tab for full lesson details.</p>
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <FileText className="h-12 w-12 mx-auto mb-4 opacity-20" />
+                    <p>No lesson content available yet.</p>
+                    <p className="text-sm mt-2">Content will appear here once the teacher adds it.</p>
                   </div>
                 )}
               </CardContent>
@@ -259,7 +337,7 @@ const ClassLessonPage = () => {
               </Card>
             )}
 
-            {/* Activities for Students */}
+            {/* Legacy Activities (if any) */}
             {typedActivities && typedActivities.length > 0 && (
               <Card>
                 <CardHeader>
@@ -332,6 +410,82 @@ const ClassLessonPage = () => {
                 </CardContent>
               </Card>
             )}
+          </TabsContent>
+
+          <TabsContent value="assignments" className="space-y-6">
+            {/* Assignment Components */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <ClipboardCheck className="h-5 w-5" />
+                  Assignments
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {assignmentComponents.length > 0 ? (
+                  <div className="space-y-6">
+                    {assignmentComponents.map((component) => (
+                      <div key={component.id} className="border rounded-lg p-4 bg-card border-primary/20">
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Badge variant="default">
+                                {componentTypeLabels[component.component_type] || component.component_type}
+                              </Badge>
+                              {component.content?.points && (
+                                <Badge variant="outline">
+                                  {component.content.points} points
+                                </Badge>
+                              )}
+                              {component.content?.dueDate && (
+                                <Badge variant="secondary">
+                                  <Clock className="h-3 w-3 mr-1" />
+                                  Due: {new Date(component.content.dueDate).toLocaleDateString()}
+                                </Badge>
+                              )}
+                            </div>
+                            {component.content?.title && (
+                              <h4 className="font-semibold text-lg">{component.content.title}</h4>
+                            )}
+                          </div>
+                        </div>
+                        
+                        <div className="prose prose-sm max-w-none dark:prose-invert">
+                          {component.content?.description && (
+                            <p className="text-muted-foreground mb-2">{component.content.description}</p>
+                          )}
+                          {component.content?.body && (
+                            <div dangerouslySetInnerHTML={{ __html: component.content.body }} />
+                          )}
+                          {component.content?.text && (
+                            <div className="whitespace-pre-wrap">{component.content.text}</div>
+                          )}
+                          {component.content?.prompt && (
+                            <div className="bg-muted/50 p-4 rounded-lg border-l-4 border-primary">
+                              <p className="font-medium mb-1">Assignment Prompt:</p>
+                              <p>{component.content.prompt}</p>
+                            </div>
+                          )}
+                        </div>
+                        
+                        {component.content?.resources && (
+                          <div className="mt-4">
+                            <p className="text-sm font-medium mb-2">Resources:</p>
+                            <div className="text-sm text-muted-foreground">{component.content.resources}</div>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <ClipboardCheck className="h-12 w-12 mx-auto mb-4 opacity-20" />
+                    <p>No assignments available yet.</p>
+                    <p className="text-sm mt-2">Your teacher hasn't assigned any work for this lesson.</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </TabsContent>
 
           <TabsContent value="teacher" className="space-y-6">

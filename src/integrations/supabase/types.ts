@@ -2035,6 +2035,7 @@ export type Database = {
           created_at: string
           enabled: boolean | null
           id: string
+          is_assignable: boolean | null
           language_code: string | null
           lesson_id: string
           order: number
@@ -2048,6 +2049,7 @@ export type Database = {
           created_at?: string
           enabled?: boolean | null
           id?: string
+          is_assignable?: boolean | null
           language_code?: string | null
           lesson_id: string
           order?: number
@@ -2061,6 +2063,7 @@ export type Database = {
           created_at?: string
           enabled?: boolean | null
           id?: string
+          is_assignable?: boolean | null
           language_code?: string | null
           lesson_id?: string
           order?: number

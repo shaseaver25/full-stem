@@ -8,6 +8,7 @@ interface LessonComponent {
   content: any;
   order: number;
   enabled: boolean;
+  is_assignable: boolean;
   reading_level?: number;
   language_code: string;
   read_aloud: boolean;

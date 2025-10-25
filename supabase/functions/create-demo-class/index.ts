@@ -140,14 +140,27 @@ serve(async (req) => {
       .select()
       .single();
 
-    // Add components to Lesson 1
+    // Add components to Lesson 1 with mixed assignable flags
     await supabase.from('lesson_components').insert([
       {
         lesson_id: lesson1.id,
-        component_type: 'text',
-        order: 1,
+        component_type: 'instructions',
+        order: 0,
+        is_assignable: false,
         content: {
-          text: 'Artificial Intelligence (AI) refers to computer systems that can perform tasks that typically require human intelligence. These tasks include learning, reasoning, problem-solving, and understanding language.'
+          title: 'Lesson Overview',
+          text: 'Welcome to our first lesson on Artificial Intelligence! Today we will explore what AI is and how it impacts our daily lives.'
+        },
+        read_aloud: true
+      },
+      {
+        lesson_id: lesson1.id,
+        component_type: 'page',
+        order: 1,
+        is_assignable: false,
+        content: {
+          title: 'What is AI?',
+          body: '<p>Artificial Intelligence (AI) refers to computer systems that can perform tasks that typically require human intelligence. These tasks include learning, reasoning, problem-solving, and understanding language.</p><p><strong>Key Concepts:</strong></p><ul><li>Machine Learning</li><li>Natural Language Processing</li><li>Computer Vision</li></ul>'
         },
         read_aloud: true
       },
@@ -155,6 +168,7 @@ serve(async (req) => {
         lesson_id: lesson1.id,
         component_type: 'video',
         order: 2,
+        is_assignable: false,
         content: {
           url: 'https://www.youtube.com/watch?v=kWmX3pd1f10',
           title: 'How AI Works for Beginners'
@@ -162,9 +176,13 @@ serve(async (req) => {
       },
       {
         lesson_id: lesson1.id,
-        component_type: 'quiz',
+        component_type: 'assignment',
         order: 3,
+        is_assignable: true,
         content: {
+          title: 'AI Identification Quiz',
+          description: 'Test your understanding of AI concepts',
+          points: 10,
           questions: [
             {
               question: 'What is artificial intelligence?',
@@ -185,16 +203,6 @@ serve(async (req) => {
                 'A bicycle'
               ],
               correct: 1
-            },
-            {
-              question: 'AI systems can:',
-              options: [
-                'Only do math',
-                'Learn from data and improve over time',
-                'Replace all human jobs',
-                'Only work with robots'
-              ],
-              correct: 1
             }
           ]
         }
@@ -203,8 +211,11 @@ serve(async (req) => {
         lesson_id: lesson1.id,
         component_type: 'reflection',
         order: 4,
+        is_assignable: true,
         content: {
-          prompt: 'Where do you see AI in your life? Write about at least 2 examples.'
+          title: 'AI in Your Life',
+          prompt: 'Where do you see AI in your life? Write about at least 2 examples and explain how they use AI technology.',
+          points: 15
         }
       }
     ]);
@@ -229,50 +240,72 @@ serve(async (req) => {
       .select()
       .single();
 
-    // Add components to Lesson 2
+    // Add components to Lesson 2 with mixed assignable flags
     await supabase.from('lesson_components').insert([
       {
         lesson_id: lesson2.id,
-        component_type: 'text',
-        order: 1,
+        component_type: 'instructions',
+        order: 0,
+        is_assignable: false,
         content: {
-          text: 'AI is everywhere in our modern world. From smart homes that adjust temperature automatically, to cars that can drive themselves, AI is transforming how we live and work.'
+          title: 'Today\'s Focus',
+          text: 'In this lesson, we\'ll explore real-world AI applications and create our first AI-powered project!'
         },
         read_aloud: true
       },
       {
         lesson_id: lesson2.id,
-        component_type: 'image',
-        order: 2,
+        component_type: 'page',
+        order: 1,
+        is_assignable: false,
         content: {
-          images: [
-            {
-              url: 'https://images.unsplash.com/photo-1558002038-1055907df827',
-              caption: 'Smart home AI systems'
-            },
-            {
-              url: 'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2',
-              caption: 'Autonomous vehicles'
-            }
-          ]
+          title: 'AI in Everyday Life',
+          body: '<p>AI is everywhere in our modern world. From smart homes that adjust temperature automatically, to cars that can drive themselves, AI is transforming how we live and work.</p><h3>Common AI Applications:</h3><ul><li>Virtual Assistants (Siri, Alexa, Google Assistant)</li><li>Recommendation Systems (Netflix, YouTube, Spotify)</li><li>Navigation Apps (Google Maps, Waze)</li><li>Email Filters (Spam Detection)</li><li>Facial Recognition</li></ul>'
+        },
+        read_aloud: true
+      },
+      {
+        lesson_id: lesson2.id,
+        component_type: 'video',
+        order: 2,
+        is_assignable: false,
+        content: {
+          url: 'https://www.youtube.com/watch?v=WSbgixdC9g8',
+          title: 'Real World AI Applications'
         }
       },
       {
         lesson_id: lesson2.id,
-        component_type: 'code',
+        component_type: 'codingEditor',
         order: 3,
+        is_assignable: false,
         content: {
-          language: 'python',
-          code: '# Simple AI decision-making example\ndef make_recommendation(user_preferences):\n    if "science" in user_preferences:\n        return "Check out our AI courses!"\n    elif "art" in user_preferences:\n        return "Explore AI in creative design!"\n    return "Discover how AI can help you!"',
-          description: 'A basic example of how AI makes recommendations'
+          title: 'Simple AI Recommendation System',
+          code: '# Simple AI decision-making example\ndef make_recommendation(user_preferences):\n    if "science" in user_preferences:\n        return "Check out our AI courses!"\n    elif "art" in user_preferences:\n        return "Explore AI in creative design!"\n    return "Discover how AI can help you!"\n\n# Test the function\npreferences = ["science", "technology"]\nprint(make_recommendation(preferences))',
+          language: 'python'
         }
       },
       {
         lesson_id: lesson2.id,
         component_type: 'assignment',
         order: 4,
+        is_assignable: true,
         content: {
-          instructions: 'Create a mini project showing how AI is used in an area that interests you. This can be a presentation, document, or simple code example.'
+          title: 'AI Mini Project',
+          description: 'Create a mini project showing how AI is used in an area that interests you.',
+          prompt: 'Choose one AI application from the lesson. Research how it works and create:\n1. A short presentation (3-5 slides) OR\n2. A written report (300-500 words) OR\n3. A simple code example\n\nInclude: What problem does it solve? How does the AI work? Why is it useful?',
+          points: 25,
+          dueDate: '2025-11-15'
+        }
+      },
+      {
+        lesson_id: lesson2.id,
+        component_type: 'resources',
+        order: 5,
+        is_assignable: false,
+        content: {
+          title: 'Additional Resources',
+          resources: 'AI for Everyone Course: https://www.coursera.org/learn/ai-for-everyone\nElements of AI: https://www.elementsofai.com/\nGoogle AI Experiments: https://experiments.withgoogle.com/collection/ai'
         }
       }
     ]);

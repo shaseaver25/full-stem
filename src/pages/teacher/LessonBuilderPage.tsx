@@ -20,6 +20,7 @@ interface LessonComponent {
   content: any;
   order: number;
   enabled: boolean;
+  is_assignable: boolean;
   reading_level?: number;
   language_code: string;
   read_aloud: boolean;
@@ -157,6 +158,7 @@ export default function LessonBuilderPage() {
             content: comp.content,
             order: index,
             enabled: comp.enabled,
+            is_assignable: comp.is_assignable || false,
             reading_level: comp.reading_level,
             language_code: comp.language_code || 'en',
             read_aloud: comp.read_aloud,
@@ -196,6 +198,7 @@ export default function LessonBuilderPage() {
       content: {},
       order: components.length,
       enabled: true,
+      is_assignable: type === 'assignment', // Auto-mark assignments as assignable
       language_code: 'en',
       read_aloud: true,
     };
