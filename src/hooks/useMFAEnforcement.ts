@@ -16,6 +16,10 @@ export const useMFAEnforcement = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  // Temporary bypass for specific users during troubleshooting
+  const bypassEmails = ['shannon@creatempls.org'];
+  const isBypassUser = user?.email && bypassEmails.includes(user.email);
+
   const { data: profile } = useQuery({
     queryKey: ['mfa-status', user?.id],
     queryFn: async () => {
@@ -35,6 +39,9 @@ export const useMFAEnforcement = () => {
 
   useEffect(() => {
     if (!user || roles.length === 0) return;
+
+    // Skip MFA enforcement for bypass users
+    if (isBypassUser) return;
 
     // Check if role requires MFA
     const requiresMFA = roles.includes('developer') || roles.includes('system_admin');
