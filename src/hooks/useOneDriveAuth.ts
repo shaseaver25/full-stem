@@ -30,25 +30,21 @@ export const useOneDriveAuth = () => {
       // Store return URL for redirect after OAuth
       const returnUrl = window.location.pathname + window.location.search;
       sessionStorage.setItem('oauth_return_to', returnUrl);
+      sessionStorage.setItem('onedrive_link_attempt', 'true');
 
       console.log('📍 Stored return URL:', returnUrl);
 
-      // Store a flag to identify this as an OneDrive connection attempt
-      sessionStorage.setItem('onedrive_link_attempt', 'true');
-      
-      // Initiate Microsoft OAuth with OneDrive scopes
-      const { data, error } = await supabase.auth.signInWithOAuth({
+      // Initiate Microsoft OAuth with linkIdentity to preserve current session
+      const { error } = await supabase.auth.linkIdentity({
         provider: 'azure',
         options: {
           redirectTo: `${window.location.origin}/auth/callback`,
           scopes: 'Files.ReadWrite offline_access User.Read',
-          skipBrowserRedirect: false,
           queryParams: {
             prompt: 'consent'
           }
         }
       });
-
       if (error) {
         console.error('❌ Microsoft OAuth error:', error);
         toast({
@@ -61,15 +57,6 @@ export const useOneDriveAuth = () => {
 
       console.log('✅ Microsoft OAuth initiated successfully');
       return { success: true };
-    } catch (error) {
-      console.error('❌ Error during Microsoft sign-in:', error);
-      toast({
-        title: 'Error',
-        description: 'An unexpected error occurred. Please try again.',
-        variant: 'destructive'
-      });
-      return { success: false };
-    }
   }, [toast]);
 
   /**
