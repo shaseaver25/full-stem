@@ -57,6 +57,15 @@ export const useOneDriveAuth = () => {
 
       console.log('✅ Microsoft OAuth initiated successfully');
       return { success: true };
+    } catch (error) {
+      console.error('❌ Error during Microsoft sign-in:', error);
+      toast({
+        title: 'Error',
+        description: 'An unexpected error occurred. Please try again.',
+        variant: 'destructive'
+      });
+      return { success: false };
+    }
   }, [toast]);
 
   /**
