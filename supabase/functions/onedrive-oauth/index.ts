@@ -91,18 +91,28 @@ serve(async (req) => {
       { token: tokens.access_token }
     );
 
+    if (encryptError1) {
+      console.error('❌ Access token encryption failed:', encryptError1);
+      return new Response(
+        JSON.stringify({ error: 'Failed to encrypt access token', details: encryptError1.message }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     const { data: encryptedRefreshToken, error: encryptError2 } = await supabase.rpc(
       'encrypt_token',
       { token: tokens.refresh_token }
     );
 
-    if (encryptError1 || encryptError2) {
-      console.error('❌ Token encryption failed');
+    if (encryptError2) {
+      console.error('❌ Refresh token encryption failed:', encryptError2);
       return new Response(
-        JSON.stringify({ error: 'Failed to encrypt tokens' }),
+        JSON.stringify({ error: 'Failed to encrypt refresh token', details: encryptError2.message }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+
+    console.log('✅ Tokens encrypted successfully');
 
     // Store encrypted tokens
     const expiresAt = new Date(Date.now() + tokens.expires_in * 1000).toISOString();
