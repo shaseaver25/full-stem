@@ -36,7 +36,7 @@ export const useOneDriveAuth = () => {
 
       // Open OAuth window
       const clientId = '8350983d-f94c-4357-8741-e83e576a49dc';
-      const redirectUri = 'https://irxzpsvzlihqitlicoql.supabase.co/auth/v1/callback';
+      const redirectUri = `${window.location.origin}/onedrive/callback`;
       const scopes = 'Files.ReadWrite offline_access User.Read';
       
       const authUrl = `https://login.microsoftonline.com/common/oauth2/v2.0/authorize?` +

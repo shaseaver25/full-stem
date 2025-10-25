@@ -22,6 +22,8 @@ import { ContentProvenance, ProvenanceBadge } from "@/components/metadata";
 const Index = React.lazy(() => import("./pages/Index"));
 const LandingPage = React.lazy(() => import("./pages/LandingPage"));
 const Auth = React.lazy(() => import("./pages/Auth"));
+const AuthCallback = React.lazy(() => import("./pages/AuthCallback"));
+const OneDriveCallback = React.lazy(() => import("./pages/OneDriveCallback"));
 const TrialPage = React.lazy(() => import("./components/TrialPage"));
 const ExcelCourse = React.lazy(() => import("./pages/ExcelCourse"));
 const WordCourse = React.lazy(() => import("./pages/WordCourse"));
@@ -74,7 +76,6 @@ const AccessDenied = React.lazy(() => import("./pages/AccessDenied"));
 const SystemDashboard = React.lazy(() => import("./pages/SystemDashboard"));
 const MFASetup = React.lazy(() => import("./pages/MFASetup"));
 const MFAVerify = React.lazy(() => import("./pages/MFAVerify"));
-const AuthCallback = React.lazy(() => import("./pages/AuthCallback"));
 const DocsViewer = React.lazy(() => import("./pages/DocsViewer"));
 const PilotInterest = React.lazy(() => import("./pages/PilotInterest"));
 
@@ -104,6 +105,7 @@ function AppContent() {
         <Route path="/bootstrap" element={<ErrorBoundary><BootstrapDemo /></ErrorBoundary>} />
         <Route path="/auth" element={<ErrorBoundary><Auth /></ErrorBoundary>} />
         <Route path="/auth/callback" element={<ErrorBoundary><AuthCallback /></ErrorBoundary>} />
+        <Route path="/onedrive/callback" element={<ErrorBoundary><OneDriveCallback /></ErrorBoundary>} />
         <Route path="/auth/setup-mfa" element={<ErrorBoundary><MFASetup /></ErrorBoundary>} />
         <Route path="/auth/verify-mfa" element={<ErrorBoundary><MFAVerify /></ErrorBoundary>} />
         <Route path="/signup/student" element={<ErrorBoundary><StudentSignupForm /></ErrorBoundary>} />
