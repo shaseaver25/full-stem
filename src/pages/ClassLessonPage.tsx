@@ -1,16 +1,27 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { AlertCircle, BookOpen, Clock, Users, ArrowLeft, Play, Target, CheckCircle, GraduationCap, FileText, ClipboardCheck } from 'lucide-react';
+import { AlertCircle, BookOpen, Clock, Users, ArrowLeft, Play, Target, CheckCircle, GraduationCap, FileText, ClipboardCheck, Edit, Trash2 } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import Header from '@/components/Header';
 import { Link } from 'react-router-dom';
 import InlineReadAloud from '@/components/InlineReadAloud';
+import { useToast } from '@/hooks/use-toast';
 
 // Type definitions for the lesson content
 interface InstructionalContent {
@@ -58,7 +69,10 @@ interface LessonComponent {
 const ClassLessonPage = () => {
   const { lessonId } = useParams<{ lessonId: string }>();
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [expandedActivities, setExpandedActivities] = useState<string[]>([]);
+  const [deleteComponentId, setDeleteComponentId] = useState<string | null>(null);
 
   // Fetch lesson with activities and components
   const { data: lesson, isLoading, error } = useQuery({
@@ -81,12 +95,55 @@ const ClassLessonPage = () => {
     enabled: !!lessonId,
   });
 
+  // Delete component mutation
+  const deleteComponentMutation = useMutation({
+    mutationFn: async (componentId: string) => {
+      const { error } = await supabase
+        .from('lesson_components')
+        .delete()
+        .eq('id', componentId);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['classLesson', lessonId] });
+      toast({
+        title: 'Content Deleted',
+        description: 'Lesson content has been successfully deleted.',
+      });
+      setDeleteComponentId(null);
+    },
+    onError: (error) => {
+      toast({
+        title: 'Error',
+        description: 'Failed to delete content. Please try again.',
+        variant: 'destructive',
+      });
+      console.error('Delete error:', error);
+    },
+  });
+
   const toggleActivity = (activityId: string) => {
     setExpandedActivities(prev => 
       prev.includes(activityId) 
         ? prev.filter(id => id !== activityId)
         : [...prev, activityId]
     );
+  };
+
+  const handleEditComponent = (componentId: string) => {
+    // Navigate to lesson builder with component to edit
+    navigate(`/teacher/build-class/${lesson.class_id}?lesson=${lessonId}&component=${componentId}`);
+  };
+
+  const handleDeleteComponent = (componentId: string) => {
+    setDeleteComponentId(componentId);
+  };
+
+  const confirmDelete = () => {
+    if (deleteComponentId) {
+      deleteComponentMutation.mutate(deleteComponentId);
+    }
   };
 
   if (isLoading) {
@@ -267,13 +324,33 @@ const ClassLessonPage = () => {
                     {lessonComponents.map((component) => (
                       <div key={component.id} className="border rounded-lg p-4 bg-card">
                         <div className="flex items-start justify-between mb-3">
-                          <div>
+                          <div className="flex-1">
                             <Badge variant="outline" className="mb-2">
                               {componentTypeLabels[component.component_type] || component.component_type}
                             </Badge>
                             {component.content?.title && (
                               <h4 className="font-semibold text-lg">{component.content.title}</h4>
                             )}
+                          </div>
+                          <div className="flex gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleEditComponent(component.id)}
+                              className="flex items-center gap-2"
+                            >
+                              <Edit className="h-4 w-4" />
+                              Edit
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleDeleteComponent(component.id)}
+                              className="flex items-center gap-2 text-destructive hover:text-destructive"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                              Delete
+                            </Button>
                           </div>
                         </div>
                         
@@ -424,7 +501,7 @@ const ClassLessonPage = () => {
               <CardContent>
                 {assignmentComponents.length > 0 ? (
                   <div className="space-y-6">
-                    {assignmentComponents.map((component) => (
+                     {assignmentComponents.map((component) => (
                       <div key={component.id} className="border rounded-lg p-4 bg-card border-primary/20">
                         <div className="flex items-start justify-between mb-3">
                           <div className="flex-1">
@@ -447,6 +524,26 @@ const ClassLessonPage = () => {
                             {component.content?.title && (
                               <h4 className="font-semibold text-lg">{component.content.title}</h4>
                             )}
+                          </div>
+                          <div className="flex gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleEditComponent(component.id)}
+                              className="flex items-center gap-2"
+                            >
+                              <Edit className="h-4 w-4" />
+                              Edit
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleDeleteComponent(component.id)}
+                              className="flex items-center gap-2 text-destructive hover:text-destructive"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                              Delete
+                            </Button>
                           </div>
                         </div>
                         
@@ -618,6 +715,28 @@ const ClassLessonPage = () => {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!deleteComponentId} onOpenChange={() => setDeleteComponentId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Lesson Content?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete this lesson content. This action cannot be undone.
+              Students will no longer be able to access this content.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
