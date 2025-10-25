@@ -33,6 +33,7 @@ export default function AIGenerationWizard({
     language: "en",
     durationMinutes: 45,
     customPrompt: "",
+    componentTypes: [] as string[],
   });
   const [isSaving, setIsSaving] = useState(false);
   const { generateLesson, lesson, isGenerating } = useAILessonWizard();
@@ -215,6 +216,7 @@ export default function AIGenerationWizard({
         language: "en",
         durationMinutes: 45,
         customPrompt: "",
+        componentTypes: [],
       });
     } catch (error) {
       console.error('Error saving components:', error);
@@ -364,21 +366,56 @@ export default function AIGenerationWizard({
             </div>
 
             <div>
-              <label className="text-sm font-medium mb-2 block">Custom Instructions (Optional)</label>
+              <label className="text-sm font-medium mb-2 block">Request Specific Components</label>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3 p-4 bg-muted/50 rounded-lg">
+                {[
+                  { value: 'instructions', label: 'Instructions' },
+                  { value: 'page', label: 'Page/Content' },
+                  { value: 'multimedia', label: 'Multimedia' },
+                  { value: 'activity', label: 'Activity' },
+                  { value: 'discussion', label: 'Discussion' },
+                  { value: 'assignment', label: 'Assignment' },
+                  { value: 'reflection', label: 'Reflection' },
+                  { value: 'resources', label: 'Resources' },
+                  { value: 'coding', label: 'Coding IDE' },
+                ].map((component) => (
+                  <label key={component.value} className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={form.componentTypes.includes(component.value)}
+                      onChange={(e) => {
+                        const newTypes = e.target.checked
+                          ? [...form.componentTypes, component.value]
+                          : form.componentTypes.filter(t => t !== component.value);
+                        updateField("componentTypes", newTypes);
+                      }}
+                      className="rounded border-input"
+                    />
+                    <span className="text-sm">{component.label}</span>
+                  </label>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">
+                Select which components you want the AI to generate
+              </p>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium mb-2 block">Additional Instructions (Optional)</label>
               <Textarea
-                placeholder="e.g., Include a discussion and a reflection activity. Add a coding example using Python."
+                placeholder="e.g., Focus on hands-on activities. Include real-world examples."
                 value={form.customPrompt}
                 onChange={(e) => updateField("customPrompt", e.target.value)}
                 rows={3}
                 className="resize-none"
               />
               <p className="text-xs text-muted-foreground mt-1">
-                Add specific requirements for component types, activities, or teaching approaches
+                Add any other specific requirements or teaching approaches
               </p>
             </div>
 
             <div className="flex justify-end">
-              <Button 
+              <Button
                 onClick={() => setStep(2)} 
                 disabled={!form.topic || !form.subject || !form.gradeLevel}
               >
@@ -404,9 +441,22 @@ export default function AIGenerationWizard({
               <div><strong>Duration:</strong> {form.durationMinutes} min</div>
             </div>
 
+            {form.componentTypes.length > 0 && (
+              <div className="p-4 bg-muted rounded-lg">
+                <strong className="block mb-2">Requested Components:</strong>
+                <div className="flex flex-wrap gap-2">
+                  {form.componentTypes.map(type => (
+                    <Badge key={type} variant="secondary">
+                      {type.charAt(0).toUpperCase() + type.slice(1)}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {form.customPrompt && (
               <div className="p-4 bg-muted rounded-lg">
-                <strong className="block mb-2">Custom Instructions:</strong>
+                <strong className="block mb-2">Additional Instructions:</strong>
                 <p className="text-sm">{form.customPrompt}</p>
               </div>
             )}
