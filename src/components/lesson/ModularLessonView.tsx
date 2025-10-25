@@ -510,8 +510,13 @@ const ModularLessonView: React.FC<ModularLessonViewProps> = ({
                       </div>
                     </div>
                     <div className="space-y-4">
-                      <LessonComponentRenderer component={tab.component} />
-                      <InlineReadAloud 
+                      <LessonComponentRenderer 
+                        component={tab.component}
+                        lessonId={lessonId}
+                        lessonTitle={lessonTitle}
+                        lessonContent={mainLessonContent}
+                      />
+                      <InlineReadAloud
                         text={tab.component?.content || tab.component?.description || ''} 
                         className="mt-4"
                       />
@@ -574,8 +579,13 @@ const ModularLessonView: React.FC<ModularLessonViewProps> = ({
 
                   {/* Component Content */}
                   <div className="space-y-4">
-                    <LessonComponentRenderer component={tab.component} />
-                    <InlineReadAloud 
+                    <LessonComponentRenderer 
+                      component={tab.component}
+                      lessonId={lessonId}
+                      lessonTitle={lessonTitle}
+                      lessonContent={mainLessonContent}
+                    />
+                    <InlineReadAloud
                       text={tab.component?.content || tab.component?.description || ''} 
                       className="mt-4"
                     />

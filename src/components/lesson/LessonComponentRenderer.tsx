@@ -3,10 +3,15 @@ import { Badge } from '@/components/ui/badge';
 import InlineReadAloud from '@/components/InlineReadAloud';
 import { LessonComponent } from '@/hooks/useLessonComponents';
 import { FileText, Video, Code, MessageSquare, CheckSquare } from 'lucide-react';
+import { DiscussionComponent } from './DiscussionComponent';
 
 interface LessonComponentRendererProps {
   component: LessonComponent;
   showTypeLabel?: boolean;
+  lessonId?: string;
+  lessonTitle?: string;
+  lessonContent?: string;
+  isTeacher?: boolean;
 }
 
 const componentTypeLabels: Record<string, string> = {
@@ -22,9 +27,29 @@ const componentTypeLabels: Record<string, string> = {
   resources: 'Resources',
 };
 
-export function LessonComponentRenderer({ component, showTypeLabel = true }: LessonComponentRendererProps) {
-  const { content, component_type, read_aloud, language_code } = component;
+export function LessonComponentRenderer({ 
+  component, 
+  showTypeLabel = true,
+  lessonId,
+  lessonTitle,
+  lessonContent,
+  isTeacher = false
+}: LessonComponentRendererProps) {
+  const { content, component_type, read_aloud, language_code, id } = component;
   const textContent = content.body || content.text || content.prompt || '';
+
+  // Render special discussion component with AI features
+  if (component_type === 'discussion' && lessonId && lessonTitle) {
+    return (
+      <DiscussionComponent
+        componentId={id}
+        lessonId={lessonId}
+        lessonTitle={lessonTitle}
+        lessonContent={lessonContent}
+        isTeacher={isTeacher}
+      />
+    );
+  }
 
   return (
     <div className="border rounded-lg p-4 bg-card">

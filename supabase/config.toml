@@ -121,3 +121,6 @@ verify_jwt = true
 [functions.create-test-students]
 verify_jwt = true
 
+[functions.generate-discussion-prompt]
+verify_jwt = true
+
