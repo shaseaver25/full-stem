@@ -98,6 +98,8 @@ serve(async (req) => {
         access_token_enc: tokens.access_token,
         refresh_token_enc: tokens.refresh_token,
         expires_at: expiresAt,
+      }, {
+        onConflict: 'user_id,provider'
       });
 
     if (storeError) {
