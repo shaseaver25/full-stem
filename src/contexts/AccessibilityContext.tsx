@@ -9,6 +9,7 @@ interface AccessibilitySettings {
   dyslexiaFont: boolean;
   preferredLanguage: string;
   voiceStyle: string;
+  darkMode: boolean;
 }
 
 interface AccessibilityContextType {
@@ -25,6 +26,7 @@ const defaultSettings: AccessibilitySettings = {
   dyslexiaFont: false,
   preferredLanguage: 'en',
   voiceStyle: 'neutral',
+  darkMode: false,
 };
 
 const AccessibilityContext = createContext<AccessibilityContextType | null>(null);
@@ -70,6 +72,7 @@ export function AccessibilityProvider({ children }: { children: ReactNode }) {
           dyslexiaFont: data.dyslexia_font,
           preferredLanguage: data.preferred_language,
           voiceStyle: data.voice_style,
+          darkMode: data.dark_mode || false,
         });
       }
     } catch (error) {
@@ -103,6 +106,7 @@ export function AccessibilityProvider({ children }: { children: ReactNode }) {
           dyslexia_font: newSettings.dyslexiaFont,
           preferred_language: newSettings.preferredLanguage,
           voice_style: newSettings.voiceStyle,
+          dark_mode: newSettings.darkMode,
         });
 
       if (error) {

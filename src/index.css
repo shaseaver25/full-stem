@@ -47,41 +47,41 @@
   }
 
   .dark {
-    --background: 215 25% 12%;
-    --foreground: 0 0% 98%;
+    --background: 222 47% 11%;
+    --foreground: 210 40% 98%;
 
-    --card: 215 25% 15%;
-    --card-foreground: 0 0% 98%;
+    --card: 222 47% 14%;
+    --card-foreground: 210 40% 98%;
 
-    --popover: 215 25% 15%;
-    --popover-foreground: 0 0% 98%;
+    --popover: 222 47% 14%;
+    --popover-foreground: 210 40% 98%;
 
     --primary: 173 80% 50%;
-    --primary-foreground: 0 0% 100%;
+    --primary-foreground: 222 47% 11%;
 
-    --secondary: 215 25% 20%;
-    --secondary-foreground: 0 0% 98%;
+    --secondary: 217 33% 17%;
+    --secondary-foreground: 210 40% 98%;
 
-    --muted: 215 25% 20%;
-    --muted-foreground: 215 10% 65%;
+    --muted: 217 33% 17%;
+    --muted-foreground: 215 20% 65%;
 
-    --accent: 215 25% 20%;
-    --accent-foreground: 0 0% 98%;
+    --accent: 217 33% 17%;
+    --accent-foreground: 210 40% 98%;
 
     --destructive: 0 62% 50%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive-foreground: 210 40% 98%;
 
-    --border: 215 25% 25%;
-    --input: 215 25% 25%;
+    --border: 217 33% 24%;
+    --input: 217 33% 24%;
     --ring: 173 80% 50%;
     
-    --sidebar-background: 215 25% 10%;
-    --sidebar-foreground: 0 0% 95%;
+    --sidebar-background: 222 47% 8%;
+    --sidebar-foreground: 210 40% 98%;
     --sidebar-primary: 173 80% 50%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 215 25% 18%;
-    --sidebar-accent-foreground: 0 0% 95%;
-    --sidebar-border: 215 25% 20%;
+    --sidebar-primary-foreground: 222 47% 11%;
+    --sidebar-accent: 217 33% 14%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 217 33% 21%;
     --sidebar-ring: 173 80% 50%;
   }
 }
@@ -91,24 +91,8 @@
     @apply border-border;
   }
 
-  /* Force light mode - prevent any dark mode styles */
-  html {
-    color-scheme: light !important;
-  }
-
-  html.dark {
-    color-scheme: light !important;
-  }
-
   body {
     @apply bg-background text-foreground;
-    background-color: hsl(0 0% 100%) !important;
-  }
-
-  /* Override dark mode if it somehow gets applied */
-  .dark body {
-    background-color: hsl(0 0% 100%) !important;
-    color: hsl(215 20% 20%) !important;
   }
 }
 

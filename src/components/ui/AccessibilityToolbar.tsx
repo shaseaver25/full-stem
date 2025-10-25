@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useTheme } from 'next-themes';
 import { useAccessibility } from '@/contexts/AccessibilityContext';
 import { useFocusMode } from '@/contexts/FocusModeContext';
 import { Button } from '@/components/ui/button';
@@ -13,15 +14,31 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { Volume2, Globe, Contrast, Type, Accessibility, Eye, EyeOff } from 'lucide-react';
+import { Volume2, Globe, Contrast, Type, Accessibility, Eye, EyeOff, Moon, Sun } from 'lucide-react';
 
 export function AccessibilityToolbar() {
   const { settings, updateSettings, isLoading } = useAccessibility();
   const { focusMode, setFocusMode } = useFocusMode();
+  const { theme, setTheme } = useTheme();
   const [isExpanded, setIsExpanded] = useState(false);
+
+  // Sync theme with accessibility settings
+  useEffect(() => {
+    if (settings.darkMode && theme !== 'dark') {
+      setTheme('dark');
+    } else if (!settings.darkMode && theme === 'dark') {
+      setTheme('light');
+    }
+  }, [settings.darkMode, theme, setTheme]);
 
   const toggleSetting = (key: keyof typeof settings, value: boolean) => {
     updateSettings({ [key]: value });
+  };
+
+  const toggleTheme = () => {
+    const newDarkMode = !settings.darkMode;
+    updateSettings({ darkMode: newDarkMode });
+    setTheme(newDarkMode ? 'dark' : 'light');
   };
 
   if (isLoading) {
@@ -128,6 +145,25 @@ export function AccessibilityToolbar() {
           </TooltipTrigger>
           <TooltipContent side="top">
             <p>Focus Mode {focusMode ? 'Enabled' : 'Disabled'}</p>
+          </TooltipContent>
+        </Tooltip>
+
+        {/* Dark Mode */}
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant={settings.darkMode ? 'default' : 'outline'}
+              size="icon"
+              className="rounded-full h-10 w-10"
+              aria-label="Toggle Dark Mode"
+              aria-pressed={settings.darkMode}
+              onClick={toggleTheme}
+            >
+              {settings.darkMode ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="top">
+            <p>Dark Mode {settings.darkMode ? 'Enabled' : 'Disabled'}</p>
           </TooltipContent>
         </Tooltip>
       </div>
@@ -289,6 +325,34 @@ export function AccessibilityToolbar() {
                   <div
                     className={`w-5 h-5 rounded-full bg-background transition-transform ${
                       focusMode ? 'translate-x-5' : 'translate-x-0.5'
+                    } mt-0.5`}
+                  />
+                </div>
+              </button>
+
+              {/* Dark Mode Toggle */}
+              <button
+                className={`w-full flex items-center justify-between p-3 rounded-lg transition-colors ${
+                  settings.darkMode
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-muted hover:bg-muted/80'
+                }`}
+                onClick={toggleTheme}
+                role="menuitemcheckbox"
+                aria-checked={settings.darkMode}
+              >
+                <div className="flex items-center gap-3">
+                  {settings.darkMode ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
+                  <span className="font-medium">Dark Mode</span>
+                </div>
+                <div
+                  className={`w-10 h-6 rounded-full transition-colors ${
+                    settings.darkMode ? 'bg-primary-foreground/20' : 'bg-muted-foreground/20'
+                  }`}
+                >
+                  <div
+                    className={`w-5 h-5 rounded-full bg-background transition-transform ${
+                      settings.darkMode ? 'translate-x-5' : 'translate-x-0.5'
                     } mt-0.5`}
                   />
                 </div>

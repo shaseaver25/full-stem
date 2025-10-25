@@ -44,6 +44,7 @@ export type Database = {
       accessibility_settings: {
         Row: {
           created_at: string | null
+          dark_mode: boolean | null
           dyslexia_font: boolean | null
           high_contrast: boolean | null
           preferred_language: string | null
@@ -55,6 +56,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
+          dark_mode?: boolean | null
           dyslexia_font?: boolean | null
           high_contrast?: boolean | null
           preferred_language?: string | null
@@ -66,6 +68,7 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
+          dark_mode?: boolean | null
           dyslexia_font?: boolean | null
           high_contrast?: boolean | null
           preferred_language?: string | null

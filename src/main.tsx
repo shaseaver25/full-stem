@@ -3,7 +3,6 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import * as Sentry from "@sentry/react";
 import { ThemeProvider } from "next-themes";
-import { ThemeEnforcer } from './components/ThemeEnforcer';
 import App from './App.tsx';
 import './index.css';
 import { initWebVitalsTracking } from "./utils/webVitals";
@@ -31,9 +30,8 @@ if (isProd) {
 const root = createRoot(document.getElementById("root")!);
 root.render(
   <StrictMode>
-    <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} forcedTheme="light">
-      <ThemeEnforcer />
-      <Sentry.ErrorBoundary 
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+      <Sentry.ErrorBoundary
         fallback={({ error, resetError }) => (
           <div className="min-h-screen flex items-center justify-center bg-white p-4">
             <div className="max-w-md w-full space-y-4 text-center">

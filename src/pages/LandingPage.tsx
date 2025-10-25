@@ -36,9 +36,12 @@ export default function LandingPage() {
     toast
   } = useToast();
 
-  // Force light mode for landing page
+  // Respect system theme preference on landing page
   React.useEffect(() => {
-    document.documentElement.classList.remove('dark');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    if (!prefersDark) {
+      document.documentElement.classList.remove('dark');
+    }
   }, []);
   const handleDemoSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
