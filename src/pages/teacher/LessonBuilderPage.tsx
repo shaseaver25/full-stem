@@ -11,6 +11,7 @@ import { LessonDetailsForm } from '@/components/lesson-builder/LessonDetailsForm
 import { ComponentList } from '@/components/lesson-builder/ComponentList';
 import { AddComponentButton } from '@/components/lesson-builder/AddComponentButton';
 import { LessonPreview } from '@/components/lesson-builder/LessonPreview';
+import { LessonTemplateUpload } from '@/components/lesson-builder/LessonTemplateUpload';
 import AIGenerationWizard from '@/components/lesson/AIGenerationWizard';
 
 interface LessonComponent {
@@ -279,8 +280,9 @@ export default function LessonBuilderPage() {
         <Card>
           <CardContent className="pt-6">
             <Tabs defaultValue="manual" className="w-full">
-              <TabsList className="grid w-full grid-cols-2 mb-6">
+              <TabsList className="grid w-full grid-cols-3 mb-6">
                 <TabsTrigger value="manual">Manual Build</TabsTrigger>
+                <TabsTrigger value="template">Import Template</TabsTrigger>
                 <TabsTrigger value="ai">AI Generator</TabsTrigger>
               </TabsList>
 
@@ -322,6 +324,49 @@ export default function LessonBuilderPage() {
                     </div>
                   </>
                 )}
+              </TabsContent>
+
+              <TabsContent value="template" className="mt-0">
+                <div className="space-y-6">
+                  <div>
+                    <h3 className="text-lg font-semibold mb-2">Import Lesson from Template</h3>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Download our lesson template, fill it out offline, and upload it to automatically 
+                      create all lesson components. Perfect for creating lessons in Word/Google Docs.
+                    </p>
+                  </div>
+
+                  <LessonTemplateUpload
+                    lessonId={lessonId}
+                    onImportComplete={(importedLessonId, componentsCount) => {
+                      console.log('✅ Import complete:', importedLessonId, componentsCount);
+                      loadLesson();
+                      toast({
+                        title: 'Lesson Imported',
+                        description: `${componentsCount} components created. Switch to Manual Build to edit.`,
+                      });
+                    }}
+                  />
+
+                  <div className="bg-muted/50 p-4 rounded-lg space-y-3">
+                    <h4 className="font-semibold text-sm">Template Instructions:</h4>
+                    <ol className="text-sm space-y-2 list-decimal list-inside">
+                      <li>Click "Download Template" to get the blank template file</li>
+                      <li>Fill out the metadata section with your lesson details</li>
+                      <li>Add content to each ## Component: section you want to use</li>
+                      <li>Save your file and click "Upload Template"</li>
+                      <li>Review the imported components and edit as needed</li>
+                    </ol>
+                  </div>
+
+                  <div className="bg-blue-50 dark:bg-blue-950/20 p-4 rounded-lg border border-blue-200 dark:border-blue-900">
+                    <p className="text-sm">
+                      <strong>💡 Pro Tip:</strong> The template supports all TailorEDU component types including 
+                      Instructions, Pages, Multimedia, Coding IDE, Activities, Quizzes, Discussions, Reflections, 
+                      Assignments, and Resources. Assignment components are automatically marked as assignable.
+                    </p>
+                  </div>
+                </div>
               </TabsContent>
 
               <TabsContent value="ai" className="mt-0">

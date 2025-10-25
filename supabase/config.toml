@@ -124,3 +124,13 @@ verify_jwt = true
 [functions.generate-discussion-prompt]
 verify_jwt = true
 
+[functions.generate-lesson-template]
+verify_jwt = false
+
+[functions.parse-lesson-template]
+verify_jwt = true
+
+[functions.onedrive-oauth]
+verify_jwt = true
+
+
