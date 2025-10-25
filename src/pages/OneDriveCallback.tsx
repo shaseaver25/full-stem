@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -7,9 +7,18 @@ import { Loader2 } from 'lucide-react';
 const OneDriveCallback = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const hasProcessed = useRef(false);
 
   useEffect(() => {
     const handleCallback = async () => {
+      // Prevent duplicate processing (React Strict Mode protection)
+      if (hasProcessed.current) {
+        console.log('⏭️ Callback already processed, skipping...');
+        return;
+      }
+
+      hasProcessed.current = true;
+
       const params = new URLSearchParams(window.location.search);
       const code = params.get('code');
       const state = params.get('state');
