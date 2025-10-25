@@ -44,6 +44,8 @@ The lesson should include:
 - Optional summative assessment
 - Teacher notes and safety considerations
 
+IMPORTANT: Return ONLY valid JSON with NO trailing commas. Ensure proper JSON syntax.
+
 Return ONLY valid JSON matching this structure:
 {
   "meta": { "subject", "topic", "gradeLevel", "readingLevel", "language", "durationMinutes", "standards" },
@@ -100,7 +102,13 @@ Return ONLY valid JSON matching this structure:
     try {
       // Try to extract JSON if it's wrapped in markdown code blocks
       const jsonMatch = lessonText.match(/```json\n([\s\S]*?)\n```/) || lessonText.match(/```\n([\s\S]*?)\n```/);
-      const jsonString = jsonMatch ? jsonMatch[1] : lessonText;
+      let jsonString = jsonMatch ? jsonMatch[1] : lessonText;
+      
+      // Fix common JSON issues: remove trailing commas before closing braces/brackets
+      jsonString = jsonString
+        .replace(/,(\s*[}\]])/g, '$1')  // Remove trailing commas
+        .trim();
+      
       lesson = JSON.parse(jsonString);
     } catch (parseError) {
       console.error('Failed to parse lesson JSON:', parseError);
