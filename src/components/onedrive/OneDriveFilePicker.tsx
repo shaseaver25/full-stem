@@ -44,6 +44,15 @@ export function OneDriveFilePicker({
 
     checkAccess();
 
+    // Re-check when returning from OAuth flow
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        checkAccess();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
     // Load OneDrive Picker SDK
     const loadOneDrivePicker = () => {
       if (window.OneDrive) {
@@ -69,6 +78,10 @@ export function OneDriveFilePicker({
     };
 
     loadOneDrivePicker();
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, [toast]);
 
   const handleConnectOneDrive = async () => {
