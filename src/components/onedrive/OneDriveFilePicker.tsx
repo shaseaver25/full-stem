@@ -125,7 +125,6 @@ export function OneDriveFilePicker({
 
       // OneDrive Picker options
       const pickerOptions = {
-        clientId: 'YOUR_AZURE_CLIENT_ID', // This should be configured in env
         action: 'share',
         multiSelect: false,
         advanced: {
