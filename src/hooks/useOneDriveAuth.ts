@@ -37,7 +37,7 @@ export const useOneDriveAuth = () => {
       const { error } = await supabase.auth.linkIdentity({
         provider: 'azure',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback/microsoft`,
+          redirectTo: `${window.location.origin}/auth/callback`,
           scopes: 'Files.ReadWrite offline_access User.Read'
         }
       });

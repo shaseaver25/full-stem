@@ -11,7 +11,13 @@ Teachers can connect Microsoft accounts (personal or school), attach OneDrive fi
 1. Go to [Azure Portal](https://portal.azure.com) > Microsoft Entra ID > App registrations
 2. Click "New registration"
 3. Name: "TailorEDU OneDrive Integration"
-4. Redirect URI: `${window.location.origin}/auth/callback/microsoft`
+4. **Supported account types:** Select "Accounts in any organizational directory (Any Microsoft Entra ID tenant - Multitenant) and personal Microsoft accounts"
+   - **CRITICAL:** This must be selected to support both school and personal Microsoft accounts
+5. Redirect URI: 
+   - Platform: **Web**
+   - URI: `https://YOUR_PROJECT_REF.supabase.co/auth/v1/callback`
+   - Example: `https://irxzpsvzlihqitlicoql.supabase.co/auth/v1/callback`
+   - **Note:** This is the Supabase Auth callback, not your app URL
 
 **Configure API Permissions:**
 - Microsoft Graph > Delegated permissions:

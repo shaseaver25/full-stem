@@ -130,7 +130,7 @@ export function OneDriveFilePicker({
         multiSelect: false,
         advanced: {
           accessToken: accessToken,
-          redirectUri: `${window.location.origin}/auth/callback/microsoft`,
+          redirectUri: `${window.location.origin}/auth/callback`,
           filter: '.docx,.xlsx,.pptx,.pdf,.jpg,.jpeg,.png,.mp4'
         },
         success: (files: any) => {
