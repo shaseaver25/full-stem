@@ -2541,6 +2541,53 @@ export type Database = {
         }
         Relationships: []
       }
+      onedrive_attachments: {
+        Row: {
+          created_at: string
+          file_id: string
+          file_name: string
+          id: string
+          lesson_component_id: string | null
+          metadata: Json | null
+          mime_type: string
+          owner_id: string
+          updated_at: string
+          web_url: string
+        }
+        Insert: {
+          created_at?: string
+          file_id: string
+          file_name: string
+          id?: string
+          lesson_component_id?: string | null
+          metadata?: Json | null
+          mime_type: string
+          owner_id: string
+          updated_at?: string
+          web_url: string
+        }
+        Update: {
+          created_at?: string
+          file_id?: string
+          file_name?: string
+          id?: string
+          lesson_component_id?: string | null
+          metadata?: Json | null
+          mime_type?: string
+          owner_id?: string
+          updated_at?: string
+          web_url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "onedrive_attachments_lesson_component_id_fkey"
+            columns: ["lesson_component_id"]
+            isOneToOne: false
+            referencedRelation: "lesson_components"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       parent_profiles: {
         Row: {
           created_at: string

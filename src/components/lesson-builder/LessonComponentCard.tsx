@@ -11,6 +11,9 @@ import { DraggableProvidedDragHandleProps } from 'react-beautiful-dnd';
 import { DriveFilePicker } from '@/components/drive/DriveFilePicker';
 import { DriveAttachmentsList } from '@/components/drive/DriveAttachmentsList';
 import { useDriveAttachment } from '@/hooks/useDriveAttachment';
+import { OneDriveFilePicker } from '@/components/onedrive/OneDriveFilePicker';
+import { OneDriveAttachmentsList } from '@/components/onedrive/OneDriveAttachmentsList';
+import { useOneDriveAttachment } from '@/hooks/useOneDriveAttachment';
 import { Separator } from '@/components/ui/separator';
 
 interface LessonComponent {
@@ -60,6 +63,7 @@ export function LessonComponentCard({
 }: LessonComponentCardProps) {
   const [isExpanded, setIsExpanded] = useState(true);
   const { attachFile, isAttaching } = useDriveAttachment();
+  const { attachFile: attachOneDriveFile, isAttaching: isAttachingOneDrive } = useOneDriveAttachment();
 
   const handleContentChange = (field: string, value: any) => {
     onUpdate(index, {
@@ -73,6 +77,14 @@ export function LessonComponentCard({
       return;
     }
     attachFile({ componentId: component.id, file });
+  };
+
+  const handleOneDriveFileSelected = (file: { id: string; name: string; mimeType: string; webUrl: string }) => {
+    if (!component.id) {
+      console.error('❌ Component ID is required to attach files');
+      return;
+    }
+    attachOneDriveFile({ componentId: component.id, file });
   };
 
   const renderFields = () => {
@@ -366,26 +378,41 @@ export function LessonComponentCard({
           
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <Label className="text-sm font-medium">Google Drive Attachments</Label>
+              <Label className="text-sm font-medium">Cloud Storage Attachments</Label>
               {component.id && (
-                <DriveFilePicker
-                  onFileSelected={handleDriveFileSelected}
-                  disabled={isAttaching}
-                  variant="outline"
-                  size="sm"
-                />
+                <div className="flex gap-2">
+                  <DriveFilePicker
+                    onFileSelected={handleDriveFileSelected}
+                    disabled={isAttaching}
+                    variant="outline"
+                    size="sm"
+                  />
+                  <OneDriveFilePicker
+                    onFileSelected={handleOneDriveFileSelected}
+                    disabled={isAttachingOneDrive}
+                    variant="outline"
+                    size="sm"
+                  />
+                </div>
               )}
             </div>
             
             {component.id ? (
-              <DriveAttachmentsList 
-                componentId={component.id} 
-                showEmbeds={false}
-                canDelete={true}
-              />
+              <>
+                <DriveAttachmentsList 
+                  componentId={component.id} 
+                  showEmbeds={false}
+                  canDelete={true}
+                />
+                <OneDriveAttachmentsList 
+                  componentId={component.id} 
+                  showEmbeds={false}
+                  canDelete={true}
+                />
+              </>
             ) : (
               <p className="text-sm text-muted-foreground italic">
-                Save this component first to attach Drive files
+                Save this component first to attach cloud files
               </p>
             )}
           </div>

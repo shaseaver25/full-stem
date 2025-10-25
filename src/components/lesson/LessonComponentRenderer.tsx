@@ -5,6 +5,7 @@ import { LessonComponent } from '@/hooks/useLessonComponents';
 import { FileText, Video, Code, MessageSquare, CheckSquare } from 'lucide-react';
 import { DiscussionComponent } from './DiscussionComponent';
 import { DriveAttachmentsList } from '@/components/drive/DriveAttachmentsList';
+import { OneDriveAttachmentsList } from '@/components/onedrive/OneDriveAttachmentsList';
 
 interface LessonComponentRendererProps {
   component: LessonComponent;
@@ -71,8 +72,13 @@ export function LessonComponentRenderer({
         </div>
       )}
       {id && (
-        <div className="mt-4 pt-4 border-t border-border">
+        <div className="mt-4 pt-4 border-t border-border space-y-4">
           <DriveAttachmentsList
+            componentId={id}
+            showEmbeds={true}
+            canDelete={false}
+          />
+          <OneDriveAttachmentsList
             componentId={id}
             showEmbeds={true}
             canDelete={false}
