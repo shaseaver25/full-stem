@@ -126,6 +126,7 @@ const LessonComponentManager: React.FC = () => {
         read_aloud: newComponent.read_aloud,
         order: newComponent.order,
         enabled: true,
+        is_assignable: false,
       }]);
 
       toast({

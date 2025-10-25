@@ -323,7 +323,17 @@ export default function LessonBuilderPage() {
               </TabsContent>
 
               <TabsContent value="ai" className="mt-0">
-                <AIGenerationWizard />
+                <AIGenerationWizard 
+                  lessonId={lessonId}
+                  classId={classId}
+                  onComponentsGenerated={(newComponents) => {
+                    loadLesson();
+                    toast({
+                      title: 'AI Components Added',
+                      description: 'Switch to Manual Build tab to view and edit them',
+                    });
+                  }}
+                />
               </TabsContent>
             </Tabs>
           </CardContent>
