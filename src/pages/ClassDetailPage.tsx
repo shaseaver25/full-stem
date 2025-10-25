@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, BookOpen, Users, ClipboardList, MessageSquare, Calendar, Clock, PlusCircle } from 'lucide-react';
+import { ArrowLeft, BookOpen, Users, ClipboardList, MessageSquare, Calendar, Clock, PlusCircle, GraduationCap } from 'lucide-react';
 import { useClass, useClassAssignments } from '@/hooks/useClassManagement';
+import { useClassLessons } from '@/hooks/useClassLessons';
 import { RosterManagement } from '@/components/teacher/RosterManagement';
 import { AssignmentWizard } from '@/components/teacher/AssignmentWizard';
 import { format, startOfToday } from 'date-fns';
@@ -43,6 +44,7 @@ export default function ClassDetailPage() {
 
   const { data: classData, isLoading: classLoading } = useClass(resolvedClassId);
   const { data: assignments = [], isLoading: assignmentsLoading } = useClassAssignments(resolvedClassId);
+  const { data: lessons = [], isLoading: lessonsLoading } = useClassLessons(resolvedClassId);
 
   // Fetch student count
   const { data: studentCount = 0 } = useQuery({
@@ -156,10 +158,14 @@ export default function ClassDetailPage() {
 
       {/* Main Content Tabs */}
       <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="overview" className="flex items-center gap-2">
             <BookOpen className="h-4 w-4" />
             Overview
+          </TabsTrigger>
+          <TabsTrigger value="lessons" className="flex items-center gap-2">
+            <GraduationCap className="h-4 w-4" />
+            Lessons
           </TabsTrigger>
           <TabsTrigger value="roster" className="flex items-center gap-2">
             <Users className="h-4 w-4" />
@@ -245,6 +251,105 @@ export default function ClassDetailPage() {
               </Button>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* Lessons Tab */}
+        <TabsContent value="lessons" className="space-y-6">
+          <div className="flex justify-between items-center">
+            <div>
+              <h2 className="text-2xl font-bold">Lessons</h2>
+              <p className="text-muted-foreground">
+                View and manage lessons for this class
+              </p>
+            </div>
+            <Button onClick={() => navigate(`/teacher/lesson-builder?classId=${resolvedClassId}`)}>
+              <PlusCircle className="h-4 w-4 mr-2" />
+              Create Lesson
+            </Button>
+          </div>
+
+          {lessonsLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="text-center space-y-3">
+                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary mx-auto" />
+                <p className="text-muted-foreground">Loading lessons...</p>
+              </div>
+            </div>
+          ) : lessons.length === 0 ? (
+            <Card>
+              <CardContent className="text-center py-12">
+                <GraduationCap className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-lg font-medium mb-2">No lessons yet</h3>
+                <p className="text-muted-foreground mb-4">
+                  Start by creating your first lesson for this class.
+                </p>
+                <Button onClick={() => navigate(`/teacher/lesson-builder?classId=${resolvedClassId}`)}>
+                  <PlusCircle className="h-4 w-4 mr-2" />
+                  Create First Lesson
+                </Button>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {lessons.map((lesson, index) => (
+                <Link
+                  key={lesson.id}
+                  to={`/teacher/classes/${resolvedClassId}/lessons/${lesson.id}`}
+                  className="group"
+                >
+                  <Card className="h-full transition-all hover:shadow-lg hover:border-primary">
+                    <CardHeader>
+                      <div className="flex items-start justify-between">
+                        <Badge variant="outline" className="mb-2">
+                          Lesson {index + 1}
+                        </Badge>
+                        {lesson.duration && (
+                          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                            <Clock className="h-3 w-3" />
+                            {lesson.duration} min
+                          </div>
+                        )}
+                      </div>
+                      <CardTitle className="line-clamp-2 group-hover:text-primary transition-colors">
+                        {lesson.title}
+                      </CardTitle>
+                      {lesson.description && (
+                        <CardDescription className="line-clamp-2">
+                          {lesson.description}
+                        </CardDescription>
+                      )}
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-2 text-sm text-muted-foreground">
+                        {lesson.objectives && lesson.objectives.length > 0 && (
+                          <div className="flex items-start gap-2">
+                            <BookOpen className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                            <span className="line-clamp-1">
+                              {lesson.objectives.length} objective{lesson.objectives.length !== 1 ? 's' : ''}
+                            </span>
+                          </div>
+                        )}
+                        {lesson.materials && lesson.materials.length > 0 && (
+                          <div className="flex items-start gap-2">
+                            <ClipboardList className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                            <span className="line-clamp-1">
+                              {lesson.materials.length} material{lesson.materials.length !== 1 ? 's' : ''}
+                            </span>
+                          </div>
+                        )}
+                        <div className="flex items-center gap-2 pt-2 border-t">
+                          <Calendar className="h-3 w-3" />
+                          <span className="text-xs">
+                            Updated {format(new Date(lesson.updated_at), 'MMM d, yyyy')}
+                          </span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
+              ))}
+            </div>
+          )}
         </TabsContent>
 
         {/* Roster Tab */}
