@@ -11,10 +11,7 @@ import { Loader2, Brain } from 'lucide-react';
 import { redirectToRoleDashboard } from '@/utils/roleRedirect';
 import { supabase } from '@/integrations/supabase/client';
 import { Separator } from "@/components/ui/separator";
-import { useGoogleAuth } from '@/hooks/useGoogleAuth';
-
 const Auth = () => {
-  useGoogleAuth();
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
