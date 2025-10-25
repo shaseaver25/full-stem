@@ -16,6 +16,7 @@ import { MultiSelect, Option } from '@/components/ui/multi-select';
 import { useStudentManagement, Student, CreateStudentData, DemoStudent } from '@/hooks/useStudentManagement';
 import { useForm } from 'react-hook-form';
 import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 interface StudentRosterPanelProps {
   classId: string;
@@ -56,6 +57,8 @@ export const StudentRosterPanel: React.FC<StudentRosterPanelProps> = ({ classId 
     updateStudent,
     deleteStudent
   } = useStudentManagement(classId);
+
+  const { toast } = useToast();
 
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
@@ -173,6 +176,24 @@ export const StudentRosterPanel: React.FC<StudentRosterPanelProps> = ({ classId 
 
   const handleEnrollExistingStudent = async (studentId: string) => {
     try {
+      // Check if student is already enrolled
+      const { data: existingEnrollment } = await supabase
+        .from('class_students')
+        .select('id')
+        .eq('class_id', classId)
+        .eq('student_id', studentId)
+        .maybeSingle();
+
+      if (existingEnrollment) {
+        toast({
+          title: 'Already Enrolled',
+          description: 'This student is already in your class.',
+          variant: 'default'
+        });
+        return;
+      }
+
+      // Enroll the student
       const { error } = await supabase
         .from('class_students')
         .insert({
@@ -181,7 +202,24 @@ export const StudentRosterPanel: React.FC<StudentRosterPanelProps> = ({ classId 
           status: 'active'
         });
 
-      if (error) throw error;
+      if (error) {
+        // Handle duplicate key error specifically
+        if (error.code === '23505') {
+          toast({
+            title: 'Already Enrolled',
+            description: 'This student is already in your class.',
+            variant: 'default'
+          });
+        } else {
+          throw error;
+        }
+        return;
+      }
+
+      toast({
+        title: 'Student Enrolled',
+        description: 'Student successfully added to class.',
+      });
 
       // The students list will auto-refresh through React Query
       setSearchQuery('');
@@ -189,6 +227,11 @@ export const StudentRosterPanel: React.FC<StudentRosterPanelProps> = ({ classId 
       setIsAddDialogOpen(false);
     } catch (error) {
       console.error('Error enrolling student:', error);
+      toast({
+        title: 'Enrollment Failed',
+        description: 'Failed to add student to class. Please try again.',
+        variant: 'destructive'
+      });
     }
   };
 
