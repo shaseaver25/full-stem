@@ -70,14 +70,20 @@ const OneDriveCallback = () => {
           console.log('✅ OneDrive connected successfully');
           toast({
             title: 'Success',
-            description: 'OneDrive connected successfully!',
+            description: 'OneDrive connected successfully — you can now attach files.',
           });
         }
 
         // Return to the original page
-        const returnUrl = sessionStorage.getItem('oauth_return_to') || state || '/';
+        const returnUrl = sessionStorage.getItem('onedrive_return_to') || 
+                         sessionStorage.getItem('oauth_return_to') || 
+                         state || 
+                         '/teacher/lesson-builder';
+        
         sessionStorage.removeItem('oauth_return_to');
+        sessionStorage.removeItem('onedrive_return_to');
         sessionStorage.removeItem('onedrive_link_attempt');
+        
         navigate(returnUrl, { replace: true });
       } catch (error) {
         console.error('❌ Error during OneDrive callback:', error);

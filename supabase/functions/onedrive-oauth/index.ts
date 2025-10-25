@@ -32,12 +32,11 @@ serve(async (req) => {
     const clientId = '8350983d-f94c-4357-8741-e83e576a49dc';
     const clientSecret = Deno.env.get('AZURE_CLIENT_SECRET');
     
-    // Get origin from referer header to construct the correct redirect URI
-    const referer = req.headers.get('referer') || '';
-    const origin = referer ? new URL(referer).origin : 'https://6ba0ffd1-9a8e-49f9-9f63-94f86000b68b.lovableproject.com';
+    // Construct redirect URI dynamically from request origin
+    const origin = req.headers.get('origin') || 'https://6ba0ffd1-9a8e-49f9-9f63-94f86000b68b.lovableproject.com';
     const redirectUri = `${origin}/onedrive/callback`;
     
-    console.log('📍 Using redirect URI:', redirectUri);
+    console.log('🔁 Using redirect URI:', redirectUri);
 
     const tokenResponse = await fetch('https://login.microsoftonline.com/common/oauth2/v2.0/token', {
       method: 'POST',

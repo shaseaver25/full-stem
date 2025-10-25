@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -8,6 +8,28 @@ import { useToast } from '@/hooks/use-toast';
  */
 export const useOneDriveAuth = () => {
   const { toast } = useToast();
+  const [connectionState, setConnectionState] = useState(0);
+
+  const checkOneDriveConnection = useCallback(async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: tokens } = await supabase
+        .from('user_tokens')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('provider', 'onedrive')
+        .single();
+
+      if (tokens) {
+        console.log('✅ OneDrive connection verified');
+        setConnectionState(prev => prev + 1); // Trigger UI refresh
+      }
+    } catch (error) {
+      console.log('ℹ️ OneDrive not connected yet');
+    }
+  }, []);
 
   /**
    * Initiates Microsoft OAuth flow to link OneDrive access
@@ -30,6 +52,7 @@ export const useOneDriveAuth = () => {
       // Store return URL for redirect after OAuth
       const returnUrl = window.location.pathname + window.location.search;
       sessionStorage.setItem('oauth_return_to', returnUrl);
+      sessionStorage.setItem('onedrive_return_to', returnUrl);
       sessionStorage.setItem('onedrive_link_attempt', 'true');
 
       console.log('📍 Stored return URL:', returnUrl);
@@ -127,5 +150,28 @@ export const useOneDriveAuth = () => {
     return () => subscription.unsubscribe();
   }, [toast]);
 
-  return { signInWithMicrosoft };
+  /**
+   * Watch for OneDrive token changes in the database
+   * Automatically refreshes UI when tokens are stored
+   */
+  useEffect(() => {
+    const channel = supabase
+      .channel('onedrive-token-watch')
+      .on('postgres_changes', { 
+        event: '*', 
+        schema: 'public', 
+        table: 'user_tokens',
+        filter: 'provider=eq.onedrive'
+      }, (payload) => {
+        console.log('🔄 OneDrive token change detected:', payload);
+        checkOneDriveConnection();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [checkOneDriveConnection]);
+
+  return { signInWithMicrosoft, connectionState };
 };

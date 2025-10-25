@@ -33,7 +33,7 @@ export function OneDriveFilePicker({
   const [showConnectDialog, setShowConnectDialog] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
   const { toast } = useToast();
-  const { signInWithMicrosoft } = useOneDriveAuth();
+  const { signInWithMicrosoft, connectionState } = useOneDriveAuth();
 
   useEffect(() => {
     // Check if user has OneDrive access
@@ -82,7 +82,7 @@ export function OneDriveFilePicker({
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [toast]);
+  }, [toast, connectionState]); // Re-check when connectionState changes
 
   const handleConnectOneDrive = async () => {
     setIsConnecting(true);
