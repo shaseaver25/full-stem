@@ -4,7 +4,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { AlertCircle, CheckCircle2, Clock } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Clock, ArrowLeft } from 'lucide-react';
 
 const formatDate = (dateString?: string) => {
   if (!dateString) return 'No due date';
@@ -72,6 +72,13 @@ export default function AssignmentsListPage() {
   return (
     <div className="min-h-screen bg-background p-6">
       <div className="max-w-4xl mx-auto">
+        <Button variant="ghost" size="sm" asChild className="mb-4">
+          <Link to="/student" className="flex items-center space-x-2">
+            <ArrowLeft className="h-4 w-4" />
+            <span>Back to Dashboard</span>
+          </Link>
+        </Button>
+        
         <div className="mb-6">
           <h1 className="text-3xl font-semibold mb-2">My Assignments</h1>
           <p className="text-muted-foreground">
