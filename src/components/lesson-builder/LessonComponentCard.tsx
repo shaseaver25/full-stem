@@ -8,12 +8,14 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import { GripVertical, Trash2, ChevronDown, ChevronUp, Copy } from 'lucide-react';
 import { DraggableProvidedDragHandleProps } from 'react-beautiful-dnd';
-import { DriveFilePicker } from '@/components/drive/DriveFilePicker';
-import { DriveAttachmentsList } from '@/components/drive/DriveAttachmentsList';
-import { useDriveAttachment } from '@/hooks/useDriveAttachment';
-import { OneDriveFilePicker } from '@/components/onedrive/OneDriveFilePicker';
-import { OneDriveAttachmentsList } from '@/components/onedrive/OneDriveAttachmentsList';
-import { useOneDriveAttachment } from '@/hooks/useOneDriveAttachment';
+// Temporarily disabled - cloud integrations
+// import { DriveFilePicker } from '@/components/drive/DriveFilePicker';
+// import { DriveAttachmentsList } from '@/components/drive/DriveAttachmentsList';
+// import { useDriveAttachment } from '@/hooks/useDriveAttachment';
+// import { OneDriveFilePicker } from '@/components/onedrive/OneDriveFilePicker';
+// import { OneDriveAttachmentsList } from '@/components/onedrive/OneDriveAttachmentsList';
+// import { useOneDriveAttachment } from '@/hooks/useOneDriveAttachment';
+import { LocalFileUpload } from './LocalFileUpload';
 import { Separator } from '@/components/ui/separator';
 
 interface LessonComponent {
@@ -62,8 +64,9 @@ export function LessonComponentCard({
   isDragging,
 }: LessonComponentCardProps) {
   const [isExpanded, setIsExpanded] = useState(true);
-  const { attachFile, isAttaching } = useDriveAttachment();
-  const { attachFile: attachOneDriveFile, isAttaching: isAttachingOneDrive } = useOneDriveAttachment();
+  // Temporarily disabled - cloud integrations
+  // const { attachFile, isAttaching } = useDriveAttachment();
+  // const { attachFile: attachOneDriveFile, isAttaching: isAttachingOneDrive } = useOneDriveAttachment();
 
   const handleContentChange = (field: string, value: any) => {
     onUpdate(index, {
@@ -71,20 +74,33 @@ export function LessonComponentCard({
     });
   };
 
-  const handleDriveFileSelected = (file: { id: string; name: string; mimeType: string; url: string }) => {
-    if (!component.id) {
-      console.error('❌ Component ID is required to attach files');
-      return;
-    }
-    attachFile({ componentId: component.id, file });
-  };
+  // Temporarily disabled - cloud integrations
+  // const handleDriveFileSelected = (file: { id: string; name: string; mimeType: string; url: string }) => {
+  //   if (!component.id) {
+  //     console.error('❌ Component ID is required to attach files');
+  //     return;
+  //   }
+  //   attachFile({ componentId: component.id, file });
+  // };
 
-  const handleOneDriveFileSelected = (file: { id: string; name: string; mimeType: string; webUrl: string }) => {
-    if (!component.id) {
-      console.error('❌ Component ID is required to attach files');
-      return;
-    }
-    attachOneDriveFile({ componentId: component.id, file });
+  // const handleOneDriveFileSelected = (file: { id: string; name: string; mimeType: string; webUrl: string }) => {
+  //   if (!component.id) {
+  //     console.error('❌ Component ID is required to attach files');
+  //     return;
+  //   }
+  //   attachOneDriveFile({ componentId: component.id, file });
+  // };
+
+  const handleLocalFileUploaded = (file: { name: string; path: string; url: string }) => {
+    console.log('📎 Local file uploaded:', file);
+    // Store the file reference in component content for now
+    const existingFiles = component.content.uploadedFiles || [];
+    onUpdate(index, {
+      content: { 
+        ...component.content, 
+        uploadedFiles: [...existingFiles, file]
+      },
+    });
   };
 
   const renderFields = () => {
@@ -378,26 +394,33 @@ export function LessonComponentCard({
           
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <Label className="text-sm font-medium">Cloud Storage Attachments</Label>
-              {component.id && (
-                <div className="flex gap-2">
-                  <DriveFilePicker
-                    onFileSelected={handleDriveFileSelected}
-                    disabled={isAttaching}
-                    variant="outline"
-                    size="sm"
-                  />
-                  <OneDriveFilePicker
-                    onFileSelected={handleOneDriveFileSelected}
-                    disabled={isAttachingOneDrive}
-                    variant="outline"
-                    size="sm"
-                  />
-                </div>
-              )}
+              <Label className="text-sm font-medium">File Attachments</Label>
             </div>
             
-            {component.id ? (
+            {/* Local File Upload (Cloud integrations temporarily disabled) */}
+            <LocalFileUpload
+              onFileUploaded={handleLocalFileUploaded}
+              variant="outline"
+              size="sm"
+            />
+
+            {/* Display uploaded files */}
+            {component.content.uploadedFiles && component.content.uploadedFiles.length > 0 && (
+              <div className="space-y-2">
+                <Label className="text-xs text-muted-foreground">Uploaded Files:</Label>
+                <ul className="text-sm space-y-1">
+                  {component.content.uploadedFiles.map((file: any, idx: number) => (
+                    <li key={idx} className="flex items-center gap-2">
+                      <span className="text-primary">📎</span>
+                      <span>{file.name}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Temporarily disabled - cloud integrations */}
+            {/* {component.id ? (
               <>
                 <DriveAttachmentsList 
                   componentId={component.id} 
@@ -414,7 +437,7 @@ export function LessonComponentCard({
               <p className="text-sm text-muted-foreground italic">
                 Save this component first to attach cloud files
               </p>
-            )}
+            )} */}
           </div>
         </CardContent>
       )}
