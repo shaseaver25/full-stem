@@ -190,7 +190,7 @@ const TeacherDashboard = () => {
               </p>
             </div>
             <div className="flex gap-3">
-              <Button onClick={() => navigate('/build-class')}>
+              <Button onClick={() => navigate('/teacher/build-class')}>
                 <BookOpen className="h-4 w-4 mr-2" />
                 Create Class
               </Button>
