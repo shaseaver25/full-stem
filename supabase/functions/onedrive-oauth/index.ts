@@ -95,8 +95,8 @@ serve(async (req) => {
       .upsert({
         user_id: user.id,
         provider: 'onedrive',
-        access_token: tokens.access_token,
-        refresh_token: tokens.refresh_token,
+        access_token_enc: tokens.access_token,
+        refresh_token_enc: tokens.refresh_token,
         expires_at: expiresAt,
       });
 
