@@ -71,11 +71,20 @@ export const useOneDriveAuth = () => {
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('🔔 OneDrive auth state change:', event, {
+          hasSession: !!session,
+          hasProviderToken: !!session?.provider_token,
+          identities: session?.user.identities?.map(i => i.provider),
+          appMetadata: session?.user.app_metadata
+        });
+        
         if ((event === 'SIGNED_IN' || event === 'USER_UPDATED') && session) {
           // Check if we have a Microsoft/Azure identity linked
           const hasAzureIdentity = session.user.identities?.some(
             identity => identity.provider === 'azure'
           );
+          
+          console.log('🔍 Checking Azure identity:', { hasAzureIdentity, providerToken: !!session.provider_token });
           
           // Check if we have a Microsoft provider token (from linkIdentity)
           if (session.provider_token && hasAzureIdentity) {
