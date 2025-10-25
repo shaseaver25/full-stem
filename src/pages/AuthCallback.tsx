@@ -10,41 +10,49 @@ const AuthCallback = () => {
   const { toast } = useToast();
 
   useEffect(() => {
+    let mounted = true;
+
     const handleCallback = async () => {
-      console.log('🔄 OAuth callback initiated...');
-      
-      const { data: { session }, error } = await supabase.auth.getSession();
-      
-      if (error) {
-        console.error('❌ Auth callback error:', error);
-        toast({
-          title: "Authentication Error",
-          description: error.message,
-          variant: "destructive"
-        });
-        navigate('/auth');
-        return;
-      }
-
-      if (!session) {
-        console.log('⚠️ No session found');
-        navigate('/auth');
-        return;
-      }
-
-      console.log('✅ Session acquired:', {
-        user: session.user.email,
-        provider: session.user.app_metadata.provider,
-        hasProviderToken: !!session.provider_token,
-        hasProviderRefreshToken: !!session.provider_refresh_token
-      });
-
-      // Check if this is a Google OAuth session with Drive token
-      if (session.provider_token) {
-        console.log('🔐 Provider token detected, storing securely...');
+      try {
+        console.log('🔄 OAuth callback initiated...');
         
-        try {
-          const { data, error: storeError } = await supabase.functions.invoke('store-oauth-tokens', {
+        // Get the session with hash from URL
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (!mounted) return;
+
+        if (error) {
+          console.error('❌ Auth callback error:', error);
+          toast({
+            title: "Authentication Error",
+            description: error.message || "Failed to complete authentication",
+            variant: "destructive"
+          });
+          navigate('/auth', { replace: true });
+          return;
+        }
+
+        if (!session) {
+          console.log('⚠️ No session found');
+          toast({
+            title: "Authentication Required",
+            description: "Please sign in to continue",
+          });
+          navigate('/auth', { replace: true });
+          return;
+        }
+
+        console.log('✅ Session acquired:', {
+          user: session.user.email,
+          provider: session.user.app_metadata.provider,
+          hasProviderToken: !!session.provider_token,
+        });
+
+        // Store OAuth tokens if present (non-blocking)
+        if (session.provider_token) {
+          console.log('🔐 Provider token detected, storing securely...');
+          
+          supabase.functions.invoke('store-oauth-tokens', {
             body: {
               provider: 'google',
               session: {
@@ -54,38 +62,46 @@ const AuthCallback = () => {
                 expires_in: session.expires_in
               }
             }
+          }).then(({ error: storeError }) => {
+            if (storeError) {
+              console.error('❌ Failed to store OAuth tokens:', storeError);
+            } else {
+              console.log('✅ OAuth tokens stored successfully');
+            }
+          }).catch(err => {
+            console.error('❌ Error storing tokens:', err);
           });
-
-          if (storeError) {
-            console.error('❌ Failed to store OAuth tokens:', storeError);
-            toast({
-              title: "Warning",
-              description: "Signed in successfully, but failed to store Drive access. You may need to re-authenticate for Drive features.",
-              variant: "destructive"
-            });
-          } else {
-            console.log('✅ OAuth tokens stored successfully:', data);
-            toast({
-              title: "Success",
-              description: "Signed in with Google Drive access enabled!",
-            });
-          }
-        } catch (err) {
-          console.error('❌ Error storing tokens:', err);
         }
-      } else {
-        console.log('ℹ️ No provider token (standard email/password sign-in)');
-        toast({
-          title: "Welcome back!",
-          description: "You have successfully signed in."
-        });
-      }
 
-      console.log('✅ Authentication successful, redirecting to role dashboard');
-      await redirectToRoleDashboard(session.user.id, navigate);
+        if (!mounted) return;
+
+        toast({
+          title: "Welcome!",
+          description: "Redirecting to your dashboard...",
+        });
+
+        console.log('✅ Authentication successful, redirecting...');
+        
+        // Use replace to prevent back button issues
+        await redirectToRoleDashboard(session.user.id, (path) => navigate(path, { replace: true }));
+      } catch (err) {
+        console.error('❌ Unexpected error in auth callback:', err);
+        if (mounted) {
+          toast({
+            title: "Error",
+            description: "An unexpected error occurred. Please try again.",
+            variant: "destructive"
+          });
+          navigate('/auth', { replace: true });
+        }
+      }
     };
 
     handleCallback();
+
+    return () => {
+      mounted = false;
+    };
   }, [navigate, toast]);
 
   return (
