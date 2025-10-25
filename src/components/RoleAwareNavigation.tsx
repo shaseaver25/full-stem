@@ -74,14 +74,14 @@ const RoleAwareNavigation = ({ onLinkClick, variant = 'desktop' }: RoleAwareNavi
                 My Menu
               </span>
             </MenubarTrigger>
-            <MenubarContent className="bg-white shadow-lg border rounded-md z-50 min-w-[200px]">
+            <MenubarContent>
               {navigationItems.map((item) => {
                 const ItemIcon = item.icon;
                 return (
                   <MenubarItem key={item.path} asChild>
                     <Link 
                       to={item.path} 
-                      className="flex items-center gap-2 px-3 py-2 hover:bg-gray-100 cursor-pointer"
+                      className="flex items-center gap-2 cursor-pointer"
                     >
                       {ItemIcon && <ItemIcon className="h-4 w-4" />}
                       {item.label}
@@ -104,14 +104,14 @@ const RoleAwareNavigation = ({ onLinkClick, variant = 'desktop' }: RoleAwareNavi
                   {group.label}
                 </span>
               </MenubarTrigger>
-              <MenubarContent className="bg-white shadow-lg border rounded-md z-50 min-w-[200px]">
+              <MenubarContent>
                 {group.items.map((item) => {
                   const ItemIcon = item.icon;
                   return (
                     <MenubarItem key={item.path} asChild>
                       <Link 
                         to={item.path} 
-                        className="flex items-center gap-2 px-3 py-2 hover:bg-gray-100 cursor-pointer"
+                        className="flex items-center gap-2 cursor-pointer"
                       >
                         {ItemIcon && <ItemIcon className="h-4 w-4" />}
                         {item.label}
