@@ -31,6 +31,18 @@ export const useSubmission = (assignmentId: string) => {
     queryFn: async (): Promise<SubmissionData> => {
       if (!user?.id) throw new Error('User not authenticated');
 
+      // First, verify the assignment exists
+      const { data: assignmentExists, error: assignmentError } = await supabase
+        .from('class_assignments_new')
+        .select('id')
+        .eq('id', assignmentId)
+        .maybeSingle();
+
+      if (assignmentError) throw assignmentError;
+      if (!assignmentExists) {
+        throw new Error('Assignment not found. This assignment may have been deleted or the link is incorrect.');
+      }
+
       const { data, error } = await supabase
         .from('assignment_submissions')
         .select('*')

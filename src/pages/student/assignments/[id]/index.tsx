@@ -10,7 +10,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function StudentAssignmentDetail() {
   const { id: assignmentId } = useParams<{ id: string }>();
-  const { submission, isLoading, resubmit } = useSubmission(assignmentId!);
+  const { submission, isLoading, error, resubmit } = useSubmission(assignmentId!);
 
   if (isLoading) {
     return (
@@ -24,14 +24,23 @@ export default function StudentAssignmentDetail() {
     );
   }
 
-  if (!submission) {
+  if (error || !submission) {
     return (
       <div className="container mx-auto p-6">
+        <Alert variant="destructive" className="mb-4">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            {error?.message || 'Failed to load assignment. Please try again later.'}
+          </AlertDescription>
+        </Alert>
         <Card>
           <CardContent className="text-center py-8">
             <AlertCircle className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-            <p className="text-muted-foreground">Assignment not found</p>
-            <div className="flex gap-2 justify-center mt-4">
+            <p className="text-lg font-medium mb-2">Assignment Not Found</p>
+            <p className="text-muted-foreground mb-6">
+              This assignment may have been deleted or the link is incorrect.
+            </p>
+            <div className="flex gap-2 justify-center">
               <Button asChild variant="outline">
                 <Link to="/student">
                   <ArrowLeft className="h-4 w-4 mr-2" />
