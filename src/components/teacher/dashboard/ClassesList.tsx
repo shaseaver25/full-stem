@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, Library, ChevronDown, Loader2 } from 'lucide-react';
+import { Library, ChevronDown, Loader2 } from 'lucide-react';
 import { ClassesGrid } from '@/components/teacher/ClassesGrid';
 import {
   DropdownMenu,
@@ -176,12 +176,6 @@ export const ClassesList = ({ classes, loading }: ClassesListProps) => {
               )}
             </DropdownMenuContent>
           </DropdownMenu>
-          <Link to="/teacher/build-class">
-            <Button size="sm">
-              <Plus className="h-4 w-4 mr-2" />
-              Create Class
-            </Button>
-          </Link>
         </div>
       </CardHeader>
       <CardContent>
