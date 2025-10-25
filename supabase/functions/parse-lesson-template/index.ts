@@ -1,5 +1,6 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.0';
+import mammoth from 'https://esm.sh/mammoth@1.6.0';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -16,12 +17,52 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const { parsedContent, lessonId } = await req.json();
+    const requestBody = await req.json();
+    const { parsedContent, lessonId, base64File, fileType } = requestBody;
 
     console.log('📄 Parsing lesson template...');
+    
+    let contentToParse = parsedContent;
+    
+    // Handle .docx file conversion
+    if (base64File && fileType === 'docx') {
+      console.log('📄 Processing .docx file...');
+      
+      try {
+        // Decode base64 to ArrayBuffer
+        const binaryString = atob(base64File);
+        const bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+        
+        // Extract text from .docx using Mammoth
+        const result = await mammoth.extractRawText({ arrayBuffer: bytes.buffer });
+        contentToParse = result.value;
+        
+        console.log('✅ .docx converted to text, length:', contentToParse.length);
+        
+        // Validate that converted text has required structure
+        if (!contentToParse.includes('## Component:')) {
+          throw new Error('Invalid .docx template format. Make sure the file contains ## Component: sections.');
+        }
+        
+        if (!contentToParse.includes('# Lesson Metadata')) {
+          throw new Error('Invalid .docx template format. Missing metadata section.');
+        }
+      } catch (conversionError) {
+        console.error('❌ Error converting .docx:', conversionError);
+        throw new Error(`We couldn't read that Word file. Make sure it follows the TailorEDU template structure. Error: ${conversionError.message}`);
+      }
+    }
+    
+    // Validate text content
+    if (!contentToParse) {
+      throw new Error('No content provided for parsing');
+    }
 
     // Parse the document content
-    const lines = parsedContent.split('\n');
+    const lines = contentToParse.split('\n');
     
     // Extract metadata
     const metadata: any = {

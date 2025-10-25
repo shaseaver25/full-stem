@@ -89,71 +89,113 @@ export function LessonTemplateUpload({
       try {
         console.log('📤 Uploading lesson template:', file.name);
 
-        // Read file content
-        const reader = new FileReader();
+        // Determine file type and read accordingly
+        const isDocx = fileExtension === '.docx';
         
-        reader.onload = async (event) => {
-          try {
-            const content = event.target?.result as string;
-            
-            // Basic validation
-            if (!content.includes('## Component:')) {
-              throw new Error('Invalid template format. Make sure the file contains ## Component: sections.');
+        if (isDocx) {
+          // Handle .docx files
+          const arrayBuffer = await file.arrayBuffer();
+          const base64Data = btoa(
+            new Uint8Array(arrayBuffer).reduce((data, byte) => data + String.fromCharCode(byte), '')
+          );
+
+          console.log('✅ .docx file read as ArrayBuffer, sending to parser...');
+
+          // Parse the template
+          const { data, error } = await supabase.functions.invoke('parse-lesson-template', {
+            body: {
+              base64File: base64Data,
+              fileType: 'docx',
+              lessonId: lessonId || null
             }
+          });
 
-            if (!content.includes('# Lesson Metadata')) {
-              throw new Error('Invalid template format. Missing metadata section.');
-            }
+          if (error) {
+            throw error;
+          }
 
-            console.log('✅ File read successfully, parsing...');
+          console.log('✅ Lesson imported:', data);
 
-            // Parse the template
-            const { data, error } = await supabase.functions.invoke('parse-lesson-template', {
-              body: {
-                parsedContent: content,
-                lessonId: lessonId || null
+          setImportResult(data);
+          setShowResultDialog(true);
+
+          if (onImportComplete) {
+            onImportComplete(data.lessonId, data.componentsCreated);
+          }
+
+          toast({
+            title: 'Lesson Imported Successfully',
+            description: `Created ${data.componentsCreated} components from template.`,
+          });
+
+          setIsUploading(false);
+        } else {
+          // Handle .txt files
+          const reader = new FileReader();
+          
+          reader.onload = async (event) => {
+            try {
+              const content = event.target?.result as string;
+              
+              // Basic validation
+              if (!content.includes('## Component:')) {
+                throw new Error('Invalid template format. Make sure the file contains ## Component: sections.');
               }
-            });
 
-            if (error) {
-              throw error;
+              if (!content.includes('# Lesson Metadata')) {
+                throw new Error('Invalid template format. Missing metadata section.');
+              }
+
+              console.log('✅ File read successfully, parsing...');
+
+              // Parse the template
+              const { data, error } = await supabase.functions.invoke('parse-lesson-template', {
+                body: {
+                  parsedContent: content,
+                  lessonId: lessonId || null
+                }
+              });
+
+              if (error) {
+                throw error;
+              }
+
+              console.log('✅ Lesson imported:', data);
+
+              setImportResult(data);
+              setShowResultDialog(true);
+
+              if (onImportComplete) {
+                onImportComplete(data.lessonId, data.componentsCreated);
+              }
+
+              toast({
+                title: 'Lesson Imported Successfully',
+                description: `Created ${data.componentsCreated} components from template.`,
+              });
+            } catch (err: any) {
+              console.error('❌ Error parsing template:', err);
+              toast({
+                title: 'Import Failed',
+                description: err.message || 'Failed to parse lesson template.',
+                variant: 'destructive'
+              });
+            } finally {
+              setIsUploading(false);
             }
+          };
 
-            console.log('✅ Lesson imported:', data);
-
-            setImportResult(data);
-            setShowResultDialog(true);
-
-            if (onImportComplete) {
-              onImportComplete(data.lessonId, data.componentsCreated);
-            }
-
+          reader.onerror = () => {
             toast({
-              title: 'Lesson Imported Successfully',
-              description: `Created ${data.componentsCreated} components from template.`,
-            });
-          } catch (err: any) {
-            console.error('❌ Error parsing template:', err);
-            toast({
-              title: 'Import Failed',
-              description: err.message || 'Failed to parse lesson template.',
+              title: 'Read Failed',
+              description: 'Failed to read file content.',
               variant: 'destructive'
             });
-          } finally {
             setIsUploading(false);
-          }
-        };
+          };
 
-        reader.onerror = () => {
-          toast({
-            title: 'Read Failed',
-            description: 'Failed to read file content.',
-            variant: 'destructive'
-          });
-          setIsUploading(false);
-        };
-
-        reader.readAsText(file);
+          reader.readAsText(file);
+        }
       } catch (err: any) {
         console.error('❌ Error uploading template:', err);
         toast({

@@ -331,8 +331,8 @@ export default function LessonBuilderPage() {
                   <div>
                     <h3 className="text-lg font-semibold mb-2">Import Lesson from Template</h3>
                     <p className="text-sm text-muted-foreground mb-4">
-                      Download our lesson template, fill it out offline, and upload it to automatically 
-                      create all lesson components. Perfect for creating lessons in Word/Google Docs.
+                      Download our lesson template, fill it out offline in plain text or Microsoft Word (.docx), 
+                      and upload it to automatically create all lesson components. Perfect for creating lessons in Word/Google Docs.
                     </p>
                   </div>
 
