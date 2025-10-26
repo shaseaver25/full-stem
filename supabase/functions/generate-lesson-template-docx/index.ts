@@ -29,26 +29,15 @@ function createLessonTemplateDocument(): Document {
         new TextRun({
           text: "TailorEDU Lesson Template",
           bold: true,
-          size: 32,
+          size: 36,
         }),
       ],
+      heading: HeadingLevel.TITLE,
     })
   );
 
-  children.push(new Paragraph(" "));
-
-  // Subtitle
-  children.push(
-    new Paragraph({
-      children: [
-        new TextRun({
-          text: "Use this document to create lessons offline. Fill in each section, then upload it into the Lesson Builder → Import Template tab.",
-          italics: true,
-        }),
-      ],
-    })
-  );
-
+  children.push(new Paragraph("Use this document to create lessons offline."));
+  children.push(new Paragraph("Fill in each section, then upload it to TailorEDU."));
   children.push(new Paragraph(" "));
 
   // Instructions
@@ -72,76 +61,19 @@ function createLessonTemplateDocument(): Document {
   // Lesson Metadata
   children.push(
     new Paragraph({
-      text: "# Lesson Metadata",
+      text: "Lesson Metadata",
       heading: HeadingLevel.HEADING_1,
     })
   );
 
   children.push(new Paragraph(" "));
-
-  children.push(
-    new Paragraph({
-      children: [
-        new TextRun({ text: "Title: ", bold: true }),
-        new TextRun("________________________________"),
-      ],
-    })
-  );
-
-  children.push(
-    new Paragraph({
-      children: [
-        new TextRun({ text: "Subject: ", bold: true }),
-        new TextRun("________________________________"),
-      ],
-    })
-  );
-
-  children.push(
-    new Paragraph({
-      children: [
-        new TextRun({ text: "Grade Level: ", bold: true }),
-        new TextRun("________________________________"),
-      ],
-    })
-  );
-
-  children.push(
-    new Paragraph({
-      children: [
-        new TextRun({ text: "Duration (minutes): ", bold: true }),
-        new TextRun("________________________________"),
-      ],
-    })
-  );
-
-  children.push(
-    new Paragraph({
-      children: [
-        new TextRun({ text: "Reading Level: ", bold: true }),
-        new TextRun("________________________________"),
-      ],
-    })
-  );
-
-  children.push(
-    new Paragraph({
-      children: [
-        new TextRun({ text: "Language: ", bold: true }),
-        new TextRun("en-US"),
-      ],
-    })
-  );
-
-  children.push(
-    new Paragraph({
-      children: [
-        new TextRun({ text: "Description: ", bold: true }),
-        new TextRun({ text: "[Brief overview of what students will learn]", italics: true }),
-      ],
-    })
-  );
-
+  children.push(new Paragraph("Title: __________________________"));
+  children.push(new Paragraph("Subject: ________________________"));
+  children.push(new Paragraph("Grade Level: ____________________"));
+  children.push(new Paragraph("Duration (minutes): _____________"));
+  children.push(new Paragraph("Reading Level: __________________"));
+  children.push(new Paragraph("Language: en-US"));
+  children.push(new Paragraph("Description: [Brief overview of what students will learn]"));
   children.push(new Paragraph(" "));
 
   // Component Sections
@@ -217,23 +149,25 @@ serve(async (req) => {
 
     const doc = createLessonTemplateDocument();
     
-    // Generate the binary buffer
+    // Create binary buffer
     const buffer = await Packer.toBuffer(doc);
     
     console.log('Template generated successfully, size:', buffer.length);
 
-    // Convert Uint8Array to ArrayBuffer for Deno Response compatibility
-    const arrayBuffer = buffer.buffer.slice(
-      buffer.byteOffset,
-      buffer.byteOffset + buffer.byteLength
-    );
+    // Create ReadableStream that sends raw chunks
+    const stream = new ReadableStream({
+      start(controller) {
+        controller.enqueue(buffer);
+        controller.close();
+      },
+    });
 
-    // Return raw binary bytes directly
-    return new Response(arrayBuffer, {
+    return new Response(stream, {
       headers: {
         ...corsHeaders,
         'Content-Type': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
         'Content-Disposition': 'attachment; filename="TailorEDU_Lesson_Template.docx"',
+        'Cache-Control': 'no-store',
       },
     });
 
