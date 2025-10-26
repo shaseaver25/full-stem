@@ -1,18 +1,31 @@
-// supabase/functions/parse-lesson-template/index.ts
 // functions/parse-lesson-template/index.ts
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import mammoth from "https://esm.sh/mammoth@1.6.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
+// ✅ Define CORS headers
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
 serve(async (req) => {
+  // Handle CORS preflight requests
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
+  }
+
   try {
     const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
-    // Auth check
+    // 🔐 Authenticate user
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
       console.error("🚫 Missing Authorization header");
-      return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: corsHeaders,
+      });
     }
 
     const token = authHeader.replace("Bearer ", "");
@@ -23,22 +36,25 @@ serve(async (req) => {
 
     if (userError || !user) {
       console.error("🚫 Invalid user session:", userError);
-      return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: corsHeaders,
+      });
     }
 
     console.log("👤 Authenticated user:", user.email);
 
-    // Read file
+    // 🧠 Read uploaded DOCX file
     const body = await req.arrayBuffer();
     console.log("📄 Processing uploaded DOCX...");
     const { value: text } = await mammoth.extractRawText({ buffer: body });
     console.log("✅ Extracted text length:", text.length);
 
-    // Basic parse
+    // 🔍 Parse metadata and components
     const metadata: Record<string, any> = {};
     const components: any[] = [];
-
     const lines = text.split("\n").map((l) => l.trim());
+
     let currentSection = "";
     let currentContent: string[] = [];
 
@@ -70,7 +86,7 @@ serve(async (req) => {
     console.log("🧩 Found components:", components.length);
     console.log("🧠 Metadata parsed:", metadata);
 
-    // Create lesson entry
+    // 🧑‍🏫 Create Lesson Record
     let finalLessonId = null;
 
     try {
@@ -112,7 +128,7 @@ serve(async (req) => {
       throw err;
     }
 
-    // Insert components
+    // 🧩 Insert Components
     for (const component of components) {
       try {
         const payload = {
@@ -136,10 +152,13 @@ serve(async (req) => {
         metadata,
         components_count: components.length,
       }),
-      { headers: { "Content-Type": "application/json" }, status: 200 },
+      {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      },
     );
   } catch (err) {
     console.error("🔥 Fatal Error in parse-lesson-template:", err);
-    return new Response(JSON.stringify({ error: err.message }), { status: 500 });
+    return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });
   }
 });
