@@ -31,18 +31,20 @@ export function LessonTemplateUpload({
     try {
       console.log('📥 Downloading lesson template...');
       
-      const { data, error } = await supabase.functions.invoke('generate-lesson-template');
+      const { data, error } = await supabase.functions.invoke('generate-docx');
 
       if (error) {
         throw error;
       }
 
       // Create blob and download
-      const blob = new Blob([data], { type: 'text/plain' });
+      const blob = new Blob([data], { 
+        type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' 
+      });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'TailorEDU_Lesson_Template.txt';
+      a.download = 'TailorEDU_Lesson_Template.docx';
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -50,7 +52,7 @@ export function LessonTemplateUpload({
 
       toast({
         title: 'Template Downloaded',
-        description: 'Fill out the template and upload it when ready.',
+        description: 'Fill out the Word document and upload it when ready.',
       });
     } catch (err: any) {
       console.error('❌ Error downloading template:', err);

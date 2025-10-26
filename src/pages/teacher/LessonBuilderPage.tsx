@@ -351,11 +351,12 @@ export default function LessonBuilderPage() {
                   <div className="bg-muted/50 p-4 rounded-lg space-y-3">
                     <h4 className="font-semibold text-sm">Template Instructions:</h4>
                     <ol className="text-sm space-y-2 list-decimal list-inside">
-                      <li>Click "Download Template" to get the blank template file</li>
-                      <li>Fill out the metadata section with your lesson details</li>
-                      <li>Add content to each ## Component: section you want to use</li>
-                      <li>Save your file and click "Upload Template"</li>
-                      <li>Review the imported components and edit as needed</li>
+                      <li>Click "Download Template" to get the formatted Word document</li>
+                      <li>Fill out the template sections in Microsoft Word, Google Docs, or any word processor</li>
+                      <li>Add content to each ## Component: section you want to include</li>
+                      <li>Save your file as .docx or export as .txt</li>
+                      <li>Click "Upload Template" to import your lesson</li>
+                      <li>Review the auto-generated components and edit as needed</li>
                     </ol>
                   </div>
 

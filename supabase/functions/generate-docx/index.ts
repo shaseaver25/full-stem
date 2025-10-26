@@ -1,130 +1,258 @@
-import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { Document, Paragraph, TextRun, HeadingLevel, AlignmentType, convertInchesToTwip, BorderStyle } from "npm:docx@8.5.0";
+import { Packer } from "npm:docx@8.5.0";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Create a proper RTF file that opens cleanly in Word
-function createWordCompatibleTemplate(): Uint8Array {
-  const rtfContent = `{\\rtf1\\ansi\\deff0 {\\fonttbl {\\f0 Times New Roman;}{\\f1 Arial;}}
-{\\colortbl ;\\red54;\\green95;\\blue145;}
-\\f0\\fs24
+function createWordTemplate(): Document {
+  const doc = new Document({
+    sections: [{
+      properties: {
+        page: {
+          margin: {
+            top: convertInchesToTwip(1),
+            right: convertInchesToTwip(1),
+            bottom: convertInchesToTwip(1),
+            left: convertInchesToTwip(1),
+          },
+        },
+      },
+      children: [
+        // Title
+        new Paragraph({
+          text: "TailorEDU Lesson Template",
+          heading: HeadingLevel.TITLE,
+          alignment: AlignmentType.CENTER,
+          spacing: { after: 200 },
+          style: "Heading1",
+        }),
+        
+        // Subtitle
+        new Paragraph({
+          text: "Fill out this document to create a new lesson in the TailorEDU platform.",
+          alignment: AlignmentType.CENTER,
+          spacing: { after: 400 },
+        }),
+        
+        // Guidelines box
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: "💡 Guidelines:",
+              bold: true,
+            }),
+          ],
+          spacing: { before: 200, after: 100 },
+          shading: { fill: "E8E8E8" },
+          border: {
+            top: { style: BorderStyle.SINGLE, size: 1, color: "CCCCCC" },
+            bottom: { style: BorderStyle.SINGLE, size: 1, color: "CCCCCC" },
+            left: { style: BorderStyle.SINGLE, size: 1, color: "CCCCCC" },
+            right: { style: BorderStyle.SINGLE, size: 1, color: "CCCCCC" },
+          },
+        }),
+        new Paragraph({
+          text: "• Do not remove or rename the ## Component headers.",
+          spacing: { after: 50 },
+          shading: { fill: "E8E8E8" },
+        }),
+        new Paragraph({
+          text: "• You may leave sections blank if not needed.",
+          spacing: { after: 50 },
+          shading: { fill: "E8E8E8" },
+        }),
+        new Paragraph({
+          text: "• Use plain text, not tables or images.",
+          spacing: { after: 50 },
+          shading: { fill: "E8E8E8" },
+        }),
+        new Paragraph({
+          text: "• When finished, upload this file in the Lesson Builder → Import Template tab.",
+          spacing: { after: 200 },
+          shading: { fill: "E8E8E8" },
+        }),
+        
+        // Lesson Metadata Section
+        new Paragraph({
+          text: "# Lesson Metadata",
+          heading: HeadingLevel.HEADING_1,
+          spacing: { before: 400, after: 200 },
+        }),
+        
+        ...createMetadataFields([
+          { label: "Title", placeholder: "Enter lesson title here" },
+          { label: "Subject", placeholder: "e.g., Mathematics, Science, English" },
+          { label: "Grade Level", placeholder: "e.g., 9-12, College" },
+          { label: "Duration (minutes)", placeholder: "e.g., 45, 90" },
+          { label: "Reading Level", placeholder: "e.g., 9th grade, College" },
+          { label: "Language", placeholder: "e.g., English, Spanish" },
+        ]),
+        
+        new Paragraph({
+          children: [
+            new TextRun({ text: "Description:", bold: true }),
+          ],
+          spacing: { before: 200, after: 100 },
+        }),
+        new Paragraph({
+          text: "[Type a brief overview of what students will learn.]",
+          italics: true,
+          color: "666666",
+          spacing: { after: 400 },
+        }),
+        
+        // Component Sections
+        ...createComponentSection(
+          "Instructions",
+          "Write the introduction or overview of the lesson here. This section appears first for students.",
+          "Welcome to this lesson on photosynthesis! You'll learn how plants convert sunlight into energy."
+        ),
+        
+        ...createComponentSection(
+          "Page",
+          "Include the main lesson content or reading material. You can add multiple pages if needed.",
+          "Photosynthesis is the process by which plants use sunlight, water, and carbon dioxide to produce oxygen and energy in the form of sugar."
+        ),
+        
+        ...createComponentSection(
+          "Multimedia",
+          "Paste YouTube or Vimeo links here — one per line.",
+          "https://www.youtube.com/watch?v=example123"
+        ),
+        
+        ...createComponentSection(
+          "Coding IDE",
+          "Specify programming language and starter code if you want to include a coding activity.",
+          "Language: Python\nStarter code:\nprint('Hello, World!')"
+        ),
+        
+        ...createComponentSection(
+          "Activity",
+          "Describe an interactive activity for students to complete.",
+          "In pairs, create a diagram showing the inputs and outputs of photosynthesis."
+        ),
+        
+        ...createComponentSection(
+          "Discussion",
+          "Create a discussion question or topic for students to respond to.",
+          "How does photosynthesis support life on Earth? Why is it crucial for our ecosystem?"
+        ),
+        
+        ...createComponentSection(
+          "Quiz",
+          "Add quiz questions in this format:\nQ: Question text\nA: Correct answer\nB: Wrong answer\nC: Wrong answer\nD: Wrong answer",
+          "Q: What do plants produce during photosynthesis?\nA: Oxygen and glucose\nB: Carbon dioxide\nC: Nitrogen\nD: Water only"
+        ),
+        
+        ...createComponentSection(
+          "Reflection",
+          "Add a reflection prompt for students to think about what they learned.",
+          "What surprised you most about how plants create energy? How might this knowledge change how you think about plants?"
+        ),
+        
+        ...createComponentSection(
+          "Assignment",
+          "Describe the assignment task and submission requirements.",
+          "Create a poster explaining photosynthesis to elementary students. Include diagrams and simple explanations. Submit as PDF."
+        ),
+        
+        ...createComponentSection(
+          "Resources",
+          "List any additional materials or resources students might need.",
+          "• Khan Academy: Photosynthesis video series\n• Biology textbook, Chapter 8\n• Lab materials: plant samples, microscope"
+        ),
+        
+        // Final instructions
+        new Paragraph({
+          text: "Next Steps",
+          heading: HeadingLevel.HEADING_1,
+          spacing: { before: 600, after: 200 },
+        }),
+        new Paragraph({
+          text: "1. Fill in all sections with your content",
+          spacing: { after: 100 },
+        }),
+        new Paragraph({
+          text: "2. Save this document",
+          spacing: { after: 100 },
+        }),
+        new Paragraph({
+          text: "3. Upload the completed template to TailorEDU",
+          spacing: { after: 100 },
+        }),
+        new Paragraph({
+          text: "4. Review the auto-generated lesson components",
+          spacing: { after: 100 },
+        }),
+        new Paragraph({
+          text: "5. Publish your lesson!",
+          spacing: { after: 100 },
+        }),
+      ],
+    }],
+  });
+  
+  return doc;
+}
 
-{\\f1\\b\\fs36\\cf1 TailorEDU Lesson Plan Template}\\par
-\\par
-{\\b Please fill in all sections below. Replace underlined areas with your content.}\\par
-\\par
+function createMetadataFields(fields: Array<{ label: string; placeholder: string }>): Paragraph[] {
+  const paragraphs: Paragraph[] = [];
+  
+  fields.forEach(field => {
+    paragraphs.push(
+      new Paragraph({
+        children: [
+          new TextRun({ text: `${field.label}: `, bold: true }),
+          new TextRun({ text: "____________________________", color: "CCCCCC" }),
+        ],
+        spacing: { after: 150 },
+      }),
+      new Paragraph({
+        text: `   ${field.placeholder}`,
+        italics: true,
+        color: "666666",
+        spacing: { after: 200 },
+      })
+    );
+  });
+  
+  return paragraphs;
+}
 
-{\\f1\\b\\fs28\\cf1 Basic Information}\\par
-\\par
-{\\b Lesson Title: }{\\ul                                                                    }\\par
-\\par
-{\\b Subject: }{\\ul                                                                    }\\par
-\\par
-{\\b Grade Level: }{\\ul                                                                    }\\par
-\\par
-{\\b Duration: }{\\ul                                                                    }\\par
-\\par
-
-{\\f1\\b\\fs28\\cf1 Video Section (Optional)}\\par
-\\par
-{\\b Video URL: }{\\ul                                                                    }\\par
-\\par
-
-{\\f1\\b\\fs28\\cf1 Learning Objectives}\\par
-\\par
-{\\b List 3-5 specific learning objectives for this lesson:}\\par
-\\par
-1. {\\ul                                                                    }\\par
-\\par
-2. {\\ul                                                                    }\\par
-\\par
-3. {\\ul                                                                    }\\par
-\\par
-4. {\\ul                                                                    }\\par
-\\par
-5. {\\ul                                                                    }\\par
-\\par
-
-{\\f1\\b\\fs28\\cf1 Written Instructions}\\par
-\\par
-{\\b Provide detailed, step-by-step instructions for students:}\\par
-\\par
-{\\ul                                                                    }\\par
-\\par
-{\\ul                                                                    }\\par
-\\par
-{\\ul                                                                    }\\par
-\\par
-{\\ul                                                                    }\\par
-\\par
-{\\ul                                                                    }\\par
-\\par
-
-{\\f1\\b\\fs28\\cf1 Assignment Instructions}\\par
-\\par
-{\\b Describe the assignment task and submission requirements:}\\par
-\\par
-{\\ul                                                                    }\\par
-\\par
-{\\ul                                                                    }\\par
-\\par
-{\\ul                                                                    }\\par
-\\par
-{\\ul                                                                    }\\par
-\\par
-
-{\\f1\\b\\fs28\\cf1 Discussion Prompt}\\par
-\\par
-{\\b Create a discussion question or topic:}\\par
-\\par
-{\\ul                                                                    }\\par
-\\par
-{\\ul                                                                    }\\par
-\\par
-
-{\\f1\\b\\fs28\\cf1 Assessment and Rubric}\\par
-\\par
-{\\b Describe how you will assess student learning:}\\par
-\\par
-{\\ul                                                                    }\\par
-\\par
-{\\ul                                                                    }\\par
-\\par
-{\\ul                                                                    }\\par
-\\par
-
-{\\f1\\b\\fs28\\cf1 Desmos Integration}\\par
-\\par
-{\\b Do you need Desmos graphing tools?} \\u9744? Yes    \\u9744? No\\par
-\\par
-{\\b If yes, which type?} \\u9744? Graphing Calculator    \\u9744? Geometry Tool\\par
-\\par
-
-{\\f1\\b\\fs28\\cf1 Additional Resources}\\par
-\\par
-{\\b List any additional materials or resources needed:}\\par
-\\par
-{\\ul                                                                    }\\par
-\\par
-{\\ul                                                                    }\\par
-\\par
-{\\ul                                                                    }\\par
-\\par
-
-{\\f1\\b\\fs28\\cf1 Instructions}\\par
-\\par
-1. Fill in all underlined sections with your content\\par
-2. Save this document (File > Save As > Word Document if needed)\\par
-3. Upload the completed template to TailorEDU\\par
-4. Review the auto-generated lesson components\\par
-5. Publish your lesson!\\par
-}`;
-
-  const encoder = new TextEncoder();
-  return encoder.encode(rtfContent);
+function createComponentSection(componentName: string, guidance: string, example: string): Paragraph[] {
+  return [
+    new Paragraph({
+      text: `## Component: ${componentName}`,
+      heading: HeadingLevel.HEADING_1,
+      spacing: { before: 400, after: 200 },
+    }),
+    new Paragraph({
+      text: guidance,
+      italics: true,
+      color: "666666",
+      spacing: { after: 150 },
+    }),
+    new Paragraph({
+      children: [
+        new TextRun({ text: "Example:", bold: true, italics: true, color: "005B99" }),
+      ],
+      spacing: { after: 100 },
+    }),
+    new Paragraph({
+      text: example,
+      italics: true,
+      color: "999999",
+      spacing: { after: 300 },
+    }),
+    new Paragraph({
+      text: "[Your content here]",
+      color: "CCCCCC",
+      spacing: { after: 400 },
+    }),
+  ];
 }
 
 serve(async (req) => {
@@ -133,18 +261,19 @@ serve(async (req) => {
   }
 
   try {
-    console.log('Generating Word-compatible template...');
+    console.log('Generating Word document template...');
     
-    const templateBytes = createWordCompatibleTemplate();
+    const doc = createWordTemplate();
+    const buffer = await Packer.toBuffer(doc);
     
-    console.log('Template generated, size:', templateBytes.length);
+    console.log('Template generated, size:', buffer.length);
 
-    return new Response(templateBytes, {
+    return new Response(buffer, {
       headers: {
         ...corsHeaders,
-        'Content-Type': 'application/rtf',
-        'Content-Disposition': 'attachment; filename="TailorEDU_Lesson_Plan_Template.rtf"',
-        'Content-Length': templateBytes.length.toString(),
+        'Content-Type': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'Content-Disposition': 'attachment; filename="TailorEDU_Lesson_Template.docx"',
+        'Content-Length': buffer.length.toString(),
       },
     });
 
