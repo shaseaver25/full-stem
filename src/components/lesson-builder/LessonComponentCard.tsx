@@ -63,9 +63,9 @@ export function LessonComponentCard({
   isDragging,
 }: LessonComponentCardProps) {
   const [isExpanded, setIsExpanded] = useState(true);
-  // Temporarily disabled - cloud integrations
-  // const { attachFile, isAttaching } = useDriveAttachment();
-  // const { attachFile: attachOneDriveFile, isAttaching: isAttachingOneDrive } = useOneDriveAttachment();
+  
+   const { attachFile, isAttaching } = useDriveAttachment();
+   const { attachFile: attachOneDriveFile, isAttaching: isAttachingOneDrive } = useOneDriveAttachment();
 
   const handleContentChange = (field: string, value: any) => {
     onUpdate(index, {
@@ -73,22 +73,22 @@ export function LessonComponentCard({
     });
   };
 
-  // Temporarily disabled - cloud integrations
-  // const handleDriveFileSelected = (file: { id: string; name: string; mimeType: string; url: string }) => {
-  //   if (!component.id) {
-  //     console.error('❌ Component ID is required to attach files');
-  //     return;
-  //   }
-  //   attachFile({ componentId: component.id, file });
-  // };
+   Temporarily disabled - cloud integrations
+   const handleDriveFileSelected = (file: { id: string; name: string; mimeType: string; url: string }) => {
+     if (!component.id) {
+       console.error('❌ Component ID is required to attach files');
+       return;
+     }
+     attachFile({ componentId: component.id, file });
+   };
 
-  // const handleOneDriveFileSelected = (file: { id: string; name: string; mimeType: string; webUrl: string }) => {
-  //   if (!component.id) {
-  //     console.error('❌ Component ID is required to attach files');
-  //     return;
-  //   }
-  //   attachOneDriveFile({ componentId: component.id, file });
-  // };
+   const handleOneDriveFileSelected = (file: { id: string; name: string; mimeType: string; webUrl: string }) => {
+     if (!component.id) {
+       console.error('❌ Component ID is required to attach files');
+       return;
+     }
+     attachOneDriveFile({ componentId: component.id, file });
+   };
 
   const handleLocalFileUploaded = (file: { name: string; path: string; url: string }) => {
     console.log("📎 Local file uploaded:", file);
@@ -401,7 +401,7 @@ export function LessonComponentCard({
             )}
 
             {/* Temporarily disabled - cloud integrations */}
-            {/* {component.id ? (
+            {component.id ? (
               <>
                 <DriveAttachmentsList 
                   componentId={component.id} 
@@ -418,7 +418,7 @@ export function LessonComponentCard({
               <p className="text-sm text-muted-foreground italic">
                 Save this component first to attach cloud files
               </p>
-            )} */}
+            )} 
           </div>
         </CardContent>
       )}
