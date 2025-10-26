@@ -1,189 +1,145 @@
 // supabase/functions/parse-lesson-template/index.ts
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+// functions/parse-lesson-template/index.ts
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import mammoth from "https://esm.sh/mammoth@1.6.0";
-import { corsHeaders } from "../_shared/cors.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
-Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
-
+serve(async (req) => {
   try {
-    console.log("📄 Parsing lesson template...");
+    const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-    );
-
-    const contentType = req.headers.get("content-type") || "";
-    let parsedContent = "";
-    let lessonId: string | null = null;
-
-    if (contentType.includes("application/vnd.openxmlformats-officedocument.wordprocessingml.document")) {
-      const buffer = await req.arrayBuffer();
-      const { value } = await mammoth.extractRawText({ buffer });
-      parsedContent = value;
-      console.log("✅ Extracted text from DOCX");
-    } else {
-      const json = await req.json();
-      parsedContent = json.parsedContent || "";
-      lessonId = json.lessonId || null;
+    // Auth check
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      console.error("🚫 Missing Authorization header");
+      return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
     }
 
-    if (!parsedContent) throw new Error("Template content is empty");
+    const token = authHeader.replace("Bearer ", "");
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser(token);
 
-    const lines = parsedContent.split("\n");
-    const metadata: any = {
-      title: "",
-      subject: "",
-      grade_level: "",
-      duration: 45,
-      reading_level: null,
-      language_code: "en-US",
-      description: "",
-    };
-
-    let components: any[] = [];
-    let section = "";
-    let content = "";
-    let inMetadata = false;
-
-    for (const raw of lines) {
-      const line = raw.trim();
-      if (line === "# Lesson Metadata") {
-        inMetadata = true;
-        continue;
-      }
-      if (line === "---") {
-        inMetadata = false;
-        if (section && content.trim()) {
-          components.push({ section, content: content.trim() });
-          content = "";
-        }
-        continue;
-      }
-      if (inMetadata && line.includes(":")) {
-        const [k, ...v] = line.split(":");
-        const key = k.toLowerCase();
-        const val = v.join(":").trim();
-        if (key.includes("title")) metadata.title = val;
-        else if (key.includes("subject")) metadata.subject = val;
-        else if (key.includes("grade")) metadata.grade_level = val;
-        else if (key.includes("duration")) metadata.duration = parseInt(val) || 45;
-        else if (key.includes("reading")) metadata.reading_level = parseInt(val);
-        else if (key.includes("language")) metadata.language_code = val;
-        else if (key.includes("description")) metadata.description = val;
-      }
-      if (line.startsWith("## Component:")) {
-        if (section && content.trim()) {
-          components.push({ section, content: content.trim() });
-        }
-        section = line.replace("## Component:", "").trim();
-        content = "";
-        continue;
-      }
-      if (section) content += line + "\n";
+    if (userError || !user) {
+      console.error("🚫 Invalid user session:", userError);
+      return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
     }
 
-    if (section && content.trim()) components.push({ section, content: content.trim() });
+    console.log("👤 Authenticated user:", user.email);
 
-    console.log(`✅ Parsed ${components.length} components`);
+    // Read file
+    const body = await req.arrayBuffer();
+    console.log("📄 Processing uploaded DOCX...");
+    const { value: text } = await mammoth.extractRawText({ buffer: body });
+    console.log("✅ Extracted text length:", text.length);
 
-    const token = req.headers.get("Authorization")?.replace("Bearer ", "");
-    const { data: { user } } = await supabase.auth.getUser(token);
-    if (!user) throw new Error("Unauthorized");
+    // Basic parse
+    const metadata: Record<string, any> = {};
+    const components: any[] = [];
 
-    const { data: teacherProfile } = await supabase
-      .from("teacher_profiles")
-      .select("id")
-      .eq("user_id", user.id)
-      .single();
+    const lines = text.split("\n").map((l) => l.trim());
+    let currentSection = "";
+    let currentContent: string[] = [];
 
-    if (!teacherProfile) throw new Error("Teacher profile missing");
-
-    // --- create or update ---
-    let finalLessonId = lessonId;
-
-    if (lessonId) {
-      const { data, error } = await supabase
-        .from("lessons")
-        .update({
-          title: metadata.title || "Imported Lesson",
-          description: metadata.description,
-          duration: metadata.duration,
-          grade_level: metadata.grade_level,
-          subject: metadata.subject,
-        })
-        .eq("id", lessonId)
-        .select()
-        .single();
-
-      if (error || !data) {
-        console.warn("⚠️ Lesson not found; creating new one.");
-        finalLessonId = null;
+    for (const line of lines) {
+      if (line.startsWith("##")) {
+        if (currentSection) {
+          components.push({
+            type: currentSection,
+            content: currentContent.join("\n").trim(),
+          });
+        }
+        currentSection = line.replace(/^##/, "").trim();
+        currentContent = [];
+      } else if (line.includes(":") && !currentSection) {
+        const [key, value] = line.split(":").map((x) => x.trim());
+        metadata[key.toLowerCase()] = value;
       } else {
-        finalLessonId = data.id;
+        currentContent.push(line);
       }
     }
 
-    if (!finalLessonId) {
-      const { data: newLesson, error: insertErr } = await supabase
-        .from("lessons")
-        .insert({
-          teacher_id: teacherProfile.id,
-          title: metadata.title || "Imported Lesson",
-          description: metadata.description,
-          duration: metadata.duration,
-          grade_level: metadata.grade_level,
-          subject: metadata.subject,
-          status: "draft",
-        })
-        .select()
-        .single();
-      if (insertErr) throw insertErr;
-      finalLessonId = newLesson.id;
-    }
-
-    const typeMap: Record<string, string> = {
-      instructions: "page",
-      page: "page",
-      multimedia: "video",
-      video: "video",
-      "coding ide": "codingEditor",
-      activity: "activity",
-      discussion: "discussion",
-      quiz: "assessment",
-      reflection: "page",
-      assignment: "assignment",
-      resources: "page",
-    };
-
-    for (const [i, c] of components.entries()) {
-      const type = typeMap[c.section.toLowerCase()] || "page";
-      await supabase.from("lesson_components").insert({
-        lesson_id: finalLessonId,
-        component_type: type,
-        title: c.section,
-        content: { text: c.content },
-        order: i,
-        enabled: true,
-        is_assignable: type === "assignment",
+    if (currentSection) {
+      components.push({
+        type: currentSection,
+        content: currentContent.join("\n").trim(),
       });
     }
 
+    console.log("🧩 Found components:", components.length);
+    console.log("🧠 Metadata parsed:", metadata);
+
+    // Create lesson entry
+    let finalLessonId = null;
+
+    try {
+      const { data: teacherProfile, error: teacherError } = await supabase
+        .from("teacher_profiles")
+        .select("id")
+        .eq("user_id", user.id)
+        .single();
+
+      if (teacherError || !teacherProfile) throw new Error("No teacher profile found");
+
+      const insertPayload = {
+        teacher_id: teacherProfile.id,
+        title: metadata.title || "Imported Lesson",
+        description: metadata.description || "",
+        duration: metadata.duration || 45,
+        grade_level: metadata.grade_level || "",
+        subject: metadata.subject || "",
+        status: "draft",
+      };
+
+      console.log("🪄 Inserting lesson:", insertPayload);
+
+      const { data: newLesson, error: insertErr } = await supabase
+        .from("lessons")
+        .insert(insertPayload)
+        .select("id")
+        .maybeSingle();
+
+      if (insertErr) {
+        console.error("❌ Lesson insert error:", insertErr);
+        throw insertErr;
+      }
+
+      finalLessonId = newLesson?.id;
+      console.log("✅ Created new lesson:", finalLessonId);
+    } catch (err) {
+      console.error("❌ Error creating lesson:", err);
+      throw err;
+    }
+
+    // Insert components
+    for (const component of components) {
+      try {
+        const payload = {
+          lesson_id: finalLessonId,
+          type: component.type,
+          content: component.content,
+          position: components.indexOf(component),
+        };
+        const { error: compErr } = await supabase.from("lesson_components").insert(payload);
+        if (compErr) console.error("⚠️ Component insert failed:", compErr);
+      } catch (compErr) {
+        console.error("❌ Component insert error:", compErr);
+      }
+    }
+
+    console.log("🎉 Lesson import completed");
     return new Response(
       JSON.stringify({
         success: true,
-        lessonId: finalLessonId,
+        lesson_id: finalLessonId,
         metadata,
-        componentsCreated: components.length,
+        components_count: components.length,
       }),
-      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { headers: { "Content-Type": "application/json" }, status: 200 },
     );
-  } catch (e) {
-    console.error("❌ Error parsing lesson template:", e);
-    return new Response(JSON.stringify({ error: String(e) }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+  } catch (err) {
+    console.error("🔥 Fatal Error in parse-lesson-template:", err);
+    return new Response(JSON.stringify({ error: err.message }), { status: 500 });
   }
 });
