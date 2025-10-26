@@ -30,6 +30,7 @@ const InlineReadAloud: React.FC<InlineReadAloudProps> = ({ text, className, lang
     <div className={`prose max-w-none ${className || ''}`}>
       {text}
     </div>
-
   );
 }
+
+export default InlineReadAloud;
