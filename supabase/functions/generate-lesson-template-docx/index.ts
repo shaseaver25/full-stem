@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { Document, Paragraph, TextRun, AlignmentType, HeadingLevel, Packer } from "npm:docx@8.5.0";
+import { Document, Paragraph, TextRun, HeadingLevel, Packer } from "npm:docx@8.5.0";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -20,19 +20,23 @@ const components = [
 ];
 
 function createLessonTemplateDocument(): Document {
-  const paragraphs: Paragraph[] = [];
+  const children: Paragraph[] = [];
 
   // Title
-  paragraphs.push(
+  children.push(
     new Paragraph({
-      text: "TailorEDU Lesson Template",
-      heading: HeadingLevel.TITLE,
-      alignment: AlignmentType.CENTER,
+      children: [
+        new TextRun({
+          text: "TailorEDU Lesson Template",
+          bold: true,
+          size: 32,
+        }),
+      ],
     })
   );
 
   // Subtitle
-  paragraphs.push(
+  children.push(
     new Paragraph({
       children: [
         new TextRun({
@@ -40,15 +44,13 @@ function createLessonTemplateDocument(): Document {
           italics: true,
         }),
       ],
-      alignment: AlignmentType.CENTER,
     })
   );
 
-  // Space
-  paragraphs.push(new Paragraph({ text: "" }));
+  children.push(new Paragraph({ text: "" }));
 
-  // Instructions Box
-  paragraphs.push(
+  // Instructions
+  children.push(
     new Paragraph({
       children: [
         new TextRun({
@@ -59,47 +61,23 @@ function createLessonTemplateDocument(): Document {
     })
   );
 
-  paragraphs.push(
-    new Paragraph({
-      text: " - Do NOT remove or rename the '## Component:' headers.",
-      bullet: { level: 0 },
-    })
-  );
+  children.push(new Paragraph("• Do NOT remove or rename the '## Component:' headers."));
+  children.push(new Paragraph("• You may leave sections blank if not needed."));
+  children.push(new Paragraph("• Use plain text (no images or tables)."));
+  children.push(new Paragraph("• Save as .docx and upload it to TailorEDU."));
+  children.push(new Paragraph({ text: "" }));
 
-  paragraphs.push(
-    new Paragraph({
-      text: " - You may leave sections blank if not needed.",
-      bullet: { level: 0 },
-    })
-  );
-
-  paragraphs.push(
-    new Paragraph({
-      text: " - Use plain text (no images or tables).",
-      bullet: { level: 0 },
-    })
-  );
-
-  paragraphs.push(
-    new Paragraph({
-      text: " - Save as .docx and upload it to TailorEDU.",
-      bullet: { level: 0 },
-    })
-  );
-
-  paragraphs.push(new Paragraph({ text: "" }));
-
-  // Lesson Metadata Section
-  paragraphs.push(
+  // Lesson Metadata
+  children.push(
     new Paragraph({
       text: "# Lesson Metadata",
       heading: HeadingLevel.HEADING_1,
     })
   );
 
-  paragraphs.push(new Paragraph({ text: "" }));
+  children.push(new Paragraph({ text: "" }));
 
-  paragraphs.push(
+  children.push(
     new Paragraph({
       children: [
         new TextRun({ text: "Title: ", bold: true }),
@@ -108,7 +86,7 @@ function createLessonTemplateDocument(): Document {
     })
   );
 
-  paragraphs.push(
+  children.push(
     new Paragraph({
       children: [
         new TextRun({ text: "Subject: ", bold: true }),
@@ -117,7 +95,7 @@ function createLessonTemplateDocument(): Document {
     })
   );
 
-  paragraphs.push(
+  children.push(
     new Paragraph({
       children: [
         new TextRun({ text: "Grade Level: ", bold: true }),
@@ -126,7 +104,7 @@ function createLessonTemplateDocument(): Document {
     })
   );
 
-  paragraphs.push(
+  children.push(
     new Paragraph({
       children: [
         new TextRun({ text: "Duration (minutes): ", bold: true }),
@@ -135,7 +113,7 @@ function createLessonTemplateDocument(): Document {
     })
   );
 
-  paragraphs.push(
+  children.push(
     new Paragraph({
       children: [
         new TextRun({ text: "Reading Level: ", bold: true }),
@@ -144,7 +122,7 @@ function createLessonTemplateDocument(): Document {
     })
   );
 
-  paragraphs.push(
+  children.push(
     new Paragraph({
       children: [
         new TextRun({ text: "Language: ", bold: true }),
@@ -153,7 +131,7 @@ function createLessonTemplateDocument(): Document {
     })
   );
 
-  paragraphs.push(
+  children.push(
     new Paragraph({
       children: [
         new TextRun({ text: "Description: ", bold: true }),
@@ -162,49 +140,37 @@ function createLessonTemplateDocument(): Document {
     })
   );
 
-  paragraphs.push(new Paragraph({ text: "" }));
+  children.push(new Paragraph({ text: "" }));
 
   // Component Sections
   for (const component of components) {
-    paragraphs.push(
-      new Paragraph({
-        text: "---",
-      })
-    );
+    children.push(new Paragraph("---"));
 
-    paragraphs.push(
+    children.push(
       new Paragraph({
         text: `## Component: ${component.name}`,
         heading: HeadingLevel.HEADING_1,
       })
     );
 
-    paragraphs.push(
+    children.push(
       new Paragraph({
         children: [
           new TextRun({
             text: component.helpText,
             italics: true,
-            color: "666666",
           }),
         ],
       })
     );
 
-    paragraphs.push(
-      new Paragraph({
-        text: "[Write your content here...]",
-      })
-    );
-
-    paragraphs.push(new Paragraph({ text: "" }));
+    children.push(new Paragraph("[Write your content here...]"));
+    children.push(new Paragraph({ text: "" }));
   }
 
-  // Footer / Final Note
-  paragraphs.push(new Paragraph({ text: "" }));
-  paragraphs.push(new Paragraph({ text: "" }));
-
-  paragraphs.push(
+  // Footer
+  children.push(new Paragraph({ text: "" }));
+  children.push(
     new Paragraph({
       children: [
         new TextRun({
@@ -212,11 +178,10 @@ function createLessonTemplateDocument(): Document {
           bold: true,
         }),
       ],
-      alignment: AlignmentType.CENTER,
     })
   );
 
-  paragraphs.push(
+  children.push(
     new Paragraph({
       children: [
         new TextRun({
@@ -224,7 +189,6 @@ function createLessonTemplateDocument(): Document {
           italics: true,
         }),
       ],
-      alignment: AlignmentType.CENTER,
     })
   );
 
@@ -232,7 +196,8 @@ function createLessonTemplateDocument(): Document {
   const doc = new Document({
     sections: [
       {
-        children: paragraphs,
+        properties: {},
+        children: children,
       },
     ],
   });
