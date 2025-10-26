@@ -31,7 +31,7 @@ export function LessonTemplateUpload({
     try {
       console.log('📥 Downloading lesson template...');
       
-      const { data, error } = await supabase.functions.invoke('generate-docx');
+      const { data, error } = await supabase.functions.invoke('generate-lesson-template-docx');
 
       if (error) {
         throw error;

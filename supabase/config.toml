@@ -130,6 +130,9 @@ verify_jwt = false
 [functions.parse-lesson-template]
 verify_jwt = true
 
+[functions.generate-lesson-template-docx]
+verify_jwt = false
+
 [functions.onedrive-oauth]
 verify_jwt = true
 
