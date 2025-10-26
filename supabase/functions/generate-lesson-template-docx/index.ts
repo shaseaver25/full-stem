@@ -154,22 +154,29 @@ serve(async (req) => {
     
     console.log('Template generated successfully, size:', buffer.length);
 
-    // Create ReadableStream that sends raw chunks
-    const stream = new ReadableStream({
-      start(controller) {
-        controller.enqueue(buffer);
-        controller.close();
-      },
-    });
+    // Convert to base64 to avoid Deno binary encoding issues
+    const uint8Array = new Uint8Array(buffer);
+    const binaryString = Array.from(uint8Array)
+      .map(byte => String.fromCharCode(byte))
+      .join('');
+    const base64 = btoa(binaryString);
 
-    return new Response(stream, {
-      headers: {
-        ...corsHeaders,
-        'Content-Type': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        'Content-Disposition': 'attachment; filename="TailorEDU_Lesson_Template.docx"',
-        'Cache-Control': 'no-store',
-      },
-    });
+    console.log('Base64 encoded, length:', base64.length);
+
+    // Return as JSON with base64 encoded file
+    return new Response(
+      JSON.stringify({
+        success: true,
+        file: base64,
+        filename: 'TailorEDU_Lesson_Template.docx',
+      }),
+      {
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
 
   } catch (error) {
     console.error('Error generating DOCX template:', error);
