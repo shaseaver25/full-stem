@@ -428,4 +428,4 @@ export function LessonComponentCard({
       )}
     </Card>
   );
-}
+
