@@ -154,33 +154,26 @@ export function LessonTemplateUpload({ lessonId, onImportComplete }: LessonTempl
 
           reader.onload = async (event) => {
             try {
-              const content = event.target?.result as string;
+              const arrayBuffer = event.target?.result as ArrayBuffer;
+              console.log("✅ .docx file read as ArrayBuffer, sending to parser...");
 
-              // Basic validation
-              if (!content.includes("## Component:")) {
-                throw new Error("Invalid template format. Make sure the file contains ## Component: sections.");
-              }
-
-              if (!content.includes("# Lesson Metadata")) {
-                throw new Error("Invalid template format. Missing metadata section.");
-              }
-
-              console.log("✅ File read successfully, parsing...");
-
-              // Parse the template
-              const { data, error } = await supabase.functions.invoke("parse-lesson-template", {
-                body: {
-                  parsedContent: content,
-                  lessonId: lessonId || null,
+              const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/parse-lesson-template`, {
+                method: "POST",
+                headers: {
+                  Authorization: `Bearer ${supabase.auth.session()?.access_token}`,
+                  "Content-Type": "application/octet-stream",
                 },
+                body: arrayBuffer,
               });
 
-              if (error) {
-                throw error;
+              const data = await response.json();
+
+              if (!response.ok) {
+                console.error("❌ Error from function:", data);
+                throw new Error(data.error || "Template parsing failed");
               }
 
               console.log("✅ Lesson imported:", data);
-
               setImportResult(data);
               setShowResultDialog(true);
 
