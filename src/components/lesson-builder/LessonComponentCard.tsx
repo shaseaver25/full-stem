@@ -8,13 +8,13 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import { GripVertical, Trash2, ChevronDown, ChevronUp, Copy } from 'lucide-react';
 import { DraggableProvidedDragHandleProps } from 'react-beautiful-dnd';
-// Temporarily disabled - cloud integrations
-// import { DriveFilePicker } from '@/components/drive/DriveFilePicker';
-// import { DriveAttachmentsList } from '@/components/drive/DriveAttachmentsList';
-// import { useDriveAttachment } from '@/hooks/useDriveAttachment';
-// import { OneDriveFilePicker } from '@/components/onedrive/OneDriveFilePicker';
-// import { OneDriveAttachmentsList } from '@/components/onedrive/OneDriveAttachmentsList';
-// import { useOneDriveAttachment } from '@/hooks/useOneDriveAttachment';
+//Temporarily disabled - cloud integrations
+import { DriveFilePicker } from '@/components/drive/DriveFilePicker';
+import { DriveAttachmentsList } from '@/components/drive/DriveAttachmentsList';
+import { useDriveAttachment } from '@/hooks/useDriveAttachment';
+import { OneDriveFilePicker } from '@/components/onedrive/OneDriveFilePicker';
+import { OneDriveAttachmentsList } from '@/components/onedrive/OneDriveAttachmentsList';
+import { useOneDriveAttachment } from '@/hooks/useOneDriveAttachment';
 import { LocalFileUpload } from './LocalFileUpload';
 import { Separator } from '@/components/ui/separator';
 
@@ -420,7 +420,7 @@ export function LessonComponentCard({
             )}
 
             {/* Temporarily disabled - cloud integrations */}
-            {/* {component.id ? (
+            {component.id ? (
               <>
                 <DriveAttachmentsList 
                   componentId={component.id} 
