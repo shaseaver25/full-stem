@@ -2,7 +2,6 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import mammoth from "https://esm.sh/mammoth@1.6.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
-// ✅ Full CORS setup
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -10,16 +9,13 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  // ✅ Handle preflight request
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
 
   try {
-    // ✅ Initialize Supabase
     const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
-    // ✅ Authenticate user
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
@@ -43,16 +39,25 @@ serve(async (req) => {
 
     console.log("👤 Authenticated user:", user.email);
 
-    // ✅ Parse .docx
+    // Read and parse .docx file
     const body = await req.arrayBuffer();
-    const { value: text } = await mammoth.extractRawText({ buffer: body });
-    console.log("📄 Extracted text length:", text.length);
+    let text = "";
+    try {
+      const result = await mammoth.extractRawText({ buffer: body });
+      text = result.value || "";
+      if (!text.trim()) throw new Error("No text extracted from .docx file");
+    } catch (err) {
+      console.error("❌ Error extracting DOCX:", err);
+      return new Response(JSON.stringify({ error: "Failed to read document" }), {
+        status: 400,
+        headers: corsHeaders,
+      });
+    }
 
-    // ✅ Parse metadata & components
-    const metadata: Record<string, any> = {};
-    const components: any[] = [];
+    // Parse template
+    const metadata: Record<string, string> = {};
+    const components: { type: string; content: string }[] = [];
     const lines = text.split("\n").map((l) => l.trim());
-
     let currentSection = "";
     let currentContent: string[] = [];
 
@@ -73,7 +78,6 @@ serve(async (req) => {
         currentContent.push(line);
       }
     }
-
     if (currentSection) {
       components.push({
         type: currentSection,
@@ -83,15 +87,26 @@ serve(async (req) => {
 
     console.log("🧩 Found components:", components.length);
 
-    // ✅ Get teacher profile
-    const { data: teacherProfile, error: teacherError } = await supabase
+    // ✅ Get or create teacher profile
+    let { data: teacherProfile, error: teacherError } = await supabase
       .from("teacher_profiles")
       .select("id")
       .eq("user_id", user.id)
-      .single();
+      .maybeSingle();
 
     if (teacherError || !teacherProfile) {
-      throw new Error("No teacher profile found for this user");
+      console.log("⚠️ No teacher profile found — creating one automatically...");
+      const { data: newProfile, error: createError } = await supabase
+        .from("teacher_profiles")
+        .insert({
+          user_id: user.id,
+          full_name: user.user_metadata?.full_name || user.email,
+          email: user.email,
+        })
+        .select("id")
+        .single();
+      if (createError) throw createError;
+      teacherProfile = newProfile;
     }
 
     // ✅ Create new lesson
@@ -131,10 +146,19 @@ serve(async (req) => {
         lessonId,
         componentsCreated: components.length,
       }),
-      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      {
+        status: 200,
+        headers: {
+          ...corsHeaders,
+          "Content-Type": "application/json",
+        },
+      },
     );
   } catch (err) {
     console.error("🔥 Error:", err);
-    return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });
+    return new Response(JSON.stringify({ error: err.message }), {
+      status: 500,
+      headers: corsHeaders,
+    });
   }
 });
