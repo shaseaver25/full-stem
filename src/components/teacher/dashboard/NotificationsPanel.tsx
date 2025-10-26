@@ -34,26 +34,40 @@ export const NotificationsPanel = () => {
     // Fetch initial notifications
     fetchNotifications();
 
-    // Set up realtime subscription
-    const channel = supabase
-      .channel('notifications')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'notifications',
-          filter: `user_id=eq.${user.id}`
-        },
-        (payload) => {
-          setNotifications(prev => [payload.new as Notification, ...prev]);
-          setUnreadCount(prev => prev + 1);
-        }
-      )
-      .subscribe();
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+    
+    const setupChannel = async () => {
+      // Ensure any existing channel is removed first
+      const existingChannel = supabase.getChannels().find(ch => ch.topic === 'notifications');
+      if (existingChannel) {
+        await supabase.removeChannel(existingChannel);
+      }
+      
+      // Set up realtime subscription
+      channel = supabase
+        .channel('notifications')
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'notifications',
+            filter: `user_id=eq.${user.id}`
+          },
+          (payload) => {
+            setNotifications(prev => [payload.new as Notification, ...prev]);
+            setUnreadCount(prev => prev + 1);
+          }
+        )
+        .subscribe();
+    };
+
+    setupChannel();
 
     return () => {
-      supabase.removeChannel(channel);
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
     };
   }, [user]);
 

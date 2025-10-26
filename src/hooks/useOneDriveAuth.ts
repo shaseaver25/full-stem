@@ -155,21 +155,35 @@ export const useOneDriveAuth = () => {
    * Automatically refreshes UI when tokens are stored
    */
   useEffect(() => {
-    const channel = supabase
-      .channel('onedrive-token-watch')
-      .on('postgres_changes', { 
-        event: '*', 
-        schema: 'public', 
-        table: 'user_tokens',
-        filter: 'provider=eq.onedrive'
-      }, (payload) => {
-        console.log('🔄 OneDrive token change detected:', payload);
-        checkOneDriveConnection();
-      })
-      .subscribe();
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+    
+    const setupChannel = async () => {
+      // Ensure any existing channel is removed first
+      const existingChannel = supabase.getChannels().find(ch => ch.topic === 'onedrive-token-watch');
+      if (existingChannel) {
+        await supabase.removeChannel(existingChannel);
+      }
+      
+      channel = supabase
+        .channel('onedrive-token-watch')
+        .on('postgres_changes', { 
+          event: '*', 
+          schema: 'public', 
+          table: 'user_tokens',
+          filter: 'provider=eq.onedrive'
+        }, (payload) => {
+          console.log('🔄 OneDrive token change detected:', payload);
+          checkOneDriveConnection();
+        })
+        .subscribe();
+    };
+
+    setupChannel();
 
     return () => {
-      supabase.removeChannel(channel);
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
     };
   }, [checkOneDriveConnection]);
 
