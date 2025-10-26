@@ -222,14 +222,14 @@ serve(async (req) => {
     
     console.log('Template generated successfully, size:', buffer.length);
 
-    // Convert to Uint8Array and wrap in Blob
-    const uint8 = new Uint8Array(buffer);
-    const blob = new Blob([uint8], {
-      type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    });
+    // Convert Uint8Array to ArrayBuffer for Deno Response compatibility
+    const arrayBuffer = buffer.buffer.slice(
+      buffer.byteOffset,
+      buffer.byteOffset + buffer.byteLength
+    );
 
-    // Return as binary ArrayBuffer response
-    return new Response(await blob.arrayBuffer(), {
+    // Return raw binary bytes directly
+    return new Response(arrayBuffer, {
       headers: {
         ...corsHeaders,
         'Content-Type': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
