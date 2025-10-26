@@ -64,8 +64,10 @@ export function LessonComponentCard({
 }: LessonComponentCardProps) {
   const [isExpanded, setIsExpanded] = useState(true);
   
-  // const { attachFile, isAttaching } = useDriveAttachment();
-  // const { attachFile: attachOneDriveFile, isAttaching: isAttachingOneDrive } = useOneDriveAttachment();
+  const { attachFile, isAttaching } = useDriveAttachment();
+  const [isExpanded, setIsExpanded] = useState(true);
+  const { attachFile, isAttaching } = useDriveAttachment();
+  const { attachFile: attachOneDriveFile, isAttaching: isAttachingOneDrive } = useOneDriveAttachment();
 
   const handleContentChange = (field: string, value: any) => {
     onUpdate(index, {
@@ -73,23 +75,23 @@ export function LessonComponentCard({
     });
   };
 
-  // Temporarily disabled - cloud integrations
-  /* const handleDriveFileSelected = (file: { id: string; name: string; mimeType: string; url: string }) => {
-     if (!component.id) {
-       console.error('❌ Component ID is required to attach files');
-       return;
-     }
-     attachFile({ componentId: component.id, file });
-   };
+  const handleDriveFileSelected = (file: { id: string; name: string; mimeType: string; url: string }) => {
+    if (!component.id) {
+      console.error('❌ Component ID is required to attach files');
+      return;
+    }
+    attachFile({ componentId: component.id, file });
+  };
 
-   const handleOneDriveFileSelected = (file: { id: string; name: string; mimeType: string; webUrl: string }) => {
-     if (!component.id) {
-       console.error('❌ Component ID is required to attach files');
-       return;
-     }
-     attachOneDriveFile({ componentId: component.id, file });
-   }; */
+  const handleOneDriveFileSelected = (file: { id: string; name: string; mimeType: string; webUrl: string }) => {
+    if (!component.id) {
+      console.error('❌ Component ID is required to attach files');
+      return;
+    }
+    attachOneDriveFile({ componentId: component.id, file });
+  };
 
+  const handleLocalFileUploaded = (file: { name: string; path: string; url: string }) => {
   const handleLocalFileUploaded = (file: { name: string; path: string; url: string }) => {
     console.log("📎 Local file uploaded:", file);
     // Store the file reference in component content for now
