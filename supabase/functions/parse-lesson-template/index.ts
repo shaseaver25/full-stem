@@ -17,42 +17,68 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const requestBody = await req.json();
-    const { parsedContent, lessonId, base64File, fileType } = requestBody;
-
     console.log('📄 Parsing lesson template...');
     
-    let contentToParse = parsedContent;
+    // Detect content type and parse accordingly
+    const contentType = req.headers.get("content-type") || "";
+    let contentToParse = "";
+    let lessonId: string | undefined;
     
-    // Handle .docx file conversion
-    if (base64File && fileType === 'docx') {
-      console.log('📄 Processing .docx file...');
+    if (contentType.includes("application/vnd.openxmlformats-officedocument.wordprocessingml.document")) {
+      // Handle .docx upload directly
+      console.log('📄 Processing .docx file from direct upload...');
       
       try {
-        // Decode base64 to ArrayBuffer
-        const binaryString = atob(base64File);
-        const bytes = new Uint8Array(binaryString.length);
-        for (let i = 0; i < binaryString.length; i++) {
-          bytes[i] = binaryString.charCodeAt(i);
-        }
-        
-        // Extract text from .docx using Mammoth
-        const result = await mammoth.extractRawText({ arrayBuffer: bytes.buffer });
-        contentToParse = result.value;
+        const arrayBuffer = await req.arrayBuffer();
+        const { value } = await mammoth.extractRawText({ buffer: arrayBuffer });
+        contentToParse = value;
         
         console.log('✅ .docx converted to text, length:', contentToParse.length);
-        
-        // Validate that converted text has required structure
-        if (!contentToParse.includes('## Component:')) {
-          throw new Error('Invalid .docx template format. Make sure the file contains ## Component: sections.');
-        }
-        
-        if (!contentToParse.includes('# Lesson Metadata')) {
-          throw new Error('Invalid .docx template format. Missing metadata section.');
-        }
       } catch (conversionError) {
-        console.error('❌ Error converting .docx:', conversionError);
-        throw new Error(`We couldn't read that Word file. Make sure it follows the TailorEDU template structure. Error: ${conversionError.message}`);
+        console.error('❌ DOCX parsing failed:', conversionError);
+        return new Response(
+          JSON.stringify({ error: "Failed to extract text from .docx" }), 
+          {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          }
+        );
+      }
+    } else {
+      // Handle JSON payload (plain text or base64 encoded .docx)
+      const requestBody = await req.json();
+      const { parsedContent, lessonId: requestLessonId, base64File, fileType } = requestBody;
+      lessonId = requestLessonId;
+      
+      if (base64File && fileType === 'docx') {
+        console.log('📄 Processing .docx file from base64...');
+        
+        try {
+          // Decode base64 to ArrayBuffer
+          const binaryString = atob(base64File);
+          const bytes = new Uint8Array(binaryString.length);
+          for (let i = 0; i < binaryString.length; i++) {
+            bytes[i] = binaryString.charCodeAt(i);
+          }
+          
+          // Extract text from .docx using Mammoth
+          const result = await mammoth.extractRawText({ arrayBuffer: bytes.buffer });
+          contentToParse = result.value;
+          
+          console.log('✅ .docx converted to text, length:', contentToParse.length);
+        } catch (conversionError) {
+          console.error('❌ DOCX parsing failed:', conversionError);
+          return new Response(
+            JSON.stringify({ error: "Failed to extract text from .docx" }), 
+            {
+              status: 400,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            }
+          );
+        }
+      } else {
+        // Plain text content
+        contentToParse = parsedContent;
       }
     }
     
