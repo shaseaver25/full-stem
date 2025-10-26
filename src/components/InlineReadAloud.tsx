@@ -1,11 +1,5 @@
 import React from 'react';
 import DOMPurify from 'dompurify';
-import SpeechControls from './SpeechControls';
-import { useInPlaceWordHighlighter } from '@/hooks/useInPlaceWordHighlighter';
-import { useElevenLabsTTS } from '@/hooks/useElevenLabsTTS';
-import { normalizeLanguageCode } from '@/utils/segment';
-import { ErrorBoundary } from './ui/ErrorBoundary';
-import TTSDebugHUD from './debug/TTSDebugHUD';
 
 interface InlineReadAloudProps {
   text: string;       // HTML string
