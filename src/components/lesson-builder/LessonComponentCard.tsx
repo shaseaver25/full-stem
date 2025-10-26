@@ -427,5 +427,5 @@ export function LessonComponentCard({
         </CardContent>
       )}
     </Card>
-  );
+  )
 
