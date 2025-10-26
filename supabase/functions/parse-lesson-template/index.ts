@@ -1,41 +1,59 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import mammoth from "https://esm.sh/mammoth@1.6.0";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-};
+import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
+import mammoth from "npm:mammoth";
 
 serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
-  }
-
   try {
-    const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    console.log("🧠 parse-lesson-template invoked");
 
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: corsHeaders,
-      });
+    const contentType = req.headers.get("content-type") || "";
+
+    let textContent = "";
+
+    if (contentType.includes("application/octet-stream")) {
+      // Binary DOCX upload
+      console.log("📄 Parsing DOCX file");
+      const arrayBuffer = await req.arrayBuffer();
+      const docxBuffer = Buffer.from(arrayBuffer);
+      const result = await mammoth.extractRawText({ buffer: docxBuffer });
+      textContent = result.value.trim();
+    } else if (contentType.includes("application/json")) {
+      // Fallback for text-based upload
+      console.log("📝 Parsing JSON body");
+      const body = await req.json();
+      textContent = body.parsedContent || "";
+    } else {
+      throw new Error("Unsupported content type");
     }
 
-    const token = authHeader.replace("Bearer ", "");
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser(token);
-
-    if (userError || !user) {
-      return new Response(JSON.stringify({ error: "Invalid user session" }), {
-        status: 401,
-        headers: corsHeaders,
-      });
+    if (!textContent) {
+      console.error("❌ No text extracted from file");
+      return new Response(
+        JSON.stringify({ error: "Failed to read document" }),
+        { status: 400, headers: { "Content-Type": "application/json" } }
+      );
     }
+
+    console.log("✅ Text extracted successfully");
+
+    // TODO: parse lesson components here (e.g., split by ## Component:)
+    const components = textContent.split("## Component:").length - 1;
+
+    return new Response(
+      JSON.stringify({
+        message: "Lesson parsed successfully",
+        components,
+        preview: textContent.slice(0, 200),
+      }),
+      { status: 200, headers: { "Content-Type": "application/json" } }
+    );
+  } catch (err) {
+    console.error("❌ Error in parse-lesson-template:", err.message);
+    return new Response(
+      JSON.stringify({ error: err.message }),
+      { status: 400, headers: { "Content-Type": "application/json" } }
+    );
+  }
+});
 
     console.log("👤 Authenticated user:", user.email);
 
