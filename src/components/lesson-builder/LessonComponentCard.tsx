@@ -402,16 +402,18 @@ export function LessonComponentCard({
               </div>
             )}
 
-            {/* Temporarily disabled - cloud integrations */}
+            {/* Cloud file attachments */}
             {component.id ? (
               <>
-                <DriveAttachmentsList 
-                  componentId={component.id} 
+                <OneDriveFilePicker onFileSelected={handleOneDriveFileSelected} />
+                <OneDriveAttachmentsList 
+                  componentId={component.id}
                   showEmbeds={false}
                   canDelete={true}
                 />
-                <OneDriveAttachmentsList 
-                  componentId={component.id} 
+                <DriveFilePicker onFileSelected={handleDriveFileSelected} />
+                <DriveAttachmentsList 
+                  componentId={component.id}
                   showEmbeds={false}
                   canDelete={true}
                 />
@@ -420,7 +422,7 @@ export function LessonComponentCard({
               <p className="text-sm text-muted-foreground italic">
                 Save this component first to attach cloud files
               </p>
-            )} 
+            )}
           </div>
         </CardContent>
       )}
