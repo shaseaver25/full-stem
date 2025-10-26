@@ -401,17 +401,18 @@ export function DraggableComponentCard({
             {component.id ? (
               <>
                 <OneDriveFilePicker onFileSelected={handleOneDriveFileSelected} />
-                <OneDriveAttachmentsList 
-                  componentId={component.id} 
-                  showEmbeds={false}
-                  canDelete={true}
-                />
-                <DriveFilePicker onFileSelected={handleDriveFileSelected} />
-                <DriveAttachmentsList 
-                  componentId={component.id} 
-                  showEmbeds={false}
-                  canDelete={true}
-                />
+               <OneDriveFilePicker onFileSelected={handleOneDriveFileSelected} />
+            {/* <OneDriveAttachmentsList 
+              componentId={component.id} 
+              showEmbeds={false}
+              canDelete={true}
+            /> */}
+            <DriveFilePicker onFileSelected={handleDriveFileSelected} />
+            {/* <DriveAttachmentsList 
+              componentId={component.id} 
+              showEmbeds={false}
+              canDelete={true}
+            /> */}
               </>
             ) : (
               <p className="text-sm text-muted-foreground italic">
