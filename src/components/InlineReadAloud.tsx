@@ -15,6 +15,23 @@ interface InlineReadAloudProps {
 
 const InlineReadAloud: React.FC<InlineReadAloudProps> = ({ text, className, language }) => {
   // Normalize language code for consistent usage
+  const InlineReadAloud: React.FC<InlineReadAloudProps> = ({ text, className, language }) => {
+  // TEMPORARY: Disable read-aloud to prevent blocking errors
+  return (
+    <div 
+      className={`prose max-w-none ${className || ''}`}
+      dangerouslySetInnerHTML={{ 
+        __html: typeof window !== 'undefined' 
+          ? DOMPurify.sanitize(text, { USE_PROFILES: { html: true } }) 
+          : text 
+      }}
+    />
+  );
+
+  // Rest of component code below will not execute
+  // Normalize language code for consistent usage
+  const normalizedLanguage = normalizeLanguageCode(language);
+  // ... rest of the code
   const normalizedLanguage = normalizeLanguageCode(language);
   // Sanitize HTML input
   const sanitizedHTML = React.useMemo(() => {
