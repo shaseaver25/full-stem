@@ -24,38 +24,27 @@ export function LessonTemplateUpload({ lessonId, onImportComplete }: LessonTempl
   const [importResult, setImportResult] = useState<any>(null);
   const { toast } = useToast();
 
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+
   const downloadTemplate = async () => {
     try {
       console.log("📥 Downloading lesson template...");
 
       const { data, error } = await supabase.functions.invoke("generate-lesson-template-docx");
 
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
+      if (!data.success || !data.file) throw new Error("Invalid response");
 
-      // Check if response is successful
-      if (!data.success || !data.file) {
-        throw new Error("Invalid response from server");
-      }
-
-      console.log("✅ Received base64 data, decoding...");
-
-      // Decode base64 to binary
       const binaryString = atob(data.file);
       const bytes = new Uint8Array(binaryString.length);
       for (let i = 0; i < binaryString.length; i++) {
         bytes[i] = binaryString.charCodeAt(i);
       }
 
-      // Create blob from decoded bytes
       const blob = new Blob([bytes], {
         type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
       });
 
-      console.log("✅ Blob created, size:", blob.size, "bytes");
-
-      // Trigger download
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -64,8 +53,6 @@ export function LessonTemplateUpload({ lessonId, onImportComplete }: LessonTempl
       a.click();
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
-
-      console.log("✅ Download triggered successfully");
 
       toast({
         title: "Template Downloaded",
@@ -90,11 +77,8 @@ export function LessonTemplateUpload({ lessonId, onImportComplete }: LessonTempl
       const file = (e.target as HTMLInputElement)?.files?.[0];
       if (!file) return;
 
-      // Validate file type
-      const validExtensions = [".txt", ".docx"];
-      const fileExtension = file.name.substring(file.name.lastIndexOf(".")).toLowerCase();
-
-      if (!validExtensions.includes(fileExtension)) {
+      const ext = file.name.split(".").pop()?.toLowerCase();
+      if (!["txt", "docx"].includes(ext || "")) {
         toast({
           title: "Invalid File Type",
           description: "Please upload a .txt or .docx file.",
@@ -107,107 +91,53 @@ export function LessonTemplateUpload({ lessonId, onImportComplete }: LessonTempl
 
       try {
         console.log("📤 Uploading lesson template:", file.name);
+        const auth = await supabase.auth.getSession();
+        const accessToken = auth.data.session?.access_token;
 
-        // Determine file type and read accordingly
-        const isDocx = fileExtension === ".docx";
-
-        if (isDocx) {
-          // Handle .docx files
-          const arrayBuffer = await file.arrayBuffer();
-          const base64Data = btoa(
-            new Uint8Array(arrayBuffer).reduce((data, byte) => data + String.fromCharCode(byte), ""),
-          );
-
-          console.log("✅ .docx file read as ArrayBuffer, sending to parser...");
-
-          // Parse the template
-          const { data, error } = await supabase.functions.invoke("parse-lesson-template", {
-            body: {
-              base64File: base64Data,
-              fileType: "docx",
-              lessonId: lessonId || null,
+        let response;
+        if (ext === "docx") {
+          console.log("📡 Sending DOCX as binary...");
+          response = await fetch(`${supabaseUrl}/functions/v1/parse-lesson-template`, {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+              "Content-Type": "application/octet-stream",
             },
+            body: file,
           });
-
-          if (error) {
-            throw error;
-          }
-
-          console.log("✅ Lesson imported:", data);
-
-          setImportResult(data);
-          setShowResultDialog(true);
-
-          if (onImportComplete) {
-            onImportComplete(data.lessonId, data.componentsCreated);
-          }
-
-          toast({
-            title: "Lesson Imported Successfully",
-            description: `Created ${data.componentsCreated} components from template.`,
-          });
-
-          setIsUploading(false);
         } else {
-          // Handle .txt files
-          const reader = new FileReader();
-
-          reader.onload = async (event) => {
-            try {
-              const arrayBuffer = event.target?.result as ArrayBuffer;
-              console.log("✅ .docx file read as ArrayBuffer, sending to parser...");
-
-              const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/parse-lesson-template`, {
-                method: "POST",
-                headers: {
-                  Authorization: `Bearer ${supabase.auth.session()?.access_token}`,
-                  "Content-Type": "application/octet-stream",
-                },
-                body: arrayBuffer,
-              });
-
-              const data = await response.json();
-
-              if (!response.ok) {
-                console.error("❌ Error from function:", data);
-                throw new Error(data.error || "Template parsing failed");
-              }
-
-              console.log("✅ Lesson imported:", data);
-              setImportResult(data);
-              setShowResultDialog(true);
-
-              if (onImportComplete) {
-                onImportComplete(data.lessonId, data.componentsCreated);
-              }
-
-              toast({
-                title: "Lesson Imported Successfully",
-                description: `Created ${data.componentsCreated} components from template.`,
-              });
-            } catch (err: any) {
-              console.error("❌ Error parsing template:", err);
-              toast({
-                title: "Import Failed",
-                description: err.message || "Failed to parse lesson template.",
-                variant: "destructive",
-              });
-            } finally {
-              setIsUploading(false);
-            }
-          };
-
-          reader.onerror = () => {
-            toast({
-              title: "Read Failed",
-              description: "Failed to read file content.",
-              variant: "destructive",
-            });
-            setIsUploading(false);
-          };
-
-          reader.readAsText(file);
+          console.log("📡 Sending TXT as text...");
+          const text = await file.text();
+          response = await fetch(`${supabaseUrl}/functions/v1/parse-lesson-template`, {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              parsedContent: text,
+              lessonId: lessonId || null,
+            }),
+          });
         }
+
+        const data = await response.json();
+        if (!response.ok) {
+          console.error("❌ Error from function:", data);
+          throw new Error(data.error || "Template parsing failed");
+        }
+
+        console.log("✅ Lesson imported:", data);
+        setImportResult(data);
+        setShowResultDialog(true);
+        if (onImportComplete) {
+          onImportComplete(data.lessonId, data.componentsCreated);
+        }
+
+        toast({
+          title: "Lesson Imported Successfully",
+          description: `Created ${data.componentsCreated || 0} components from template.`,
+        });
       } catch (err: any) {
         console.error("❌ Error uploading template:", err);
         toast({
@@ -215,6 +145,7 @@ export function LessonTemplateUpload({ lessonId, onImportComplete }: LessonTempl
           description: err.message || "Failed to upload template.",
           variant: "destructive",
         });
+      } finally {
         setIsUploading(false);
       }
     };
@@ -262,7 +193,7 @@ export function LessonTemplateUpload({ lessonId, onImportComplete }: LessonTempl
             <div className="space-y-4">
               <Alert>
                 <AlertDescription>
-                  <strong>{importResult.componentsCreated} components</strong> were created from your template.
+                  <strong>{importResult.componentsCreated || 0} components</strong> were created from your template.
                 </AlertDescription>
               </Alert>
 
@@ -270,19 +201,19 @@ export function LessonTemplateUpload({ lessonId, onImportComplete }: LessonTempl
                 <h4 className="font-semibold text-sm">Lesson Details:</h4>
                 <ul className="text-sm space-y-1">
                   <li>
-                    <strong>Title:</strong> {importResult.metadata.title}
+                    <strong>Title:</strong> {importResult.metadata?.title || "Untitled"}
                   </li>
-                  {importResult.metadata.subject && (
+                  {importResult.metadata?.subject && (
                     <li>
                       <strong>Subject:</strong> {importResult.metadata.subject}
                     </li>
                   )}
-                  {importResult.metadata.grade_level && (
+                  {importResult.metadata?.grade_level && (
                     <li>
                       <strong>Grade Level:</strong> {importResult.metadata.grade_level}
                     </li>
                   )}
-                  {importResult.metadata.duration && (
+                  {importResult.metadata?.duration && (
                     <li>
                       <strong>Duration:</strong> {importResult.metadata.duration} minutes
                     </li>
@@ -290,26 +221,28 @@ export function LessonTemplateUpload({ lessonId, onImportComplete }: LessonTempl
                 </ul>
               </div>
 
-              <div className="space-y-2">
-                <h4 className="font-semibold text-sm">Created Components:</h4>
-                <div className="max-h-60 overflow-y-auto">
-                  <ul className="text-sm space-y-1">
-                    {importResult.components.map((comp: any, idx: number) => (
-                      <li key={idx} className="flex items-center gap-2">
-                        <span className="text-primary">•</span>
-                        <span className="capitalize">{comp.type}</span>
-                        <span className="text-muted-foreground">—</span>
-                        <span>{comp.title}</span>
-                      </li>
-                    ))}
-                  </ul>
+              {importResult.components?.length > 0 && (
+                <div className="space-y-2">
+                  <h4 className="font-semibold text-sm">Created Components:</h4>
+                  <div className="max-h-60 overflow-y-auto">
+                    <ul className="text-sm space-y-1">
+                      {importResult.components.map((comp: any, idx: number) => (
+                        <li key={idx} className="flex items-center gap-2">
+                          <span className="text-primary">•</span>
+                          <span className="capitalize">{comp.type}</span>
+                          <span className="text-muted-foreground">—</span>
+                          <span>{comp.title}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 </div>
-              </div>
+              )}
 
               <Alert variant="default">
                 <AlertDescription className="text-xs">
-                  💡 <strong>Next Steps:</strong> Review and edit the imported components below. You can customize
-                  content, reorder components, and publish when ready.
+                  💡 <strong>Next Steps:</strong> Review and edit the imported components below. You can customize,
+                  reorder, and publish when ready.
                 </AlertDescription>
               </Alert>
             </div>
