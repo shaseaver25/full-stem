@@ -35,6 +35,8 @@ function createLessonTemplateDocument(): Document {
     })
   );
 
+  children.push(new Paragraph(" "));
+
   // Subtitle
   children.push(
     new Paragraph({
@@ -47,7 +49,7 @@ function createLessonTemplateDocument(): Document {
     })
   );
 
-  children.push(new Paragraph({ text: "" }));
+  children.push(new Paragraph(" "));
 
   // Instructions
   children.push(
@@ -65,7 +67,7 @@ function createLessonTemplateDocument(): Document {
   children.push(new Paragraph("• You may leave sections blank if not needed."));
   children.push(new Paragraph("• Use plain text (no images or tables)."));
   children.push(new Paragraph("• Save as .docx and upload it to TailorEDU."));
-  children.push(new Paragraph({ text: "" }));
+  children.push(new Paragraph(" "));
 
   // Lesson Metadata
   children.push(
@@ -75,7 +77,7 @@ function createLessonTemplateDocument(): Document {
     })
   );
 
-  children.push(new Paragraph({ text: "" }));
+  children.push(new Paragraph(" "));
 
   children.push(
     new Paragraph({
@@ -140,7 +142,7 @@ function createLessonTemplateDocument(): Document {
     })
   );
 
-  children.push(new Paragraph({ text: "" }));
+  children.push(new Paragraph(" "));
 
   // Component Sections
   for (const component of components) {
@@ -165,11 +167,11 @@ function createLessonTemplateDocument(): Document {
     );
 
     children.push(new Paragraph("[Write your content here...]"));
-    children.push(new Paragraph({ text: "" }));
+    children.push(new Paragraph(" "));
   }
 
   // Footer
-  children.push(new Paragraph({ text: "" }));
+  children.push(new Paragraph(" "));
   children.push(
     new Paragraph({
       children: [
@@ -214,16 +216,24 @@ serve(async (req) => {
     console.log('Generating TailorEDU Lesson Template .docx...');
 
     const doc = createLessonTemplateDocument();
+    
+    // Generate the binary buffer
     const buffer = await Packer.toBuffer(doc);
-
+    
     console.log('Template generated successfully, size:', buffer.length);
 
-    return new Response(buffer, {
+    // Convert to Uint8Array and wrap in Blob
+    const uint8 = new Uint8Array(buffer);
+    const blob = new Blob([uint8], {
+      type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    });
+
+    // Return as binary ArrayBuffer response
+    return new Response(await blob.arrayBuffer(), {
       headers: {
         ...corsHeaders,
         'Content-Type': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
         'Content-Disposition': 'attachment; filename="TailorEDU_Lesson_Template.docx"',
-        'Content-Length': buffer.length.toString(),
       },
     });
 
