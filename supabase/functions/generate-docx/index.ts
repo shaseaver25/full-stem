@@ -1,6 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { Document, Paragraph, TextRun, HeadingLevel, AlignmentType, convertInchesToTwip, BorderStyle } from "npm:docx@8.5.0";
-import { Packer } from "npm:docx@8.5.0";
+import { Document, Paragraph, TextRun, HeadingLevel, AlignmentType, Packer } from "npm:docx@8.5.0";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -10,34 +9,35 @@ const corsHeaders = {
 function createWordTemplate(): Document {
   const doc = new Document({
     sections: [{
-      properties: {
-        page: {
-          margin: {
-            top: convertInchesToTwip(1),
-            right: convertInchesToTwip(1),
-            bottom: convertInchesToTwip(1),
-            left: convertInchesToTwip(1),
-          },
-        },
-      },
       children: [
         // Title
         new Paragraph({
-          text: "TailorEDU Lesson Template",
+          children: [
+            new TextRun({
+              text: "TailorEDU Lesson Template",
+              bold: true,
+              size: 32,
+              color: "005B99",
+            }),
+          ],
           heading: HeadingLevel.TITLE,
           alignment: AlignmentType.CENTER,
           spacing: { after: 200 },
-          style: "Heading1",
         }),
         
         // Subtitle
         new Paragraph({
-          text: "Fill out this document to create a new lesson in the TailorEDU platform.",
+          children: [
+            new TextRun({
+              text: "Fill out this document to create a new lesson in the TailorEDU platform.",
+              size: 24,
+            }),
+          ],
           alignment: AlignmentType.CENTER,
           spacing: { after: 400 },
         }),
         
-        // Guidelines box
+        // Guidelines box header
         new Paragraph({
           children: [
             new TextRun({
@@ -46,50 +46,178 @@ function createWordTemplate(): Document {
             }),
           ],
           spacing: { before: 200, after: 100 },
-          shading: { fill: "E8E8E8" },
-          border: {
-            top: { style: BorderStyle.SINGLE, size: 1, color: "CCCCCC" },
-            bottom: { style: BorderStyle.SINGLE, size: 1, color: "CCCCCC" },
-            left: { style: BorderStyle.SINGLE, size: 1, color: "CCCCCC" },
-            right: { style: BorderStyle.SINGLE, size: 1, color: "CCCCCC" },
+          shading: {
+            fill: "E8E8E8",
+          },
+        }),
+        
+        // Guidelines
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: "• Do not remove or rename the ## Component headers.",
+            }),
+          ],
+          spacing: { after: 50 },
+          shading: {
+            fill: "E8E8E8",
           },
         }),
         new Paragraph({
-          text: "• Do not remove or rename the ## Component headers.",
+          children: [
+            new TextRun({
+              text: "• You may leave sections blank if not needed.",
+            }),
+          ],
           spacing: { after: 50 },
-          shading: { fill: "E8E8E8" },
+          shading: {
+            fill: "E8E8E8",
+          },
         }),
         new Paragraph({
-          text: "• You may leave sections blank if not needed.",
+          children: [
+            new TextRun({
+              text: "• Use plain text, not tables or images.",
+            }),
+          ],
           spacing: { after: 50 },
-          shading: { fill: "E8E8E8" },
+          shading: {
+            fill: "E8E8E8",
+          },
         }),
         new Paragraph({
-          text: "• Use plain text, not tables or images.",
-          spacing: { after: 50 },
-          shading: { fill: "E8E8E8" },
-        }),
-        new Paragraph({
-          text: "• When finished, upload this file in the Lesson Builder → Import Template tab.",
+          children: [
+            new TextRun({
+              text: "• When finished, upload this file in the Lesson Builder → Import Template tab.",
+            }),
+          ],
           spacing: { after: 200 },
-          shading: { fill: "E8E8E8" },
+          shading: {
+            fill: "E8E8E8",
+          },
         }),
         
         // Lesson Metadata Section
         new Paragraph({
-          text: "# Lesson Metadata",
-          heading: HeadingLevel.HEADING_1,
+          children: [
+            new TextRun({
+              text: "# Lesson Metadata",
+              bold: true,
+              size: 28,
+              color: "005B99",
+            }),
+          ],
           spacing: { before: 400, after: 200 },
         }),
         
-        ...createMetadataFields([
-          { label: "Title", placeholder: "Enter lesson title here" },
-          { label: "Subject", placeholder: "e.g., Mathematics, Science, English" },
-          { label: "Grade Level", placeholder: "e.g., 9-12, College" },
-          { label: "Duration (minutes)", placeholder: "e.g., 45, 90" },
-          { label: "Reading Level", placeholder: "e.g., 9th grade, College" },
-          { label: "Language", placeholder: "e.g., English, Spanish" },
-        ]),
+        // Metadata fields
+        new Paragraph({
+          children: [
+            new TextRun({ text: "Title: ", bold: true }),
+            new TextRun({ text: "____________________________", color: "CCCCCC" }),
+          ],
+          spacing: { after: 100 },
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: "   Enter lesson title here",
+              italics: true,
+              color: "666666",
+            }),
+          ],
+          spacing: { after: 200 },
+        }),
+        
+        new Paragraph({
+          children: [
+            new TextRun({ text: "Subject: ", bold: true }),
+            new TextRun({ text: "____________________________", color: "CCCCCC" }),
+          ],
+          spacing: { after: 100 },
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: "   e.g., Mathematics, Science, English",
+              italics: true,
+              color: "666666",
+            }),
+          ],
+          spacing: { after: 200 },
+        }),
+        
+        new Paragraph({
+          children: [
+            new TextRun({ text: "Grade Level: ", bold: true }),
+            new TextRun({ text: "____________________________", color: "CCCCCC" }),
+          ],
+          spacing: { after: 100 },
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: "   e.g., 9-12, College",
+              italics: true,
+              color: "666666",
+            }),
+          ],
+          spacing: { after: 200 },
+        }),
+        
+        new Paragraph({
+          children: [
+            new TextRun({ text: "Duration (minutes): ", bold: true }),
+            new TextRun({ text: "____________________________", color: "CCCCCC" }),
+          ],
+          spacing: { after: 100 },
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: "   e.g., 45, 90",
+              italics: true,
+              color: "666666",
+            }),
+          ],
+          spacing: { after: 200 },
+        }),
+        
+        new Paragraph({
+          children: [
+            new TextRun({ text: "Reading Level: ", bold: true }),
+            new TextRun({ text: "____________________________", color: "CCCCCC" }),
+          ],
+          spacing: { after: 100 },
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: "   e.g., 9th grade, College",
+              italics: true,
+              color: "666666",
+            }),
+          ],
+          spacing: { after: 200 },
+        }),
+        
+        new Paragraph({
+          children: [
+            new TextRun({ text: "Language: ", bold: true }),
+            new TextRun({ text: "____________________________", color: "CCCCCC" }),
+          ],
+          spacing: { after: 100 },
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: "   e.g., English, Spanish",
+              italics: true,
+              color: "666666",
+            }),
+          ],
+          spacing: { after: 200 },
+        }),
         
         new Paragraph({
           children: [
@@ -98,9 +226,13 @@ function createWordTemplate(): Document {
           spacing: { before: 200, after: 100 },
         }),
         new Paragraph({
-          text: "[Type a brief overview of what students will learn.]",
-          italics: true,
-          color: "666666",
+          children: [
+            new TextRun({
+              text: "[Type a brief overview of what students will learn.]",
+              italics: true,
+              color: "666666",
+            }),
+          ],
           spacing: { after: 400 },
         }),
         
@@ -167,28 +299,34 @@ function createWordTemplate(): Document {
         
         // Final instructions
         new Paragraph({
-          text: "Next Steps",
-          heading: HeadingLevel.HEADING_1,
+          children: [
+            new TextRun({
+              text: "Next Steps",
+              bold: true,
+              size: 28,
+              color: "005B99",
+            }),
+          ],
           spacing: { before: 600, after: 200 },
         }),
         new Paragraph({
-          text: "1. Fill in all sections with your content",
+          children: [new TextRun({ text: "1. Fill in all sections with your content" })],
           spacing: { after: 100 },
         }),
         new Paragraph({
-          text: "2. Save this document",
+          children: [new TextRun({ text: "2. Save this document" })],
           spacing: { after: 100 },
         }),
         new Paragraph({
-          text: "3. Upload the completed template to TailorEDU",
+          children: [new TextRun({ text: "3. Upload the completed template to TailorEDU" })],
           spacing: { after: 100 },
         }),
         new Paragraph({
-          text: "4. Review the auto-generated lesson components",
+          children: [new TextRun({ text: "4. Review the auto-generated lesson components" })],
           spacing: { after: 100 },
         }),
         new Paragraph({
-          text: "5. Publish your lesson!",
+          children: [new TextRun({ text: "5. Publish your lesson!" })],
           spacing: { after: 100 },
         }),
       ],
@@ -198,58 +336,57 @@ function createWordTemplate(): Document {
   return doc;
 }
 
-function createMetadataFields(fields: Array<{ label: string; placeholder: string }>): Paragraph[] {
-  const paragraphs: Paragraph[] = [];
-  
-  fields.forEach(field => {
-    paragraphs.push(
-      new Paragraph({
-        children: [
-          new TextRun({ text: `${field.label}: `, bold: true }),
-          new TextRun({ text: "____________________________", color: "CCCCCC" }),
-        ],
-        spacing: { after: 150 },
-      }),
-      new Paragraph({
-        text: `   ${field.placeholder}`,
-        italics: true,
-        color: "666666",
-        spacing: { after: 200 },
-      })
-    );
-  });
-  
-  return paragraphs;
-}
-
 function createComponentSection(componentName: string, guidance: string, example: string): Paragraph[] {
   return [
     new Paragraph({
-      text: `## Component: ${componentName}`,
-      heading: HeadingLevel.HEADING_1,
+      children: [
+        new TextRun({
+          text: `## Component: ${componentName}`,
+          bold: true,
+          size: 28,
+          color: "005B99",
+        }),
+      ],
       spacing: { before: 400, after: 200 },
     }),
     new Paragraph({
-      text: guidance,
-      italics: true,
-      color: "666666",
+      children: [
+        new TextRun({
+          text: guidance,
+          italics: true,
+          color: "666666",
+        }),
+      ],
       spacing: { after: 150 },
     }),
     new Paragraph({
       children: [
-        new TextRun({ text: "Example:", bold: true, italics: true, color: "005B99" }),
+        new TextRun({ 
+          text: "Example:", 
+          bold: true, 
+          italics: true, 
+          color: "005B99" 
+        }),
       ],
       spacing: { after: 100 },
     }),
     new Paragraph({
-      text: example,
-      italics: true,
-      color: "999999",
+      children: [
+        new TextRun({
+          text: example,
+          italics: true,
+          color: "999999",
+        }),
+      ],
       spacing: { after: 300 },
     }),
     new Paragraph({
-      text: "[Your content here]",
-      color: "CCCCCC",
+      children: [
+        new TextRun({
+          text: "[Your content here]",
+          color: "CCCCCC",
+        }),
+      ],
       spacing: { after: 400 },
     }),
   ];
