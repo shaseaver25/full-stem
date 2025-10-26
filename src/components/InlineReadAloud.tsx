@@ -31,3 +31,4 @@ const InlineReadAloud: React.FC<InlineReadAloudProps> = ({ text, className, lang
       {text}
     </div>
 
+);
