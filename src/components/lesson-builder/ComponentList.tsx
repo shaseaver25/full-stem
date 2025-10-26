@@ -1,5 +1,5 @@
 import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
-import { LessonComponentCard } from './LessonComponentCard';
+import { DraggableComponentCard } from './DraggableComponentCard';
 
 interface LessonComponent {
   id?: string;
@@ -61,7 +61,7 @@ export function ComponentList({ components, onUpdate, onDelete, onReorder }: Com
                     {...provided.draggableProps}
                     style={provided.draggableProps.style}
                   >
-                    <LessonComponentCard
+                    <DraggableComponentCard
                       component={component}
                       index={index}
                       onUpdate={onUpdate}
