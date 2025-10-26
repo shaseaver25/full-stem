@@ -19,76 +19,61 @@ serve(async (req) => {
 
     console.log('📄 Parsing lesson template...');
     
-    // Detect content type and parse accordingly
+    // Detect content type BEFORE parsing body
     const contentType = req.headers.get("content-type") || "";
-    let contentToParse = "";
-    let lessonId: string | undefined;
-    
+    let parsedContent = "";
+    let lessonId: string | null = null;
+
+    // Handle Word document uploads
     if (contentType.includes("application/vnd.openxmlformats-officedocument.wordprocessingml.document")) {
-      // Handle .docx upload directly
-      console.log('📄 Processing .docx file from direct upload...');
+      console.log('📄 Detected .docx upload, extracting text...');
       
       try {
-        const arrayBuffer = await req.arrayBuffer();
-        const { value } = await mammoth.extractRawText({ buffer: arrayBuffer });
-        contentToParse = value;
-        
-        console.log('✅ .docx converted to text, length:', contentToParse.length);
-      } catch (conversionError) {
-        console.error('❌ DOCX parsing failed:', conversionError);
-        return new Response(
-          JSON.stringify({ error: "Failed to extract text from .docx" }), 
-          {
-            status: 400,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-          }
-        );
+        const buffer = await req.arrayBuffer();
+        const { value } = await mammoth.extractRawText({ buffer });
+        parsedContent = value;
+        console.log("✅ Extracted text from .docx:", parsedContent.slice(0, 200));
+      } catch (err) {
+        console.error("❌ DOCX parsing failed:", err);
+        return new Response(JSON.stringify({ error: "Failed to extract text from .docx" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
       }
     } else {
-      // Handle JSON payload (plain text or base64 encoded .docx)
-      const requestBody = await req.json();
-      const { parsedContent, lessonId: requestLessonId, base64File, fileType } = requestBody;
-      lessonId = requestLessonId;
-      
-      if (base64File && fileType === 'docx') {
-        console.log('📄 Processing .docx file from base64...');
+      // Handle JSON payload (plain text or base64-encoded .docx)
+      try {
+        const jsonBody = await req.json();
+        parsedContent = jsonBody.parsedContent || "";
+        lessonId = jsonBody.lessonId || null;
         
-        try {
-          // Decode base64 to ArrayBuffer
-          const binaryString = atob(base64File);
+        // Handle base64-encoded .docx from JSON
+        if (jsonBody.base64File && jsonBody.fileType === 'docx') {
+          console.log('📄 Processing base64 .docx...');
+          const binaryString = atob(jsonBody.base64File);
           const bytes = new Uint8Array(binaryString.length);
           for (let i = 0; i < binaryString.length; i++) {
             bytes[i] = binaryString.charCodeAt(i);
           }
-          
-          // Extract text from .docx using Mammoth
           const result = await mammoth.extractRawText({ arrayBuffer: bytes.buffer });
-          contentToParse = result.value;
-          
-          console.log('✅ .docx converted to text, length:', contentToParse.length);
-        } catch (conversionError) {
-          console.error('❌ DOCX parsing failed:', conversionError);
-          return new Response(
-            JSON.stringify({ error: "Failed to extract text from .docx" }), 
-            {
-              status: 400,
-              headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-            }
-          );
+          parsedContent = result.value;
+          console.log("✅ Extracted text from base64 .docx:", parsedContent.slice(0, 200));
         }
-      } else {
-        // Plain text content
-        contentToParse = parsedContent;
+      } catch (err) {
+        console.error("❌ JSON parsing failed:", err);
+        return new Response(JSON.stringify({ error: "Invalid request format" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
       }
     }
-    
-    // Validate text content
-    if (!contentToParse) {
-      throw new Error('No content provided for parsing');
+
+    if (!parsedContent) {
+      throw new Error("No content found in request");
     }
 
     // Parse the document content
-    const lines = contentToParse.split('\n');
+    const lines = parsedContent.split('\n');
     
     // Extract metadata
     const metadata: any = {
