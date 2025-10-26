@@ -1,27 +1,27 @@
-// functions/parse-lesson-template/index.ts
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import mammoth from "https://esm.sh/mammoth@1.6.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
-// ✅ Define CORS headers
+// ✅ Full CORS setup
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
 serve(async (req) => {
-  // Handle CORS preflight requests
+  // ✅ Handle preflight request
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
 
   try {
+    // ✅ Initialize Supabase
     const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
-    // 🔐 Authenticate user
+    // ✅ Authenticate user
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
-      console.error("🚫 Missing Authorization header");
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: corsHeaders,
@@ -35,8 +35,7 @@ serve(async (req) => {
     } = await supabase.auth.getUser(token);
 
     if (userError || !user) {
-      console.error("🚫 Invalid user session:", userError);
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      return new Response(JSON.stringify({ error: "Invalid user session" }), {
         status: 401,
         headers: corsHeaders,
       });
@@ -44,13 +43,12 @@ serve(async (req) => {
 
     console.log("👤 Authenticated user:", user.email);
 
-    // 🧠 Read uploaded DOCX file
+    // ✅ Parse .docx
     const body = await req.arrayBuffer();
-    console.log("📄 Processing uploaded DOCX...");
     const { value: text } = await mammoth.extractRawText({ buffer: body });
-    console.log("✅ Extracted text length:", text.length);
+    console.log("📄 Extracted text length:", text.length);
 
-    // 🔍 Parse metadata and components
+    // ✅ Parse metadata & components
     const metadata: Record<string, any> = {};
     const components: any[] = [];
     const lines = text.split("\n").map((l) => l.trim());
@@ -84,21 +82,22 @@ serve(async (req) => {
     }
 
     console.log("🧩 Found components:", components.length);
-    console.log("🧠 Metadata parsed:", metadata);
 
-    // 🧑‍🏫 Create Lesson Record
-    let finalLessonId = null;
+    // ✅ Get teacher profile
+    const { data: teacherProfile, error: teacherError } = await supabase
+      .from("teacher_profiles")
+      .select("id")
+      .eq("user_id", user.id)
+      .single();
 
-    try {
-      const { data: teacherProfile, error: teacherError } = await supabase
-        .from("teacher_profiles")
-        .select("id")
-        .eq("user_id", user.id)
-        .single();
+    if (teacherError || !teacherProfile) {
+      throw new Error("No teacher profile found for this user");
+    }
 
-      if (teacherError || !teacherProfile) throw new Error("No teacher profile found");
-
-      const insertPayload = {
+    // ✅ Create new lesson
+    const { data: newLesson, error: insertErr } = await supabase
+      .from("lessons")
+      .insert({
         teacher_id: teacherProfile.id,
         title: metadata.title || "Imported Lesson",
         description: metadata.description || "",
@@ -106,59 +105,36 @@ serve(async (req) => {
         grade_level: metadata.grade_level || "",
         subject: metadata.subject || "",
         status: "draft",
-      };
+      })
+      .select("id")
+      .maybeSingle();
 
-      console.log("🪄 Inserting lesson:", insertPayload);
+    if (insertErr) throw insertErr;
+    const lessonId = newLesson?.id;
+    console.log("✅ Created new lesson:", lessonId);
 
-      const { data: newLesson, error: insertErr } = await supabase
-        .from("lessons")
-        .insert(insertPayload)
-        .select("id")
-        .maybeSingle();
-
-      if (insertErr) {
-        console.error("❌ Lesson insert error:", insertErr);
-        throw insertErr;
-      }
-
-      finalLessonId = newLesson?.id;
-      console.log("✅ Created new lesson:", finalLessonId);
-    } catch (err) {
-      console.error("❌ Error creating lesson:", err);
-      throw err;
+    // ✅ Insert lesson components
+    for (const [i, comp] of components.entries()) {
+      await supabase.from("lesson_components").insert({
+        lesson_id: lessonId,
+        type: comp.type,
+        content: comp.content,
+        order: i,
+      });
     }
 
-    // 🧩 Insert Components
-    for (const component of components) {
-      try {
-        const payload = {
-          lesson_id: finalLessonId,
-          type: component.type,
-          content: component.content,
-          position: components.indexOf(component),
-        };
-        const { error: compErr } = await supabase.from("lesson_components").insert(payload);
-        if (compErr) console.error("⚠️ Component insert failed:", compErr);
-      } catch (compErr) {
-        console.error("❌ Component insert error:", compErr);
-      }
-    }
+    console.log("🎉 Lesson import complete");
 
-    console.log("🎉 Lesson import completed");
     return new Response(
       JSON.stringify({
         success: true,
-        lesson_id: finalLessonId,
-        metadata,
-        components_count: components.length,
+        lessonId,
+        componentsCreated: components.length,
       }),
-      {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200,
-      },
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (err) {
-    console.error("🔥 Fatal Error in parse-lesson-template:", err);
+    console.error("🔥 Error:", err);
     return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });
   }
 });
