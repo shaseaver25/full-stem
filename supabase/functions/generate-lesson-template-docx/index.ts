@@ -2,21 +2,21 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { Document, Paragraph, TextRun, HeadingLevel, Packer } from "npm:docx@8.5.0";
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
 const components = [
-  { name: 'Instructions', helpText: 'Write the introduction or overview of the lesson.' },
-  { name: 'Page', helpText: 'Add the main instructional content.' },
-  { name: 'Multimedia', helpText: 'Paste video or media links here (one per line).' },
-  { name: 'Coding IDE', helpText: 'Insert code samples or programming activities.' },
-  { name: 'Activity', helpText: 'Describe a hands-on or guided task.' },
-  { name: 'Discussion', helpText: 'Add discussion prompts for students.' },
-  { name: 'Quiz', helpText: 'List questions and answers using Q: and A:.' },
-  { name: 'Reflection', helpText: 'Add reflection prompts or journaling questions.' },
-  { name: 'Assignment', helpText: 'Describe graded work. This will be marked as assignable.' },
-  { name: 'Resources', helpText: 'Provide reference links or filenames of resources.' },
+  { name: "Instructions", helpText: "Write the introduction or overview of the lesson." },
+  { name: "Page", helpText: "Add the main instructional content." },
+  { name: "Multimedia", helpText: "Paste video or media links here (one per line)." },
+  { name: "Coding IDE", helpText: "Insert code samples or programming activities." },
+  { name: "Activity", helpText: "Describe a hands-on or guided task." },
+  { name: "Discussion", helpText: "Add discussion prompts for students." },
+  { name: "Quiz", helpText: "List questions and answers using Q: and A:." },
+  { name: "Reflection", helpText: "Add reflection prompts or journaling questions." },
+  { name: "Assignment", helpText: "Describe graded work. This will be marked as assignable." },
+  { name: "Resources", helpText: "Provide reference links or filenames of resources." },
 ];
 
 function createLessonTemplateDocument(): Document {
@@ -33,7 +33,7 @@ function createLessonTemplateDocument(): Document {
         }),
       ],
       heading: HeadingLevel.TITLE,
-    })
+    }),
   );
 
   children.push(new Paragraph("Use this document to create lessons offline."));
@@ -49,7 +49,7 @@ function createLessonTemplateDocument(): Document {
           bold: true,
         }),
       ],
-    })
+    }),
   );
 
   children.push(new Paragraph("• Do NOT remove or rename the '## Component:' headers."));
@@ -63,7 +63,7 @@ function createLessonTemplateDocument(): Document {
     new Paragraph({
       text: "Lesson Metadata",
       heading: HeadingLevel.HEADING_1,
-    })
+    }),
   );
 
   children.push(new Paragraph(" "));
@@ -84,7 +84,7 @@ function createLessonTemplateDocument(): Document {
       new Paragraph({
         text: `## Component: ${component.name}`,
         heading: HeadingLevel.HEADING_1,
-      })
+      }),
     );
 
     children.push(
@@ -95,7 +95,7 @@ function createLessonTemplateDocument(): Document {
             italics: true,
           }),
         ],
-      })
+      }),
     );
 
     children.push(new Paragraph("[Write your content here...]"));
@@ -112,7 +112,7 @@ function createLessonTemplateDocument(): Document {
           bold: true,
         }),
       ],
-    })
+    }),
   );
 
   children.push(
@@ -123,7 +123,7 @@ function createLessonTemplateDocument(): Document {
           italics: true,
         }),
       ],
-    })
+    }),
   );
 
   // Create and return the document
@@ -140,52 +140,51 @@ function createLessonTemplateDocument(): Document {
 }
 
 serve(async (req) => {
-  if (req.method === 'OPTIONS') {
+  if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    console.log('Generating TailorEDU Lesson Template .docx...');
+    console.log("Generating TailorEDU Lesson Template .docx...");
 
     const doc = createLessonTemplateDocument();
-    
+
     // Create binary buffer
     const buffer = await Packer.toBuffer(doc);
-    
-    console.log('Template generated successfully, size:', buffer.length);
+
+    console.log("Template generated successfully, size:", buffer.length);
 
     // Convert to base64 to avoid Deno binary encoding issues
     const uint8Array = new Uint8Array(buffer);
     const binaryString = Array.from(uint8Array)
-      .map(byte => String.fromCharCode(byte))
-      .join('');
+      .map((byte) => String.fromCharCode(byte))
+      .join("");
     const base64 = btoa(binaryString);
 
-    console.log('Base64 encoded, length:', base64.length);
+    console.log("Base64 encoded, length:", base64.length);
 
     // Return as JSON with base64 encoded file
     return new Response(
       JSON.stringify({
         success: true,
         file: base64,
-        filename: 'TailorEDU_Lesson_Template.docx',
+        filename: "TailorEDU_Lesson_Template.docx",
       }),
       {
         headers: {
           ...corsHeaders,
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-      }
+      },
     );
-
   } catch (error) {
-    console.error('Error generating DOCX template:', error);
+    console.error("Error generating DOCX template:", error);
     return new Response(
       JSON.stringify({
-        error: 'Failed to generate DOCX template',
+        error: "Failed to generate DOCX template",
         details: error.message,
       }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   }
 });
