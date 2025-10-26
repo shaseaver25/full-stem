@@ -1,22 +1,21 @@
-import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Checkbox } from '@/components/ui/checkbox';
-import { RichTextEditor } from '@/components/ui/rich-text-editor';
-import { GripVertical, Trash2, ChevronDown, ChevronUp, Copy } from 'lucide-react';
-import { DraggableProvidedDragHandleProps } from 'react-beautiful-dnd';
-//Temporarily disabled - cloud integrations
-import { DriveFilePicker } from '@/components/drive/DriveFilePicker';
-import { DriveAttachmentsList } from '@/components/drive/DriveAttachmentsList';
-import { useDriveAttachment } from '@/hooks/useDriveAttachment';
-import { OneDriveFilePicker } from '@/components/onedrive/OneDriveFilePicker';
-import { OneDriveAttachmentsList } from '@/components/onedrive/OneDriveAttachmentsList';
-import { useOneDriveAttachment } from '@/hooks/useOneDriveAttachment';
-import { LocalFileUpload } from './LocalFileUpload';
-import { Separator } from '@/components/ui/separator';
+import { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+import { RichTextEditor } from "@/components/ui/rich-text-editor";
+import { GripVertical, Trash2, ChevronDown, ChevronUp, Copy } from "lucide-react";
+import { DraggableProvidedDragHandleProps } from "react-beautiful-dnd";
+import { DriveFilePicker } from "@/components/drive/DriveFilePicker";
+import { DriveAttachmentsList } from "@/components/drive/DriveAttachmentsList";
+import { useDriveAttachment } from "@/hooks/useDriveAttachment";
+import { OneDriveFilePicker } from "@/components/onedrive/OneDriveFilePicker";
+import { OneDriveAttachmentsList } from "@/components/onedrive/OneDriveAttachmentsList";
+import { useOneDriveAttachment } from "@/hooks/useOneDriveAttachment";
+import { LocalFileUpload } from "./LocalFileUpload";
+import { Separator } from "@/components/ui/separator";
 
 interface LessonComponent {
   id?: string;
@@ -41,18 +40,18 @@ interface LessonComponentCardProps {
 }
 
 const componentTypeLabels: Record<string, string> = {
-  slides: 'PowerPoint/Slides',
-  page: 'Page',
-  video: 'Multimedia',
-  discussion: 'Discussion',
-  codingEditor: 'Coding IDE',
-  desmos: 'Desmos Activity',
-  activity: 'Activity',
-  assignment: 'Assignment',
-  assessment: 'Assessment',
-  reflection: 'Reflection',
-  instructions: 'Instructions',
-  resources: 'Resources',
+  slides: "PowerPoint/Slides",
+  page: "Page",
+  video: "Multimedia",
+  discussion: "Discussion",
+  codingEditor: "Coding IDE",
+  desmos: "Desmos Activity",
+  activity: "Activity",
+  assignment: "Assignment",
+  assessment: "Assessment",
+  reflection: "Reflection",
+  instructions: "Instructions",
+  resources: "Resources",
 };
 
 export function LessonComponentCard({
@@ -92,101 +91,101 @@ export function LessonComponentCard({
   // };
 
   const handleLocalFileUploaded = (file: { name: string; path: string; url: string }) => {
-    console.log('📎 Local file uploaded:', file);
+    console.log("📎 Local file uploaded:", file);
     // Store the file reference in component content for now
     const existingFiles = component.content.uploadedFiles || [];
     onUpdate(index, {
-      content: { 
-        ...component.content, 
-        uploadedFiles: [...existingFiles, file]
+      content: {
+        ...component.content,
+        uploadedFiles: [...existingFiles, file],
       },
     });
   };
 
   const renderFields = () => {
     switch (component.component_type) {
-      case 'slides':
+      case "slides":
         return (
           <>
             <div>
               <Label>Title</Label>
               <Input
-                value={component.content.title || ''}
-                onChange={(e) => handleContentChange('title', e.target.value)}
+                value={component.content.title || ""}
+                onChange={(e) => handleContentChange("title", e.target.value)}
                 placeholder="Slide deck title"
               />
             </div>
             <div>
               <Label>Embed URL or Upload</Label>
               <Input
-                value={component.content.url || ''}
-                onChange={(e) => handleContentChange('url', e.target.value)}
+                value={component.content.url || ""}
+                onChange={(e) => handleContentChange("url", e.target.value)}
                 placeholder="https://..."
               />
             </div>
           </>
         );
 
-      case 'page':
+      case "page":
         return (
           <>
             <div>
               <Label>Title</Label>
               <Input
-                value={component.content.title || ''}
-                onChange={(e) => handleContentChange('title', e.target.value)}
+                value={component.content.title || ""}
+                onChange={(e) => handleContentChange("title", e.target.value)}
                 placeholder="Page title"
               />
             </div>
             <div>
               <Label>Content</Label>
               <RichTextEditor
-                value={component.content.body || ''}
-                onChange={(value) => handleContentChange('body', value)}
+                value={component.content.body || ""}
+                onChange={(value) => handleContentChange("body", value)}
                 placeholder="Enter page content with formatting, links, and images..."
               />
             </div>
           </>
         );
 
-      case 'video':
+      case "video":
         return (
           <>
             <div>
               <Label>Title</Label>
               <Input
-                value={component.content.title || ''}
-                onChange={(e) => handleContentChange('title', e.target.value)}
+                value={component.content.title || ""}
+                onChange={(e) => handleContentChange("title", e.target.value)}
                 placeholder="Video title"
               />
             </div>
             <div>
               <Label>Video URL</Label>
               <Input
-                value={component.content.url || ''}
-                onChange={(e) => handleContentChange('url', e.target.value)}
+                value={component.content.url || ""}
+                onChange={(e) => handleContentChange("url", e.target.value)}
                 placeholder="https://youtube.com/..."
               />
             </div>
             <div>
               <Label>Caption</Label>
               <Input
-                value={component.content.caption || ''}
-                onChange={(e) => handleContentChange('caption', e.target.value)}
+                value={component.content.caption || ""}
+                onChange={(e) => handleContentChange("caption", e.target.value)}
                 placeholder="Video description"
               />
             </div>
           </>
         );
 
-      case 'discussion':
+      case "discussion":
         return (
           <>
             <div>
               <Label>Discussion Prompt</Label>
               <Textarea
-                value={component.content.prompt || ''}
-                onChange={(e) => handleContentChange('prompt', e.target.value)}
+                value={component.content.prompt || ""}
+                onChange={(e) => handleContentChange("prompt", e.target.value)}
                 placeholder="What question should students discuss?"
                 rows={3}
               />
@@ -194,30 +193,30 @@ export function LessonComponentCard({
             <div>
               <Label>Resources (optional)</Label>
               <Input
-                value={component.content.resources || ''}
-                onChange={(e) => handleContentChange('resources', e.target.value)}
+                value={component.content.resources || ""}
+                onChange={(e) => handleContentChange("resources", e.target.value)}
                 placeholder="Links or references"
               />
             </div>
           </>
         );
 
-      case 'codingEditor':
+      case "codingEditor":
         return (
           <>
             <div>
               <Label>Title</Label>
               <Input
-                value={component.content.title || ''}
-                onChange={(e) => handleContentChange('title', e.target.value)}
+                value={component.content.title || ""}
+                onChange={(e) => handleContentChange("title", e.target.value)}
                 placeholder="Coding exercise title"
               />
             </div>
             <div>
               <Label>IDE Embed URL or Code</Label>
               <Textarea
-                value={component.content.code || ''}
-                onChange={(e) => handleContentChange('code', e.target.value)}
+                value={component.content.code || ""}
+                onChange={(e) => handleContentChange("code", e.target.value)}
                 placeholder="Replit URL, CodeSandbox URL, or starter code"
                 rows={4}
               />
@@ -225,22 +224,22 @@ export function LessonComponentCard({
           </>
         );
 
-      case 'activity':
+      case "activity":
         return (
           <>
             <div>
               <Label>Activity Title</Label>
               <Input
-                value={component.content.title || ''}
-                onChange={(e) => handleContentChange('title', e.target.value)}
+                value={component.content.title || ""}
+                onChange={(e) => handleContentChange("title", e.target.value)}
                 placeholder="Activity name"
               />
             </div>
             <div>
               <Label>Description</Label>
               <Textarea
-                value={component.content.description || ''}
-                onChange={(e) => handleContentChange('description', e.target.value)}
+                value={component.content.description || ""}
+                onChange={(e) => handleContentChange("description", e.target.value)}
                 placeholder="What will students do?"
                 rows={3}
               />
@@ -248,22 +247,22 @@ export function LessonComponentCard({
             <div>
               <Label>Resources</Label>
               <Input
-                value={component.content.resources || ''}
-                onChange={(e) => handleContentChange('resources', e.target.value)}
+                value={component.content.resources || ""}
+                onChange={(e) => handleContentChange("resources", e.target.value)}
                 placeholder="Materials or links"
               />
             </div>
           </>
         );
 
-      case 'assignment':
+      case "assignment":
         return (
           <>
             <div>
               <Label>Assignment Title</Label>
               <Input
-                value={component.content.title || ''}
-                onChange={(e) => handleContentChange('title', e.target.value)}
+                value={component.content.title || ""}
+                onChange={(e) => handleContentChange("title", e.target.value)}
                 placeholder="Assignment name"
               />
             </div>
@@ -271,8 +270,8 @@ export function LessonComponentCard({
               <Label>Points</Label>
               <Input
                 type="number"
-                value={component.content.points || ''}
-                onChange={(e) => handleContentChange('points', e.target.value)}
+                value={component.content.points || ""}
+                onChange={(e) => handleContentChange("points", e.target.value)}
                 placeholder="100"
               />
             </div>
@@ -280,33 +279,33 @@ export function LessonComponentCard({
               <Label>Due Date</Label>
               <Input
                 type="date"
-                value={component.content.dueDate || ''}
-                onChange={(e) => handleContentChange('dueDate', e.target.value)}
+                value={component.content.dueDate || ""}
+                onChange={(e) => handleContentChange("dueDate", e.target.value)}
               />
             </div>
           </>
         );
 
-      case 'reflection':
+      case "reflection":
         return (
           <div>
             <Label>Reflection Prompt</Label>
             <Textarea
-              value={component.content.prompt || ''}
-              onChange={(e) => handleContentChange('prompt', e.target.value)}
+              value={component.content.prompt || ""}
+              onChange={(e) => handleContentChange("prompt", e.target.value)}
               placeholder="What should students reflect on?"
               rows={4}
             />
           </div>
         );
 
-      case 'instructions':
+      case "instructions":
         return (
           <div>
             <Label>Instructions</Label>
             <Textarea
-              value={component.content.text || ''}
-              onChange={(e) => handleContentChange('text', e.target.value)}
+              value={component.content.text || ""}
+              onChange={(e) => handleContentChange("text", e.target.value)}
               placeholder="Step-by-step instructions"
               rows={6}
             />
@@ -335,7 +334,7 @@ export function LessonComponentCard({
   };
 
   return (
-    <Card className={isDragging ? 'shadow-lg' : ''}>
+    <Card className={isDragging ? "shadow-lg" : ""}>
       <CardHeader>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -347,22 +346,10 @@ export function LessonComponentCard({
             </CardTitle>
           </div>
           <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setIsExpanded(!isExpanded)}
-            >
-              {isExpanded ? (
-                <ChevronUp className="h-4 w-4" />
-              ) : (
-                <ChevronDown className="h-4 w-4" />
-              )}
+            <Button variant="ghost" size="sm" onClick={() => setIsExpanded(!isExpanded)}>
+              {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
             </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onDelete(index)}
-            >
+            <Button variant="ghost" size="sm" onClick={() => onDelete(index)}>
               <Trash2 className="h-4 w-4 text-destructive" />
             </Button>
           </div>
@@ -371,16 +358,14 @@ export function LessonComponentCard({
       {isExpanded && (
         <CardContent className="space-y-4">
           {renderFields()}
-          
+
           <Separator className="my-4" />
-          
+
           <div className="flex items-center space-x-2">
             <Checkbox
               id={`assignable-${index}`}
               checked={component.is_assignable || false}
-              onCheckedChange={(checked) => 
-                onUpdate(index, { is_assignable: checked as boolean })
-              }
+              onCheckedChange={(checked) => onUpdate(index, { is_assignable: checked as boolean })}
             />
             <label
               htmlFor={`assignable-${index}`}
@@ -389,20 +374,16 @@ export function LessonComponentCard({
               Mark as Assignable (appears in Assignments tab)
             </label>
           </div>
-          
+
           <Separator className="my-4" />
-          
+
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <Label className="text-sm font-medium">File Attachments</Label>
             </div>
-            
+
             {/* Local File Upload (Cloud integrations temporarily disabled) */}
-            <LocalFileUpload
-              onFileUploaded={handleLocalFileUploaded}
-              variant="outline"
-              size="sm"
-            />
+            <LocalFileUpload onFileUploaded={handleLocalFileUploaded} variant="outline" size="sm" />
 
             {/* Display uploaded files */}
             {component.content.uploadedFiles && component.content.uploadedFiles.length > 0 && (
@@ -420,7 +401,7 @@ export function LessonComponentCard({
             )}
 
             {/* Temporarily disabled - cloud integrations */}
-            {component.id ? (
+            {/* {component.id ? (
               <>
                 <DriveAttachmentsList 
                   componentId={component.id} 
