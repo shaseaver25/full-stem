@@ -194,6 +194,7 @@ serve(async (req) => {
 
     // Update lesson metadata if lessonId provided, otherwise create new lesson
     let finalLessonId = lessonId;
+    let shouldCreateNewLesson = !lessonId;
     
     if (lessonId) {
       const { error: updateError } = await supabase
@@ -209,10 +210,12 @@ serve(async (req) => {
         .eq('id', lessonId);
 
       if (updateError) {
-        console.error('❌ Error updating lesson:', updateError);
-        throw updateError;
+        console.log('⚠️ Failed to update lesson, creating new one instead:', updateError.message);
+        shouldCreateNewLesson = true;
       }
-    } else {
+    }
+    
+    if (shouldCreateNewLesson) {
       const { data: newLesson, error: createError } = await supabase
         .from('lessons')
         .insert({
@@ -232,6 +235,7 @@ serve(async (req) => {
         throw createError;
       }
 
+      console.log('✅ Created new lesson:', newLesson.id);
       finalLessonId = newLesson.id;
     }
 
