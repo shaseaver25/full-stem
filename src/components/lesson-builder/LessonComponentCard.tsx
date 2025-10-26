@@ -403,26 +403,26 @@ export function LessonComponentCard({
             )}
 
             {/* Cloud file attachments */}
-            {component.id ? (
-              <>
-                <OneDriveFilePicker onFileSelected={handleOneDriveFileSelected} />
-                <OneDriveAttachmentsList 
-                  componentId={component.id}
-                  showEmbeds={false}
-                  canDelete={true}
-                />
-                <DriveFilePicker onFileSelected={handleDriveFileSelected} />
-                <DriveAttachmentsList 
-                  componentId={component.id}
-                  showEmbeds={false}
-                  canDelete={true}
-                />
-              </>
-            ) : (
-              <p className="text-sm text-muted-foreground italic">
-                Save this component first to attach cloud files
-              </p>
-            )}
+              {component.id ? (
+                <>
+                  <OneDriveFilePicker onFileSelected={handleOneDriveFileSelected} />
+                  <OneDriveAttachmentsList 
+                    componentId={component.id}
+                    showEmbeds={false}
+                    canDelete={true}
+                  />
+                  <DriveFilePicker onFileSelected={handleDriveFileSelected} />
+                  <DriveAttachmentsList 
+                    componentId={component.id}
+                    showEmbeds={false}
+                    canDelete={true}
+                  />
+                </>
+              ) : (
+                <p className="text-sm text-muted-foreground italic">
+                  Save this component first to attach cloud files
+                </p>
+              )}
           </div>
         </CardContent>
       )}
