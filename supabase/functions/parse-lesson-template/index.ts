@@ -1,4 +1,4 @@
-// ✅ parse-lesson-template/index.ts
+// ✅ Clean parse-lesson-template Edge Function
 import { serve as startServer } from "https://deno.land/std@0.168.0/http/server.ts";
 import mammoth from "https://esm.sh/mammoth@1.6.0";
 
@@ -10,7 +10,6 @@ const corsHeaders: Record<string, string> = {
 
 startServer(async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
-    // Preflight CORS check
     return new Response("ok", { status: 200, headers: corsHeaders });
   }
 
@@ -36,10 +35,8 @@ startServer(async (req: Request): Promise<Response> => {
 
     // Extract text with Mammoth
     const { value: text } = await mammoth.extractRawText({ buffer });
-
     console.log("✅ Parsed text length:", text.length);
 
-    // Extract metadata (simple placeholder parsing)
     const metadata = {
       title: text.match(/Title:\s*(.*)/)?.[1] ?? "Untitled Lesson",
       subject: text.match(/Subject:\s*(.*)/)?.[1] ?? "General",
