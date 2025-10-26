@@ -1,181 +1,96 @@
-import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
-import mammoth from "npm:mammoth";
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import mammoth from "https://esm.sh/mammoth@1.6.0";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+};
 
 serve(async (req) => {
-  try {
-    console.log("🧠 parse-lesson-template invoked");
-
-    const contentType = req.headers.get("content-type") || "";
-
-    let textContent = "";
-
-    if (contentType.includes("application/octet-stream")) {
-      // Binary DOCX upload
-      console.log("📄 Parsing DOCX file");
-      const arrayBuffer = await req.arrayBuffer();
-      const docxBuffer = Buffer.from(arrayBuffer);
-      const result = await mammoth.extractRawText({ buffer: docxBuffer });
-      textContent = result.value.trim();
-    } else if (contentType.includes("application/json")) {
-      // Fallback for text-based upload
-      console.log("📝 Parsing JSON body");
-      const body = await req.json();
-      textContent = body.parsedContent || "";
-    } else {
-      throw new Error("Unsupported content type");
-    }
-
-    if (!textContent) {
-      console.error("❌ No text extracted from file");
-      return new Response(
-        JSON.stringify({ error: "Failed to read document" }),
-        { status: 400, headers: { "Content-Type": "application/json" } }
-      );
-    }
-
-    console.log("✅ Text extracted successfully");
-
-    // TODO: parse lesson components here (e.g., split by ## Component:)
-    const components = textContent.split("## Component:").length - 1;
-
-    return new Response(
-      JSON.stringify({
-        message: "Lesson parsed successfully",
-        components,
-        preview: textContent.slice(0, 200),
-      }),
-      { status: 200, headers: { "Content-Type": "application/json" } }
-    );
-  } catch (err) {
-    console.error("❌ Error in parse-lesson-template:", err.message);
-    return new Response(
-      JSON.stringify({ error: err.message }),
-      { status: 400, headers: { "Content-Type": "application/json" } }
-    );
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
   }
-});
 
-    console.log("👤 Authenticated user:", user.email);
+  try {
+    const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
-    // Read and parse .docx file
-    const body = await req.arrayBuffer();
-    let text = "";
-    try {
-      const result = await mammoth.extractRawText({ buffer: body });
-      text = result.value || "";
-      if (!text.trim()) throw new Error("No text extracted from .docx file");
-    } catch (err) {
-      console.error("❌ Error extracting DOCX:", err);
-      return new Response(JSON.stringify({ error: "Failed to read document" }), {
-        status: 400,
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
         headers: corsHeaders,
       });
     }
 
-    // Parse template
-    const metadata: Record<string, string> = {};
-    const components: { type: string; content: string }[] = [];
-    const lines = text.split("\n").map((l) => l.trim());
-    let currentSection = "";
-    let currentContent: string[] = [];
+    const token = authHeader.replace("Bearer ", "");
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser(token);
 
-    for (const line of lines) {
-      if (line.startsWith("##")) {
-        if (currentSection) {
-          components.push({
-            type: currentSection,
-            content: currentContent.join("\n").trim(),
-          });
-        }
-        currentSection = line.replace(/^##/, "").trim();
-        currentContent = [];
-      } else if (line.includes(":") && !currentSection) {
-        const [key, value] = line.split(":").map((x) => x.trim());
-        metadata[key.toLowerCase()] = value;
-      } else {
-        currentContent.push(line);
-      }
-    }
-    if (currentSection) {
-      components.push({
-        type: currentSection,
-        content: currentContent.join("\n").trim(),
+    if (userError || !user) {
+      return new Response(JSON.stringify({ error: "Invalid user session" }), {
+        status: 401,
+        headers: corsHeaders,
       });
     }
 
-    console.log("🧩 Found components:", components.length);
+    const contentType = req.headers.get("content-type") || "";
+    console.log("📄 Received request with content-type:", contentType);
 
-    // ✅ Get or create teacher profile
-    let { data: teacherProfile, error: teacherError } = await supabase
-      .from("teacher_profiles")
-      .select("id")
-      .eq("user_id", user.id)
-      .maybeSingle();
+    let parsedText = "";
 
-    if (teacherError || !teacherProfile) {
-      console.log("⚠️ No teacher profile found — creating one automatically...");
-      const { data: newProfile, error: createError } = await supabase
-        .from("teacher_profiles")
-        .insert({
-          user_id: user.id,
-          full_name: user.user_metadata?.full_name || user.email,
-          email: user.email,
-        })
-        .select("id")
-        .single();
-      if (createError) throw createError;
-      teacherProfile = newProfile;
+    // Handle DOCX binary uploads
+    if (contentType.includes("application/octet-stream")) {
+      console.log("📦 Reading binary DOCX buffer...");
+      const uint8Array = new Uint8Array(await req.arrayBuffer());
+
+      console.log("📖 Extracting DOCX text via mammoth...");
+      const result = await mammoth.extractRawText({ buffer: uint8Array });
+      parsedText = result.value.trim();
+
+      console.log("✅ Extracted DOCX text length:", parsedText.length);
+    }
+    // Handle JSON uploads (from .txt templates)
+    else if (contentType.includes("application/json")) {
+      const body = await req.json();
+      parsedText = body.parsedContent || "";
+      console.log("📝 Received text content:", parsedText.slice(0, 100));
+    } else {
+      throw new Error(`Unsupported content type: ${contentType}`);
     }
 
-    // ✅ Create new lesson
-    const { data: newLesson, error: insertErr } = await supabase
-      .from("lessons")
-      .insert({
-        teacher_id: teacherProfile.id,
-        title: metadata.title || "Imported Lesson",
-        description: metadata.description || "",
-        duration: metadata.duration || 45,
-        grade_level: metadata.grade_level || "",
-        subject: metadata.subject || "",
-        status: "draft",
-      })
-      .select("id")
-      .maybeSingle();
-
-    if (insertErr) throw insertErr;
-    const lessonId = newLesson?.id;
-    console.log("✅ Created new lesson:", lessonId);
-
-    // ✅ Insert lesson components
-    for (const [i, comp] of components.entries()) {
-      await supabase.from("lesson_components").insert({
-        lesson_id: lessonId,
-        type: comp.type,
-        content: comp.content,
-        order: i,
-      });
+    if (!parsedText) {
+      throw new Error("No lesson content found in file.");
     }
 
-    console.log("🎉 Lesson import complete");
+    // Simple parser demo — replace with your real logic
+    const components = parsedText
+      .split("## Component:")
+      .filter((x) => x.trim().length > 0)
+      .map((block, index) => ({
+        title: block.split("\n")[0].trim(),
+        order: index,
+        content: block.trim(),
+      }));
+
+    console.log(`✅ Parsed ${components.length} components`);
 
     return new Response(
       JSON.stringify({
         success: true,
-        lessonId,
+        metadata: { title: "Imported Lesson" },
         componentsCreated: components.length,
+        components,
       }),
-      {
-        status: 200,
-        headers: {
-          ...corsHeaders,
-          "Content-Type": "application/json",
-        },
-      },
+      { status: 200, headers: corsHeaders },
     );
   } catch (err) {
-    console.error("🔥 Error:", err);
+    console.error("❌ Error extracting DOCX:", err);
     return new Response(JSON.stringify({ error: err.message }), {
-      status: 500,
+      status: 400,
       headers: corsHeaders,
     });
   }
