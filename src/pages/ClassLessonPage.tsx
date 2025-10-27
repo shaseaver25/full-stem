@@ -228,7 +228,7 @@ const ClassLessonPage = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
       <Header />
-      <div className="max-w-6xl mx-auto px-4 py-8">
+      <div className="max-w-6xl mx-auto px-4 py-8 pb-32">
         {/* Navigation */}
         <div className="mb-6">
           <Link to={`/teacher/classes/${lesson.class_id}`} className="flex items-center text-blue-600 hover:text-blue-800 mb-4">
