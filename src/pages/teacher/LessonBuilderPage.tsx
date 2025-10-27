@@ -276,9 +276,9 @@ export default function LessonBuilderPage() {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-8 max-w-6xl">
+      <div className="container mx-auto px-4 py-8 pb-32 max-w-6xl">
         <Card>
-          <CardContent className="pt-6">
+          <CardContent className="pt-6 pb-24">
             <Tabs defaultValue="manual" className="w-full">
               <TabsList className="grid w-full grid-cols-3 mb-6">
                 <TabsTrigger value="manual">Manual Build</TabsTrigger>
