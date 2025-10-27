@@ -319,14 +319,14 @@ const BuildClassPage = () => {
           }
         });
         
-        // Navigate to build lesson page after update
-        navigate(`/teacher/build-lesson/${classId}`);
+        // Stay on edit page after update
+        navigate(`/teacher/classes/${classId}/edit`);
       } else {
         // Create new class and navigate to build lesson page
         const newClass = await createClassAsync(classDataToSave);
         
-        // Navigate to build lesson page with the new class ID
-        navigate(`/teacher/build-lesson/${newClass.id}`);
+        // Navigate to edit page with the new class ID
+        navigate(`/teacher/classes/${newClass.id}/edit`);
       }
     } catch (error) {
       console.error('Error saving class:', error);
@@ -496,7 +496,7 @@ const BuildClassPage = () => {
                 Lessons
               </CardTitle>
               <Button
-                onClick={() => navigate('/teacher/lesson-builder')}
+                onClick={() => navigate(`/teacher/lesson-builder?classId=${classId}`)}
                 className="gap-2"
               >
                 <Plus className="h-4 w-4" />
@@ -556,7 +556,7 @@ const BuildClassPage = () => {
                     Start building your class by adding lessons
                   </p>
                   <Button
-                    onClick={() => navigate('/teacher/lesson-builder')}
+                    onClick={() => navigate(`/teacher/lesson-builder?classId=${classId}`)}
                     className="gap-2"
                   >
                     <Plus className="h-4 w-4" />
