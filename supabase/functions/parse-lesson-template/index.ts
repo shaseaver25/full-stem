@@ -21,21 +21,50 @@ startServer(async (req: Request): Promise<Response> => {
       });
     }
 
-    const { base64File, fileType, lessonId } = await req.json();
+    const contentType = req.headers.get("content-type") || "";
+    console.log("📥 Content-Type:", contentType);
 
-    if (!base64File || fileType !== "docx") {
-      return new Response(JSON.stringify({ error: "Missing or invalid file data" }), {
-        status: 400,
-        headers: corsHeaders,
-      });
+    let text: string;
+    let lessonId: string | undefined;
+
+    // Handle binary DOCX upload (from frontend FileReader)
+    if (contentType.includes("application/octet-stream")) {
+      console.log("📄 Processing binary DOCX file");
+      
+      const arrayBuffer = await req.arrayBuffer();
+      const buffer = new Uint8Array(arrayBuffer);
+      
+      console.log("📊 Buffer size:", buffer.length, "bytes");
+      
+      // Extract text with Mammoth
+      const result = await mammoth.extractRawText({ buffer });
+      text = result.value;
+      console.log("✅ Parsed text length:", text.length);
+      
+    } else {
+      // Handle JSON format (base64 or parsed content)
+      console.log("📋 Processing JSON request");
+      
+      const body = await req.json();
+      const { base64File, fileType, lessonId: requestLessonId } = body;
+      
+      lessonId = requestLessonId;
+
+      if (!base64File || fileType !== "docx") {
+        return new Response(JSON.stringify({ error: "Missing or invalid file data" }), {
+          status: 400,
+          headers: corsHeaders,
+        });
+      }
+
+      // Decode base64 DOCX buffer
+      const buffer = Uint8Array.from(atob(base64File), (c) => c.charCodeAt(0));
+      
+      // Extract text with Mammoth
+      const result = await mammoth.extractRawText({ buffer });
+      text = result.value;
+      console.log("✅ Parsed text length:", text.length);
     }
-
-    // Decode base64 DOCX buffer
-    const buffer = Uint8Array.from(atob(base64File), (c) => c.charCodeAt(0));
-
-    // Extract text with Mammoth
-    const { value: text } = await mammoth.extractRawText({ buffer });
-    console.log("✅ Parsed text length:", text.length);
 
     const metadata = {
       title: text.match(/Title:\s*(.*)/)?.[1] ?? "Untitled Lesson",
