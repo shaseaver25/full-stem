@@ -32,13 +32,12 @@ startServer(async (req: Request): Promise<Response> => {
       console.log("📄 Processing binary DOCX file");
       
       const arrayBuffer = await req.arrayBuffer();
-      const buffer = new Uint8Array(arrayBuffer);
       
-      console.log("📊 Buffer size:", buffer.length, "bytes");
+      console.log("📊 Buffer size:", arrayBuffer.byteLength, "bytes");
       
-      // Extract text with Mammoth using buffer property
+      // Extract text with Mammoth - pass raw arrayBuffer
       const result = await mammoth.extractRawText({ 
-        buffer: buffer as any 
+        arrayBuffer: arrayBuffer 
       });
       text = result.value;
       console.log("✅ Parsed text length:", text.length);
