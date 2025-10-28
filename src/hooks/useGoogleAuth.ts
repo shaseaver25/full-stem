@@ -15,6 +15,44 @@ export const useGoogleAuth = () => {
         throw new Error('User not authenticated');
       }
 
+      // Check if user already has Google provider
+      const hasGoogleProvider = user.app_metadata?.providers?.includes('google') || 
+                               user.app_metadata?.provider === 'google';
+
+      if (hasGoogleProvider) {
+        console.log('✅ User already has Google provider, refreshing session...');
+        
+        // Refresh session to get fresh tokens
+        const { data: session, error: refreshError } = await supabase.auth.refreshSession();
+        
+        if (refreshError) {
+          console.error('❌ Failed to refresh session:', refreshError);
+          throw refreshError;
+        }
+
+        if (session?.session?.provider_token) {
+          // Store the refreshed tokens
+          await supabase.functions.invoke('store-oauth-tokens', {
+            body: {
+              provider: 'google',
+              session: {
+                provider_token: session.session.provider_token,
+                provider_refresh_token: session.session.provider_refresh_token,
+                expires_at: session.session.expires_at,
+                expires_in: session.session.expires_in
+              }
+            }
+          });
+
+          toast({
+            title: "Success",
+            description: "Google Drive access is ready!",
+          });
+
+          return { success: true, data: session };
+        }
+      }
+
       // Store current location to return after OAuth
       const returnTo = window.location.pathname + window.location.search;
       sessionStorage.setItem('oauth_return_to', returnTo);

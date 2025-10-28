@@ -253,10 +253,29 @@ export const uploadToDrive = async (
 
 /**
  * Check if the user has Drive access configured
+ * Includes retry logic for race conditions after login
  */
 export const hasDriveAccess = async (): Promise<boolean> => {
-  const token = await getDriveToken();
-  return token !== null;
+  // First attempt
+  let token = await getDriveToken();
+  if (token !== null) return true;
+
+  // Check if user has Google provider linked
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return false;
+
+  const hasGoogleProvider = user.app_metadata?.providers?.includes('google') || 
+                           user.app_metadata?.provider === 'google';
+
+  // If user has Google provider but no token yet (race condition), retry once after delay
+  if (hasGoogleProvider) {
+    console.log('⏳ User has Google provider, retrying token fetch...');
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    token = await getDriveToken();
+    return token !== null;
+  }
+
+  return false;
 };
 
 /**

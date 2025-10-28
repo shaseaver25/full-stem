@@ -48,7 +48,7 @@ const AuthCallback = () => {
           hasProviderToken: !!session.provider_token,
         });
 
-        // Store OAuth tokens if present (non-blocking)
+        // Store OAuth tokens if present (BLOCKING to ensure tokens are ready)
         if (session.provider_token) {
           console.log('🔐 Provider token detected, storing securely...');
           
@@ -58,25 +58,27 @@ const AuthCallback = () => {
           
           console.log(`🔐 Storing ${provider} tokens...`);
           
-          supabase.functions.invoke('store-oauth-tokens', {
-            body: {
-              provider: provider,
-              session: {
-                provider_token: session.provider_token,
-                provider_refresh_token: session.provider_refresh_token,
-                expires_at: session.expires_at,
-                expires_in: session.expires_in
+          try {
+            const { error: storeError } = await supabase.functions.invoke('store-oauth-tokens', {
+              body: {
+                provider: provider,
+                session: {
+                  provider_token: session.provider_token,
+                  provider_refresh_token: session.provider_refresh_token,
+                  expires_at: session.expires_at,
+                  expires_in: session.expires_in
+                }
               }
-            }
-          }).then(({ error: storeError }) => {
+            });
+            
             if (storeError) {
               console.error('❌ Failed to store OAuth tokens:', storeError);
             } else {
               console.log(`✅ ${provider} tokens stored successfully`);
             }
-          }).catch(err => {
+          } catch (err) {
             console.error('❌ Error storing tokens:', err);
-          });
+          }
           
           if (isOneDriveLink) {
             sessionStorage.removeItem('onedrive_link_attempt');
