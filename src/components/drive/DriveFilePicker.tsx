@@ -43,10 +43,25 @@ export function DriveFilePicker({
     // Check if user has Drive access
     const checkAccess = async () => {
       const hasAccess = await hasDriveAccess();
+      console.log('🔍 Drive access check result:', hasAccess);
       setNeedsAuth(!hasAccess);
     };
 
     checkAccess();
+
+    // Listen for auth state changes to recheck access
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log('🔔 Auth state changed in DriveFilePicker:', event);
+        if (event === 'SIGNED_IN' || event === 'USER_UPDATED') {
+          // Wait a moment for tokens to be stored, then recheck
+          setTimeout(async () => {
+            console.log('🔄 Rechecking Drive access after auth change...');
+            await checkAccess();
+          }, 1500);
+        }
+      }
+    );
 
     // Load Google Picker API
     const loadGooglePicker = () => {
@@ -75,6 +90,10 @@ export function DriveFilePicker({
     };
 
     loadGooglePicker();
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, [toast]);
 
   const handleConnectDrive = async () => {
@@ -87,11 +106,21 @@ export function DriveFilePicker({
     
     if (result.success) {
       setShowConnectDialog(false);
-      toast({
-        title: "Success",
-        description: "Google Drive connection initiated. You'll be redirected to complete the authorization.",
-      });
-      // The OAuth flow will redirect the user, and when they return, tokens will be stored
+      
+      // Recheck access after a brief delay to allow tokens to be stored
+      console.log('✅ Drive connection initiated, will recheck access...');
+      setTimeout(async () => {
+        const hasAccess = await hasDriveAccess();
+        console.log('🔍 Drive access recheck result:', hasAccess);
+        setNeedsAuth(!hasAccess);
+        
+        if (hasAccess) {
+          toast({
+            title: "Success",
+            description: "Google Drive is now connected!",
+          });
+        }
+      }, 1500);
     }
   };
 
