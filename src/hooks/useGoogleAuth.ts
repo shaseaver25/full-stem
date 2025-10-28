@@ -1,174 +1,52 @@
-import { useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useState } from 'react';
 
-export const useGoogleAuth = () => {
+export const useGoogleAuth = (onSuccess?: () => void) => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
-  const signInWithGoogle = useCallback(async () => {
-    console.log('🔐 Initiating Google OAuth for Drive access...');
-    
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        throw new Error('User not authenticated');
-      }
+  const signInWithGoogle = async () => {
+    setIsLoading(true);
+    setError(null);
 
-      // Check if user already has Google provider
-      const hasGoogleProvider = user.app_metadata?.providers?.includes('google') || 
-                               user.app_metadata?.provider === 'google';
+    console.log('🔐 Initiating Google OAuth with full-page redirect...');
 
-      if (hasGoogleProvider) {
-        console.log('✅ User already has Google provider, refreshing session...');
-        
-        // Refresh session to get fresh tokens
-        const { data: session, error: refreshError } = await supabase.auth.refreshSession();
-        
-        if (refreshError) {
-          console.error('❌ Failed to refresh session:', refreshError);
-          throw refreshError;
+    // Use signInWithOAuth to trigger a full-page redirect to Google's auth page
+    // This avoids the iframe "refused to connect" error
+    const { error: authError } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        // Request the drive.file scope for Google Drive access
+        scopes: 'https://www.googleapis.com/auth/drive.file',
+        // Redirect back to our auth callback page after authentication
+        redirectTo: `${window.location.origin}/auth/callback`,
+        queryParams: {
+          access_type: 'offline',
+          prompt: 'consent'
         }
+      },
+    });
 
-        if (session?.session?.provider_token) {
-          // Store the refreshed tokens
-          await supabase.functions.invoke('store-oauth-tokens', {
-            body: {
-              provider: 'google',
-              session: {
-                provider_token: session.session.provider_token,
-                provider_refresh_token: session.session.provider_refresh_token,
-                expires_at: session.session.expires_at,
-                expires_in: session.session.expires_in
-              }
-            }
-          });
-
-          toast({
-            title: "Success",
-            description: "Google Drive access is ready!",
-          });
-
-          return { success: true, data: session };
-        }
-      }
-
-      // Store current location to return after OAuth
-      const returnTo = window.location.pathname + window.location.search;
-      sessionStorage.setItem('oauth_return_to', returnTo);
-      console.log('📍 Stored return location:', returnTo);
-
-      // Use linkIdentity to add Google OAuth to existing account
-      const { data, error } = await supabase.auth.linkIdentity({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
-          scopes: 'email profile openid https://www.googleapis.com/auth/drive.file',
-          queryParams: {
-            access_type: 'offline',
-            prompt: 'consent'
-          }
-        }
-      });
-
-      if (error) {
-        console.error('❌ Failed to link Google identity:', error);
-        toast({
-          title: "Connection Failed",
-          description: "Could not connect to Google Drive. Please try again.",
-          variant: "destructive"
-        });
-        return { success: false, error };
-      }
-
-      console.log('✅ Google identity link initiated:', data);
-      return { success: true, data };
-    } catch (err) {
-      console.error('❌ Error during Google sign-in:', err);
+    if (authError) {
+      console.error('❌ Google Drive connection error:', authError.message);
+      setError(authError.message);
       toast({
-        title: "Error",
-        description: "An unexpected error occurred. Please try again.",
-        variant: "destructive"
+        title: 'Connection Failed',
+        description: authError.message,
+        variant: 'destructive',
       });
-      return { success: false, error: err };
+      setIsLoading(false);
+      return { success: false, error: authError };
     }
-  }, [toast]);
 
-  useEffect(() => {
-    console.log('🔧 useGoogleAuth hook initialized');
-
-    // Listen for OAuth callback
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log('🔔 Auth state change:', event, {
-          hasSession: !!session,
-          hasProviderToken: !!session?.provider_token,
-          provider: session?.user?.app_metadata?.provider
-        });
-
-        // Handle Google OAuth sign-in or identity linking
-        if ((event === 'SIGNED_IN' || event === 'USER_UPDATED') && session?.provider_token) {
-          console.log('🔐 Google OAuth detected with provider token');
-          console.log('📊 Session details:', {
-            userId: session.user.id,
-            email: session.user.email,
-            provider: session.user.app_metadata.provider,
-            tokenPresent: !!session.provider_token,
-            refreshTokenPresent: !!session.provider_refresh_token,
-            expiresAt: session.expires_at
-          });
-
-          // Store OAuth tokens securely
-          try {
-            console.log('💾 Attempting to store OAuth tokens...');
-            
-            const { data, error } = await supabase.functions.invoke('store-oauth-tokens', {
-              body: {
-                provider: 'google',
-                session: {
-                  provider_token: session.provider_token,
-                  provider_refresh_token: session.provider_refresh_token,
-                  expires_at: session.expires_at,
-                  expires_in: session.expires_in
-                }
-              },
-            });
-
-            if (error) {
-              console.error('❌ Failed to store OAuth tokens:', error);
-              toast({
-                title: "Warning",
-                description: "Signed in successfully, but failed to store Drive access token. Drive features may be limited.",
-                variant: "destructive"
-              });
-            } else {
-              console.log('✅ OAuth tokens stored successfully:', data);
-              toast({
-                title: "Success",
-                description: "Google Drive access enabled!",
-              });
-            }
-          } catch (err) {
-            console.error('❌ Error storing tokens:', err);
-            toast({
-              title: "Error",
-              description: "Failed to secure Drive access. Please try signing in again.",
-              variant: "destructive"
-            });
-          }
-        } else if ((event === 'SIGNED_IN' || event === 'USER_UPDATED') && !session?.provider_token) {
-          console.log('ℹ️ Auth event without OAuth provider token');
-        }
-      }
-    );
-
-    return () => {
-      console.log('🔌 useGoogleAuth hook cleanup');
-      authListener?.subscription.unsubscribe();
-    };
-  }, [toast]);
-
-  return {
-    signInWithGoogle
+    console.log('✅ Redirecting to Google for authentication...');
+    // The page will redirect, so we don't need to call onSuccess here
+    // The auth callback will handle token storage
+    setIsLoading(false);
+    return { success: true };
   };
+
+  return { signInWithGoogle, isLoading, error };
 };
