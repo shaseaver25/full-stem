@@ -1,6 +1,6 @@
-// ✅ Clean parse-lesson-template Edge Function
+// ✅ Simplified parse-lesson-template Edge Function
+// DOCX parsing is now done on the frontend with mammoth.js
 import { serve as startServer } from "https://deno.land/std@0.168.0/http/server.ts";
-import mammoth from "https://esm.sh/mammoth@1.6.0";
 
 const corsHeaders: Record<string, string> = {
   "Access-Control-Allow-Origin": "*",
@@ -21,50 +21,19 @@ startServer(async (req: Request): Promise<Response> => {
       });
     }
 
-    const contentType = req.headers.get("content-type") || "";
-    console.log("📥 Content-Type:", contentType);
-
-    let text: string;
-    let lessonId: string | undefined;
-
-    // Handle binary DOCX upload (from frontend FileReader)
-    if (contentType.includes("application/octet-stream")) {
-      console.log("📄 Processing binary DOCX file");
-      
-      const arrayBuffer = await req.arrayBuffer();
-      
-      console.log("📊 Buffer size:", arrayBuffer.byteLength, "bytes");
-      
-      // Extract text with Mammoth - pass raw arrayBuffer
-      const result = await mammoth.extractRawText({ 
-        arrayBuffer: arrayBuffer 
+    console.log("📋 Processing parsed lesson content");
+    
+    const body = await req.json();
+    const text = body.parsedContent || '';
+    const lessonId = body.lessonId;
+    
+    console.log("✅ Received text length:", text.length);
+    
+    if (!text.trim()) {
+      return new Response(JSON.stringify({ error: "No content provided" }), {
+        status: 400,
+        headers: corsHeaders,
       });
-      text = result.value;
-      console.log("✅ Parsed text length:", text.length);
-      
-    } else {
-      // Handle JSON format (base64 or parsed content)
-      console.log("📋 Processing JSON request");
-      
-      const body = await req.json();
-      const { base64File, fileType, lessonId: requestLessonId } = body;
-      
-      lessonId = requestLessonId;
-
-      if (!base64File || fileType !== "docx") {
-        return new Response(JSON.stringify({ error: "Missing or invalid file data" }), {
-          status: 400,
-          headers: corsHeaders,
-        });
-      }
-
-      // Decode base64 DOCX buffer
-      const buffer = Uint8Array.from(atob(base64File), (c) => c.charCodeAt(0));
-      
-      // Extract text with Mammoth
-      const result = await mammoth.extractRawText({ buffer });
-      text = result.value;
-      console.log("✅ Parsed text length:", text.length);
     }
 
     const metadata = {

@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { FileText, Loader2, Download, CheckCircle2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import mammoth from "mammoth";
 import {
   Dialog,
   DialogContent,
@@ -94,32 +95,31 @@ export function LessonTemplateUpload({ lessonId, onImportComplete }: LessonTempl
         const auth = await supabase.auth.getSession();
         const accessToken = auth.data.session?.access_token;
 
-        let response;
+        let parsedText = "";
+        
         if (ext === "docx") {
-          console.log("📡 Sending DOCX as binary...");
-          response = await fetch(`${supabaseUrl}/functions/v1/parse-lesson-template`, {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-              "Content-Type": "application/octet-stream",
-            },
-            body: file,
-          });
+          console.log("📄 Parsing DOCX on client side with mammoth.js...");
+          const arrayBuffer = await file.arrayBuffer();
+          const result = await mammoth.extractRawText({ arrayBuffer });
+          parsedText = result.value;
+          console.log("✅ Extracted text length:", parsedText.length);
         } else {
-          console.log("📡 Sending TXT as text...");
-          const text = await file.text();
-          response = await fetch(`${supabaseUrl}/functions/v1/parse-lesson-template`, {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              parsedContent: text,
-              lessonId: lessonId || null,
-            }),
-          });
+          console.log("📄 Reading TXT file...");
+          parsedText = await file.text();
         }
+
+        console.log("📡 Sending parsed text to edge function...");
+        const response = await fetch(`${supabaseUrl}/functions/v1/parse-lesson-template`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            parsedContent: parsedText,
+            lessonId: lessonId || null,
+          }),
+        });
 
         const data = await response.json();
         if (!response.ok) {
