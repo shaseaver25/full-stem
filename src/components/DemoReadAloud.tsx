@@ -51,7 +51,7 @@ export const DemoReadAloud: React.FC<DemoReadAloudProps> = ({ text }) => {
 
   // Split text into words for highlighting
   const words = useMemo(() => {
-    return text.split(/(\s+)/).filter(w => w.trim().length > 0);
+    return text.split(/\s+/).filter(w => w.length > 0);
   }, [text]);
 
   const handlePlayPause = async () => {
@@ -80,9 +80,9 @@ export const DemoReadAloud: React.FC<DemoReadAloudProps> = ({ text }) => {
             return (
               <span
                 key={index}
-                className={`inline-block transition-all duration-200 ${
+                className={`transition-all duration-200 ${
                   isHighlighted
-                    ? 'bg-yellow-400/30 text-foreground font-semibold px-1 rounded scale-105'
+                    ? 'bg-yellow-400/30 text-foreground font-semibold px-1 rounded'
                     : 'text-foreground'
                 }`}
               >
