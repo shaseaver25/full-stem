@@ -33,26 +33,18 @@ const generateSyntheticTimings = (text: string, duration: number) => {
 };
 
 export const DemoReadAloud: React.FC<DemoReadAloudProps> = ({ text }) => {
-  const [selectedVoice, setSelectedVoice] = useState(VOICES[0].id);
-  const [playbackSpeed, setPlaybackSpeed] = useState(1.0);
+  const [selectedVoiceEn, setSelectedVoiceEn] = useState(VOICES[0].id);
+  const [selectedVoiceTranslated, setSelectedVoiceTranslated] = useState(VOICES[1].id);
+  const [playbackSpeedEn, setPlaybackSpeedEn] = useState(1.0);
+  const [playbackSpeedTranslated, setPlaybackSpeedTranslated] = useState(1.0);
   const [translatedText, setTranslatedText] = useState<string | null>(null);
   
   const { settings } = useAccessibility();
   const { translateText, isTranslating } = useLiveTranslation();
   
-  const {
-    speak,
-    pause,
-    resume,
-    stop,
-    isPlaying,
-    isPaused,
-    isLoading,
-    error,
-    currentTime,
-    duration,
-    wordTimings,
-  } = useElevenLabsTTSPublic();
+  // Separate TTS instances for English and translated text
+  const englishTTS = useElevenLabsTTSPublic();
+  const translatedTTS = useElevenLabsTTSPublic();
 
   // Translate text when language changes
   useEffect(() => {
@@ -72,55 +64,64 @@ export const DemoReadAloud: React.FC<DemoReadAloudProps> = ({ text }) => {
     performTranslation();
   }, [settings.preferredLanguage, text]);
 
-  // Use translated text or original
-  const displayText = translatedText || text;
+  // Split text into words for both languages
+  const englishWords = useMemo(() => {
+    return text.split(/\s+/).filter(w => w.length > 0);
+  }, [text]);
 
-  // Split text into words for highlighting
-  const words = useMemo(() => {
-    return displayText.split(/\s+/).filter(w => w.length > 0);
-  }, [displayText]);
+  const translatedWords = useMemo(() => {
+    return (translatedText || '').split(/\s+/).filter(w => w.length > 0);
+  }, [translatedText]);
 
-  // Use synthetic timings if API data is incomplete
-  const effectiveTimings = useMemo(() => {
-    if (wordTimings && wordTimings.length === words.length) {
-      console.log('✅ Using API word timings');
-      return wordTimings;
+  // Effective timings for English
+  const effectiveTimingsEn = useMemo(() => {
+    if (englishTTS.wordTimings && englishTTS.wordTimings.length === englishWords.length) {
+      return englishTTS.wordTimings;
     }
-    
-    if (duration > 0 && words.length > 0) {
-      console.log('⚠️ Generating synthetic word timings');
-      const text = words.join(' ');
-      return generateSyntheticTimings(text, duration);
+    if (englishTTS.duration > 0 && englishWords.length > 0) {
+      return generateSyntheticTimings(englishWords.join(' '), englishTTS.duration);
     }
-    
     return [];
-  }, [wordTimings, words, duration]);
+  }, [englishTTS.wordTimings, englishWords, englishTTS.duration]);
 
-  // Find current word based on currentTime
-  const currentWordIndex = useMemo(() => {
-    if (!effectiveTimings || effectiveTimings.length === 0 || !isPlaying) {
+  // Effective timings for translated text
+  const effectiveTimingsTranslated = useMemo(() => {
+    if (translatedTTS.wordTimings && translatedTTS.wordTimings.length === translatedWords.length) {
+      return translatedTTS.wordTimings;
+    }
+    if (translatedTTS.duration > 0 && translatedWords.length > 0) {
+      return generateSyntheticTimings(translatedWords.join(' '), translatedTTS.duration);
+    }
+    return [];
+  }, [translatedTTS.wordTimings, translatedWords, translatedTTS.duration]);
+
+  // Current word index for English
+  const currentWordIndexEn = useMemo(() => {
+    if (!effectiveTimingsEn || effectiveTimingsEn.length === 0 || !englishTTS.isPlaying) {
       return -1;
     }
-    
-    for (let i = 0; i < effectiveTimings.length; i++) {
-      const timing = effectiveTimings[i];
-      if (currentTime >= timing.start && currentTime < timing.end) {
+    for (let i = 0; i < effectiveTimingsEn.length; i++) {
+      const timing = effectiveTimingsEn[i];
+      if (englishTTS.currentTime >= timing.start && englishTTS.currentTime < timing.end) {
         return i;
       }
     }
-    
     return -1;
-  }, [currentTime, effectiveTimings, isPlaying]);
+  }, [englishTTS.currentTime, effectiveTimingsEn, englishTTS.isPlaying]);
 
-  const handlePlayPause = async () => {
-    if (isPlaying) {
-      pause();
-    } else if (isPaused) {
-      resume();
-    } else {
-      await speak(displayText, selectedVoice, playbackSpeed);
+  // Current word index for translated
+  const currentWordIndexTranslated = useMemo(() => {
+    if (!effectiveTimingsTranslated || effectiveTimingsTranslated.length === 0 || !translatedTTS.isPlaying) {
+      return -1;
     }
-  };
+    for (let i = 0; i < effectiveTimingsTranslated.length; i++) {
+      const timing = effectiveTimingsTranslated[i];
+      if (translatedTTS.currentTime >= timing.start && translatedTTS.currentTime < timing.end) {
+        return i;
+      }
+    }
+    return -1;
+  }, [translatedTTS.currentTime, effectiveTimingsTranslated, translatedTTS.isPlaying]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -128,118 +129,130 @@ export const DemoReadAloud: React.FC<DemoReadAloudProps> = ({ text }) => {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  return (
-    <div className="w-full max-w-4xl mx-auto space-y-6 p-6">
-      {/* Translation Status */}
-      {isTranslating && (
-        <div className="text-sm text-muted-foreground flex items-center gap-2 justify-center">
-          <Loader2 className="h-3 w-3 animate-spin" />
-          Translating to {settings.preferredLanguage}...
-        </div>
-      )}
+  const renderTextBox = (
+    title: string,
+    words: string[],
+    currentWordIndex: number,
+    tts: ReturnType<typeof useElevenLabsTTSPublic>,
+    selectedVoice: string,
+    setSelectedVoice: (v: string) => void,
+    playbackSpeed: number,
+    setPlaybackSpeed: (s: number) => void,
+    textToSpeak: string
+  ) => {
+    const handlePlayPause = async () => {
+      if (tts.isPlaying) {
+        tts.pause();
+      } else if (tts.isPaused) {
+        tts.resume();
+      } else {
+        await tts.speak(textToSpeak, selectedVoice, playbackSpeed);
+      }
+    };
 
-      {/* Text Display with Highlighting */}
-      <div className="bg-card border border-border rounded-lg p-8">
-        <p className="text-xl leading-relaxed">
-          {words.map((word, index) => {
-            const isHighlighted = currentWordIndex === index;
-            return (
-              <span
-                key={index}
-                className={`transition-all duration-200 ${
-                  isHighlighted
-                    ? 'bg-yellow-400/30 text-foreground font-semibold px-1 rounded'
-                    : 'text-foreground'
-                }`}
-              >
-                {word}{' '}
-              </span>
-            );
-          })}
-        </p>
-      </div>
-
-      {/* Error Display */}
-      {error && (
-        <Alert variant="destructive">
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
-
-      {/* Controls */}
-      <div className="bg-card border border-border rounded-lg p-6 space-y-6">
-        {/* Main Play/Pause Button - LARGE */}
-        <div className="flex justify-center">
-          <Button
-            onClick={handlePlayPause}
-            disabled={isLoading}
-            size="lg"
-            className="h-20 w-48 text-xl font-semibold"
-          >
-            {isLoading ? (
-              <>
-                <Loader2 className="h-8 w-8 mr-3 animate-spin" />
-                Generating...
-              </>
-            ) : isPlaying ? (
-              <>
-                <Pause className="h-8 w-8 mr-3" />
-                Pause
-              </>
-            ) : (
-              <>
-                <Play className="h-8 w-8 mr-3" />
-                {isPaused ? 'Resume' : 'Play'}
-              </>
-            )}
-          </Button>
+    return (
+      <div className="flex-1 space-y-4">
+        <h2 className="text-xl font-semibold">{title}</h2>
+        
+        {/* Text Display with Highlighting */}
+        <div className="bg-card border border-border rounded-lg p-6 min-h-[200px]">
+          <p className="text-lg leading-relaxed">
+            {words.map((word, index) => {
+              const isHighlighted = currentWordIndex === index;
+              return (
+                <span
+                  key={index}
+                  className={`transition-all duration-200 ${
+                    isHighlighted
+                      ? 'bg-yellow-400/30 text-foreground font-semibold px-1 rounded'
+                      : 'text-foreground'
+                  }`}
+                >
+                  {word}{' '}
+                </span>
+              );
+            })}
+          </p>
         </div>
 
-        {/* Stop Button */}
-        {(isPlaying || isPaused) && (
+        {/* Error Display */}
+        {tts.error && (
+          <Alert variant="destructive">
+            <AlertDescription>{tts.error}</AlertDescription>
+          </Alert>
+        )}
+
+        {/* Controls */}
+        <div className="bg-card border border-border rounded-lg p-4 space-y-4">
+          {/* Main Play/Pause Button */}
           <div className="flex justify-center">
             <Button
-              onClick={stop}
-              variant="outline"
+              onClick={handlePlayPause}
+              disabled={tts.isLoading}
               size="lg"
-              className="h-14 px-8 text-lg"
+              className="h-16 w-40 text-lg font-semibold"
             >
-              <Square className="h-6 w-6 mr-2" />
-              Stop
+              {tts.isLoading ? (
+                <>
+                  <Loader2 className="h-6 w-6 mr-2 animate-spin" />
+                  Loading...
+                </>
+              ) : tts.isPlaying ? (
+                <>
+                  <Pause className="h-6 w-6 mr-2" />
+                  Pause
+                </>
+              ) : (
+                <>
+                  <Play className="h-6 w-6 mr-2" />
+                  {tts.isPaused ? 'Resume' : 'Play'}
+                </>
+              )}
             </Button>
           </div>
-        )}
 
-        {/* Progress Bar */}
-        {duration > 0 && (
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm text-muted-foreground">
-              <span>{formatTime(currentTime)}</span>
-              <span>{formatTime(duration)}</span>
+          {/* Stop Button */}
+          {(tts.isPlaying || tts.isPaused) && (
+            <div className="flex justify-center">
+              <Button
+                onClick={tts.stop}
+                variant="outline"
+                size="sm"
+              >
+                <Square className="h-4 w-4 mr-2" />
+                Stop
+              </Button>
             </div>
-            <div className="w-full bg-secondary rounded-full h-3">
-              <div
-                className="bg-primary h-3 rounded-full transition-all duration-200"
-                style={{ width: `${(currentTime / duration) * 100}%` }}
-              />
-            </div>
-          </div>
-        )}
+          )}
 
-        {/* Voice and Speed Controls */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t">
+          {/* Progress Bar */}
+          {tts.duration > 0 && (
+            <div className="space-y-2">
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>{formatTime(tts.currentTime)}</span>
+                <span>{formatTime(tts.duration)}</span>
+              </div>
+              <div className="w-full bg-secondary rounded-full h-2">
+                <div
+                  className="bg-primary h-2 rounded-full transition-all duration-200"
+                  style={{ width: `${(tts.currentTime / tts.duration) * 100}%` }}
+                />
+              </div>
+            </div>
+          )}
+
           {/* Voice Selection */}
-          <div className="space-y-3">
-            <label className="text-base font-medium flex items-center gap-2">
-              <Volume2 className="h-5 w-5" />
+          <div className="space-y-2">
+            <label className="text-sm font-medium flex items-center gap-2">
+              <Volume2 className="h-4 w-4" />
               Voice
             </label>
             <Select
               value={selectedVoice}
               onValueChange={setSelectedVoice}
-              disabled={isPlaying || isLoading}
+              disabled={tts.isPlaying || tts.isLoading}
             >
-              <SelectTrigger className="h-12 text-base">
+              <SelectTrigger className="h-10">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -253,8 +266,8 @@ export const DemoReadAloud: React.FC<DemoReadAloudProps> = ({ text }) => {
           </div>
 
           {/* Speed Control */}
-          <div className="space-y-3">
-            <label className="text-base font-medium">
+          <div className="space-y-2">
+            <label className="text-sm font-medium">
               Speed: {playbackSpeed.toFixed(1)}x
             </label>
             <Slider
@@ -263,44 +276,79 @@ export const DemoReadAloud: React.FC<DemoReadAloudProps> = ({ text }) => {
               min={0.5}
               max={2.0}
               step={0.1}
-              disabled={isPlaying || isLoading}
-              className="py-2"
+              disabled={tts.isPlaying || tts.isLoading}
             />
-            <div className="flex justify-between text-sm text-muted-foreground">
-              <span>0.5x</span>
-              <span>1.0x</span>
-              <span>2.0x</span>
-            </div>
+          </div>
+
+          {/* Status Indicator */}
+          <div className="flex items-center justify-center gap-2 text-sm">
+            {tts.isLoading && (
+              <>
+                <div className="h-2 w-2 bg-blue-500 rounded-full animate-pulse" />
+                <span className="text-muted-foreground">Loading...</span>
+              </>
+            )}
+            {tts.isPlaying && !tts.isLoading && (
+              <>
+                <div className="h-2 w-2 bg-green-500 rounded-full animate-pulse" />
+                <span className="text-muted-foreground">Playing</span>
+              </>
+            )}
+            {tts.isPaused && (
+              <>
+                <div className="h-2 w-2 bg-yellow-500 rounded-full" />
+                <span className="text-muted-foreground">Paused</span>
+              </>
+            )}
+            {!tts.isPlaying && !tts.isPaused && !tts.isLoading && (
+              <>
+                <div className="h-2 w-2 bg-muted-foreground/50 rounded-full" />
+                <span className="text-muted-foreground">Ready</span>
+              </>
+            )}
           </div>
         </div>
+      </div>
+    );
+  };
 
-        {/* Status Indicator */}
-        <div className="flex items-center justify-center gap-2 text-base pt-2">
-          {isLoading && (
-            <>
-              <div className="h-3 w-3 bg-blue-500 rounded-full animate-pulse" />
-              <span className="text-muted-foreground">Generating audio...</span>
-            </>
-          )}
-          {isPlaying && !isLoading && (
-            <>
-              <div className="h-3 w-3 bg-green-500 rounded-full animate-pulse" />
-              <span className="text-muted-foreground">Playing</span>
-            </>
-          )}
-          {isPaused && (
-            <>
-              <div className="h-3 w-3 bg-yellow-500 rounded-full" />
-              <span className="text-muted-foreground">Paused</span>
-            </>
-          )}
-          {!isPlaying && !isPaused && !isLoading && (
-            <>
-              <div className="h-3 w-3 bg-muted-foreground/50 rounded-full" />
-              <span className="text-muted-foreground">Ready</span>
-            </>
-          )}
+  return (
+    <div className="w-full max-w-7xl mx-auto space-y-6 p-6">
+      {/* Translation Status */}
+      {isTranslating && (
+        <div className="text-sm text-muted-foreground flex items-center gap-2 justify-center">
+          <Loader2 className="h-3 w-3 animate-spin" />
+          Translating to {settings.preferredLanguage}...
         </div>
+      )}
+
+      {/* Two-column layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* English Text Box */}
+        {renderTextBox(
+          'English',
+          englishWords,
+          currentWordIndexEn,
+          englishTTS,
+          selectedVoiceEn,
+          setSelectedVoiceEn,
+          playbackSpeedEn,
+          setPlaybackSpeedEn,
+          text
+        )}
+
+        {/* Translated Text Box */}
+        {settings.preferredLanguage !== 'en' && translatedText && renderTextBox(
+          `${settings.preferredLanguage.toUpperCase()}`,
+          translatedWords,
+          currentWordIndexTranslated,
+          translatedTTS,
+          selectedVoiceTranslated,
+          setSelectedVoiceTranslated,
+          playbackSpeedTranslated,
+          setPlaybackSpeedTranslated,
+          translatedText
+        )}
       </div>
     </div>
   );
