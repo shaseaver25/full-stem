@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import Header from '@/components/Header';
-import InlineReadAloud from '@/components/InlineReadAloud';
+import EnhancedReadAloudDemo from '@/components/EnhancedReadAloudDemo';
 import { Sparkles, Volume2, Mic } from 'lucide-react';
 
 const ComponentsPage = () => {
@@ -54,7 +54,7 @@ const ComponentsPage = () => {
                 
                 <Separator />
                 
-                <InlineReadAloud
+                <EnhancedReadAloudDemo
                   text={sampleText}
                 />
               </div>
