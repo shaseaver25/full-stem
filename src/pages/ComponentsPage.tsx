@@ -4,6 +4,7 @@ import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import Header from '@/components/Header';
 import DemoReadAloud from '@/components/DemoReadAloud';
+import { LanguageSelector } from '@/components/LanguageSelector';
 import { Sparkles, Volume2, Mic } from 'lucide-react';
 
 const ComponentsPage = () => {
@@ -14,10 +15,15 @@ const ComponentsPage = () => {
       <Header />
       <div className="max-w-6xl mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">UI Components Showcase</h1>
-          <p className="text-lg text-gray-600">
-            Explore and test the various interactive components available in the platform.
-          </p>
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h1 className="text-4xl font-bold text-gray-900 mb-2">AI Read-Aloud Demo</h1>
+              <p className="text-lg text-gray-600">
+                Conference demo with 40-language support
+              </p>
+            </div>
+            <LanguageSelector />
+          </div>
         </div>
 
         <div className="grid gap-8">

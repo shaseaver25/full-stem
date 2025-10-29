@@ -1,5 +1,7 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useElevenLabsTTSPublic } from '@/hooks/useElevenLabsTTSPublic';
+import { useLiveTranslation } from '@/hooks/useLiveTranslation';
+import { useAccessibility } from '@/contexts/AccessibilityContext';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -33,6 +35,10 @@ const generateSyntheticTimings = (text: string, duration: number) => {
 export const DemoReadAloud: React.FC<DemoReadAloudProps> = ({ text }) => {
   const [selectedVoice, setSelectedVoice] = useState(VOICES[0].id);
   const [playbackSpeed, setPlaybackSpeed] = useState(1.0);
+  const [translatedText, setTranslatedText] = useState<string | null>(null);
+  
+  const { settings } = useAccessibility();
+  const { translateText, isTranslating } = useLiveTranslation();
   
   const {
     speak,
@@ -48,10 +54,31 @@ export const DemoReadAloud: React.FC<DemoReadAloudProps> = ({ text }) => {
     wordTimings,
   } = useElevenLabsTTSPublic();
 
+  // Translate text when language changes
+  useEffect(() => {
+    const performTranslation = async () => {
+      if (settings.preferredLanguage !== 'en') {
+        const result = await translateText({
+          text,
+          targetLanguage: settings.preferredLanguage,
+          sourceLanguage: 'en'
+        });
+        setTranslatedText(result);
+      } else {
+        setTranslatedText(null);
+      }
+    };
+
+    performTranslation();
+  }, [settings.preferredLanguage, text]);
+
+  // Use translated text or original
+  const displayText = translatedText || text;
+
   // Split text into words for highlighting
   const words = useMemo(() => {
-    return text.split(/\s+/).filter(w => w.length > 0);
-  }, [text]);
+    return displayText.split(/\s+/).filter(w => w.length > 0);
+  }, [displayText]);
 
   // Use synthetic timings if API data is incomplete
   const effectiveTimings = useMemo(() => {
@@ -85,27 +112,13 @@ export const DemoReadAloud: React.FC<DemoReadAloudProps> = ({ text }) => {
     return -1;
   }, [currentTime, effectiveTimings, isPlaying]);
 
-  // Debug logging
-  React.useEffect(() => {
-    console.log('=== DEBUG INFO ===');
-    console.log('isPlaying:', isPlaying);
-    console.log('currentTime:', currentTime);
-    console.log('duration:', duration);
-    console.log('wordTimings length:', wordTimings?.length);
-    console.log('words length:', words.length);
-    console.log('currentWordIndex:', currentWordIndex);
-    if (wordTimings && wordTimings.length > 0) {
-      console.log('First 3 wordTimings:', wordTimings.slice(0, 3));
-    }
-  }, [isPlaying, currentTime, wordTimings, currentWordIndex, duration, words.length]);
-
   const handlePlayPause = async () => {
     if (isPlaying) {
       pause();
     } else if (isPaused) {
       resume();
     } else {
-      await speak(text, selectedVoice, playbackSpeed);
+      await speak(displayText, selectedVoice, playbackSpeed);
     }
   };
 
@@ -117,6 +130,14 @@ export const DemoReadAloud: React.FC<DemoReadAloudProps> = ({ text }) => {
 
   return (
     <div className="w-full max-w-4xl mx-auto space-y-6 p-6">
+      {/* Translation Status */}
+      {isTranslating && (
+        <div className="text-sm text-muted-foreground flex items-center gap-2 justify-center">
+          <Loader2 className="h-3 w-3 animate-spin" />
+          Translating to {settings.preferredLanguage}...
+        </div>
+      )}
+
       {/* Text Display with Highlighting */}
       <div className="bg-card border border-border rounded-lg p-8">
         <p className="text-xl leading-relaxed">
