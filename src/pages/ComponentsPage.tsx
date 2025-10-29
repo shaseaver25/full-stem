@@ -3,11 +3,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import Header from '@/components/Header';
-import EnhancedReadAloudDemo from '@/components/EnhancedReadAloudDemo';
+import DemoReadAloud from '@/components/DemoReadAloud';
 import { Sparkles, Volume2, Mic } from 'lucide-react';
 
 const ComponentsPage = () => {
-  const sampleText = `Welcome to our enhanced reading experience! This is a demonstration of our advanced text-to-speech capabilities. The system uses cutting-edge AI voices to provide natural-sounding narration with real-time word highlighting. You can adjust the playback speed, choose different voices, and even download the transcript. This technology helps students of all reading levels engage with content more effectively. The highlighting feature helps track progress and improve reading comprehension. Try clicking the play button to experience this innovative learning tool in action!`;
+  const sampleText = "Artificial intelligence is transforming education by making learning more accessible and personalized for every student. With AI-powered tools, students can learn at their own pace, in their own language, and with support tailored to their unique needs.";
 
   return (
     <div className="min-h-screen bg-white">
@@ -21,43 +21,19 @@ const ComponentsPage = () => {
         </div>
 
         <div className="grid gap-8">
-          {/* Enhanced Read Aloud Component */}
+          {/* AI Read-Aloud Demo for Conference */}
           <Card className="shadow-lg">
             <CardHeader>
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-2">
-                  <Sparkles className="h-6 w-6 text-primary" />
-                  <CardTitle className="text-2xl">Enhanced Read Aloud</CardTitle>
-                </div>
-                <Badge variant="default" className="flex items-center gap-1">
-                  <Mic className="h-3 w-3" />
-                  AI Powered
-                </Badge>
-              </div>
+              <CardTitle className="flex items-center gap-2">
+                <Volume2 className="h-5 w-5" />
+                AI Read-Aloud Demo
+              </CardTitle>
               <CardDescription>
-                Integrated text-to-speech with ElevenLabs AI voices, real-time word highlighting, and synchronized playback controls.
+                Conference demo: Click the large Play button to hear AI-powered text-to-speech with word highlighting
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-muted-foreground">
-                  <div className="flex items-center gap-2">
-                    ✨ ElevenLabs AI voices
-                  </div>
-                  <div className="flex items-center gap-2">
-                    🎯 Word-by-word highlighting
-                  </div>
-                  <div className="flex items-center gap-2">
-                    ⚡ Adjustable speed & voice
-                  </div>
-                </div>
-                
-                <Separator />
-                
-                <EnhancedReadAloudDemo
-                  text={sampleText}
-                />
-              </div>
+              <DemoReadAloud text={sampleText} />
             </CardContent>
           </Card>
 
