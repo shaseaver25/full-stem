@@ -18,6 +18,18 @@ const VOICES = [
   { id: 'pFZP5JQG7iQjIQuC4Bku', name: 'Lily (Female)' },
 ];
 
+// Generate synthetic word timings as fallback
+const generateSyntheticTimings = (text: string, duration: number) => {
+  const words = text.trim().split(/\s+/);
+  const avgDuration = duration / words.length;
+  
+  return words.map((word, index) => ({
+    word: word,
+    start: index * avgDuration,
+    end: (index + 1) * avgDuration
+  }));
+};
+
 export const DemoReadAloud: React.FC<DemoReadAloudProps> = ({ text }) => {
   const [selectedVoice, setSelectedVoice] = useState(VOICES[0].id);
   const [playbackSpeed, setPlaybackSpeed] = useState(1.0);
@@ -41,21 +53,37 @@ export const DemoReadAloud: React.FC<DemoReadAloudProps> = ({ text }) => {
     return text.split(/\s+/).filter(w => w.length > 0);
   }, [text]);
 
+  // Use synthetic timings if API data is incomplete
+  const effectiveTimings = useMemo(() => {
+    if (wordTimings && wordTimings.length === words.length) {
+      console.log('✅ Using API word timings');
+      return wordTimings;
+    }
+    
+    if (duration > 0 && words.length > 0) {
+      console.log('⚠️ Generating synthetic word timings');
+      const text = words.join(' ');
+      return generateSyntheticTimings(text, duration);
+    }
+    
+    return [];
+  }, [wordTimings, words, duration]);
+
   // Find current word based on currentTime
   const currentWordIndex = useMemo(() => {
-    if (!wordTimings || wordTimings.length === 0 || !isPlaying) return -1;
+    if (!effectiveTimings || effectiveTimings.length === 0 || !isPlaying) {
+      return -1;
+    }
     
-    let foundIndex = -1;
-    for (let i = 0; i < wordTimings.length; i++) {
-      const timing = wordTimings[i];
+    for (let i = 0; i < effectiveTimings.length; i++) {
+      const timing = effectiveTimings[i];
       if (currentTime >= timing.start && currentTime < timing.end) {
-        foundIndex = i;
-        break;
+        return i;
       }
     }
-    console.log('Found word index:', foundIndex, 'at time:', currentTime);
-    return foundIndex;
-  }, [currentTime, wordTimings, isPlaying]);
+    
+    return -1;
+  }, [currentTime, effectiveTimings, isPlaying]);
 
   // Debug logging
   React.useEffect(() => {
