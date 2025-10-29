@@ -50,6 +50,7 @@ const ParentPortalPage = React.lazy(() => import("./pages/ParentPortalPage"));
 const AdvancedAdminPage = React.lazy(() => import("./pages/AdvancedAdminPage"));
 const CourseEditorPage = React.lazy(() => import("./pages/CourseEditorPage"));
 const ComponentsPage = React.lazy(() => import("./pages/ComponentsPage"));
+const TeacherDemoPage = React.lazy(() => import("./pages/TeacherDemoPage"));
 const DeveloperDashboard = React.lazy(() => import("./pages/DeveloperDashboard"));
 const SuperAdminDashboard = React.lazy(() => import("./pages/SuperAdminDashboard"));
 const ClassManagementPage = React.lazy(() => import("./pages/ClassManagementPage"));
@@ -218,6 +219,9 @@ function AppContent() {
         
         {/* Components Showcase */}
         <Route path="/components" element={<ErrorBoundary><ComponentsPage /></ErrorBoundary>} />
+        
+        {/* Teacher AI Demo */}
+        <Route path="/teacher-demo" element={<ErrorBoundary><TeacherDemoPage /></ErrorBoundary>} />
         
         {/* Demo Showcase */}
         <Route path="/demo-showcase" element={<ErrorBoundary><DemoShowcase /></ErrorBoundary>} />

@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { getPrimaryNavigationForRole, getNavigationGroupsForRole } from '@/utils/permissions';
 import { useUserRole } from '@/hooks/useUserRole';
-import { Code } from 'lucide-react';
+import { Code, Sparkles } from 'lucide-react';
 import { CollapsibleNavGroup } from '@/components/navigation/CollapsibleNavGroup';
 import React, { useContext } from 'react';
 import { ImpersonationContext } from '@/contexts/ImpersonationContext';
@@ -62,6 +62,10 @@ const RoleAwareNavigation = ({ onLinkClick, variant = 'desktop' }: RoleAwareNavi
             </Link>
             <Link to="/teacher/auth" className="text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium inline-flex items-center">
               Teacher Portal
+            </Link>
+            <Link to="/teacher-demo" className="text-purple-600 hover:text-purple-700 px-3 py-2 text-sm font-medium inline-flex items-center gap-2">
+              <Sparkles className="h-4 w-4" />
+              AI Lesson Demo
             </Link>
           </>
         )}
