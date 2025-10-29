@@ -77,13 +77,13 @@ serve(async (req) => {
     const selectedVoiceId = voiceId || 'EXAVITQu4vr4xnSDxMaL'; // Sarah voice
     console.log('Using voice ID:', selectedVoiceId);
 
-    // Call ElevenLabs API
+    // Call ElevenLabs API with timestamp alignment
     console.log(`Calling ElevenLabs API for text: "${text.substring(0, 50)}..."`);
 
-    const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${selectedVoiceId}`, {
+    const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${selectedVoiceId}/with-timestamps`, {
       method: 'POST',
       headers: {
-        'Accept': 'audio/mpeg',
+        'Accept': 'application/json',
         'Content-Type': 'application/json',
         'xi-api-key': apiKey,
       },
@@ -96,7 +96,7 @@ serve(async (req) => {
           style: 0.0,
           use_speaker_boost: true,
         },
-        generation_config: { speed: rate },
+        output_format: 'mp3_44100_128',
       }),
     });
 
@@ -113,23 +113,81 @@ serve(async (req) => {
       });
     }
 
-    // Convert audio to base64
-    console.log('Converting audio to base64...');
-    const arrayBuffer = await response.arrayBuffer();
-    const uint8Array = new Uint8Array(arrayBuffer);
-    
-    let binaryString = '';
-    for (let i = 0; i < uint8Array.length; i++) {
-      binaryString += String.fromCharCode(uint8Array[i]);
-    }
-    const audioBase64 = btoa(binaryString);
-
-    // Generate tokens and weights for highlighting
-    const tokens = text.split(/(\s+)/).filter(t => t.trim().length > 0);
-    const weights = tokens.map(tok => {
-      const w = tok.replace(/[^\p{L}\p{N}]/gu, '').length;
-      return w || 1;
+    // Parse the response containing both audio and alignment data
+    const responseData = await response.json();
+    console.log('Response data structure:', {
+      hasAudio: !!responseData.audio_base64,
+      hasAlignment: !!responseData.alignment,
+      alignmentType: typeof responseData.alignment
     });
+
+    // Extract audio
+    const audioBase64 = responseData.audio_base64;
+    
+    if (!audioBase64) {
+      console.error('No audio data in response');
+      return new Response(JSON.stringify({ 
+        error: 'No audio data received from ElevenLabs' 
+      }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Extract word-level timings from alignment data
+    let tokens: string[] = [];
+    let weights: number[] = [];
+
+    if (responseData.alignment && responseData.alignment.characters) {
+      console.log('Processing character alignment data...');
+      
+      const characters = responseData.alignment.characters;
+      const charStartTimes = responseData.alignment.character_start_times_seconds;
+      const charEndTimes = responseData.alignment.character_end_times_seconds;
+      
+      // Group characters into words
+      let currentWord = '';
+      let wordStartTime = 0;
+      const wordTimings: Array<{word: string, start: number, end: number}> = [];
+      
+      for (let i = 0; i < characters.length; i++) {
+        const char = characters[i];
+        
+        if (char === ' ' || i === characters.length - 1) {
+          // End of word
+          if (i === characters.length - 1 && char !== ' ') {
+            currentWord += char;
+          }
+          
+          if (currentWord.length > 0) {
+            const endTime = charEndTimes[i === characters.length - 1 ? i : i - 1];
+            wordTimings.push({
+              word: currentWord,
+              start: wordStartTime,
+              end: endTime
+            });
+            tokens.push(currentWord);
+            weights.push(endTime - wordStartTime);
+          }
+          
+          currentWord = '';
+          wordStartTime = charStartTimes[i + 1] || charEndTimes[i];
+        } else {
+          if (currentWord.length === 0) {
+            wordStartTime = charStartTimes[i];
+          }
+          currentWord += char;
+        }
+      }
+      
+      console.log('Extracted word timings:', wordTimings.length, 'words');
+      console.log('First 3 words:', wordTimings.slice(0, 3));
+    } else {
+      // Fallback: generate synthetic timings
+      console.warn('No alignment data available, using fallback');
+      tokens = text.split(/\s+/).filter(t => t.length > 0);
+      weights = tokens.map(tok => tok.length || 1);
+    }
 
     console.log('Successfully generated speech, tokens:', tokens.length);
 
