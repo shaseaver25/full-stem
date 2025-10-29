@@ -36,23 +36,40 @@ export const DemoReadAloud: React.FC<DemoReadAloudProps> = ({ text }) => {
     wordTimings,
   } = useElevenLabsTTSPublic();
 
-  // Find current word based on currentTime
-  const currentWordIndex = useMemo(() => {
-    if (!wordTimings || wordTimings.length === 0 || !isPlaying) return -1;
-    
-    for (let i = 0; i < wordTimings.length; i++) {
-      const timing = wordTimings[i];
-      if (currentTime >= timing.start && currentTime <= timing.end) {
-        return i;
-      }
-    }
-    return -1;
-  }, [currentTime, wordTimings, isPlaying]);
-
   // Split text into words for highlighting
   const words = useMemo(() => {
     return text.split(/\s+/).filter(w => w.length > 0);
   }, [text]);
+
+  // Find current word based on currentTime
+  const currentWordIndex = useMemo(() => {
+    if (!wordTimings || wordTimings.length === 0 || !isPlaying) return -1;
+    
+    let foundIndex = -1;
+    for (let i = 0; i < wordTimings.length; i++) {
+      const timing = wordTimings[i];
+      if (currentTime >= timing.start && currentTime < timing.end) {
+        foundIndex = i;
+        break;
+      }
+    }
+    console.log('Found word index:', foundIndex, 'at time:', currentTime);
+    return foundIndex;
+  }, [currentTime, wordTimings, isPlaying]);
+
+  // Debug logging
+  React.useEffect(() => {
+    console.log('=== DEBUG INFO ===');
+    console.log('isPlaying:', isPlaying);
+    console.log('currentTime:', currentTime);
+    console.log('duration:', duration);
+    console.log('wordTimings length:', wordTimings?.length);
+    console.log('words length:', words.length);
+    console.log('currentWordIndex:', currentWordIndex);
+    if (wordTimings && wordTimings.length > 0) {
+      console.log('First 3 wordTimings:', wordTimings.slice(0, 3));
+    }
+  }, [isPlaying, currentTime, wordTimings, currentWordIndex, duration, words.length]);
 
   const handlePlayPause = async () => {
     if (isPlaying) {
