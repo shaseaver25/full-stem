@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useElevenLabsTTS } from '@/hooks/useElevenLabsTTS';
+import { useElevenLabsTTSPublic } from '@/hooks/useElevenLabsTTSPublic';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -38,7 +38,7 @@ const EnhancedReadAloudDemo: React.FC<EnhancedReadAloudDemoProps> = ({ text, cla
     currentTime,
     duration,
     wordTimings,
-  } = useElevenLabsTTS();
+  } = useElevenLabsTTSPublic();
 
   // Find current word index based on currentTime
   const currentWordIndex = useMemo(() => {
@@ -62,7 +62,7 @@ const EnhancedReadAloudDemo: React.FC<EnhancedReadAloudDemoProps> = ({ text, cla
     } else if (isPaused) {
       resume();
     } else {
-      await speak(text, selectedVoice);
+      await speak(text, selectedVoice, playbackSpeed);
     }
   };
 
@@ -168,7 +168,7 @@ const EnhancedReadAloudDemo: React.FC<EnhancedReadAloudDemoProps> = ({ text, cla
           </Button>
 
           <Button
-            onClick={() => speak(text, selectedVoice)}
+            onClick={() => speak(text, selectedVoice, playbackSpeed)}
             disabled={isLoading}
             size="lg"
             variant="outline"
