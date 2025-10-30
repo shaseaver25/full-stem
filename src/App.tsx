@@ -55,6 +55,7 @@ const DeveloperDashboard = React.lazy(() => import("./pages/DeveloperDashboard")
 const SuperAdminDashboard = React.lazy(() => import("./pages/SuperAdminDashboard"));
 const ClassManagementPage = React.lazy(() => import("./pages/ClassManagementPage"));
 const ClassLessonPage = React.lazy(() => import("./pages/ClassLessonPage"));
+const StudentLessonPage = React.lazy(() => import("./pages/StudentLessonPage"));
 const AICourseBuilderPage = React.lazy(() => import("./pages/AICourseBuilderPage"));
 const DemoGate = React.lazy(() => import("./pages/DemoGate"));
 const DemoStart = React.lazy(() => import("./pages/DemoStart"));
@@ -479,6 +480,16 @@ function AppContent() {
             <ErrorBoundary>
               <ProtectedTeacherRoute requireOnboarding={true}>
                 <ClassLessonPage />
+              </ProtectedTeacherRoute>
+            </ErrorBoundary>
+          } 
+        />
+        <Route
+          path="/student/lesson/:lessonId" 
+          element={
+            <ErrorBoundary>
+              <ProtectedTeacherRoute requireOnboarding={true}>
+                <StudentLessonPage />
               </ProtectedTeacherRoute>
             </ErrorBoundary>
           } 

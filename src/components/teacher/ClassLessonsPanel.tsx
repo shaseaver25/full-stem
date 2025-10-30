@@ -155,13 +155,19 @@ export const ClassLessonsPanel = ({ classId }: ClassLessonsPanelProps) => {
                 
                   <div className="flex flex-col gap-2 ml-4">
                   <Link to={`/class-lesson/${lesson.id}`}>
-                    <Button variant="outline" size="sm" className="flex items-center gap-1">
+                    <Button variant="outline" size="sm" className="flex items-center gap-1 w-full">
                       <Eye className="h-4 w-4" />
-                      Preview
+                      Teacher Preview
+                    </Button>
+                  </Link>
+                  <Link to={`/student/lesson/${lesson.id}`}>
+                    <Button variant="outline" size="sm" className="flex items-center gap-1 w-full">
+                      <Users className="h-4 w-4" />
+                      View as Student
                     </Button>
                   </Link>
                   <Link to={`/teacher/build-class/${classId}?lesson=${lesson.id}`}>
-                    <Button variant="ghost" size="sm">
+                    <Button variant="ghost" size="sm" className="w-full">
                       Edit
                     </Button>
                   </Link>
@@ -169,7 +175,7 @@ export const ClassLessonsPanel = ({ classId }: ClassLessonsPanelProps) => {
                     variant="ghost" 
                     size="sm"
                     onClick={() => setLessonToDelete(lesson.id)}
-                    className="text-destructive hover:text-destructive"
+                    className="text-destructive hover:text-destructive w-full"
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
