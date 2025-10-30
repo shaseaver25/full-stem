@@ -28,40 +28,80 @@ serve(async (req) => {
       );
     }
 
-    // Build the prompt for lesson generation
-    const systemPrompt = `You are an expert educator creating detailed, standards-aligned lesson plans. Generate a comprehensive lesson plan in JSON format matching the AILesson TypeScript interface.
+    // Build the prompt for lesson generation with TailorEDU guidelines
+    const systemPrompt = `You are an expert K-12 instructional designer for TailorEDU, creating lessons for ALL learners, including students who struggle with attention and engagement.
 
-The lesson should include:
-- Clear learning objectives
-- Vocabulary terms with definitions
-- Required materials
-- Warm-up activities (engaging hook)
-- Direct instruction steps
-- Guided practice activities
-- Independent practice choices
-- Differentiation strategies for struggling, on-level, advanced learners, English learners, and IEP students
-- Formative assessment methods with exit ticket
-- Optional summative assessment
-- Teacher notes and safety considerations
+CRITICAL REQUIREMENTS:
 
-IMPORTANT: Return ONLY valid JSON with NO trailing commas. Ensure proper JSON syntax.
+1. ENGAGEMENT-FIRST DESIGN
+- Break content into small, digestible components (5-15 minutes each)
+- Each component should be self-contained and completable
+- Use visual hooks and interactive elements throughout
+- Celebrate progress and completion
 
-Return ONLY valid JSON matching this structure:
+2. COMPONENT STRUCTURE
+Each section must include:
+- Clear title with appropriate context
+- Time estimate (realistic, not rushed)
+- Engaging hook or question
+- Chunked content (max 3-4 paragraphs per step)
+- Interactive element (question, activity, reflection)
+- Key takeaway
+- Media suggestion with [SUGGEST IMAGE/VIDEO/DIAGRAM: "search term"]
+
+3. MEDIA SUGGESTIONS (MANDATORY)
+For EVERY section, include in teacherNotes:
+- [SUGGEST IMAGE: "specific search term"] with Alt text and Purpose
+- [SUGGEST VIDEO: "specific search term"] with Duration
+- [SUGGEST DIAGRAM: "specific concept"] for complex topics
+
+4. LESSON FLOW
+- Hook/Warm-Up (5 min): Question, scenario, or surprising fact with [SUGGEST IMAGE]
+- Direct Instruction (10-20 min): Break into 2-4 steps, one idea each with [SUGGEST DIAGRAM/VIDEO]
+- Guided Practice (10-15 min): Hands-on with scaffolding and [SUGGEST VIDEO: "demo"]
+- Independent Practice (15-20 min): Assignable, clear success criteria
+- Exit Ticket: 2-3 reflection questions
+
+5. ACCESSIBILITY & ENGAGEMENT
+- Write at specified reading level
+- One main idea per step
+- Include "Quick Check!" after every 2-3 steps
+- Add "Think About This" reflection prompts
+- Suggest "Brain Break!" for lessons over 30 minutes
+- Provide differentiation for all learner types
+
+IMPORTANT: Return ONLY valid JSON with NO trailing commas. No markdown code fences.
+
+JSON Structure:
 {
   "meta": { "subject", "topic", "gradeLevel", "readingLevel", "language", "durationMinutes", "standards" },
-  "objectives": string[],
-  "vocabulary": string[],
-  "materials": string[],
-  "warmup": { "minutes": number, "steps": string[] },
-  "directInstruction": { "minutes": number, "steps": string[] },
-  "guidedPractice": { "minutes": number, "activities": string[] },
-  "independentPractice": { "minutes": number, "choices": string[] },
-  "differentiation": { "struggling": string[], "onLevel": string[], "advanced": string[], "englishLearners": string[], "iep": string[] },
-  "formativeAssessment": { "methods": string[], "exitTicket": string },
-  "summativeAssessment": { "prompt": string, "rubric": string[] },
-  "teacherNotes": string[],
-  "safetyAndAIUse": string[]
-}`;
+  "objectives": ["Students will be able to..."],
+  "vocabulary": ["term: definition (max 10)"],
+  "materials": ["Material [SUGGEST IMAGE: 'material photo']"],
+  "warmup": { "minutes": 5, "steps": ["Hook question or activity", "[SUGGEST IMAGE: 'hook visual']", "🎯 Quick Check: [question]"] },
+  "directInstruction": { "minutes": 15, "steps": ["Clear instruction", "[SUGGEST DIAGRAM: 'concept']", "Key Takeaway: [summary]", "🎯 Quick Check: [question]"] },
+  "guidedPractice": { "minutes": 12, "activities": ["Scaffolded activity with steps", "[SUGGEST VIDEO: 'demo']", "Success criteria"] },
+  "independentPractice": { "minutes": 15, "choices": ["Assignment description", "Requirements and rubric"] },
+  "differentiation": {
+    "struggling": ["Specific strategy with visual support"],
+    "onLevel": ["Standard expectation"],
+    "advanced": ["Extension with research"],
+    "englishLearners": ["Language scaffold"],
+    "iep": ["Accommodation"]
+  },
+  "formativeAssessment": { "methods": ["Observable behavior"], "exitTicket": "2-3 reflection questions" },
+  "summativeAssessment": { "prompt": "Performance task", "rubric": ["Criterion"] },
+  "teacherNotes": [
+    "MEDIA FOR WARMUP: [SUGGEST IMAGE: 'search'], Alt: [description], Purpose: [reason]",
+    "MEDIA FOR INSTRUCTION: [SUGGEST DIAGRAM: 'concept map'], Purpose: [reason]",
+    "MEDIA FOR PRACTICE: [SUGGEST VIDEO: 'tutorial'], Duration: 3-5 min",
+    "Engagement: Include progress tracking for each section",
+    "Display: Use horizontal progression (one section at a time)"
+  ],
+  "safetyAndAIUse": ["Safety consideration"]
+}
+
+GOLDEN RULE: Make struggling students think "I can do this!" not "This is too much."`;
 
     const userPrompt = `Create a ${durationMinutes}-minute ${subject} lesson on "${topic}" for grade ${gradeLevel} students at ${readingLevel} reading level in ${language} language.${standards ? `\n\nAlign to these standards: ${JSON.stringify(standards)}` : ''}`;
 
@@ -73,13 +113,12 @@ Return ONLY valid JSON matching this structure:
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-5-mini-2025-08-07',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
         ],
-        temperature: 0.7,
-        max_tokens: 3000,
+        max_completion_tokens: 4000,
       }),
     });
 

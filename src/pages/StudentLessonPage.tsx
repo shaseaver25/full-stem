@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import Header from '@/components/Header';
 import InlineReadAloud from '@/components/InlineReadAloud';
+import HorizontalLessonViewer from '@/components/lesson/HorizontalLessonViewer';
 
 const StudentLessonPage = () => {
   const { lessonId } = useParams<{ lessonId: string }>();
@@ -150,54 +151,17 @@ const StudentLessonPage = () => {
           </Card>
         )}
 
-        {/* Lesson Content - Student View (NO EDIT/DELETE BUTTONS) */}
+        {/* Lesson Content - Horizontal Progression */}
         {studentComponents.length > 0 && (
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle>Lesson Content</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
-                {studentComponents.map((component: any) => (
-                  <div key={component.id} className="border rounded-lg p-4 bg-card">
-                    <Badge variant="outline" className="mb-3">
-                      {componentTypeLabels[component.component_type] || component.component_type}
-                    </Badge>
-                    
-                    {component.content?.title && (
-                      <h4 className="font-semibold text-lg mb-2">{component.content.title}</h4>
-                    )}
-                    
-                    <div className="prose prose-sm max-w-none">
-                      {component.content?.body && (
-                        <div dangerouslySetInnerHTML={{ __html: component.content.body }} />
-                      )}
-                      {component.content?.text && (
-                        <div className="whitespace-pre-wrap">{component.content.text}</div>
-                      )}
-                      {component.content?.url && (
-                        <div className="mt-2">
-                          <a href={component.content.url} target="_blank" rel="noopener noreferrer" 
-                             className="text-primary hover:underline">
-                            View Resource →
-                          </a>
-                        </div>
-                      )}
-                    </div>
-                    
-                    {component.read_aloud && (component.content?.body || component.content?.text) && (
-                      <div className="mt-4">
-                        <InlineReadAloud 
-                          text={component.content.body || component.content.text} 
-                          language={component.language_code || 'en'} 
-                        />
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+          <HorizontalLessonViewer
+            components={studentComponents as any}
+            lessonTitle={lesson.title}
+            totalDuration={lesson.duration}
+            onComplete={() => {
+              // Optional: Track completion or show celebration
+              console.log('Lesson completed!');
+            }}
+          />
         )}
 
         {/* Assignments */}
