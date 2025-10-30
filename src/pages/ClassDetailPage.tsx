@@ -292,61 +292,72 @@ export default function ClassDetailPage() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {lessons.map((lesson, index) => (
-                <Link
-                  key={lesson.id}
-                  to={`/class-lesson/${lesson.id}`}
-                  className="group"
-                >
-                  <Card className="h-full transition-all hover:shadow-lg hover:border-primary">
-                    <CardHeader>
-                      <div className="flex items-start justify-between">
-                        <Badge variant="outline" className="mb-2">
-                          Lesson {index + 1}
-                        </Badge>
-                        {lesson.duration && (
-                          <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                            <Clock className="h-3 w-3" />
-                            {lesson.duration} min
-                          </div>
-                        )}
-                      </div>
-                      <CardTitle className="line-clamp-2 group-hover:text-primary transition-colors">
-                        {lesson.title}
-                      </CardTitle>
-                      {lesson.description && (
-                        <CardDescription className="line-clamp-2">
-                          {lesson.description}
-                        </CardDescription>
+                <Card key={lesson.id} className="h-full transition-all hover:shadow-lg">
+                  <CardHeader>
+                    <div className="flex items-start justify-between">
+                      <Badge variant="outline" className="mb-2">
+                        Lesson {index + 1}
+                      </Badge>
+                      {lesson.duration && (
+                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                          <Clock className="h-3 w-3" />
+                          {lesson.duration} min
+                        </div>
                       )}
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-2 text-sm text-muted-foreground">
-                        {lesson.objectives && lesson.objectives.length > 0 && (
-                          <div className="flex items-start gap-2">
-                            <BookOpen className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                            <span className="line-clamp-1">
-                              {lesson.objectives.length} objective{lesson.objectives.length !== 1 ? 's' : ''}
-                            </span>
-                          </div>
-                        )}
-                        {lesson.materials && lesson.materials.length > 0 && (
-                          <div className="flex items-start gap-2">
-                            <ClipboardList className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                            <span className="line-clamp-1">
-                              {lesson.materials.length} material{lesson.materials.length !== 1 ? 's' : ''}
-                            </span>
-                          </div>
-                        )}
-                        <div className="flex items-center gap-2 pt-2 border-t">
-                          <Calendar className="h-3 w-3" />
-                          <span className="text-xs">
-                            Updated {format(new Date(lesson.updated_at), 'MMM d, yyyy')}
+                    </div>
+                    <CardTitle className="line-clamp-2">
+                      {lesson.title}
+                    </CardTitle>
+                    {lesson.description && (
+                      <CardDescription className="line-clamp-2">
+                        {lesson.description}
+                      </CardDescription>
+                    )}
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2 text-sm text-muted-foreground mb-4">
+                      {lesson.objectives && lesson.objectives.length > 0 && (
+                        <div className="flex items-start gap-2">
+                          <BookOpen className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                          <span className="line-clamp-1">
+                            {lesson.objectives.length} objective{lesson.objectives.length !== 1 ? 's' : ''}
                           </span>
                         </div>
+                      )}
+                      {lesson.materials && lesson.materials.length > 0 && (
+                        <div className="flex items-start gap-2">
+                          <ClipboardList className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                          <span className="line-clamp-1">
+                            {lesson.materials.length} material{lesson.materials.length !== 1 ? 's' : ''}
+                          </span>
+                        </div>
+                      )}
+                      <div className="flex items-center gap-2 pt-2 border-t">
+                        <Calendar className="h-3 w-3" />
+                        <span className="text-xs">
+                          Updated {format(new Date(lesson.updated_at), 'MMM d, yyyy')}
+                        </span>
                       </div>
-                    </CardContent>
-                  </Card>
-                </Link>
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <Link to={`/class-lesson/${lesson.id}`}>
+                        <Button variant="outline" size="sm" className="w-full">
+                          Teacher Preview
+                        </Button>
+                      </Link>
+                      <Link to={`/student/lesson/${lesson.id}`}>
+                        <Button variant="outline" size="sm" className="w-full">
+                          View as Student
+                        </Button>
+                      </Link>
+                      <Link to={`/teacher/lesson-builder?classId=${resolvedClassId}&lessonId=${lesson.id}`}>
+                        <Button variant="ghost" size="sm" className="w-full">
+                          Edit
+                        </Button>
+                      </Link>
+                    </div>
+                  </CardContent>
+                </Card>
               ))}
             </div>
           )}
