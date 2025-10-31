@@ -17,11 +17,11 @@ export function usePresentationTTS() {
     setIsLoading(true);
 
     try {
-      const { data, error } = await supabase.functions.invoke('text-to-speech', {
+      const { data, error } = await supabase.functions.invoke('elevenlabs-tts', {
         body: {
           text,
-          language_code: settings.preferredLanguage || 'en-US',
-          voice_style: settings.voiceStyle || 'neutral',
+          voiceId: '9BWtsMINqrJLrRacOk9x', // Aria voice
+          rate: 1.0,
         },
       });
 
@@ -35,8 +35,8 @@ export function usePresentationTTS() {
         return;
       }
 
-      if (data?.audio_base64) {
-        const audio = new Audio(`data:${data.audio_mime};base64,${data.audio_base64}`);
+      if (data?.audioBase64) {
+        const audio = new Audio(`data:audio/mpeg;base64,${data.audioBase64}`);
         
         audio.onplay = () => setIsPlaying(true);
         audio.onended = () => setIsPlaying(false);
