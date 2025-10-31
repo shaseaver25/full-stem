@@ -7,11 +7,11 @@ import { LessonComponent } from '@/hooks/useLessonComponents';
 import { FileText, Video, Code, MessageSquare, CheckSquare, Volume2, Languages } from 'lucide-react';
 import { DiscussionComponent } from './DiscussionComponent';
 import { PresentationViewer } from './PresentationViewer';
-import { DriveAttachmentsList } from '@/components/drive/DriveAttachmentsList';
-import { OneDriveAttachmentsList } from '@/components/onedrive/OneDriveAttachmentsList';
 import { usePresentationTTS } from '@/hooks/usePresentationTTS';
 import { useLiveTranslation } from '@/hooks/useLiveTranslation';
 import { HighlightedText } from './HighlightedText';
+import { DriveAttachmentsList } from '@/components/drive/DriveAttachmentsList';
+import { OneDriveAttachmentsList } from '@/components/onedrive/OneDriveAttachmentsList';
 
 const SUPPORTED_LANGUAGES = [
   { code: 'en', name: 'English' },
@@ -318,7 +318,7 @@ export function LessonComponentRenderer({
           <InlineReadAloud text={textContent.replace(/<[^>]*>/g, '')} language={language_code || 'en'} />
         </div>
       )}
-      {id && (
+      {id && component_type !== 'video' && component_type !== 'multimedia' && (
         <div className="mt-4 pt-4 border-t border-border space-y-4">
           <DriveAttachmentsList
             componentId={id}
