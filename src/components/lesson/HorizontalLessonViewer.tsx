@@ -18,20 +18,18 @@ import {
   Target
 } from 'lucide-react';
 import InlineReadAloud from '@/components/InlineReadAloud';
+import { LessonComponentRenderer } from './LessonComponentRenderer';
 
 interface LessonComponent {
   id: string;
   component_type: string;
-  content: {
-    title?: string;
-    text?: string;
-    body?: string;
-    prompt?: string;
-  };
+  content: any; // Changed to any to support all component types
   order: number;
   enabled: boolean;
   estimated_time?: number;
   is_assignable?: boolean;
+  read_aloud?: boolean;
+  language_code?: string;
 }
 
 interface HorizontalLessonViewerProps {
@@ -52,6 +50,12 @@ const componentTypeConfig: Record<string, {
     label: 'Instructions',
     bgColor: 'bg-yellow-50 dark:bg-yellow-950/30',
     textColor: 'text-yellow-800 dark:text-yellow-200'
+  },
+  'slides': { 
+    icon: <Video className="w-4 h-4" />, 
+    label: 'Presentation',
+    bgColor: 'bg-indigo-50 dark:bg-indigo-950/30',
+    textColor: 'text-indigo-800 dark:text-indigo-200'
   },
   'page': { 
     icon: <BookOpen className="w-4 h-4" />, 
@@ -77,9 +81,15 @@ const componentTypeConfig: Record<string, {
     bgColor: 'bg-orange-50 dark:bg-orange-950/30',
     textColor: 'text-orange-800 dark:text-orange-200'
   },
-  'multimedia': { 
+  'video': { 
     icon: <Video className="w-4 h-4" />, 
     label: 'Video',
+    bgColor: 'bg-teal-50 dark:bg-teal-950/30',
+    textColor: 'text-teal-800 dark:text-teal-200'
+  },
+  'multimedia': { 
+    icon: <Video className="w-4 h-4" />, 
+    label: 'Multimedia',
     bgColor: 'bg-teal-50 dark:bg-teal-950/30',
     textColor: 'text-teal-800 dark:text-teal-200'
   },
@@ -241,12 +251,11 @@ export default function HorizontalLessonViewer({
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="prose prose-sm max-w-none dark:prose-invert">
-            <InlineReadAloud 
-              text={getComponentContent(currentComponent)}
-              className="w-full"
-            />
-          </div>
+          {/* Render component using LessonComponentRenderer for proper display */}
+          <LessonComponentRenderer
+            component={currentComponent as any}
+            showTypeLabel={false}
+          />
 
           {currentComponent.is_assignable && (
             <div className="mt-4 p-4 bg-primary/5 border border-primary/20 rounded-lg">
