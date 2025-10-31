@@ -4,20 +4,34 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, BookOpen, Users, ClipboardList, MessageSquare, Calendar, Clock, PlusCircle, GraduationCap } from 'lucide-react';
+import { ArrowLeft, BookOpen, Users, ClipboardList, MessageSquare, Calendar, Clock, PlusCircle, GraduationCap, Trash2 } from 'lucide-react';
 import { useClass, useClassAssignments } from '@/hooks/useClassManagement';
 import { useClassLessons } from '@/hooks/useClassLessons';
 import { RosterManagement } from '@/components/teacher/RosterManagement';
 import { AssignmentWizard } from '@/components/teacher/AssignmentWizard';
 import { format, startOfToday } from 'date-fns';
 import Header from '@/components/Header';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 export default function ClassDetailPage() {
   const { classId, id } = useParams<{ classId?: string; id?: string }>();
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [assignmentWizardOpen, setAssignmentWizardOpen] = useState(false);
+  const [lessonToDelete, setLessonToDelete] = useState<string | null>(null);
 
   // Support both :classId and :id params for flexibility
   const resolvedClassId = classId || id;
@@ -45,6 +59,34 @@ export default function ClassDetailPage() {
   const { data: classData, isLoading: classLoading } = useClass(resolvedClassId);
   const { data: assignments = [], isLoading: assignmentsLoading } = useClassAssignments(resolvedClassId);
   const { data: lessons = [], isLoading: lessonsLoading } = useClassLessons(resolvedClassId);
+
+  // Mutation to delete a lesson
+  const deleteLesson = useMutation({
+    mutationFn: async (lessonId: string) => {
+      const { error } = await supabase
+        .from('lessons')
+        .delete()
+        .eq('id', lessonId);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['class-lessons', resolvedClassId] });
+      toast({
+        title: 'Lesson deleted',
+        description: 'The lesson has been successfully deleted.',
+      });
+      setLessonToDelete(null);
+    },
+    onError: (error) => {
+      toast({
+        title: 'Error',
+        description: 'Failed to delete lesson. Please try again.',
+        variant: 'destructive',
+      });
+      console.error('Error deleting lesson:', error);
+    },
+  });
 
   // Fetch student count
   const { data: studentCount = 0 } = useQuery({
@@ -340,6 +382,16 @@ export default function ClassDetailPage() {
                       </div>
                     </div>
                     <div className="flex flex-col gap-2">
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => setLessonToDelete(lesson.id)}
+                        className="w-full flex items-center gap-2"
+                        title="Delete this lesson"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        Delete
+                      </Button>
                       <Link to={`/class-lesson/${lesson.id}`}>
                         <Button variant="outline" size="sm" className="w-full">
                           Teacher Preview
@@ -478,6 +530,26 @@ export default function ClassDetailPage() {
         open={assignmentWizardOpen}
         onOpenChange={setAssignmentWizardOpen}
       />
+
+      <AlertDialog open={!!lessonToDelete} onOpenChange={() => setLessonToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Lesson</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this lesson? This action cannot be undone and will remove the lesson from the class.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => lessonToDelete && deleteLesson.mutate(lessonToDelete)}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       </div>
     </div>
   );
