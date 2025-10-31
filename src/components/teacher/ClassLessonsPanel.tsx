@@ -108,9 +108,10 @@ export const ClassLessonsPanel = ({ classId }: ClassLessonsPanelProps) => {
                 variant="ghost" 
                 size="sm"
                 onClick={() => setLessonToDelete(lesson.id)}
-                className="absolute top-2 right-2 h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
+                className="absolute top-2 right-2 h-9 w-9 p-0 text-destructive hover:bg-destructive/10 z-10"
+                title="Remove lesson"
               >
-                <Trash2 className="h-4 w-4" />
+                <Trash2 className="h-5 w-5" />
               </Button>
               
               <div className="flex items-start justify-between pr-10">
