@@ -106,20 +106,77 @@ export function DraggableComponentCard({
         return (
           <>
             <div>
-              <Label>Title</Label>
+              <Label htmlFor={`${component.id}-title`}>Title</Label>
               <Input
+                id={`${component.id}-title`}
                 value={component.content.title || ''}
                 onChange={(e) => handleContentChange('title', e.target.value)}
-                placeholder="Slide deck title"
+                placeholder="Presentation title"
               />
             </div>
             <div>
-              <Label>Embed URL or Upload</Label>
+              <Label htmlFor={`${component.id}-url`}>Embed URL</Label>
               <Input
+                id={`${component.id}-url`}
                 value={component.content.url || ''}
                 onChange={(e) => handleContentChange('url', e.target.value)}
-                placeholder="https://..."
+                placeholder="https://docs.google.com/presentation/..."
               />
+              <p className="text-xs text-muted-foreground mt-1">
+                Paste Google Slides, Prezi, or other presentation embed links
+              </p>
+            </div>
+            <div>
+              <Label htmlFor={`${component.id}-notes`}>Speaker Notes (optional)</Label>
+              <Textarea
+                id={`${component.id}-notes`}
+                value={component.content.notes || ''}
+                onChange={(e) => handleContentChange('notes', e.target.value)}
+                placeholder="Additional notes or context for students..."
+                rows={3}
+              />
+            </div>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <Label htmlFor={`${component.id}-downloads`}>Allow Downloads</Label>
+                <input
+                  type="checkbox"
+                  id={`${component.id}-downloads`}
+                  checked={component.content.allowDownloads !== false}
+                  onChange={(e) => handleContentChange('allowDownloads', e.target.checked)}
+                  className="h-4 w-4"
+                />
+              </div>
+              <div className="flex items-center justify-between">
+                <Label htmlFor={`${component.id}-fullview`}>Require Full Viewing</Label>
+                <input
+                  type="checkbox"
+                  id={`${component.id}-fullview`}
+                  checked={component.content.requireFullViewing || false}
+                  onChange={(e) => handleContentChange('requireFullViewing', e.target.checked)}
+                  className="h-4 w-4"
+                />
+              </div>
+              <div className="flex items-center justify-between">
+                <Label htmlFor={`${component.id}-thumbnails`}>Show Thumbnails</Label>
+                <input
+                  type="checkbox"
+                  id={`${component.id}-thumbnails`}
+                  checked={component.content.showThumbnails !== false}
+                  onChange={(e) => handleContentChange('showThumbnails', e.target.checked)}
+                  className="h-4 w-4"
+                />
+              </div>
+              <div className="flex items-center justify-between">
+                <Label htmlFor={`${component.id}-translation`}>Enable Translation</Label>
+                <input
+                  type="checkbox"
+                  id={`${component.id}-translation`}
+                  checked={component.content.enableTranslation !== false}
+                  onChange={(e) => handleContentChange('enableTranslation', e.target.checked)}
+                  className="h-4 w-4"
+                />
+              </div>
             </div>
           </>
         );

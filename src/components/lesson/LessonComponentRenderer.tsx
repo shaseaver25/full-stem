@@ -4,6 +4,7 @@ import InlineReadAloud from '@/components/InlineReadAloud';
 import { LessonComponent } from '@/hooks/useLessonComponents';
 import { FileText, Video, Code, MessageSquare, CheckSquare } from 'lucide-react';
 import { DiscussionComponent } from './DiscussionComponent';
+import { PresentationViewer } from './PresentationViewer';
 import { DriveAttachmentsList } from '@/components/drive/DriveAttachmentsList';
 import { OneDriveAttachmentsList } from '@/components/onedrive/OneDriveAttachmentsList';
 
@@ -50,6 +51,43 @@ export function LessonComponentRenderer({
         lessonContent={lessonContent}
         isTeacher={isTeacher}
       />
+    );
+  }
+
+  // Render presentation viewer with enhanced features
+  if (component_type === 'slides') {
+    return (
+      <div className="space-y-4">
+        {showTypeLabel && (
+          <Badge variant="outline">
+            {componentTypeLabels[component_type] || component_type}
+          </Badge>
+        )}
+        <PresentationViewer
+          title={content.title}
+          embedUrl={content.url}
+          slides={content.slides}
+          speakerNotes={content.notes}
+          allowDownloads={content.allowDownloads !== false}
+          requireFullViewing={content.requireFullViewing || false}
+          showThumbnails={content.showThumbnails !== false}
+          enableTranslation={content.enableTranslation !== false}
+        />
+        {id && (
+          <div className="pt-4 border-t border-border space-y-4">
+            <DriveAttachmentsList
+              componentId={id}
+              showEmbeds={true}
+              canDelete={false}
+            />
+            <OneDriveAttachmentsList
+              componentId={id}
+              showEmbeds={true}
+              canDelete={false}
+            />
+          </div>
+        )}
+      </div>
     );
   }
 
