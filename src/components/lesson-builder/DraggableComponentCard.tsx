@@ -17,6 +17,7 @@ import { DriveFilePicker } from '@/components/drive/DriveFilePicker';
 import { DriveAttachmentsList } from '@/components/drive/DriveAttachmentsList';
 import { useDriveAttachment } from '@/hooks/useDriveAttachment';
 import { LocalFileUpload } from './LocalFileUpload';
+import { SlideTextExtractor } from './SlideTextExtractor';
 
 interface LessonComponent {
   id?: string;
@@ -194,6 +195,17 @@ export function DraggableComponentCard({
                   </p>
                 </div>
               </div>
+
+              {/* AI Text Extraction */}
+              <SlideTextExtractor 
+                onTextsExtracted={(texts) => {
+                  const newSlides = texts.map((text, index) => ({
+                    text,
+                    notes: component.content.slides?.[index]?.notes || ''
+                  }));
+                  handleContentChange('slides', newSlides);
+                }}
+              />
 
               <div className="space-y-3">
                 {(component.content.slides || []).map((slide: any, index: number) => (
