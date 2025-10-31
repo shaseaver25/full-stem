@@ -28,11 +28,14 @@ interface LessonComponent {
 }
 
 export default function LessonBuilderPage() {
-  const { lessonId } = useParams();
+  const { lessonId: routeLessonId } = useParams();
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
+
+  // Get lessonId from either route params or query params
+  const lessonId = routeLessonId || searchParams.get('lessonId');
 
   const [title, setTitle] = useState('');
   const [lessonNumber, setLessonNumber] = useState<number>(1);
@@ -47,10 +50,10 @@ export default function LessonBuilderPage() {
   useEffect(() => {
     // Check for classId in URL params (for new lessons)
     const classIdParam = searchParams.get('classId');
-    if (classIdParam && !lessonId) {
+    if (classIdParam) {
       setClassId(classIdParam);
     }
-  }, [searchParams, lessonId]);
+  }, [searchParams]);
 
   useEffect(() => {
     if (lessonId) {
