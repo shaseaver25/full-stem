@@ -326,66 +326,6 @@ export function PresentationViewer({
             <Home className="h-4 w-4" />
           </Button>
 
-          {currentSlideData?.text ? (
-            <div className="flex items-center gap-1">
-              {!isPlaying ? (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={handleReadAloud}
-                  disabled={isSpeaking}
-                  aria-label="Read slide aloud"
-                  title="Read slide aloud"
-                  tabIndex={0}
-                >
-                  <Volume2 className="h-4 w-4" />
-                </Button>
-              ) : (
-                <>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={isPaused ? resume : pause}
-                    aria-label={isPaused ? "Resume reading" : "Pause reading"}
-                    title={isPaused ? "Resume reading" : "Pause reading"}
-                    tabIndex={0}
-                  >
-                    {isPaused ? (
-                      <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M8 5v14l11-7z"/>
-                      </svg>
-                    ) : (
-                      <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>
-                      </svg>
-                    )}
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={stop}
-                    aria-label="Stop reading"
-                    title="Stop reading"
-                    tabIndex={0}
-                  >
-                    <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M6 6h12v12H6z"/>
-                    </svg>
-                  </Button>
-                </>
-              )}
-            </div>
-          ) : (
-            <div 
-              className="flex items-center gap-2 px-3 py-2 text-xs text-muted-foreground border rounded-md bg-muted/30"
-              role="status"
-              aria-label="Accessibility features unavailable"
-            >
-              <Volume2 className="h-3 w-3 opacity-50" />
-              <span>Text-to-Speech requires slide text data</span>
-            </div>
-          )}
-
           <Button
             variant="ghost"
             size="icon"
@@ -404,26 +344,6 @@ export function PresentationViewer({
         </div>
 
         <div className="flex items-center gap-2">
-          {enableTranslation && currentSlideData?.text && (
-            <Select value={selectedLanguage} onValueChange={handleLanguageChange} disabled={isTranslating}>
-              <SelectTrigger 
-                className="w-32" 
-                aria-label={`Select language. Currently ${SUPPORTED_LANGUAGES.find(l => l.code === selectedLanguage)?.name}`}
-                tabIndex={0}
-              >
-                <Languages className="h-4 w-4 mr-2" />
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {SUPPORTED_LANGUAGES.map(lang => (
-                  <SelectItem key={lang.code} value={lang.code}>
-                    {lang.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
-
           {allowDownloads && embedUrl && (
             <Button
               variant="ghost"
@@ -554,6 +474,87 @@ export function PresentationViewer({
                   />
                 </div>
 
+                {/* Translation & Read Aloud Ribbon */}
+                {currentSlideData?.text && (
+                  <div className="mt-4 flex items-center justify-between gap-3 p-3 border rounded-lg bg-card">
+                    <div className="flex items-center gap-2">
+                      {!isPlaying ? (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={handleReadAloud}
+                          disabled={isSpeaking}
+                          aria-label="Read slide aloud"
+                          title="Read slide aloud"
+                          tabIndex={0}
+                        >
+                          <Volume2 className="h-4 w-4 mr-2" />
+                          Read Aloud
+                        </Button>
+                      ) : (
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={isPaused ? resume : pause}
+                            aria-label={isPaused ? "Resume reading" : "Pause reading"}
+                            title={isPaused ? "Resume reading" : "Pause reading"}
+                            tabIndex={0}
+                          >
+                            {isPaused ? (
+                              <>
+                                <svg className="h-4 w-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                                  <path d="M8 5v14l11-7z"/>
+                                </svg>
+                                Resume
+                              </>
+                            ) : (
+                              <>
+                                <svg className="h-4 w-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                                  <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>
+                                </svg>
+                                Pause
+                              </>
+                            )}
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={stop}
+                            aria-label="Stop reading"
+                            title="Stop reading"
+                            tabIndex={0}
+                          >
+                            <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+                              <path d="M6 6h12v12H6z"/>
+                            </svg>
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+
+                    {enableTranslation && (
+                      <Select value={selectedLanguage} onValueChange={handleLanguageChange} disabled={isTranslating}>
+                        <SelectTrigger 
+                          className="w-40" 
+                          aria-label={`Select language. Currently ${SUPPORTED_LANGUAGES.find(l => l.code === selectedLanguage)?.name}`}
+                          tabIndex={0}
+                        >
+                          <Languages className="h-4 w-4 mr-2" />
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {SUPPORTED_LANGUAGES.map(lang => (
+                            <SelectItem key={lang.code} value={lang.code}>
+                              {lang.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  </div>
+                )}
+
                 {/* Slide Text Panel - Shows current slide text for accessibility */}
                 {currentSlideData?.text && (
                   <Card className="mt-4">
@@ -565,12 +566,12 @@ export function PresentationViewer({
                           </div>
                           <div>
                             <h3 className="font-semibold text-sm">Slide {currentSlide + 1} Content</h3>
-                            <p className="text-xs text-muted-foreground">Text available for Read Aloud & Translation</p>
+                            <p className="text-xs text-muted-foreground">Text with word-by-word highlighting</p>
                           </div>
                         </div>
                         {selectedLanguage !== 'en' && (
                           <span className="text-xs px-2 py-1 bg-primary/10 text-primary rounded">
-                            Translated to {SUPPORTED_LANGUAGES.find(l => l.code === selectedLanguage)?.name}
+                            {SUPPORTED_LANGUAGES.find(l => l.code === selectedLanguage)?.name}
                           </span>
                         )}
                       </div>
