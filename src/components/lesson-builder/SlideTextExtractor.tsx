@@ -7,7 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import * as pdfjsLib from 'pdfjs-dist';
 
 // Set PDF.js worker to use local file in public folder
-pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
+pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
 
 interface SlideTextExtractorProps {
   onTextsExtracted: (texts: string[]) => void;
@@ -20,7 +20,16 @@ export const SlideTextExtractor = ({ onTextsExtracted }: SlideTextExtractorProps
 
   const convertPdfToImages = async (file: File): Promise<string[]> => {
     const arrayBuffer = await file.arrayBuffer();
-    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    
+    // Explicitly set worker before loading document
+    pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
+    
+    const pdf = await pdfjsLib.getDocument({ 
+      data: arrayBuffer,
+      isEvalSupported: false,
+      useWorkerFetch: false,
+      verbosity: 0
+    }).promise;
     const images: string[] = [];
 
     setProgress({ current: 0, total: pdf.numPages });
