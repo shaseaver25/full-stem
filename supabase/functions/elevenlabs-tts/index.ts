@@ -135,8 +135,7 @@ serve(async (req) => {
     }
 
     // Extract word-level timings from alignment data
-    let tokens: string[] = [];
-    let weights: number[] = [];
+    const wordTimings: Array<{text: string, start_time: number, end_time: number}> = [];
 
     if (responseData.alignment && responseData.alignment.characters) {
       console.log('Processing character alignment data...');
@@ -148,7 +147,6 @@ serve(async (req) => {
       // Group characters into words
       let currentWord = '';
       let wordStartTime = 0;
-      const wordTimings: Array<{word: string, start: number, end: number}> = [];
       
       for (let i = 0; i < characters.length; i++) {
         const char = characters[i];
@@ -162,12 +160,10 @@ serve(async (req) => {
           if (currentWord.length > 0) {
             const endTime = charEndTimes[i === characters.length - 1 ? i : i - 1];
             wordTimings.push({
-              word: currentWord,
-              start: wordStartTime,
-              end: endTime
+              text: currentWord,
+              start_time: wordStartTime,
+              end_time: endTime
             });
-            tokens.push(currentWord);
-            weights.push(endTime - wordStartTime);
           }
           
           currentWord = '';
@@ -181,20 +177,26 @@ serve(async (req) => {
       }
       
       console.log('Extracted word timings:', wordTimings.length, 'words');
-      console.log('First 3 words:', wordTimings.slice(0, 3));
+      console.log('First 3 words:', JSON.stringify(wordTimings.slice(0, 3)));
     } else {
       // Fallback: generate synthetic timings
       console.warn('No alignment data available, using fallback');
-      tokens = text.split(/\s+/).filter(t => t.length > 0);
-      weights = tokens.map(tok => tok.length || 1);
+      const words = text.split(/\s+/).filter(t => t.length > 0);
+      const avgDuration = 0.3; // 300ms per word estimate
+      words.forEach((word, i) => {
+        wordTimings.push({
+          text: word,
+          start_time: i * avgDuration,
+          end_time: (i + 1) * avgDuration
+        });
+      });
     }
 
-    console.log('Successfully generated speech, tokens:', tokens.length);
+    console.log('Successfully generated speech, tokens:', wordTimings.length);
 
     return new Response(JSON.stringify({
       audioBase64,
-      tokens,
-      weights,
+      tokens: wordTimings,
       cache: false
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

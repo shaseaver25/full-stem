@@ -134,14 +134,16 @@ export function usePresentationTTS() {
           setIsPaused(false);
         };
         audio.onpause = () => {
-          if (!isPaused) setIsPaused(true);
+          // Only set paused if we didn't stop the audio
+          if (audioRef.current) setIsPaused(true);
         };
         audio.onended = () => {
           setIsPlaying(false);
           setIsPaused(false);
           setCurrentWordIndex(-1);
         };
-        audio.onerror = () => {
+        audio.onerror = (e) => {
+          console.error('Audio playback error:', e);
           setIsPlaying(false);
           setIsPaused(false);
           setCurrentWordIndex(-1);
@@ -152,7 +154,16 @@ export function usePresentationTTS() {
           });
         };
 
-        await audio.play();
+        try {
+          await audio.play();
+        } catch (playError) {
+          console.error('Failed to start audio playback:', playError);
+          toast({
+            title: 'Playback Error',
+            description: 'Unable to play audio. Please try again.',
+            variant: 'destructive',
+          });
+        }
       }
     } catch (error) {
       console.error('TTS error:', error);
