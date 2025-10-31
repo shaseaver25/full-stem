@@ -92,12 +92,26 @@ export function DraggableComponentCard({
   const handleLocalFileUploaded = (file: { name: string; path: string; url: string }) => {
     console.log('📎 Local file uploaded:', file);
     const existingFiles = component.content.uploadedFiles || [];
-    onUpdate(index, {
-      content: {
-        ...component.content,
-        uploadedFiles: [...existingFiles, file],
-      },
-    });
+    
+    // For slides component, if it's a presentation file, set it as the embed URL
+    if (component.component_type === 'slides' && 
+        (file.name.endsWith('.pptx') || file.name.endsWith('.ppt') || file.name.endsWith('.pdf'))) {
+      console.log('📊 Setting PowerPoint file as embed URL:', file.url);
+      onUpdate(index, {
+        content: {
+          ...component.content,
+          url: file.url,
+          uploadedFiles: [...existingFiles, file],
+        },
+      });
+    } else {
+      onUpdate(index, {
+        content: {
+          ...component.content,
+          uploadedFiles: [...existingFiles, file],
+        },
+      });
+    }
   };
 
   const renderFields = () => {
@@ -114,17 +128,24 @@ export function DraggableComponentCard({
                 placeholder="Presentation title"
               />
             </div>
-            <div>
-              <Label htmlFor={`${component.id}-url`}>Embed URL</Label>
-              <Input
-                id={`${component.id}-url`}
-                value={component.content.url || ''}
-                onChange={(e) => handleContentChange('url', e.target.value)}
-                placeholder="https://docs.google.com/presentation/..."
-              />
-              <p className="text-xs text-muted-foreground mt-1">
-                Paste Google Slides, Prezi, or other presentation embed links
-              </p>
+            <div className="space-y-2">
+              <Label>Presentation Source</Label>
+              <div className="p-3 bg-muted/50 rounded-md space-y-2">
+                <p className="text-sm font-medium">Option 1: Upload PowerPoint/PDF file below</p>
+                <p className="text-xs text-muted-foreground">Use the "Upload File" button in the File Attachments section</p>
+              </div>
+              <div className="p-3 bg-muted/50 rounded-md">
+                <p className="text-sm font-medium mb-2">Option 2: Paste embed URL</p>
+                <Input
+                  id={`${component.id}-url`}
+                  value={component.content.url || ''}
+                  onChange={(e) => handleContentChange('url', e.target.value)}
+                  placeholder="https://docs.google.com/presentation/..."
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Google Slides, Prezi, or other presentation embed links
+                </p>
+              </div>
             </div>
             <div>
               <Label htmlFor={`${component.id}-notes`}>Speaker Notes (optional)</Label>
