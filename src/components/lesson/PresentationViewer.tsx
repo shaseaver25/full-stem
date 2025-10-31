@@ -21,7 +21,9 @@ import {
   Home,
   Volume2,
   Languages,
-  Download
+  Download,
+  HelpCircle,
+  X
 } from 'lucide-react';
 import {
   Select,
@@ -87,6 +89,7 @@ export function PresentationViewer({
   const [selectedLanguage, setSelectedLanguage] = useState('en');
   const [translatedTexts, setTranslatedTexts] = useState<Map<number, string>>(new Map());
   const [showNotesPanel, setShowNotesPanel] = useState(false);
+  const [showKeyboardHelp, setShowKeyboardHelp] = useState(false);
   
   const { speak, isPlaying, isLoading: isSpeaking } = useTextToSpeech();
   const { translate, isTranslating } = useTranslation();
@@ -171,14 +174,21 @@ export function PresentationViewer({
           if (isFullscreen) {
             e.preventDefault();
             toggleFullscreen();
+          } else if (showKeyboardHelp) {
+            e.preventDefault();
+            setShowKeyboardHelp(false);
           }
+          break;
+        case '?':
+          e.preventDefault();
+          setShowKeyboardHelp(!showKeyboardHelp);
           break;
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [currentSlide, totalSlides, isFullscreen, goToPrevious, goToNext, goToFirst, goToLast]);
+  }, [currentSlide, totalSlides, isFullscreen, showKeyboardHelp, goToPrevious, goToNext, goToFirst, goToLast]);
 
   // Fullscreen toggle
   const toggleFullscreen = () => {
@@ -274,7 +284,16 @@ export function PresentationViewer({
         className
       )}
       id="presentation-container"
+      role="region"
+      aria-label={`Presentation viewer: ${title || 'Presentation'}`}
+      aria-describedby="presentation-description"
     >
+      {/* Screen reader description */}
+      <div id="presentation-description" className="sr-only">
+        Interactive presentation with {totalSlides} slide{totalSlides > 1 ? 's' : ''}. 
+        Use arrow keys or Tab to navigate. Press question mark for keyboard shortcuts.
+      </div>
+
       {/* Screen reader announcer */}
       <div 
         id="slide-announcer" 
@@ -285,7 +304,7 @@ export function PresentationViewer({
       />
 
       {/* Top Controls Bar */}
-      <div className="flex items-center justify-between gap-2 p-3 border-b bg-card">
+      <nav className="flex items-center justify-between gap-2 p-3 border-b bg-card" role="toolbar" aria-label="Presentation controls">
         <div className="flex items-center gap-2">
           <Button
             variant="ghost"
@@ -294,6 +313,7 @@ export function PresentationViewer({
             disabled={currentSlide === 0}
             aria-label="Go to first slide"
             title="Go to first slide (Home key)"
+            tabIndex={0}
           >
             <Home className="h-4 w-4" />
           </Button>
@@ -304,20 +324,38 @@ export function PresentationViewer({
             onClick={handleReadAloud}
             disabled={isSpeaking || !currentSlideData?.text}
             aria-label={isPlaying ? "Reading slide" : "Read slide aloud"}
+            aria-pressed={isPlaying}
             title="Read slide aloud"
+            tabIndex={0}
           >
             <Volume2 className={cn("h-4 w-4", isPlaying && "animate-pulse")} />
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setShowKeyboardHelp(!showKeyboardHelp)}
+            aria-label="Show keyboard shortcuts"
+            aria-pressed={showKeyboardHelp}
+            title="Keyboard shortcuts (Press ? key)"
+            tabIndex={0}
+          >
+            <HelpCircle className="h-4 w-4" />
           </Button>
         </div>
 
         <div className="flex-1 text-center">
-          {title && <h2 className="font-semibold text-sm">{title}</h2>}
+          {title && <h1 className="font-semibold text-sm" id="presentation-title">{title}</h1>}
         </div>
 
         <div className="flex items-center gap-2">
           {enableTranslation && (
-            <Select value={selectedLanguage} onValueChange={handleLanguageChange}>
-              <SelectTrigger className="w-32" aria-label="Select language">
+            <Select value={selectedLanguage} onValueChange={handleLanguageChange} disabled={isTranslating}>
+              <SelectTrigger 
+                className="w-32" 
+                aria-label={`Select language. Currently ${SUPPORTED_LANGUAGES.find(l => l.code === selectedLanguage)?.name}`}
+                tabIndex={0}
+              >
                 <Languages className="h-4 w-4 mr-2" />
                 <SelectValue />
               </SelectTrigger>
@@ -336,8 +374,9 @@ export function PresentationViewer({
               variant="ghost"
               size="icon"
               onClick={() => window.open(embedUrl, '_blank')}
-              aria-label="Download presentation"
-              title="Download presentation"
+              aria-label="Open presentation in new tab"
+              title="Open presentation in new tab"
+              tabIndex={0}
             >
               <Download className="h-4 w-4" />
             </Button>
@@ -347,26 +386,35 @@ export function PresentationViewer({
             variant="ghost"
             size="icon"
             onClick={toggleFullscreen}
-            aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+            aria-label={isFullscreen ? "Exit fullscreen mode" : "Enter fullscreen mode"}
+            aria-pressed={isFullscreen}
             title={isFullscreen ? "Exit fullscreen (ESC)" : "Enter fullscreen (F key)"}
+            tabIndex={0}
           >
             {isFullscreen ? <Minimize className="h-4 w-4" /> : <Maximize className="h-4 w-4" />}
           </Button>
         </div>
-      </div>
+      </nav>
 
       {/* Progress Bar */}
-      <div className="px-3 py-2 bg-card border-b">
+      <div className="px-3 py-2 bg-card border-b" role="region" aria-label="Presentation progress">
         <div className="flex items-center gap-3">
-          <Progress value={progressPercentage} className="flex-1" aria-label={`Progress: ${Math.round(progressPercentage)}%`} />
-          <span className="text-sm text-muted-foreground whitespace-nowrap">
+          <Progress 
+            value={progressPercentage} 
+            className="flex-1" 
+            aria-label={`Presentation progress: ${Math.round(progressPercentage)} percent complete`}
+            aria-valuenow={Math.round(progressPercentage)}
+            aria-valuemin={0}
+            aria-valuemax={100}
+          />
+          <span className="text-sm text-muted-foreground whitespace-nowrap" aria-hidden="true">
             {Math.round(progressPercentage)}%
           </span>
         </div>
       </div>
 
       {/* Main Slide View */}
-      <div className="relative flex items-center justify-center min-h-[400px] bg-muted/30">
+      <main className="relative flex items-center justify-center min-h-[400px] bg-muted/30" role="main" aria-label="Slide content">
         {/* Previous Button */}
         <Button
           variant="ghost"
@@ -377,8 +425,9 @@ export function PresentationViewer({
           )}
           onClick={goToPrevious}
           disabled={currentSlide === 0}
-          aria-label="Previous slide"
-          title="Previous slide (Left arrow)"
+          aria-label={`Previous slide. Currently on slide ${currentSlide + 1} of ${totalSlides}`}
+          title="Previous slide (Left arrow key)"
+          tabIndex={0}
         >
           <ChevronLeft className="h-6 w-6" />
         </Button>
@@ -438,13 +487,14 @@ export function PresentationViewer({
                 </div>
               </Card>
             ) : (
-              <div className="aspect-video w-full rounded-lg overflow-hidden shadow-lg">
+              <div className="aspect-video w-full rounded-lg overflow-hidden shadow-lg" role="img" aria-label={`Embedded presentation: ${title || 'Presentation'}`}>
                 <iframe
                   src={embedUrl}
                   className="w-full h-full"
-                  title={`${title || 'Presentation'} - Slide ${currentSlide + 1} of ${totalSlides}`}
+                  title={`${title || 'Presentation'} - Slide ${currentSlide + 1} of ${totalSlides}. Use arrow keys to navigate between slides.`}
                   allowFullScreen
                   allow="autoplay; fullscreen"
+                  aria-label={`Slide ${currentSlide + 1} of ${totalSlides}`}
                 />
               </div>
             )
@@ -490,12 +540,13 @@ export function PresentationViewer({
           )}
           onClick={goToNext}
           disabled={currentSlide === totalSlides - 1}
-          aria-label="Next slide"
-          title="Next slide (Right arrow or Space)"
+          aria-label={`Next slide. Currently on slide ${currentSlide + 1} of ${totalSlides}`}
+          title="Next slide (Right arrow or Space key)"
+          tabIndex={0}
         >
           <ChevronRight className="h-6 w-6" />
         </Button>
-      </div>
+      </main>
 
       {/* Slide Counter */}
       <div className="py-3 text-center border-t bg-card">
@@ -549,9 +600,73 @@ export function PresentationViewer({
         </div>
       )}
 
+      {/* Keyboard Shortcuts Help */}
+      {showKeyboardHelp && (
+        <div 
+          className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          role="dialog"
+          aria-labelledby="keyboard-shortcuts-title"
+          aria-modal="true"
+        >
+          <Card className="max-w-md w-full">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 id="keyboard-shortcuts-title" className="text-lg font-semibold">Keyboard Shortcuts</h2>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setShowKeyboardHelp(false)}
+                  aria-label="Close keyboard shortcuts"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+              <div className="space-y-3 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Next slide:</span>
+                  <kbd className="px-2 py-1 bg-muted rounded text-xs font-mono">→</kbd>
+                  <kbd className="px-2 py-1 bg-muted rounded text-xs font-mono">Space</kbd>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Previous slide:</span>
+                  <kbd className="px-2 py-1 bg-muted rounded text-xs font-mono">←</kbd>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">First slide:</span>
+                  <kbd className="px-2 py-1 bg-muted rounded text-xs font-mono">Home</kbd>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Last slide:</span>
+                  <kbd className="px-2 py-1 bg-muted rounded text-xs font-mono">End</kbd>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Fullscreen:</span>
+                  <kbd className="px-2 py-1 bg-muted rounded text-xs font-mono">F</kbd>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Exit fullscreen:</span>
+                  <kbd className="px-2 py-1 bg-muted rounded text-xs font-mono">Esc</kbd>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">This help:</span>
+                  <kbd className="px-2 py-1 bg-muted rounded text-xs font-mono">?</kbd>
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground mt-4">
+                💡 Tip: Use Tab to navigate between controls
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
       {/* Completion Message */}
       {isCompleted && requireFullViewing && (
-        <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2 bg-success text-success-foreground px-4 py-2 rounded-full shadow-lg">
+        <div 
+          className="absolute bottom-20 left-1/2 transform -translate-x-1/2 bg-success text-success-foreground px-4 py-2 rounded-full shadow-lg"
+          role="status"
+          aria-live="polite"
+        >
           <p className="text-sm font-medium">✓ Presentation Completed!</p>
         </div>
       )}
