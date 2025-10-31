@@ -103,19 +103,9 @@ export const ClassLessonsPanel = ({ classId }: ClassLessonsPanelProps) => {
       <CardContent>
         <div className="space-y-4">
           {lessons.map((lesson, index) => (
-            <div key={lesson.id} className="border rounded-lg p-4 hover:shadow-sm transition-shadow relative">
-              <Button 
-                variant="ghost" 
-                size="sm"
-                onClick={() => setLessonToDelete(lesson.id)}
-                className="absolute top-2 right-2 h-9 w-9 p-0 text-destructive hover:bg-destructive/10 z-10"
-                title="Remove lesson"
-              >
-                <Trash2 className="h-5 w-5" />
-              </Button>
-              
-              <div className="flex items-start justify-between pr-10">
-                <div className="flex-1">
+            <div key={lesson.id} className="border rounded-lg p-4 hover:shadow-sm transition-shadow">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-2">
                     <Badge variant="outline">Lesson {index + 1}</Badge>
                     <h3 className="font-semibold text-lg">{lesson.title}</h3>
@@ -163,7 +153,16 @@ export const ClassLessonsPanel = ({ classId }: ClassLessonsPanelProps) => {
                   )}
                 </div>
                 
-                  <div className="flex flex-col gap-2 ml-4">
+                <div className="flex flex-col gap-2 flex-shrink-0">
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => setLessonToDelete(lesson.id)}
+                    className="h-9 w-9 p-0 text-destructive hover:bg-destructive/10"
+                    title="Remove lesson"
+                  >
+                    <Trash2 className="h-5 w-5" />
+                  </Button>
                   <Link to={`/class-lesson/${lesson.id}`}>
                     <Button variant="outline" size="sm" className="flex items-center gap-1 w-full">
                       <Eye className="h-4 w-4" />
