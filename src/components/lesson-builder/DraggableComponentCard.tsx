@@ -7,7 +7,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Checkbox } from '@/components/ui/checkbox';
-import { GripVertical, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
+import { GripVertical, Trash2, ChevronDown, ChevronUp, Plus, Volume2 } from 'lucide-react';
 import { DraggableProvidedDragHandleProps } from 'react-beautiful-dnd';
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import { OneDriveFilePicker } from '@/components/onedrive/OneDriveFilePicker';
@@ -179,6 +179,85 @@ export function DraggableComponentCard({
                 placeholder="Additional context or talking points for students..."
                 rows={3}
               />
+            </div>
+
+            {/* Accessibility Section - Slide Text Content */}
+            <div className="space-y-3 p-4 border rounded-lg bg-muted/30">
+              <div className="flex items-start gap-2">
+                <div className="p-2 bg-primary/10 rounded-lg">
+                  <Volume2 className="h-4 w-4 text-primary" />
+                </div>
+                <div className="flex-1">
+                  <Label className="text-base font-semibold">Accessibility Content (Optional)</Label>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Add text content for each slide to enable Text-to-Speech and Translation features for students
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                {(component.content.slides || []).map((slide: any, index: number) => (
+                  <div key={index} className="p-3 border rounded-lg bg-card space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-sm font-medium">Slide {index + 1}</Label>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          const newSlides = [...(component.content.slides || [])];
+                          newSlides.splice(index, 1);
+                          handleContentChange('slides', newSlides);
+                        }}
+                        className="h-6 px-2 text-destructive hover:text-destructive"
+                      >
+                        Remove
+                      </Button>
+                    </div>
+                    <Textarea
+                      value={slide.text || ''}
+                      onChange={(e) => {
+                        const newSlides = [...(component.content.slides || [])];
+                        newSlides[index] = { ...newSlides[index], text: e.target.value };
+                        handleContentChange('slides', newSlides);
+                      }}
+                      placeholder="Enter the text content from this slide..."
+                      rows={3}
+                      className="text-sm"
+                    />
+                    <Input
+                      value={slide.notes || ''}
+                      onChange={(e) => {
+                        const newSlides = [...(component.content.slides || [])];
+                        newSlides[index] = { ...newSlides[index], notes: e.target.value };
+                        handleContentChange('slides', newSlides);
+                      }}
+                      placeholder="Optional notes for this slide"
+                      className="text-sm"
+                    />
+                  </div>
+                ))}
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const newSlides = [...(component.content.slides || []), { text: '', notes: '' }];
+                    handleContentChange('slides', newSlides);
+                  }}
+                  className="w-full"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Slide Text
+                </Button>
+
+                {(!component.content.slides || component.content.slides.length === 0) && (
+                  <p className="text-xs text-center text-muted-foreground py-2">
+                    No slide text added yet. Add slide text to enable accessibility features.
+                  </p>
+                )}
+              </div>
             </div>
 
             <div className="space-y-3">
