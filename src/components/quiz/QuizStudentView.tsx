@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,10 +6,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
-import { CheckCircle2, XCircle, Clock, Flag, Lightbulb, ChevronLeft, ChevronRight, AlertCircle } from 'lucide-react';
+import { CheckCircle2, XCircle, Clock, Flag, Lightbulb, ChevronLeft, ChevronRight, AlertCircle, Volume2, Wifi, WifiOff } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useTextToSpeech } from '@/hooks/useTextToSpeech';
 
 // Temporary type definitions until Supabase types are regenerated
 interface QuizComponentData {
@@ -78,9 +79,77 @@ export function QuizStudentView({ componentId }: QuizStudentViewProps) {
   const [remainingAttempts, setRemainingAttempts] = useState<number | null>(null);
   const [currentAttemptId, setCurrentAttemptId] = useState<string | null>(null);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [pendingSave, setPendingSave] = useState(false);
+  
+  const { speak, isPlaying, isLoading: isSpeaking } = useTextToSpeech();
 
   useEffect(() => {
     loadQuiz();
+  }, [componentId]);
+
+  // Network status monitoring
+  useEffect(() => {
+    const handleOnline = () => {
+      setIsOnline(true);
+      if (pendingSave) {
+        saveProgress();
+        setPendingSave(false);
+      }
+      toast({
+        title: 'Connection Restored',
+        description: 'Your quiz progress is being saved.',
+      });
+    };
+
+    const handleOffline = () => {
+      setIsOnline(false);
+      toast({
+        title: 'Connection Lost',
+        description: 'Your answers are being saved locally.',
+        variant: 'destructive'
+      });
+    };
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, [pendingSave]);
+
+  // Save to localStorage for offline persistence
+  useEffect(() => {
+    if (started && !completed && quizData) {
+      localStorage.setItem(`quiz_progress_${componentId}`, JSON.stringify({
+        answers,
+        currentQuestionIndex,
+        timeRemaining,
+        attemptNumber,
+        startedAt: Date.now()
+      }));
+    }
+  }, [answers, currentQuestionIndex, timeRemaining, started, completed]);
+
+  // Restore from localStorage on mount
+  useEffect(() => {
+    const saved = localStorage.getItem(`quiz_progress_${componentId}`);
+    if (saved && !started) {
+      try {
+        const data = JSON.parse(saved);
+        // Check if saved data is recent (within 24 hours)
+        if (Date.now() - data.startedAt < 24 * 60 * 60 * 1000) {
+          setAnswers(data.answers || {});
+          setCurrentQuestionIndex(data.currentQuestionIndex || 0);
+          setAttemptNumber(data.attemptNumber || 1);
+          if (data.timeRemaining) setTimeRemaining(data.timeRemaining);
+        }
+      } catch (error) {
+        console.error('Error restoring quiz progress:', error);
+      }
+    }
   }, [componentId]);
 
   // Auto-save progress every 30 seconds
@@ -268,6 +337,11 @@ export function QuizStudentView({ componentId }: QuizStudentViewProps) {
   const saveProgress = async () => {
     if (!quizData || !currentAttemptId) return;
 
+    if (!isOnline) {
+      setPendingSave(true);
+      return;
+    }
+
     try {
       // Update the in-progress attempt with current answers
       await (supabase as any).from('quiz_attempts').update({
@@ -276,13 +350,48 @@ export function QuizStudentView({ componentId }: QuizStudentViewProps) {
       }).eq('id', currentAttemptId);
 
       setLastSaved(new Date());
+      setPendingSave(false);
     } catch (error) {
       console.error('Error saving progress:', error);
+      setPendingSave(true);
     }
   };
 
   const handleAnswer = (questionId: string, answer: any) => {
     setAnswers(prev => ({ ...prev, [questionId]: answer }));
+  };
+
+  // Keyboard navigation
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if (!started || completed) return;
+
+    if (e.key === 'ArrowLeft' && currentQuestionIndex > 0) {
+      e.preventDefault();
+      setCurrentQuestionIndex(prev => prev - 1);
+    } else if (e.key === 'ArrowRight' && currentQuestionIndex < (quizData?.questions.length || 0) - 1) {
+      e.preventDefault();
+      setCurrentQuestionIndex(prev => prev + 1);
+    } else if (e.key === 'Enter' && e.ctrlKey && currentQuestionIndex === (quizData?.questions.length || 0) - 1) {
+      e.preventDefault();
+      submitQuiz();
+    }
+  }, [started, completed, currentQuestionIndex, quizData]);
+
+  useEffect(() => {
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [handleKeyDown]);
+
+  const speakQuestion = () => {
+    if (quizData && currentQuestionIndex < quizData.questions.length) {
+      const question = quizData.questions[currentQuestionIndex];
+      const textToSpeak = `Question ${currentQuestionIndex + 1}. ${question.question_text}. ${
+        question.options.length > 0 
+          ? question.options.map((opt, idx) => `Option ${String.fromCharCode(65 + idx)}: ${opt.option_text}`).join('. ')
+          : ''
+      }`;
+      speak(textToSpeak);
+    }
   };
 
   const submitQuiz = async () => {
@@ -379,6 +488,13 @@ export function QuizStudentView({ componentId }: QuizStudentViewProps) {
       });
     }
   };
+
+  // Clear localStorage on completion
+  useEffect(() => {
+    if (completed) {
+      localStorage.removeItem(`quiz_progress_${componentId}`);
+    }
+  }, [completed, componentId]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -510,6 +626,16 @@ export function QuizStudentView({ componentId }: QuizStudentViewProps) {
           )}
           <div>Question {currentQuestionIndex + 1} of {quizData.questions.length}</div>
           <div className="flex items-center gap-2">
+            {!isOnline && (
+              <div title="Offline - answers saved locally">
+                <WifiOff className="h-4 w-4 text-red-600" />
+              </div>
+            )}
+            {isOnline && (
+              <div title="Online">
+                <Wifi className="h-4 w-4 text-green-600" />
+              </div>
+            )}
             <span>Attempt {attemptNumber}</span>
             {lastSaved && (
               <span className="text-xs text-muted-foreground">
@@ -528,16 +654,28 @@ export function QuizStudentView({ componentId }: QuizStudentViewProps) {
               </p>
               <p className="mt-2">{currentQuestion.question_text}</p>
             </div>
-            {currentQuestion.hint_text && (
+            <div className="flex gap-2">
+              {currentQuestion.hint_text && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowHint(prev => ({ ...prev, [currentQuestion.id]: !prev[currentQuestion.id] }))}
+                >
+                  <Lightbulb className="h-4 w-4 mr-1" />
+                  {showHint[currentQuestion.id] ? 'Hide' : 'Show'} Hint
+                </Button>
+              )}
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => setShowHint(prev => ({ ...prev, [currentQuestion.id]: !prev[currentQuestion.id] }))}
+                onClick={speakQuestion}
+                disabled={isSpeaking}
+                title="Read question aloud (Keyboard: R)"
               >
-                <Lightbulb className="h-4 w-4 mr-1" />
-                {showHint[currentQuestion.id] ? 'Hide' : 'Show'} Hint
+                <Volume2 className="h-4 w-4 mr-1" />
+                {isSpeaking ? 'Speaking...' : 'Read Aloud'}
               </Button>
-            )}
+            </div>
           </div>
 
           {showHint[currentQuestion.id] && currentQuestion.hint_text && (
@@ -632,6 +770,13 @@ export function QuizStudentView({ componentId }: QuizStudentViewProps) {
 
         {/* Question Navigation */}
         <div className="border-t pt-4">
+          <Alert className="mb-4">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription className="text-xs">
+              <strong>Keyboard shortcuts:</strong> ← → to navigate questions | Ctrl+Enter to submit quiz
+            </AlertDescription>
+          </Alert>
+
           <div className="flex gap-2 flex-wrap mb-4">
             {quizData.questions.map((q, idx) => (
               <Button

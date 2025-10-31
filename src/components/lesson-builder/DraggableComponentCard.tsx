@@ -45,6 +45,7 @@ const componentTypeLabels: Record<string, string> = {
   slides: 'PowerPoint/Slides',
   page: 'Page',
   video: 'Multimedia',
+  quiz: 'Quiz/Assessment',
   discussion: 'Discussion',
   codingEditor: 'Coding IDE',
   desmos: 'Desmos Activity',
@@ -367,6 +368,28 @@ export function DraggableComponentCard({
               />
             </div>
           </>
+        );
+
+      case 'quiz':
+        return (
+          <div className="space-y-4">
+            <div className="p-4 bg-cyan-50 border-2 border-cyan-900 rounded-lg">
+              <p className="font-semibold text-cyan-900 mb-2">✅ Quiz Component</p>
+              <p className="text-sm text-muted-foreground">
+                Quiz content is managed through the dedicated Quiz Builder interface when students view this lesson.
+                Teachers can create questions, set time limits, configure grading, and view analytics through the
+                quiz component when viewing as a student or in the lesson preview.
+              </p>
+            </div>
+            <div>
+              <Label>Quiz Title (optional override)</Label>
+              <Input
+                value={component.content.title || ''}
+                onChange={(e) => handleContentChange('title', e.target.value)}
+                placeholder="e.g., Chapter 3 Quiz"
+              />
+            </div>
+          </div>
         );
 
       case 'discussion':
