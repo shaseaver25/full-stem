@@ -155,13 +155,13 @@ export const ClassLessonsPanel = ({ classId }: ClassLessonsPanelProps) => {
                 
                 <div className="flex flex-col gap-2 flex-shrink-0">
                   <Button 
-                    variant="ghost" 
+                    variant="destructive" 
                     size="sm"
                     onClick={() => setLessonToDelete(lesson.id)}
-                    className="h-9 w-9 p-0 text-destructive hover:bg-destructive/10"
+                    className="h-9 w-9 p-0"
                     title="Remove lesson"
                   >
-                    <Trash2 className="h-5 w-5" />
+                    <Trash2 className="h-4 w-4" />
                   </Button>
                   <Link to={`/class-lesson/${lesson.id}`}>
                     <Button variant="outline" size="sm" className="flex items-center gap-1 w-full">
