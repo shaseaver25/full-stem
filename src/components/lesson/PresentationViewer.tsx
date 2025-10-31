@@ -444,7 +444,7 @@ export function PresentationViewer({
         </Button>
 
         {/* Slide Content */}
-        <div className="w-full max-w-5xl p-8">
+        <div className="w-full max-w-5xl p-8 space-y-4">
           {embedUrl ? (
             // Check if this is a file URL (old format) vs embed URL (new format)
             embedUrl.includes('/storage/v1/object/') || embedUrl.endsWith('.pptx') || embedUrl.endsWith('.ppt') || embedUrl.endsWith('.pdf') ? (
@@ -498,16 +498,51 @@ export function PresentationViewer({
                 </div>
               </Card>
             ) : (
-              <div className="aspect-video w-full rounded-lg overflow-hidden shadow-lg" role="img" aria-label={`Embedded presentation: ${title || 'Presentation'}`}>
-                <iframe
-                  src={embedUrl}
-                  className="w-full h-full"
-                  title={`${title || 'Presentation'} - Slide ${currentSlide + 1} of ${totalSlides}. Use arrow keys to navigate between slides.`}
-                  allowFullScreen
-                  allow="autoplay; fullscreen"
-                  aria-label={`Slide ${currentSlide + 1} of ${totalSlides}`}
-                />
-              </div>
+              <>
+                <div className="aspect-video w-full rounded-lg overflow-hidden shadow-lg" role="img" aria-label={`Embedded presentation: ${title || 'Presentation'}`}>
+                  <iframe
+                    src={embedUrl}
+                    className="w-full h-full"
+                    title={`${title || 'Presentation'} - Slide ${currentSlide + 1} of ${totalSlides}. Use arrow keys to navigate between slides.`}
+                    allowFullScreen
+                    allow="autoplay; fullscreen"
+                    aria-label={`Slide ${currentSlide + 1} of ${totalSlides}`}
+                  />
+                </div>
+
+                {/* Slide Text Panel - Shows current slide text for accessibility */}
+                {currentSlideData?.text && (
+                  <Card className="mt-4">
+                    <CardContent className="p-4 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className="p-2 bg-primary/10 rounded-lg">
+                            <Volume2 className="h-4 w-4 text-primary" />
+                          </div>
+                          <div>
+                            <h3 className="font-semibold text-sm">Slide {currentSlide + 1} Content</h3>
+                            <p className="text-xs text-muted-foreground">Text available for Read Aloud & Translation</p>
+                          </div>
+                        </div>
+                        {selectedLanguage !== 'en' && (
+                          <span className="text-xs px-2 py-1 bg-primary/10 text-primary rounded">
+                            Translated to {SUPPORTED_LANGUAGES.find(l => l.code === selectedLanguage)?.name}
+                          </span>
+                        )}
+                      </div>
+                      <div className="prose prose-sm max-w-none dark:prose-invert">
+                        <p className="text-sm leading-relaxed">{displayText}</p>
+                      </div>
+                      {currentSlideData.notes && (
+                        <div className="pt-3 border-t">
+                          <p className="text-xs font-medium text-muted-foreground mb-1">Notes:</p>
+                          <p className="text-xs text-muted-foreground italic">{currentSlideData.notes}</p>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                )}
+              </>
             )
           ) : currentSlideData ? (
             <Card className="shadow-lg">
