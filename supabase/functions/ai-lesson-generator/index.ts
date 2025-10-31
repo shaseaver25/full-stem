@@ -17,13 +17,13 @@ serve(async (req) => {
     
     console.log('Generating AI lesson:', { topic, subject, gradeLevel, readingLevel, language, durationMinutes });
 
-    // Get OpenAI API key from Supabase secrets
-    const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+    // Get Lovable API key from Supabase secrets (auto-configured)
+    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
     
-    if (!openAIApiKey) {
-      console.error('OPENAI_API_KEY not configured in Supabase secrets');
+    if (!lovableApiKey) {
+      console.error('LOVABLE_API_KEY not configured');
       return new Response(
-        JSON.stringify({ error: 'OpenAI API key not configured. Please add it in Supabase Dashboard → Project Settings → Edge Functions → Secrets' }),
+        JSON.stringify({ error: 'Lovable API key not configured' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -105,34 +105,48 @@ GOLDEN RULE: Make struggling students think "I can do this!" not "This is too mu
 
     const userPrompt = `Create a ${durationMinutes}-minute ${subject} lesson on "${topic}" for grade ${gradeLevel} students at ${readingLevel} reading level in ${language} language.${standards ? `\n\nAlign to these standards: ${JSON.stringify(standards)}` : ''}`;
 
-    // Call OpenAI API
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    // Call Lovable AI Gateway
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
+        'Authorization': `Bearer ${lovableApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-5-mini-2025-08-07',
+        model: 'google/gemini-2.5-flash',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
         ],
-        max_completion_tokens: 4000,
       }),
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('OpenAI API error:', response.status, errorText);
+      console.error('Lovable AI error:', response.status, errorText);
+      
+      if (response.status === 429) {
+        return new Response(
+          JSON.stringify({ error: 'Rate limit exceeded. Please try again in a moment.' }),
+          { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      
+      if (response.status === 402) {
+        return new Response(
+          JSON.stringify({ error: 'Payment required. Please add credits to your Lovable workspace.' }),
+          { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      
       return new Response(
-        JSON.stringify({ error: `OpenAI API error: ${response.status}` }),
+        JSON.stringify({ error: `Lovable AI error: ${response.status}` }),
         { status: response.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
     const data = await response.json();
-    console.log('OpenAI response received, tokens used:', data.usage);
+    console.log('Lovable AI response received, tokens used:', data.usage);
 
     // Parse the lesson JSON from the response
     const lessonText = data.choices[0].message.content;
@@ -162,11 +176,11 @@ GOLDEN RULE: Make struggling students think "I can do this!" not "This is too mu
       JSON.stringify({ 
         lesson,
         usage: {
-          provider: 'OpenAI',
-          model: 'gpt-4o-mini',
-          inputTokens: data.usage.prompt_tokens,
-          outputTokens: data.usage.completion_tokens,
-          estimatedCost: (data.usage.prompt_tokens * 0.00015 + data.usage.completion_tokens * 0.0006) / 1000
+          provider: 'Lovable AI',
+          model: 'google/gemini-2.5-flash',
+          inputTokens: data.usage?.prompt_tokens || 0,
+          outputTokens: data.usage?.completion_tokens || 0,
+          estimatedCost: 0 // Lovable AI uses workspace credits
         }
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
