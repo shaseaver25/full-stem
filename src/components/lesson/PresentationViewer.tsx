@@ -33,7 +33,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useTextToSpeech } from '@/hooks/useTextToSpeech';
-import { useTranslation } from '@/hooks/useTranslation';
+import { useLiveTranslation } from '@/hooks/useLiveTranslation';
 import { cn } from '@/lib/utils';
 
 interface Slide {
@@ -92,7 +92,7 @@ export function PresentationViewer({
   const [showKeyboardHelp, setShowKeyboardHelp] = useState(false);
   
   const { speak, isPlaying, isLoading: isSpeaking } = useTextToSpeech();
-  const { translate, isTranslating } = useTranslation();
+  const { translateText, isTranslating } = useLiveTranslation();
 
   const totalSlides = slides.length || 1;
   const progressPercentage = ((currentSlide + 1) / totalSlides) * 100;
@@ -227,8 +227,15 @@ export function PresentationViewer({
     if (!translatedTexts.has(currentSlide)) {
       const currentSlideData = slides[currentSlide];
       if (currentSlideData?.text) {
-        const translated = await translate(currentSlideData.text);
-        setTranslatedTexts(new Map(translatedTexts).set(currentSlide, translated));
+        const languageName = SUPPORTED_LANGUAGES.find(l => l.code === langCode)?.name || langCode;
+        const translated = await translateText({
+          text: currentSlideData.text,
+          targetLanguage: languageName,
+          sourceLanguage: 'auto'
+        });
+        if (translated) {
+          setTranslatedTexts(new Map(translatedTexts).set(currentSlide, translated));
+        }
       }
     }
   };
