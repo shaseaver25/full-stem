@@ -32,7 +32,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useTextToSpeech } from '@/hooks/useTextToSpeech';
+import { usePresentationTTS } from '@/hooks/usePresentationTTS';
 import { useLiveTranslation } from '@/hooks/useLiveTranslation';
 import { cn } from '@/lib/utils';
 
@@ -91,7 +91,7 @@ export function PresentationViewer({
   const [showNotesPanel, setShowNotesPanel] = useState(false);
   const [showKeyboardHelp, setShowKeyboardHelp] = useState(false);
   
-  const { speak, isPlaying, isLoading: isSpeaking } = useTextToSpeech();
+  const { speak, isPlaying, isLoading: isSpeaking } = usePresentationTTS();
   const { translateText, isTranslating } = useLiveTranslation();
 
   const totalSlides = slides.length || 1;
