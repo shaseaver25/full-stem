@@ -3627,6 +3627,7 @@ export type Database = {
       encrypt_token: { Args: { token_text: string }; Returns: string }
       generate_class_code: { Args: never; Returns: string }
       get_student_id_for_user: { Args: { _user_id: string }; Returns: string }
+      get_teacher_profile_id: { Args: { _user_id: string }; Returns: string }
       global_search: {
         Args: { org_name?: string; search_query: string; user_role?: string }
         Returns: {
@@ -3651,6 +3652,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      has_teacher_profile: { Args: { _user_id?: string }; Returns: boolean }
       is_developer: { Args: { _user_id?: string }; Returns: boolean }
       is_super_admin: { Args: { _user_id?: string }; Returns: boolean }
       is_system_admin: { Args: { _user_id?: string }; Returns: boolean }

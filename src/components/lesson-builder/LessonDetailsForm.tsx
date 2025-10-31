@@ -36,10 +36,25 @@ export function LessonDetailsForm({
   const { data: classes } = useQuery({
     queryKey: ['teacher-classes'],
     queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return [];
+
+      // Get teacher profile ID
+      const { data: teacherProfile } = await supabase
+        .from('teacher_profiles')
+        .select('id')
+        .eq('user_id', user.id)
+        .single();
+
+      if (!teacherProfile) return [];
+
+      // Only show classes where the user is the teacher
       const { data, error } = await supabase
         .from('classes')
         .select('id, name')
+        .eq('teacher_id', teacherProfile.id)
         .order('name');
+      
       if (error) throw error;
       return data;
     },

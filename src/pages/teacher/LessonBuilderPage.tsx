@@ -112,6 +112,32 @@ export default function LessonBuilderPage() {
       return;
     }
 
+    // Validate teacher profile exists
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      toast({
+        title: 'Authentication Error',
+        description: 'You must be logged in to save lessons',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const { data: teacherProfile } = await supabase
+      .from('teacher_profiles')
+      .select('id')
+      .eq('user_id', user.id)
+      .single();
+
+    if (!teacherProfile) {
+      toast({
+        title: 'Profile Error',
+        description: 'Teacher profile not found. Please complete your profile setup.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setIsSaving(true);
 
     try {
