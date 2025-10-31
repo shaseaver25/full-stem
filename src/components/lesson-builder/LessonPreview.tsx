@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import { Pencil, Check, X } from 'lucide-react';
 import { DiscussionComponent } from '@/components/lesson/DiscussionComponent';
+import { LessonComponentRenderer } from '@/components/lesson/LessonComponentRenderer';
 
 interface LessonComponent {
   component_type: string;
@@ -239,21 +240,11 @@ export function LessonPreview({ title, objectives, components, lessonId, onUpdat
                 {component.component_type === 'page' && (
                   <SafeHtml html={component.content.body || ''} />
                 )}
-                {component.component_type === 'video' && (
-                  <div>
-                    <p className="text-sm text-muted-foreground mb-2">{component.content.caption}</p>
-                    <div className="aspect-video bg-muted rounded flex items-center justify-center">
-                      {component.content.url ? (
-                        <iframe
-                          src={component.content.url}
-                          className="w-full h-full rounded"
-                          allowFullScreen
-                        />
-                      ) : (
-                        <p className="text-muted-foreground">Video URL not set</p>
-                      )}
-                    </div>
-                  </div>
+                {(component.component_type === 'video' || component.component_type === 'multimedia') && (
+                  <LessonComponentRenderer 
+                    component={component as any}
+                    showTypeLabel={false}
+                  />
                 )}
                 {component.component_type === 'discussion' && lessonId && (
                   <DiscussionComponent
