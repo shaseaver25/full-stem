@@ -34,6 +34,7 @@ import {
 } from "@/components/ui/select";
 import { usePresentationTTS } from '@/hooks/usePresentationTTS';
 import { useLiveTranslation } from '@/hooks/useLiveTranslation';
+import { HighlightedText } from './HighlightedText';
 import { cn } from '@/lib/utils';
 
 interface Slide {
@@ -91,7 +92,7 @@ export function PresentationViewer({
   const [showNotesPanel, setShowNotesPanel] = useState(false);
   const [showKeyboardHelp, setShowKeyboardHelp] = useState(false);
   
-  const { speak, isPlaying, isLoading: isSpeaking } = usePresentationTTS();
+  const { speak, isPlaying, isLoading: isSpeaking, currentWordIndex, wordTimings } = usePresentationTTS();
   const { translateText, isTranslating } = useLiveTranslation();
 
   const totalSlides = slides.length || 1;
@@ -538,7 +539,13 @@ export function PresentationViewer({
                         )}
                       </div>
                       <div className="prose prose-sm max-w-none dark:prose-invert">
-                        <p className="text-sm leading-relaxed">{displayText}</p>
+                        <p className="text-sm leading-relaxed">
+                          <HighlightedText 
+                            text={displayText} 
+                            currentWordIndex={currentWordIndex}
+                            wordTimings={wordTimings}
+                          />
+                        </p>
                       </div>
                       {currentSlideData.notes && (
                         <div className="pt-3 border-t">
