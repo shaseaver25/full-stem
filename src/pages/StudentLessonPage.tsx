@@ -163,51 +163,6 @@ const StudentLessonPage = () => {
             }}
           />
         )}
-
-        {/* Assignments */}
-        {assignmentComponents.length > 0 && (
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle>Assignments</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {assignmentComponents.map((component: any) => (
-                  <div key={component.id} className="border rounded-lg p-4 bg-card">
-                    <Badge variant="default" className="mb-2">Assignment</Badge>
-                    {component.content?.title && (
-                      <h4 className="font-semibold text-lg mb-2">{component.content.title}</h4>
-                    )}
-                    <div className="prose prose-sm max-w-none">
-                      {component.content?.prompt && (
-                        <p className="text-muted-foreground">{component.content.prompt}</p>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Materials Needed */}
-        {lesson.materials && lesson.materials.length > 0 && (
-          <Card className="mt-6">
-            <CardHeader>
-              <CardTitle>Materials You'll Need</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ul className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                {lesson.materials.map((material: string, index: number) => (
-                  <li key={index} className="flex items-center gap-2">
-                    <span className="w-2 h-2 bg-primary rounded-full"></span>
-                    <span>{material}</span>
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
-        )}
       </div>
     </div>
   );
