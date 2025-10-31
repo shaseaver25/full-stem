@@ -381,22 +381,13 @@ export function DraggableComponentCard({
                 <DialogHeader>
                   <DialogTitle>Quiz Builder</DialogTitle>
                 </DialogHeader>
-                {component.id && (
-                  <QuizBuilderComponent 
-                    componentId={component.id}
-                    onUpdate={() => {
-                      // Optionally refresh or update the component
-                      setIsQuizBuilderOpen(false);
-                    }}
-                  />
-                )}
-                {!component.id && (
-                  <div className="p-4 bg-yellow-50 border border-yellow-200 rounded">
-                    <p className="text-sm text-yellow-800">
-                      Please save the lesson first before configuring the quiz. The component needs to be saved to the database.
-                    </p>
-                  </div>
-                )}
+                <QuizBuilderComponent 
+                  initialData={component.content?.quizData}
+                  onSave={(quizData) => {
+                    handleContentChange('quizData', quizData);
+                    setIsQuizBuilderOpen(false);
+                  }}
+                />
               </DialogContent>
             </Dialog>
           </div>

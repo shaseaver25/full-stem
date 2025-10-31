@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,7 +8,6 @@ import { Switch } from '@/components/ui/switch';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CheckCircle2, Plus, Trash2, MoveUp, MoveDown, Lightbulb, Image as ImageIcon } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
 interface QuizQuestion {
@@ -31,99 +30,28 @@ interface QuizOption {
 }
 
 interface QuizBuilderProps {
-  componentId: string;
-  onUpdate?: () => void;
+  initialData?: any;
+  onSave: (quizData: any) => void;
 }
 
-export function QuizBuilderComponent({ componentId, onUpdate }: QuizBuilderProps) {
+export function QuizBuilderComponent({ initialData, onSave }: QuizBuilderProps) {
   const { toast } = useToast();
-  const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   
   // Quiz settings
-  const [title, setTitle] = useState('');
-  const [instructions, setInstructions] = useState('');
-  const [timeLimitMinutes, setTimeLimitMinutes] = useState<number | null>(null);
-  const [attemptsAllowed, setAttemptsAllowed] = useState(-1);
-  const [randomizeQuestions, setRandomizeQuestions] = useState(false);
-  const [randomizeAnswers, setRandomizeAnswers] = useState(false);
-  const [showCorrectAnswers, setShowCorrectAnswers] = useState<'immediately' | 'after_submission' | 'never'>('after_submission');
-  const [passThreshold, setPassThreshold] = useState(70);
+  const [title, setTitle] = useState(initialData?.title || '');
+  const [instructions, setInstructions] = useState(initialData?.instructions || '');
+  const [timeLimitMinutes, setTimeLimitMinutes] = useState<number | null>(initialData?.timeLimitMinutes || null);
+  const [attemptsAllowed, setAttemptsAllowed] = useState(initialData?.attemptsAllowed || -1);
+  const [randomizeQuestions, setRandomizeQuestions] = useState(initialData?.randomizeQuestions || false);
+  const [randomizeAnswers, setRandomizeAnswers] = useState(initialData?.randomizeAnswers || false);
+  const [showCorrectAnswers, setShowCorrectAnswers] = useState<'immediately' | 'after_submission' | 'never'>(initialData?.showCorrectAnswers || 'after_submission');
+  const [passThreshold, setPassThreshold] = useState(initialData?.passThreshold || 70);
   
   // Questions
-  const [questions, setQuestions] = useState<QuizQuestion[]>([]);
-  const [quizComponentId, setQuizComponentId] = useState<string | null>(null);
+  const [questions, setQuestions] = useState<QuizQuestion[]>(initialData?.questions || []);
 
-  useEffect(() => {
-    loadQuiz();
-  }, [componentId]);
-
-  const loadQuiz = async () => {
-    setLoading(true);
-    try {
-      // Load quiz component
-      const { data: quizData, error: quizError } = await (supabase as any)
-        .from('quiz_components')
-        .select('*')
-        .eq('component_id', componentId)
-        .maybeSingle();
-
-      if (quizError && quizError.code !== 'PGRST116') throw quizError;
-
-      if (quizData) {
-        setQuizComponentId(quizData.id);
-        setTitle(quizData.title);
-        setInstructions(quizData.instructions || '');
-        setTimeLimitMinutes(quizData.time_limit_minutes);
-        setAttemptsAllowed(quizData.attempts_allowed);
-        setRandomizeQuestions(quizData.randomize_questions);
-        setRandomizeAnswers(quizData.randomize_answers);
-        setShowCorrectAnswers(quizData.show_correct_answers);
-        setPassThreshold(quizData.pass_threshold_percentage);
-
-        // Load questions
-        const { data: questionsData, error: questionsError } = await (supabase as any)
-          .from('quiz_questions')
-          .select('*, quiz_question_options(*)')
-          .eq('quiz_component_id', quizData.id)
-          .order('question_order');
-
-        if (questionsError) throw questionsError;
-
-        const loadedQuestions: QuizQuestion[] = questionsData.map((q: any) => ({
-          id: q.id,
-          question_order: q.question_order,
-          question_type: q.question_type,
-          question_text: q.question_text,
-          question_image_url: q.question_image_url,
-          points: q.points,
-          hint_text: q.hint_text,
-          explanation: q.explanation,
-          options: (q.quiz_question_options || [])
-            .sort((a: any, b: any) => a.option_order - b.option_order)
-            .map((opt: any) => ({
-              id: opt.id,
-              option_order: opt.option_order,
-              option_text: opt.option_text,
-              is_correct: opt.is_correct
-            }))
-        }));
-
-        setQuestions(loadedQuestions);
-      }
-    } catch (error) {
-      console.error('Error loading quiz:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load quiz data',
-        variant: 'destructive'
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const saveQuiz = async () => {
+  const saveQuiz = () => {
     if (!title.trim()) {
       toast({
         title: 'Validation Error',
@@ -135,83 +63,27 @@ export function QuizBuilderComponent({ componentId, onUpdate }: QuizBuilderProps
 
     setSaving(true);
     try {
-      // Calculate total points
       const pointsTotal = questions.reduce((sum, q) => sum + q.points, 0);
 
-      // Upsert quiz component
-      const { data: quizData, error: quizError } = await (supabase as any)
-        .from('quiz_components')
-        .upsert({
-          id: quizComponentId || undefined,
-          component_id: componentId,
-          title,
-          instructions,
-          time_limit_minutes: timeLimitMinutes,
-          attempts_allowed: attemptsAllowed,
-          randomize_questions: randomizeQuestions,
-          randomize_answers: randomizeAnswers,
-          show_correct_answers: showCorrectAnswers,
-          pass_threshold_percentage: passThreshold,
-          points_total: pointsTotal
-        })
-        .select()
-        .single();
+      const quizData = {
+        title,
+        instructions,
+        timeLimitMinutes,
+        attemptsAllowed,
+        randomizeQuestions,
+        randomizeAnswers,
+        showCorrectAnswers,
+        passThreshold,
+        pointsTotal,
+        questions
+      };
 
-      if (quizError) throw quizError;
-      
-      const savedQuizId = quizData.id;
-      setQuizComponentId(savedQuizId);
-
-      // Delete existing questions and options (cascade will handle options)
-      if (quizComponentId) {
-        await (supabase as any)
-          .from('quiz_questions')
-          .delete()
-          .eq('quiz_component_id', quizComponentId);
-      }
-
-      // Insert questions and options
-      for (const question of questions) {
-        const { data: questionData, error: questionError } = await (supabase as any)
-          .from('quiz_questions')
-          .insert({
-            quiz_component_id: savedQuizId,
-            question_order: question.question_order,
-            question_type: question.question_type,
-            question_text: question.question_text,
-            question_image_url: question.question_image_url,
-            points: question.points,
-            hint_text: question.hint_text,
-            explanation: question.explanation
-          })
-          .select()
-          .single();
-
-        if (questionError) throw questionError;
-
-        // Insert options for this question
-        if (question.options.length > 0) {
-          const optionsToInsert = question.options.map(opt => ({
-            question_id: questionData.id,
-            option_order: opt.option_order,
-            option_text: opt.option_text,
-            is_correct: opt.is_correct
-          }));
-
-          const { error: optionsError } = await (supabase as any)
-            .from('quiz_question_options')
-            .insert(optionsToInsert);
-
-          if (optionsError) throw optionsError;
-        }
-      }
+      onSave(quizData);
 
       toast({
         title: 'Success',
-        description: 'Quiz saved successfully'
+        description: 'Quiz configured successfully'
       });
-
-      onUpdate?.();
     } catch (error) {
       console.error('Error saving quiz:', error);
       toast({
@@ -332,10 +204,6 @@ export function QuizBuilderComponent({ componentId, onUpdate }: QuizBuilderProps
   };
 
   const totalPoints = questions.reduce((sum, q) => sum + q.points, 0);
-
-  if (loading) {
-    return <div className="p-4">Loading quiz...</div>;
-  }
 
   return (
     <Card className="bg-cyan-50 border-cyan-900">
