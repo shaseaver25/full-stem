@@ -93,25 +93,12 @@ export function DraggableComponentCard({
     console.log('📎 Local file uploaded:', file);
     const existingFiles = component.content.uploadedFiles || [];
     
-    // For slides component, if it's a presentation file, set it as the embed URL
-    if (component.component_type === 'slides' && 
-        (file.name.endsWith('.pptx') || file.name.endsWith('.ppt') || file.name.endsWith('.pdf'))) {
-      console.log('📊 Setting PowerPoint file as embed URL:', file.url);
-      onUpdate(index, {
-        content: {
-          ...component.content,
-          url: file.url,
-          uploadedFiles: [...existingFiles, file],
-        },
-      });
-    } else {
-      onUpdate(index, {
-        content: {
-          ...component.content,
-          uploadedFiles: [...existingFiles, file],
-        },
-      });
-    }
+    onUpdate(index, {
+      content: {
+        ...component.content,
+        uploadedFiles: [...existingFiles, file],
+      },
+    });
   };
 
   const renderFields = () => {
@@ -120,43 +107,80 @@ export function DraggableComponentCard({
         return (
           <>
             <div>
-              <Label htmlFor={`${component.id}-title`}>Title</Label>
+              <Label htmlFor={`${component.id}-title`}>Presentation Title</Label>
               <Input
                 id={`${component.id}-title`}
                 value={component.content.title || ''}
                 onChange={(e) => handleContentChange('title', e.target.value)}
-                placeholder="Presentation title"
+                placeholder="e.g., Introduction to Cell Biology"
               />
             </div>
-            <div className="space-y-2">
-              <Label>Presentation Source</Label>
-              <div className="p-3 bg-muted/50 rounded-md space-y-2">
-                <p className="text-sm font-medium">Option 1: Upload PowerPoint/PDF file below</p>
-                <p className="text-xs text-muted-foreground">Use the "Upload File" button in the File Attachments section</p>
+
+            <div className="space-y-3">
+              <Label htmlFor={`${component.id}-url`}>Presentation Embed Link</Label>
+              <Input
+                id={`${component.id}-url`}
+                value={component.content.url || ''}
+                onChange={(e) => handleContentChange('url', e.target.value)}
+                placeholder="https://docs.google.com/presentation/d/.../embed"
+                className="font-mono text-sm"
+              />
+              
+              <div className="space-y-2 p-3 bg-muted/50 rounded-lg text-sm">
+                <p className="font-medium flex items-center gap-2">
+                  📚 Supported Platforms
+                </p>
+                <ul className="space-y-1 text-muted-foreground ml-4">
+                  <li>✓ Google Slides (recommended)</li>
+                  <li>✓ OneDrive PowerPoint Online</li>
+                  <li>✓ Canva Presentations</li>
+                  <li>✓ Prezi</li>
+                  <li>✓ SlideShare</li>
+                </ul>
               </div>
-              <div className="p-3 bg-muted/50 rounded-md">
-                <p className="text-sm font-medium mb-2">Option 2: Paste embed URL</p>
-                <Input
-                  id={`${component.id}-url`}
-                  value={component.content.url || ''}
-                  onChange={(e) => handleContentChange('url', e.target.value)}
-                  placeholder="https://docs.google.com/presentation/..."
-                />
-                <p className="text-xs text-muted-foreground mt-1">
-                  Google Slides, Prezi, or other presentation embed links
+
+              <div className="border rounded-lg p-3 space-y-3 bg-card">
+                <p className="text-sm font-medium text-primary">📋 How to Get an Embed Link:</p>
+                
+                <div className="space-y-2">
+                  <div className="text-sm">
+                    <p className="font-medium mb-1">Google Slides:</p>
+                    <ol className="text-muted-foreground space-y-0.5 ml-4 list-decimal text-xs">
+                      <li>Open your presentation in Google Slides</li>
+                      <li>Click <strong>File</strong> → <strong>Share</strong> → <strong>Publish to web</strong></li>
+                      <li>Click the <strong>Embed</strong> tab</li>
+                      <li>Copy the link and paste it above</li>
+                    </ol>
+                  </div>
+
+                  <div className="text-sm pt-2 border-t">
+                    <p className="font-medium mb-1">OneDrive PowerPoint:</p>
+                    <ol className="text-muted-foreground space-y-0.5 ml-4 list-decimal text-xs">
+                      <li>Open your PowerPoint in OneDrive (online)</li>
+                      <li>Click <strong>File</strong> → <strong>Share</strong> → <strong>Embed</strong></li>
+                      <li>Click <strong>Generate</strong> to create embed code</li>
+                      <li>Copy the URL from the <code>src="..."</code> part of the iframe code</li>
+                    </ol>
+                  </div>
+                </div>
+
+                <p className="text-xs text-muted-foreground pt-2 border-t">
+                  💡 Make sure your presentation is set to "Anyone with the link can view" in your sharing settings.
                 </p>
               </div>
             </div>
+
             <div>
               <Label htmlFor={`${component.id}-notes`}>Speaker Notes (optional)</Label>
               <Textarea
                 id={`${component.id}-notes`}
                 value={component.content.notes || ''}
                 onChange={(e) => handleContentChange('notes', e.target.value)}
-                placeholder="Additional notes or context for students..."
+                placeholder="Additional context or talking points for students..."
                 rows={3}
               />
             </div>
+
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <Label htmlFor={`${component.id}-downloads`}>Allow Downloads</Label>
@@ -454,12 +478,14 @@ export function DraggableComponentCard({
 
           <Separator className="my-4" />
 
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <Label className="text-sm font-medium">File Attachments</Label>
-            </div>
+          {/* File Attachments - Hidden for slides component since it uses embed links only */}
+          {component.component_type !== 'slides' && (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <Label className="text-sm font-medium">File Attachments</Label>
+              </div>
 
-            <LocalFileUpload onFileUploaded={handleLocalFileUploaded} variant="outline" size="sm" />
+              <LocalFileUpload onFileUploaded={handleLocalFileUploaded} variant="outline" size="sm" />
 
             {component.content.uploadedFiles && component.content.uploadedFiles.length > 0 && (
               <div className="space-y-2">
@@ -498,6 +524,7 @@ export function DraggableComponentCard({
               </p>
             )}
           </div>
+          )}
         </CardContent>
       )}
     </Card>

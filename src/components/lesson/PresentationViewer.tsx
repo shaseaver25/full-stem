@@ -387,28 +387,13 @@ export function PresentationViewer({
         <div className="w-full max-w-5xl p-8">
           {embedUrl ? (
             <div className="aspect-video w-full rounded-lg overflow-hidden shadow-lg">
-              {embedUrl.endsWith('.pptx') || embedUrl.endsWith('.ppt') ? (
-                <iframe
-                  src={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(embedUrl)}`}
-                  className="w-full h-full"
-                  title={`Slide ${currentSlide + 1} of ${totalSlides}`}
-                  allowFullScreen
-                />
-              ) : embedUrl.endsWith('.pdf') ? (
-                <iframe
-                  src={embedUrl}
-                  className="w-full h-full"
-                  title={`Slide ${currentSlide + 1} of ${totalSlides}`}
-                  allowFullScreen
-                />
-              ) : (
-                <iframe
-                  src={embedUrl}
-                  className="w-full h-full"
-                  title={`Slide ${currentSlide + 1} of ${totalSlides}`}
-                  allowFullScreen
-                />
-              )}
+              <iframe
+                src={embedUrl}
+                className="w-full h-full"
+                title={`${title || 'Presentation'} - Slide ${currentSlide + 1} of ${totalSlides}`}
+                allowFullScreen
+                allow="autoplay; fullscreen"
+              />
             </div>
           ) : currentSlideData ? (
             <Card className="shadow-lg">
