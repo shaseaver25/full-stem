@@ -40,6 +40,27 @@ export default function AIGenerationWizard({
   const { generateLesson, lesson, isGenerating } = useAILessonWizard();
   const { toast } = useToast();
 
+  // Show alert if no lesson ID
+  if (!lessonId) {
+    return (
+      <Alert>
+        <AlertCircle className="h-4 w-4" />
+        <AlertDescription>
+          <div className="space-y-2">
+            <p className="font-semibold">Lesson Not Saved Yet</p>
+            <p>Before using the AI Generator, please:</p>
+            <ol className="list-decimal list-inside space-y-1 ml-2">
+              <li>Switch to the "Manual Build" tab</li>
+              <li>Enter a lesson title (required)</li>
+              <li>Click "Save Lesson"</li>
+              <li>Return here to generate AI components</li>
+            </ol>
+          </div>
+        </AlertDescription>
+      </Alert>
+    );
+  }
+
   function updateField(field: string, value: any) {
     setForm((f) => ({ ...f, [field]: value }));
   }
