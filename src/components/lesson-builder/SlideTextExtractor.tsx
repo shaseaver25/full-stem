@@ -6,11 +6,8 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import * as pdfjsLib from 'pdfjs-dist';
 
-// Configure PDF.js worker using Vite's URL resolution
-pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
-  'pdfjs-dist/build/pdf.worker.mjs',
-  import.meta.url
-).toString();
+// Set PDF.js worker to use local file in public folder
+pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
 
 interface SlideTextExtractorProps {
   onTextsExtracted: (texts: string[]) => void;
