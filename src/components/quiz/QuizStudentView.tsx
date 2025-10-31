@@ -76,10 +76,23 @@ export function QuizStudentView({ componentId }: QuizStudentViewProps) {
   const [feedback, setFeedback] = useState<Record<string, { correct: boolean; explanation?: string }>>({});
   const [attemptNumber, setAttemptNumber] = useState(1);
   const [remainingAttempts, setRemainingAttempts] = useState<number | null>(null);
+  const [currentAttemptId, setCurrentAttemptId] = useState<string | null>(null);
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
 
   useEffect(() => {
     loadQuiz();
   }, [componentId]);
+
+  // Auto-save progress every 30 seconds
+  useEffect(() => {
+    if (started && !completed && quizData) {
+      const saveInterval = setInterval(() => {
+        saveProgress();
+      }, 30000); // 30 seconds
+
+      return () => clearInterval(saveInterval);
+    }
+  }, [started, completed, answers, quizData]);
 
   useEffect(() => {
     if (started && timeRemaining !== null && timeRemaining > 0) {
@@ -131,7 +144,7 @@ export function QuizStudentView({ componentId }: QuizStudentViewProps) {
 
       if (questionsError) throw questionsError;
 
-      const formattedQuestions: QuizQuestion[] = questions.map((q: any) => ({
+      let formattedQuestions: QuizQuestion[] = questions.map((q: any) => ({
         id: q.id,
         question_order: q.question_order,
         question_type: q.question_type,
@@ -148,6 +161,19 @@ export function QuizStudentView({ componentId }: QuizStudentViewProps) {
             is_correct: opt.is_correct
           }))
       }));
+
+      // Apply randomization if enabled
+      if (quizComponent.randomize_questions) {
+        formattedQuestions = [...formattedQuestions].sort(() => Math.random() - 0.5);
+        formattedQuestions.forEach((q, idx) => q.question_order = idx);
+      }
+
+      if (quizComponent.randomize_answers) {
+        formattedQuestions = formattedQuestions.map(q => ({
+          ...q,
+          options: [...q.options].sort(() => Math.random() - 0.5)
+        }));
+      }
 
       setQuizData({
         id: quizComponent.id,
@@ -214,6 +240,45 @@ export function QuizStudentView({ componentId }: QuizStudentViewProps) {
     if (quizData?.time_limit_minutes) {
       setTimeRemaining(quizData.time_limit_minutes * 60);
     }
+
+    // Create initial attempt record for auto-save
+    if (userData.user && quizData) {
+      const { data: newAttempt } = await (supabase as any)
+        .from('quiz_attempts')
+        .insert({
+          quiz_component_id: quizData.id,
+          student_id: userData.user.id,
+          attempt_number: attemptNumber,
+          score: 0,
+          max_score: quizData.points_total,
+          percentage: 0,
+          time_spent_seconds: 0,
+          answers: {},
+          completed_at: null
+        })
+        .select()
+        .single();
+
+      if (newAttempt) {
+        setCurrentAttemptId(newAttempt.id);
+      }
+    }
+  };
+
+  const saveProgress = async () => {
+    if (!quizData || !currentAttemptId) return;
+
+    try {
+      // Update the in-progress attempt with current answers
+      await (supabase as any).from('quiz_attempts').update({
+        answers: answers,
+        updated_at: new Date().toISOString()
+      }).eq('id', currentAttemptId);
+
+      setLastSaved(new Date());
+    } catch (error) {
+      console.error('Error saving progress:', error);
+    }
   };
 
   const handleAnswer = (questionId: string, answer: any) => {
@@ -270,21 +335,35 @@ export function QuizStudentView({ componentId }: QuizStudentViewProps) {
       setFeedback(newFeedback);
       setCompleted(true);
 
-      // Save attempt to database
+      // Save final attempt to database
       const { data: userData } = await supabase.auth.getUser();
       if (userData.user) {
-        await (supabase as any).from('quiz_attempts').insert({
-          quiz_component_id: quizData.id,
-          student_id: userData.user.id,
-          attempt_number: attemptNumber,
-          score: totalScore,
-          max_score: quizData.points_total,
-          percentage: (totalScore / quizData.points_total) * 100,
-          time_spent_seconds: quizData.time_limit_minutes 
-            ? (quizData.time_limit_minutes * 60) - (timeRemaining || 0)
-            : 0,
-          answers: answers
-        });
+        if (currentAttemptId) {
+          // Update existing attempt
+          await (supabase as any).from('quiz_attempts').update({
+            score: totalScore,
+            percentage: (totalScore / quizData.points_total) * 100,
+            time_spent_seconds: quizData.time_limit_minutes 
+              ? (quizData.time_limit_minutes * 60) - (timeRemaining || 0)
+              : 0,
+            answers: answers,
+            completed_at: new Date().toISOString()
+          }).eq('id', currentAttemptId);
+        } else {
+          // Create new attempt
+          await (supabase as any).from('quiz_attempts').insert({
+            quiz_component_id: quizData.id,
+            student_id: userData.user.id,
+            attempt_number: attemptNumber,
+            score: totalScore,
+            max_score: quizData.points_total,
+            percentage: (totalScore / quizData.points_total) * 100,
+            time_spent_seconds: quizData.time_limit_minutes 
+              ? (quizData.time_limit_minutes * 60) - (timeRemaining || 0)
+              : 0,
+            answers: answers
+          });
+        }
       }
 
       toast({
@@ -430,7 +509,14 @@ export function QuizStudentView({ componentId }: QuizStudentViewProps) {
             </div>
           )}
           <div>Question {currentQuestionIndex + 1} of {quizData.questions.length}</div>
-          <div>Attempt {attemptNumber}</div>
+          <div className="flex items-center gap-2">
+            <span>Attempt {attemptNumber}</span>
+            {lastSaved && (
+              <span className="text-xs text-muted-foreground">
+                (Saved {Math.floor((Date.now() - lastSaved.getTime()) / 1000)}s ago)
+              </span>
+            )}
+          </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
