@@ -54,7 +54,7 @@ export function LessonComponentRenderer({
     );
   }
 
-  // Render presentation viewer with enhanced features
+  // Render presentation viewer with enhanced features (shareable links only)
   if (component_type === 'slides') {
     return (
       <div className="space-y-4">
@@ -73,20 +73,6 @@ export function LessonComponentRenderer({
           showThumbnails={content.showThumbnails !== false}
           enableTranslation={content.enableTranslation !== false}
         />
-        {id && (
-          <div className="pt-4 border-t border-border space-y-4">
-            <DriveAttachmentsList
-              componentId={id}
-              showEmbeds={true}
-              canDelete={false}
-            />
-            <OneDriveAttachmentsList
-              componentId={id}
-              showEmbeds={true}
-              canDelete={false}
-            />
-          </div>
-        )}
       </div>
     );
   }
