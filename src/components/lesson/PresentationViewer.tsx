@@ -386,15 +386,68 @@ export function PresentationViewer({
         {/* Slide Content */}
         <div className="w-full max-w-5xl p-8">
           {embedUrl ? (
-            <div className="aspect-video w-full rounded-lg overflow-hidden shadow-lg">
-              <iframe
-                src={embedUrl}
-                className="w-full h-full"
-                title={`${title || 'Presentation'} - Slide ${currentSlide + 1} of ${totalSlides}`}
-                allowFullScreen
-                allow="autoplay; fullscreen"
-              />
-            </div>
+            // Check if this is a file URL (old format) vs embed URL (new format)
+            embedUrl.includes('/storage/v1/object/') || embedUrl.endsWith('.pptx') || embedUrl.endsWith('.ppt') || embedUrl.endsWith('.pdf') ? (
+              <Card className="p-8 bg-yellow-50 dark:bg-yellow-950/30 border-yellow-200 dark:border-yellow-800">
+                <div className="space-y-4">
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 bg-yellow-100 dark:bg-yellow-900 rounded-lg">
+                      <svg className="w-6 h-6 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                      </svg>
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-lg text-yellow-900 dark:text-yellow-100 mb-2">
+                        Embed URL Required
+                      </h3>
+                      <p className="text-yellow-800 dark:text-yellow-200 mb-4">
+                        This presentation uses an old file format that can't be displayed. Please update it with a proper embed link from Google Slides or OneDrive.
+                      </p>
+                      
+                      <div className="space-y-3 text-sm">
+                        <div>
+                          <p className="font-medium text-yellow-900 dark:text-yellow-100 mb-1">📊 For Google Slides:</p>
+                          <ol className="list-decimal ml-4 space-y-1 text-yellow-800 dark:text-yellow-200">
+                            <li>Open your presentation in Google Slides</li>
+                            <li>Click "File" → "Share" → "Publish to web"</li>
+                            <li>Click "Embed" tab and copy the link</li>
+                            <li>Update this component with the embed link</li>
+                          </ol>
+                        </div>
+                        
+                        <div>
+                          <p className="font-medium text-yellow-900 dark:text-yellow-100 mb-1">📊 For OneDrive PowerPoint:</p>
+                          <ol className="list-decimal ml-4 space-y-1 text-yellow-800 dark:text-yellow-200">
+                            <li>Open your PowerPoint in OneDrive</li>
+                            <li>Click "File" → "Share" → "Embed"</li>
+                            <li>Click "Generate" and copy the src URL from the iframe code</li>
+                            <li>Update this component with the embed link</li>
+                          </ol>
+                        </div>
+
+                        {/* Show the current file URL for teacher reference */}
+                        <div className="mt-4 p-3 bg-yellow-100 dark:bg-yellow-900 rounded border border-yellow-300 dark:border-yellow-700">
+                          <p className="font-medium text-yellow-900 dark:text-yellow-100 mb-1">Current URL (file format):</p>
+                          <p className="text-xs text-yellow-700 dark:text-yellow-300 break-all font-mono">
+                            {embedUrl}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            ) : (
+              <div className="aspect-video w-full rounded-lg overflow-hidden shadow-lg">
+                <iframe
+                  src={embedUrl}
+                  className="w-full h-full"
+                  title={`${title || 'Presentation'} - Slide ${currentSlide + 1} of ${totalSlides}`}
+                  allowFullScreen
+                  allow="autoplay; fullscreen"
+                />
+              </div>
+            )
           ) : currentSlideData ? (
             <Card className="shadow-lg">
               <CardContent className="p-8">
