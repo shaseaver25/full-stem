@@ -281,7 +281,7 @@ export default function LessonBuilderPage() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => navigate(-1)}
+                  onClick={() => navigate(classId ? `/classes/${classId}` : '/teacher/classes')}
                 >
                   <ArrowLeft className="h-4 w-4 mr-2" />
                   Back
