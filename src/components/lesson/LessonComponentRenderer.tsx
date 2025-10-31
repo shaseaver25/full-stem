@@ -86,6 +86,50 @@ export function LessonComponentRenderer({
     );
   }
 
+  // Render video/multimedia component
+  if (component_type === 'video' || component_type === 'multimedia') {
+    let videoUrl = content.url;
+    
+    // Convert YouTube URLs to embed format
+    if (videoUrl && (videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be'))) {
+      const youtubeIdMatch = videoUrl.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
+      if (youtubeIdMatch && youtubeIdMatch[1]) {
+        videoUrl = `https://www.youtube.com/embed/${youtubeIdMatch[1]}`;
+      }
+    }
+    
+    return (
+      <div className="space-y-4">
+        {showTypeLabel && (
+          <Badge variant="outline" className="mb-3">
+            <Video className="w-3 h-3 mr-1" />
+            {componentTypeLabels[component_type] || component_type}
+          </Badge>
+        )}
+        {content.title && <h3 className="text-lg font-semibold mb-3">{content.title}</h3>}
+        {content.caption && (
+          <p className="text-sm text-muted-foreground mb-3">{content.caption}</p>
+        )}
+        {videoUrl && (
+          <div className="aspect-video w-full rounded-lg overflow-hidden shadow-lg bg-muted">
+            <iframe
+              src={videoUrl}
+              className="w-full h-full"
+              title={content.title || 'Video content'}
+              allowFullScreen
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            />
+          </div>
+        )}
+        {read_aloud && textContent && (
+          <div className="mt-4 pt-4 border-t">
+            <InlineReadAloud text={textContent.replace(/<[^>]*>/g, '')} language={language_code || 'en'} />
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="border rounded-lg p-4 bg-card">
       {showTypeLabel && (
