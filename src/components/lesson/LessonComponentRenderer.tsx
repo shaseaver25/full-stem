@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import InlineReadAloud from '@/components/InlineReadAloud';
 import { LessonComponent } from '@/hooks/useLessonComponents';
-import { FileText, Video, Code, MessageSquare, CheckSquare, Volume2, Languages } from 'lucide-react';
+import { FileText, Video, Code, MessageSquare, CheckSquare, Volume2, Languages, CheckCircle2 } from 'lucide-react';
 import { DiscussionComponent } from './DiscussionComponent';
 import { PresentationViewer } from './PresentationViewer';
 import { usePresentationTTS } from '@/hooks/usePresentationTTS';
@@ -12,6 +12,7 @@ import { useLiveTranslation } from '@/hooks/useLiveTranslation';
 import { HighlightedText } from './HighlightedText';
 import { DriveAttachmentsList } from '@/components/drive/DriveAttachmentsList';
 import { OneDriveAttachmentsList } from '@/components/onedrive/OneDriveAttachmentsList';
+import { QuizStudentView } from '@/components/quiz/QuizStudentView';
 
 const SUPPORTED_LANGUAGES = [
   { code: 'en', name: 'English' },
@@ -41,6 +42,7 @@ const componentTypeLabels: Record<string, string> = {
   slides: 'PowerPoint/Slides',
   page: 'Page',
   video: 'Multimedia',
+  quiz: 'Quiz/Assessment',
   discussion: 'Discussion',
   codingEditor: 'Coding IDE',
   activity: 'Activity',
@@ -298,6 +300,11 @@ export function LessonComponentRenderer({
   // Render video/multimedia component with translation and TTS
   if (component_type === 'video' || component_type === 'multimedia') {
     return <VideoComponentWithControls content={content} read_aloud={read_aloud} language_code={language_code} textContent={textContent} showTypeLabel={showTypeLabel} />;
+  }
+
+  // Render quiz component
+  if (component_type === 'quiz') {
+    return <QuizStudentView componentId={id} />;
   }
 
   return (

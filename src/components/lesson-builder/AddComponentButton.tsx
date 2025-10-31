@@ -18,7 +18,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { Plus, Presentation, FileText, Video, MessageSquare, Code, Calculator, Activity, FileCheck, BarChart, Lightbulb, BookOpen, FolderOpen } from 'lucide-react';
+import { Plus, Presentation, FileText, Video, MessageSquare, Code, Calculator, Activity, FileCheck, BarChart, Lightbulb, BookOpen, FolderOpen, CheckCircle2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 
 interface AddComponentButtonProps {
@@ -29,6 +29,7 @@ const componentTypes = [
   { type: 'slides', label: 'PowerPoint/Slides', icon: Presentation, description: 'Upload or embed slide presentations' },
   { type: 'page', label: 'Page', icon: FileText, description: 'Rich text content page' },
   { type: 'video', label: 'Multimedia', icon: Video, description: 'Video, audio, or interactive media' },
+  { type: 'quiz', label: 'Quiz/Assessment', icon: CheckCircle2, description: 'Create interactive quizzes with auto-grading' },
   { type: 'discussion', label: 'Discussion', icon: MessageSquare, description: 'Class discussion prompt' },
   { type: 'codingEditor', label: 'Coding IDE', icon: Code, description: 'Live coding environment' },
   { type: 'activity', label: 'Activity', icon: Activity, description: 'In-class activity' },
