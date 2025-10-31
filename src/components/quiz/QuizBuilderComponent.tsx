@@ -62,7 +62,7 @@ export function QuizBuilderComponent({ componentId, onUpdate }: QuizBuilderProps
     setLoading(true);
     try {
       // Load quiz component
-      const { data: quizData, error: quizError } = await supabase
+      const { data: quizData, error: quizError } = await (supabase as any)
         .from('quiz_components')
         .select('*')
         .eq('component_id', componentId)
@@ -82,7 +82,7 @@ export function QuizBuilderComponent({ componentId, onUpdate }: QuizBuilderProps
         setPassThreshold(quizData.pass_threshold_percentage);
 
         // Load questions
-        const { data: questionsData, error: questionsError } = await supabase
+        const { data: questionsData, error: questionsError } = await (supabase as any)
           .from('quiz_questions')
           .select('*, quiz_question_options(*)')
           .eq('quiz_component_id', quizData.id)
@@ -139,7 +139,7 @@ export function QuizBuilderComponent({ componentId, onUpdate }: QuizBuilderProps
       const pointsTotal = questions.reduce((sum, q) => sum + q.points, 0);
 
       // Upsert quiz component
-      const { data: quizData, error: quizError } = await supabase
+      const { data: quizData, error: quizError } = await (supabase as any)
         .from('quiz_components')
         .upsert({
           id: quizComponentId || undefined,
@@ -164,7 +164,7 @@ export function QuizBuilderComponent({ componentId, onUpdate }: QuizBuilderProps
 
       // Delete existing questions and options (cascade will handle options)
       if (quizComponentId) {
-        await supabase
+        await (supabase as any)
           .from('quiz_questions')
           .delete()
           .eq('quiz_component_id', quizComponentId);
@@ -172,7 +172,7 @@ export function QuizBuilderComponent({ componentId, onUpdate }: QuizBuilderProps
 
       // Insert questions and options
       for (const question of questions) {
-        const { data: questionData, error: questionError } = await supabase
+        const { data: questionData, error: questionError } = await (supabase as any)
           .from('quiz_questions')
           .insert({
             quiz_component_id: savedQuizId,
@@ -198,7 +198,7 @@ export function QuizBuilderComponent({ componentId, onUpdate }: QuizBuilderProps
             is_correct: opt.is_correct
           }));
 
-          const { error: optionsError } = await supabase
+          const { error: optionsError } = await (supabase as any)
             .from('quiz_question_options')
             .insert(optionsToInsert);
 

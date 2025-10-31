@@ -8,6 +8,20 @@ import { CheckCircle2, XCircle, Clock, Flag, Lightbulb, ChevronLeft, ChevronRigh
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
+// Temporary type definitions until Supabase types are regenerated
+interface QuizComponentData {
+  id: string;
+  title: string;
+  instructions: string | null;
+  time_limit_minutes: number | null;
+  attempts_allowed: number;
+  randomize_questions: boolean;
+  randomize_answers: boolean;
+  show_correct_answers: 'immediately' | 'after_submission' | 'never';
+  pass_threshold_percentage: number;
+  points_total: number;
+}
+
 interface QuizStudentViewProps {
   componentId: string;
 }
@@ -80,7 +94,7 @@ export function QuizStudentView({ componentId }: QuizStudentViewProps) {
   const loadQuiz = async () => {
     setLoading(true);
     try {
-      const { data: quizComponent, error: quizError } = await supabase
+      const { data: quizComponent, error: quizError } = await (supabase as any)
         .from('quiz_components')
         .select('*')
         .eq('component_id', componentId)
@@ -88,7 +102,7 @@ export function QuizStudentView({ componentId }: QuizStudentViewProps) {
 
       if (quizError) throw quizError;
 
-      const { data: questions, error: questionsError } = await supabase
+      const { data: questions, error: questionsError } = await (supabase as any)
         .from('quiz_questions')
         .select('*, quiz_question_options(*)')
         .eq('quiz_component_id', quizComponent.id)
@@ -189,7 +203,7 @@ export function QuizStudentView({ componentId }: QuizStudentViewProps) {
       // Save attempt to database
       const { data: userData } = await supabase.auth.getUser();
       if (userData.user) {
-        await supabase.from('quiz_attempts').insert({
+        await (supabase as any).from('quiz_attempts').insert({
           quiz_component_id: quizData.id,
           student_id: userData.user.id,
           attempt_number: 1, // TODO: Track actual attempt number
