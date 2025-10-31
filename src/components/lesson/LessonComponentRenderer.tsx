@@ -56,6 +56,15 @@ export function LessonComponentRenderer({
 
   // Render presentation viewer with enhanced features (shareable links only)
   if (component_type === 'slides') {
+    // Extract URL from iframe tag if necessary
+    let embedUrl = content.url;
+    if (embedUrl && embedUrl.includes('<iframe')) {
+      const srcMatch = embedUrl.match(/src=["']([^"']+)["']/);
+      if (srcMatch && srcMatch[1]) {
+        embedUrl = srcMatch[1];
+      }
+    }
+    
     return (
       <div className="space-y-4">
         {showTypeLabel && (
@@ -65,7 +74,7 @@ export function LessonComponentRenderer({
         )}
         <PresentationViewer
           title={content.title}
-          embedUrl={content.url}
+          embedUrl={embedUrl}
           slides={content.slides}
           speakerNotes={content.notes}
           allowDownloads={content.allowDownloads !== false}
