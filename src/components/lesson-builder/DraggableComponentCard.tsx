@@ -11,12 +11,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { GripVertical, Trash2, ChevronDown, ChevronUp, Plus, Volume2, Settings } from 'lucide-react';
 import { DraggableProvidedDragHandleProps } from 'react-beautiful-dnd';
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
-import { OneDriveFilePicker } from '@/components/onedrive/OneDriveFilePicker';
-import { OneDriveAttachmentsList } from '@/components/onedrive/OneDriveAttachmentsList';
-import { useOneDriveAttachment } from '@/hooks/useOneDriveAttachment';
-import { DriveFilePicker } from '@/components/drive/DriveFilePicker';
-import { DriveAttachmentsList } from '@/components/drive/DriveAttachmentsList';
-import { useDriveAttachment } from '@/hooks/useDriveAttachment';
 import { LocalFileUpload } from './LocalFileUpload';
 import { SlideTextExtractor } from './SlideTextExtractor';
 import { QuizBuilderComponent } from '@/components/quiz/QuizBuilderComponent';
@@ -69,29 +63,11 @@ export function DraggableComponentCard({
 }: DraggableComponentCardProps) {
   const [isExpanded, setIsExpanded] = useState(true);
   const [isQuizBuilderOpen, setIsQuizBuilderOpen] = useState(false);
-  const { attachFile, isAttaching } = useDriveAttachment();
-  const { attachFile: attachOneDriveFile, isAttaching: isAttachingOneDrive } = useOneDriveAttachment();
 
   const handleContentChange = (field: string, value: any) => {
     onUpdate(index, {
       content: { ...component.content, [field]: value },
     });
-  };
-
-  const handleDriveFileSelected = (file: { id: string; name: string; mimeType: string; url: string }) => {
-    if (!component.id) {
-      console.error('❌ Component ID is required to attach files');
-      return;
-    }
-    attachFile({ componentId: component.id, file });
-  };
-
-  const handleOneDriveFileSelected = (file: { id: string; name: string; mimeType: string; webUrl: string }) => {
-    if (!component.id) {
-      console.error('❌ Component ID is required to attach files');
-      return;
-    }
-    attachOneDriveFile({ componentId: component.id, file });
   };
 
   const handleLocalFileUploaded = (file: { name: string; path: string; url: string }) => {
@@ -647,29 +623,6 @@ export function DraggableComponentCard({
                   ))}
                 </ul>
               </div>
-            )}
-
-            {/* Cloud file attachments */}
-            {component.id ? (
-              <>
-                <OneDriveFilePicker onFileSelected={handleOneDriveFileSelected} />
-               <OneDriveFilePicker onFileSelected={handleOneDriveFileSelected} />
-            {/* <OneDriveAttachmentsList 
-              componentId={component.id} 
-              showEmbeds={false}
-              canDelete={true}
-            /> */}
-            <DriveFilePicker onFileSelected={handleDriveFileSelected} />
-            {/* <DriveAttachmentsList 
-              componentId={component.id} 
-              showEmbeds={false}
-              canDelete={true}
-            /> */}
-              </>
-            ) : (
-              <p className="text-sm text-muted-foreground italic">
-                Save this component first to attach cloud files
-              </p>
             )}
           </div>
           )}
