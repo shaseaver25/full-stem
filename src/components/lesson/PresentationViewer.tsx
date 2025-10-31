@@ -318,18 +318,29 @@ export function PresentationViewer({
             <Home className="h-4 w-4" />
           </Button>
 
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleReadAloud}
-            disabled={isSpeaking || !currentSlideData?.text}
-            aria-label={isPlaying ? "Reading slide" : "Read slide aloud"}
-            aria-pressed={isPlaying}
-            title="Read slide aloud"
-            tabIndex={0}
-          >
-            <Volume2 className={cn("h-4 w-4", isPlaying && "animate-pulse")} />
-          </Button>
+          {currentSlideData?.text ? (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleReadAloud}
+              disabled={isSpeaking}
+              aria-label={isPlaying ? "Reading slide" : "Read slide aloud"}
+              aria-pressed={isPlaying}
+              title="Read slide aloud"
+              tabIndex={0}
+            >
+              <Volume2 className={cn("h-4 w-4", isPlaying && "animate-pulse")} />
+            </Button>
+          ) : (
+            <div 
+              className="flex items-center gap-2 px-3 py-2 text-xs text-muted-foreground border rounded-md bg-muted/30"
+              role="status"
+              aria-label="Accessibility features unavailable"
+            >
+              <Volume2 className="h-3 w-3 opacity-50" />
+              <span>Text-to-Speech requires slide text data</span>
+            </div>
+          )}
 
           <Button
             variant="ghost"
@@ -349,7 +360,7 @@ export function PresentationViewer({
         </div>
 
         <div className="flex items-center gap-2">
-          {enableTranslation && (
+          {enableTranslation && currentSlideData?.text && (
             <Select value={selectedLanguage} onValueChange={handleLanguageChange} disabled={isTranslating}>
               <SelectTrigger 
                 className="w-32" 
