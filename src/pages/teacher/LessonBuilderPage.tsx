@@ -174,42 +174,72 @@ export default function LessonBuilderPage() {
       }
 
       if (savedLessonId) {
-        console.log('💾 Saving components before delete:', components);
+        console.log('💾 Current components state:', components);
+        console.log('💾 Number of components to save:', components.length);
         
+        // Only proceed with save if there are components OR if user confirms deletion
+        if (components.length === 0) {
+          const existingComponents = await supabase
+            .from('lesson_components')
+            .select('id')
+            .eq('lesson_id', savedLessonId);
+          
+          if (existingComponents.data && existingComponents.data.length > 0) {
+            console.warn('⚠️ Attempting to save with no components but lesson has existing components');
+            toast({
+              title: 'Warning',
+              description: 'No components to save. Existing components will be preserved.',
+              variant: 'default',
+            });
+            setIsSaving(false);
+            return;
+          }
+        }
+        
+        // Validate all components have required fields
+        const invalidComponents = components.filter(comp => !comp.component_type || !comp.content);
+        if (invalidComponents.length > 0) {
+          console.error('❌ Invalid components detected:', invalidComponents);
+          throw new Error(`${invalidComponents.length} component(s) are missing required fields`);
+        }
+
+        const componentsToInsert = components.map((comp, index) => ({
+          lesson_id: savedLessonId!,
+          component_type: comp.component_type,
+          content: comp.content || {},
+          order: index,
+          enabled: comp.enabled !== false,
+          is_assignable: comp.is_assignable || false,
+          reading_level: comp.reading_level || null,
+          language_code: comp.language_code || 'en',
+          read_aloud: comp.read_aloud !== false,
+        }));
+
+        console.log('📝 Components to insert:', componentsToInsert);
+
+        // Delete old components and insert new ones in a more controlled way
         const { error: deleteError } = await supabase
           .from('lesson_components')
           .delete()
           .eq('lesson_id', savedLessonId);
 
-        if (deleteError) throw deleteError;
-
-        if (components.length > 0) {
-          const componentsToInsert = components.map((comp, index) => ({
-            lesson_id: savedLessonId!,
-            component_type: comp.component_type,
-            content: comp.content,
-            order: index,
-            enabled: comp.enabled,
-            is_assignable: comp.is_assignable || false,
-            reading_level: comp.reading_level,
-            language_code: comp.language_code || 'en',
-            read_aloud: comp.read_aloud,
-          }));
-
-          console.log('📝 Inserting components:', componentsToInsert);
-
-          const { data: insertedData, error: insertError } = await supabase
-            .from('lesson_components')
-            .insert(componentsToInsert)
-            .select();
-
-          if (insertError) {
-            console.error('❌ Insert error:', insertError);
-            throw insertError;
-          }
-
-          console.log('✅ Inserted components:', insertedData);
+        if (deleteError) {
+          console.error('❌ Delete error:', deleteError);
+          throw deleteError;
         }
+
+        const { data: insertedData, error: insertError } = await supabase
+          .from('lesson_components')
+          .insert(componentsToInsert)
+          .select();
+
+        if (insertError) {
+          console.error('❌ Insert error:', insertError);
+          console.error('❌ Failed components:', componentsToInsert);
+          throw insertError;
+        }
+
+        console.log('✅ Successfully inserted components:', insertedData);
       }
 
       toast({
