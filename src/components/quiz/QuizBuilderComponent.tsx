@@ -243,6 +243,19 @@ export function QuizBuilderComponent({ componentId, onUpdate }: QuizBuilderProps
             { id: crypto.randomUUID(), option_order: 0, option_text: 'True', is_correct: false },
             { id: crypto.randomUUID(), option_order: 1, option_text: 'False', is_correct: false }
           ]
+        : type === 'short_answer'
+        ? [
+            { id: crypto.randomUUID(), option_order: 0, option_text: '', is_correct: true }
+          ]
+        : type === 'fill_blank'
+        ? [
+            { id: crypto.randomUUID(), option_order: 0, option_text: '', is_correct: true }
+          ]
+        : type === 'multiple_select'
+        ? [
+            { id: crypto.randomUUID(), option_order: 0, option_text: '', is_correct: false },
+            { id: crypto.randomUUID(), option_order: 1, option_text: '', is_correct: false }
+          ]
         : []
     };
     setQuestions([...questions, newQuestion]);
@@ -275,11 +288,12 @@ export function QuizBuilderComponent({ componentId, onUpdate }: QuizBuilderProps
   const addOption = (questionIndex: number) => {
     const updated = [...questions];
     const question = updated[questionIndex];
+    const isCorrect = question.question_type === 'short_answer' || question.question_type === 'fill_blank';
     question.options.push({
       id: crypto.randomUUID(),
       option_order: question.options.length,
       option_text: '',
-      is_correct: false
+      is_correct: isCorrect
     });
     setQuestions(updated);
   };
@@ -552,6 +566,75 @@ export function QuizBuilderComponent({ componentId, onUpdate }: QuizBuilderProps
                           <Plus className="h-4 w-4 mr-1" /> Add Option
                         </Button>
                       )}
+                    </div>
+                  )}
+
+                  {/* Short Answer - Correct Answers */}
+                  {question.question_type === 'short_answer' && (
+                    <div className="space-y-2">
+                      <Label>Acceptable Answers (case-insensitive):</Label>
+                      <p className="text-xs text-muted-foreground">Add all acceptable variations of the correct answer.</p>
+                      {question.options.map((option, oIndex) => (
+                        <div key={option.id} className="flex items-center gap-2">
+                          <Input
+                            value={option.option_text}
+                            onChange={(e) => updateOption(qIndex, oIndex, { option_text: e.target.value })}
+                            placeholder={`Acceptable answer ${oIndex + 1}`}
+                            className="flex-1"
+                          />
+                          {question.options.length > 1 && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => deleteOption(qIndex, oIndex)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
+                      ))}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => addOption(qIndex)}
+                      >
+                        <Plus className="h-4 w-4 mr-1" /> Add Alternative Answer
+                      </Button>
+                    </div>
+                  )}
+
+                  {/* Fill in the Blank - Correct Answers */}
+                  {question.question_type === 'fill_blank' && (
+                    <div className="space-y-2">
+                      <Label>Correct Answers for Each Blank (case-insensitive):</Label>
+                      <p className="text-xs text-muted-foreground">Add one correct answer for each blank in your question.</p>
+                      {question.options.map((option, oIndex) => (
+                        <div key={option.id} className="flex items-center gap-2">
+                          <span className="text-sm font-medium w-16">Blank {oIndex + 1}:</span>
+                          <Input
+                            value={option.option_text}
+                            onChange={(e) => updateOption(qIndex, oIndex, { option_text: e.target.value })}
+                            placeholder={`Answer for blank ${oIndex + 1}`}
+                            className="flex-1"
+                          />
+                          {question.options.length > 1 && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => deleteOption(qIndex, oIndex)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
+                      ))}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => addOption(qIndex)}
+                      >
+                        <Plus className="h-4 w-4 mr-1" /> Add Another Blank
+                      </Button>
                     </div>
                   )}
 

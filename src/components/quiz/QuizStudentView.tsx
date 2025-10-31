@@ -1,12 +1,15 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
-import { CheckCircle2, XCircle, Clock, Flag, Lightbulb, ChevronLeft, ChevronRight } from 'lucide-react';
+import { CheckCircle2, XCircle, Clock, Flag, Lightbulb, ChevronLeft, ChevronRight, AlertCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 // Temporary type definitions until Supabase types are regenerated
 interface QuizComponentData {
@@ -71,6 +74,8 @@ export function QuizStudentView({ componentId }: QuizStudentViewProps) {
   const [completed, setCompleted] = useState(false);
   const [score, setScore] = useState<number | null>(null);
   const [feedback, setFeedback] = useState<Record<string, { correct: boolean; explanation?: string }>>({});
+  const [attemptNumber, setAttemptNumber] = useState(1);
+  const [remainingAttempts, setRemainingAttempts] = useState<number | null>(null);
 
   useEffect(() => {
     loadQuiz();
@@ -83,6 +88,22 @@ export function QuizStudentView({ componentId }: QuizStudentViewProps) {
           if (prev === null || prev <= 1) {
             submitQuiz();
             return 0;
+          }
+          // Show warning at 5 minutes (300 seconds)
+          if (prev === 300) {
+            toast({
+              title: '⏰ 5 Minutes Remaining',
+              description: 'You have 5 minutes left to complete the quiz.',
+              variant: 'default'
+            });
+          }
+          // Show warning at 1 minute (60 seconds)
+          if (prev === 60) {
+            toast({
+              title: '⏰ 1 Minute Remaining!',
+              description: 'Only 1 minute left to complete the quiz.',
+              variant: 'destructive'
+            });
           }
           return prev - 1;
         });
@@ -153,7 +174,42 @@ export function QuizStudentView({ componentId }: QuizStudentViewProps) {
     }
   };
 
-  const startQuiz = () => {
+  const startQuiz = async () => {
+    if (!quizData) return;
+
+    // Check existing attempts
+    const { data: userData } = await supabase.auth.getUser();
+    if (userData.user) {
+      const { data: attempts, error } = await (supabase as any)
+        .from('quiz_attempts')
+        .select('attempt_number')
+        .eq('quiz_component_id', quizData.id)
+        .eq('student_id', userData.user.id)
+        .order('attempt_number', { ascending: false })
+        .limit(1);
+
+      if (!error && attempts && attempts.length > 0) {
+        const nextAttempt = attempts[0].attempt_number + 1;
+        setAttemptNumber(nextAttempt);
+        
+        // Check if attempts limit reached
+        if (quizData.attempts_allowed !== -1 && nextAttempt > quizData.attempts_allowed) {
+          toast({
+            title: 'No Attempts Remaining',
+            description: `You have already used all ${quizData.attempts_allowed} attempts for this quiz.`,
+            variant: 'destructive'
+          });
+          return;
+        }
+        
+        if (quizData.attempts_allowed !== -1) {
+          setRemainingAttempts(quizData.attempts_allowed - attempts[0].attempt_number);
+        }
+      } else {
+        setRemainingAttempts(quizData.attempts_allowed === -1 ? null : quizData.attempts_allowed - 1);
+      }
+    }
+
     setStarted(true);
     if (quizData?.time_limit_minutes) {
       setTimeRemaining(quizData.time_limit_minutes * 60);
@@ -184,6 +240,20 @@ export function QuizStudentView({ componentId }: QuizStudentViewProps) {
           const userAnswerArray = userAnswer || [];
           isCorrect = correctOptionIds.length === userAnswerArray.length && 
                       correctOptionIds.every(id => userAnswerArray.includes(id));
+        } else if (question.question_type === 'short_answer') {
+          // For short answer, accept any of the correct options (case-insensitive)
+          const correctAnswers = question.options.map(opt => opt.option_text.toLowerCase().trim());
+          const userAnswerText = (userAnswer || '').toLowerCase().trim();
+          isCorrect = correctAnswers.includes(userAnswerText);
+        } else if (question.question_type === 'fill_blank') {
+          // For fill in blank, check if user filled all blanks correctly
+          // Expected format: question.options contains correct answers for each blank
+          const userAnswers = userAnswer || [];
+          const correctAnswers = question.options.map(opt => opt.option_text.toLowerCase().trim());
+          isCorrect = correctAnswers.length === userAnswers.length &&
+                      correctAnswers.every((correct, idx) => 
+                        userAnswers[idx]?.toLowerCase().trim() === correct
+                      );
         }
 
         if (isCorrect) {
@@ -206,7 +276,7 @@ export function QuizStudentView({ componentId }: QuizStudentViewProps) {
         await (supabase as any).from('quiz_attempts').insert({
           quiz_component_id: quizData.id,
           student_id: userData.user.id,
-          attempt_number: 1, // TODO: Track actual attempt number
+          attempt_number: attemptNumber,
           score: totalScore,
           max_score: quizData.points_total,
           percentage: (totalScore / quizData.points_total) * 100,
@@ -268,6 +338,15 @@ export function QuizStudentView({ componentId }: QuizStudentViewProps) {
             </div>
           )}
 
+          {quizData.attempts_allowed !== -1 && (
+            <Alert>
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                You have {quizData.attempts_allowed} attempt{quizData.attempts_allowed > 1 ? 's' : ''} for this quiz.
+              </AlertDescription>
+            </Alert>
+          )}
+
           <div className="text-center pt-4">
             <Button onClick={startQuiz} size="lg">
               Start Quiz
@@ -312,10 +391,24 @@ export function QuizStudentView({ componentId }: QuizStudentViewProps) {
             </div>
           </div>
 
+          {remainingAttempts !== null && remainingAttempts > 0 && (
+            <Alert>
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                Attempts remaining: {remainingAttempts}
+              </AlertDescription>
+            </Alert>
+          )}
+
           <div className="flex gap-2">
             <Button onClick={() => window.location.reload()} variant="outline" className="flex-1">
               Review Answers
             </Button>
+            {remainingAttempts !== null && remainingAttempts > 0 && (
+              <Button onClick={() => window.location.reload()} className="flex-1">
+                Retake Quiz
+              </Button>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -331,13 +424,13 @@ export function QuizStudentView({ componentId }: QuizStudentViewProps) {
       <CardHeader>
         <div className="flex items-center justify-between text-sm">
           {timeRemaining !== null && (
-            <div className="flex items-center gap-2 text-cyan-900">
+            <div className={`flex items-center gap-2 ${timeRemaining <= 60 ? 'text-red-600 font-bold' : timeRemaining <= 300 ? 'text-orange-600 font-semibold' : 'text-cyan-900'}`}>
               <Clock className="h-4 w-4" />
               <span>Time Remaining: {formatTime(timeRemaining)}</span>
             </div>
           )}
           <div>Question {currentQuestionIndex + 1} of {quizData.questions.length}</div>
-          <div>Score: {Object.values(feedback).reduce((sum, f) => sum + (f.correct ? 1 : 0), 0)}/{quizData.points_total} pts</div>
+          <div>Attempt {attemptNumber}</div>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -387,6 +480,7 @@ export function QuizStudentView({ componentId }: QuizStudentViewProps) {
           {/* Multiple Select */}
           {currentQuestion.question_type === 'multiple_select' && (
             <div className="space-y-2">
+              <p className="text-sm text-muted-foreground mb-2">Select all that apply:</p>
               {currentQuestion.options.map((option) => (
                 <div key={option.id} className="flex items-center space-x-2 p-3 rounded-lg bg-background hover:bg-accent">
                   <Checkbox
@@ -405,6 +499,45 @@ export function QuizStudentView({ componentId }: QuizStudentViewProps) {
                   <Label htmlFor={option.id} className="flex-1 cursor-pointer">
                     {option.option_text}
                   </Label>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Short Answer */}
+          {currentQuestion.question_type === 'short_answer' && (
+            <div className="space-y-2">
+              <Label htmlFor={`answer-${currentQuestion.id}`}>Your Answer:</Label>
+              <Textarea
+                id={`answer-${currentQuestion.id}`}
+                value={answers[currentQuestion.id] || ''}
+                onChange={(e) => handleAnswer(currentQuestion.id, e.target.value)}
+                placeholder="Type your answer here..."
+                rows={4}
+                className="bg-background"
+              />
+            </div>
+          )}
+
+          {/* Fill in the Blank */}
+          {currentQuestion.question_type === 'fill_blank' && (
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">Fill in the blanks:</p>
+              {currentQuestion.options.map((option, idx) => (
+                <div key={option.id} className="space-y-1">
+                  <Label htmlFor={`blank-${idx}`}>Blank {idx + 1}:</Label>
+                  <Input
+                    id={`blank-${idx}`}
+                    value={(answers[currentQuestion.id] || [])[idx] || ''}
+                    onChange={(e) => {
+                      const current = answers[currentQuestion.id] || [];
+                      const updated = [...current];
+                      updated[idx] = e.target.value;
+                      handleAnswer(currentQuestion.id, updated);
+                    }}
+                    placeholder={`Enter answer for blank ${idx + 1}`}
+                    className="bg-background"
+                  />
                 </div>
               ))}
             </div>
