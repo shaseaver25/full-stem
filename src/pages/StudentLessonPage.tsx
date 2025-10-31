@@ -100,7 +100,7 @@ const StudentLessonPage = () => {
           <Button 
             variant="ghost" 
             size="sm" 
-            onClick={() => navigate(-1)}
+            onClick={() => navigate(`/classes/${lesson.class_id}`)}
             className="text-primary-foreground hover:bg-primary/90"
           >
             Exit Preview
