@@ -6,6 +6,7 @@ import { WordTiming } from '@/types/tts';
 
 export function usePresentationTTS() {
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [currentWordIndex, setCurrentWordIndex] = useState<number>(-1);
   const [wordTimings, setWordTimings] = useState<WordTiming[]>([]);
@@ -15,28 +16,31 @@ export function usePresentationTTS() {
   const animationFrameRef = useRef<number>();
 
   const updateCurrentWord = () => {
-    if (!audioRef.current || !isPlaying) return;
+    if (!audioRef.current || !isPlaying || isPaused) return;
     
     const currentTime = audioRef.current.currentTime * 1000; // Convert to ms
-    const index = wordTimings.findIndex(
-      (timing, i) => {
-        const nextTiming = wordTimings[i + 1];
-        return currentTime >= timing.start && (!nextTiming || currentTime < nextTiming.start);
-      }
-    );
     
-    setCurrentWordIndex(index);
+    // Find the current word based on timing
+    let foundIndex = -1;
+    for (let i = 0; i < wordTimings.length; i++) {
+      if (currentTime >= wordTimings[i].start) {
+        foundIndex = i;
+      } else {
+        break;
+      }
+    }
+    
+    setCurrentWordIndex(foundIndex);
     animationFrameRef.current = requestAnimationFrame(updateCurrentWord);
   };
 
   useEffect(() => {
-    if (isPlaying) {
+    if (isPlaying && !isPaused) {
       animationFrameRef.current = requestAnimationFrame(updateCurrentWord);
     } else {
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
       }
-      setCurrentWordIndex(-1);
     }
     
     return () => {
@@ -44,7 +48,31 @@ export function usePresentationTTS() {
         cancelAnimationFrame(animationFrameRef.current);
       }
     };
-  }, [isPlaying, wordTimings]);
+  }, [isPlaying, isPaused, wordTimings]);
+
+  const pause = () => {
+    if (audioRef.current && isPlaying && !isPaused) {
+      audioRef.current.pause();
+      setIsPaused(true);
+    }
+  };
+
+  const resume = () => {
+    if (audioRef.current && isPaused) {
+      audioRef.current.play();
+      setIsPaused(false);
+    }
+  };
+
+  const stop = () => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+    }
+    setIsPlaying(false);
+    setIsPaused(false);
+    setCurrentWordIndex(-1);
+  };
 
   const speak = async (text: string) => {
     if (!text || text.trim().length === 0) {
@@ -52,10 +80,7 @@ export function usePresentationTTS() {
     }
 
     // Stop any existing audio
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current = null;
-    }
+    stop();
 
     setIsLoading(true);
     setCurrentWordIndex(-1);
@@ -80,26 +105,45 @@ export function usePresentationTTS() {
         return;
       }
 
-      if (data?.audioBase64 && data?.tokens) {
-        // Store word timings
-        const timings: WordTiming[] = data.tokens.map((token: any, index: number) => ({
-          start: token.start_time || 0,
-          end: token.end_time || 0,
-          index,
-          text: token.text || '',
-        }));
-        setWordTimings(timings);
+      console.log('TTS Response:', { 
+        hasAudio: !!data?.audioBase64, 
+        hasTokens: !!data?.tokens,
+        tokenCount: data?.tokens?.length 
+      });
+
+      if (data?.audioBase64) {
+        // Store word timings if available
+        if (data?.tokens && Array.isArray(data.tokens)) {
+          const timings: WordTiming[] = data.tokens.map((token: any, index: number) => ({
+            start: (token.start_time || 0) * 1000, // Convert to ms
+            end: (token.end_time || 0) * 1000,
+            index,
+            text: token.text || '',
+          }));
+          console.log('Word timings:', timings.slice(0, 5)); // Log first 5 for debugging
+          setWordTimings(timings);
+        } else {
+          console.warn('No word timings available from TTS response');
+        }
 
         const audio = new Audio(`data:audio/mpeg;base64,${data.audioBase64}`);
         audioRef.current = audio;
         
-        audio.onplay = () => setIsPlaying(true);
+        audio.onplay = () => {
+          setIsPlaying(true);
+          setIsPaused(false);
+        };
+        audio.onpause = () => {
+          if (!isPaused) setIsPaused(true);
+        };
         audio.onended = () => {
           setIsPlaying(false);
+          setIsPaused(false);
           setCurrentWordIndex(-1);
         };
         audio.onerror = () => {
           setIsPlaying(false);
+          setIsPaused(false);
           setCurrentWordIndex(-1);
           toast({
             title: 'Playback Error',
@@ -124,7 +168,11 @@ export function usePresentationTTS() {
 
   return {
     speak,
+    pause,
+    resume,
+    stop,
     isPlaying,
+    isPaused,
     isLoading,
     currentWordIndex,
     wordTimings,

@@ -92,7 +92,7 @@ export function PresentationViewer({
   const [showNotesPanel, setShowNotesPanel] = useState(false);
   const [showKeyboardHelp, setShowKeyboardHelp] = useState(false);
   
-  const { speak, isPlaying, isLoading: isSpeaking, currentWordIndex, wordTimings } = usePresentationTTS();
+  const { speak, pause, resume, stop, isPlaying, isPaused, isLoading: isSpeaking, currentWordIndex, wordTimings } = usePresentationTTS();
   const { translateText, isTranslating } = useLiveTranslation();
 
   const totalSlides = slides.length || 1;
@@ -327,18 +327,54 @@ export function PresentationViewer({
           </Button>
 
           {currentSlideData?.text ? (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleReadAloud}
-              disabled={isSpeaking}
-              aria-label={isPlaying ? "Reading slide" : "Read slide aloud"}
-              aria-pressed={isPlaying}
-              title="Read slide aloud"
-              tabIndex={0}
-            >
-              <Volume2 className={cn("h-4 w-4", isPlaying && "animate-pulse")} />
-            </Button>
+            <div className="flex items-center gap-1">
+              {!isPlaying ? (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleReadAloud}
+                  disabled={isSpeaking}
+                  aria-label="Read slide aloud"
+                  title="Read slide aloud"
+                  tabIndex={0}
+                >
+                  <Volume2 className="h-4 w-4" />
+                </Button>
+              ) : (
+                <>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={isPaused ? resume : pause}
+                    aria-label={isPaused ? "Resume reading" : "Pause reading"}
+                    title={isPaused ? "Resume reading" : "Pause reading"}
+                    tabIndex={0}
+                  >
+                    {isPaused ? (
+                      <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M8 5v14l11-7z"/>
+                      </svg>
+                    ) : (
+                      <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>
+                      </svg>
+                    )}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={stop}
+                    aria-label="Stop reading"
+                    title="Stop reading"
+                    tabIndex={0}
+                  >
+                    <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M6 6h12v12H6z"/>
+                    </svg>
+                  </Button>
+                </>
+              )}
+            </div>
           ) : (
             <div 
               className="flex items-center gap-2 px-3 py-2 text-xs text-muted-foreground border rounded-md bg-muted/30"
