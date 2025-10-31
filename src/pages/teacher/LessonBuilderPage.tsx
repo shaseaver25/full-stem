@@ -171,6 +171,8 @@ export default function LessonBuilderPage() {
       }
 
       if (savedLessonId) {
+        console.log('💾 Saving components before delete:', components);
+        
         const { error: deleteError } = await supabase
           .from('lesson_components')
           .delete()
@@ -191,11 +193,19 @@ export default function LessonBuilderPage() {
             read_aloud: comp.read_aloud,
           }));
 
-          const { error: insertError } = await supabase
-            .from('lesson_components')
-            .insert(componentsToInsert);
+          console.log('📝 Inserting components:', componentsToInsert);
 
-          if (insertError) throw insertError;
+          const { data: insertedData, error: insertError } = await supabase
+            .from('lesson_components')
+            .insert(componentsToInsert)
+            .select();
+
+          if (insertError) {
+            console.error('❌ Insert error:', insertError);
+            throw insertError;
+          }
+
+          console.log('✅ Inserted components:', insertedData);
         }
       }
 
@@ -203,6 +213,11 @@ export default function LessonBuilderPage() {
         title: 'Success',
         description: 'Lesson saved successfully',
       });
+
+      // Reload lesson data to verify save
+      if (lessonId) {
+        await loadLesson();
+      }
 
       if (!lessonId) {
         navigate(`/teacher/lesson-builder/${savedLessonId}`);
@@ -229,6 +244,7 @@ export default function LessonBuilderPage() {
       language_code: 'en',
       read_aloud: true,
     };
+    console.log('➕ Adding component:', newComponent);
     setComponents([...components, newComponent]);
   };
 
