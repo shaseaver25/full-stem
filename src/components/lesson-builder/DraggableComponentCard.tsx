@@ -7,7 +7,8 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Checkbox } from '@/components/ui/checkbox';
-import { GripVertical, Trash2, ChevronDown, ChevronUp, Plus, Volume2 } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { GripVertical, Trash2, ChevronDown, ChevronUp, Plus, Volume2, Settings } from 'lucide-react';
 import { DraggableProvidedDragHandleProps } from 'react-beautiful-dnd';
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import { OneDriveFilePicker } from '@/components/onedrive/OneDriveFilePicker';
@@ -18,6 +19,7 @@ import { DriveAttachmentsList } from '@/components/drive/DriveAttachmentsList';
 import { useDriveAttachment } from '@/hooks/useDriveAttachment';
 import { LocalFileUpload } from './LocalFileUpload';
 import { SlideTextExtractor } from './SlideTextExtractor';
+import { QuizBuilderComponent } from '@/components/quiz/QuizBuilderComponent';
 
 interface LessonComponent {
   id?: string;
@@ -66,6 +68,7 @@ export function DraggableComponentCard({
   isDragging,
 }: DraggableComponentCardProps) {
   const [isExpanded, setIsExpanded] = useState(true);
+  const [isQuizBuilderOpen, setIsQuizBuilderOpen] = useState(false);
   const { attachFile, isAttaching } = useDriveAttachment();
   const { attachFile: attachOneDriveFile, isAttaching: isAttachingOneDrive } = useOneDriveAttachment();
 
@@ -376,11 +379,18 @@ export function DraggableComponentCard({
             <div className="p-4 bg-cyan-50 border-2 border-cyan-900 rounded-lg">
               <p className="font-semibold text-cyan-900 mb-2">✅ Quiz Component</p>
               <p className="text-sm text-muted-foreground">
-                Quiz content is managed through the dedicated Quiz Builder interface when students view this lesson.
-                Teachers can create questions, set time limits, configure grading, and view analytics through the
-                quiz component when viewing as a student or in the lesson preview.
+                Quiz content is managed through the dedicated Quiz Builder interface. 
+                Click the "Configure Quiz" button below to add questions, set time limits, configure grading, and more.
               </p>
             </div>
+            <Button 
+              onClick={() => setIsQuizBuilderOpen(true)}
+              className="w-full"
+              variant="default"
+            >
+              <Settings className="h-4 w-4 mr-2" />
+              Configure Quiz
+            </Button>
             <div>
               <Label>Quiz Title (optional override)</Label>
               <Input
@@ -389,6 +399,30 @@ export function DraggableComponentCard({
                 placeholder="e.g., Chapter 3 Quiz"
               />
             </div>
+            
+            <Dialog open={isQuizBuilderOpen} onOpenChange={setIsQuizBuilderOpen}>
+              <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>Quiz Builder</DialogTitle>
+                </DialogHeader>
+                {component.id && (
+                  <QuizBuilderComponent 
+                    componentId={component.id}
+                    onUpdate={() => {
+                      // Optionally refresh or update the component
+                      setIsQuizBuilderOpen(false);
+                    }}
+                  />
+                )}
+                {!component.id && (
+                  <div className="p-4 bg-yellow-50 border border-yellow-200 rounded">
+                    <p className="text-sm text-yellow-800">
+                      Please save the lesson first before configuring the quiz. The component needs to be saved to the database.
+                    </p>
+                  </div>
+                )}
+              </DialogContent>
+            </Dialog>
           </div>
         );
 
