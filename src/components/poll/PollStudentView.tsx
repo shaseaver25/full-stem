@@ -60,14 +60,14 @@ export const PollStudentView: React.FC<PollStudentViewProps> = ({ componentId, p
       if (propPollData) {
         const mockPollData: PollData = {
           id: componentId, // Use componentId as temporary ID
-          poll_question: propPollData.question,
-          poll_type: propPollData.pollType,
-          show_results_timing: propPollData.resultsTimingValue,
-          allow_anonymous: propPollData.allowAnonymous,
-          allow_change_vote: propPollData.allowChangeVote,
-          chart_type: propPollData.chartType,
-          show_percentages: propPollData.showPercentages,
-          show_vote_counts: propPollData.showVoteCounts,
+          poll_question: propPollData.poll_question,
+          poll_type: propPollData.poll_type,
+          show_results_timing: propPollData.show_results_timing,
+          allow_anonymous: propPollData.allow_anonymous,
+          allow_change_vote: propPollData.allow_change_vote,
+          chart_type: propPollData.chart_type,
+          show_percentages: propPollData.show_percentages,
+          show_vote_counts: propPollData.show_vote_counts,
           is_closed: false
         };
         setPollData(mockPollData);
@@ -75,8 +75,8 @@ export const PollStudentView: React.FC<PollStudentViewProps> = ({ componentId, p
         // Create mock options from prop data
         const mockOptions: PollOption[] = propPollData.options.map((opt: any, index: number) => ({
           id: opt.id,
-          option_text: opt.text,
-          option_order: opt.order || index,
+          option_text: opt.option_text,
+          option_order: opt.option_order || index,
           vote_count: 0
         }));
         setOptions(mockOptions);
