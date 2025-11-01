@@ -346,7 +346,7 @@ IMPORTANT:
     const formattedQuestions = validQuestions.map((q: any, index: number) => ({
       id: crypto.randomUUID(),
       question_order: index,
-      question_type: 'multiple_choice',
+      question_type: q.question_type,
       question_text: q.question_text,
       points: q.points || 2,
       hint_text: q.hint || '',
