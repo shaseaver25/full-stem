@@ -20,17 +20,27 @@ export function parseConferenceSessions(csvContent: string): SessionBlock[] {
   // Skip header row
   for (let i = 1; i < lines.length; i++) {
     const line = lines[i];
-    const match = line.match(/^([^,]+),([^,]+(?:,[^,]+)*),([^,]+)$/);
     
-    if (match) {
-      const [, time, titleWithCommas, room] = match;
-      sessions.push({
-        time: time.trim(),
-        title: titleWithCommas.trim(),
-        room: room.trim(),
-        timeBlock: time.trim()
-      });
-    }
+    // Find the room (always starts with "Breakout")
+    const roomMatch = line.match(/,(Breakout [^,]+)$/);
+    if (!roomMatch) continue;
+    
+    const room = roomMatch[1];
+    const beforeRoom = line.substring(0, line.lastIndexOf(',' + room));
+    
+    // First comma separates time from title
+    const firstCommaIndex = beforeRoom.indexOf(',');
+    if (firstCommaIndex === -1) continue;
+    
+    const time = beforeRoom.substring(0, firstCommaIndex).trim();
+    const title = beforeRoom.substring(firstCommaIndex + 1).trim();
+    
+    sessions.push({
+      time,
+      title,
+      room,
+      timeBlock: time
+    });
   }
   
   // Group by time blocks
