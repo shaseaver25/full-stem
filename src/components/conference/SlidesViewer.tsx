@@ -77,21 +77,27 @@ const SlidesViewer: React.FC<SlidesViewerProps> = ({
 
   // Navigation functions
   const goToSlide = useCallback((index: number) => {
+    console.log('goToSlide called:', { index, currentSlide, totalSlides });
     if (index >= 0 && index < totalSlides) {
+      console.log('Setting currentSlide to:', index);
       setCurrentSlide(index);
       const announcement = `Slide ${index + 1} of ${totalSlides}`;
       const liveRegion = document.getElementById('slide-announcer');
       if (liveRegion) {
         liveRegion.textContent = announcement;
       }
+    } else {
+      console.log('Navigation blocked - out of range:', { index, totalSlides });
     }
-  }, [totalSlides]);
+  }, [totalSlides, currentSlide]);
 
   const goToPrevious = useCallback(() => {
+    console.log('goToPrevious clicked - currentSlide:', currentSlide);
     goToSlide(currentSlide - 1);
   }, [currentSlide, goToSlide]);
 
   const goToNext = useCallback(() => {
+    console.log('goToNext clicked - currentSlide:', currentSlide);
     goToSlide(currentSlide + 1);
   }, [currentSlide, goToSlide]);
 
