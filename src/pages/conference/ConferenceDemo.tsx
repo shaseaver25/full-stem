@@ -21,7 +21,7 @@ const ConferenceDemo: React.FC = () => {
   const { data: sessionBlocks = [], isLoading } = useQuery({
     queryKey: ['conference-sessions-csv'],
     queryFn: async () => {
-      const response = await fetch('/src/data/conference-schedule.csv');
+      const response = await fetch('/conference-schedule.csv');
       const csvContent = await response.text();
       const blocks = parseConferenceSessions(csvContent);
       console.log('Parsed session blocks:', blocks);
