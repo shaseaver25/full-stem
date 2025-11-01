@@ -8,7 +8,23 @@ import { Progress } from '@/components/ui/progress';
 import { BarChart3, Users, Star, Check, GripVertical } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 interface PollOption {
   id: string;
@@ -35,6 +51,64 @@ interface PollStudentViewProps {
   pollData?: any; // Poll data from lesson component content
 }
 
+// Separate SortableItem component for each ranking option
+function SortableRankingItem({ 
+  option, 
+  index 
+}: { 
+  option: PollOption; 
+  index: number;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: option.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`
+        flex items-center gap-3 p-4 bg-white rounded-lg border-2 
+        ${isDragging 
+          ? 'border-emerald-500 shadow-lg z-50' 
+          : 'border-gray-200 hover:border-emerald-300'
+        }
+        transition-all cursor-move
+      `}
+    >
+      {/* Drag Handle */}
+      <div
+        {...attributes}
+        {...listeners}
+        className="flex-shrink-0 cursor-grab active:cursor-grabbing touch-none"
+      >
+        <GripVertical className="h-5 w-5 text-gray-400" />
+      </div>
+
+      {/* Rank Number */}
+      <div className="flex-shrink-0 w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 font-semibold flex items-center justify-center">
+        {index + 1}
+      </div>
+
+      {/* Option Text */}
+      <div className="flex-grow text-gray-900">
+        {option.option_text}
+      </div>
+    </div>
+  );
+}
+
 export const PollStudentView: React.FC<PollStudentViewProps> = ({ componentId, pollData: propPollData }) => {
   const [pollData, setPollData] = useState<PollData | null>(null);
   const [options, setOptions] = useState<PollOption[]>([]);
@@ -42,15 +116,28 @@ export const PollStudentView: React.FC<PollStudentViewProps> = ({ componentId, p
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
   const [ratingValue, setRatingValue] = useState<number>(0);
   const [rankingOrder, setRankingOrder] = useState<PollOption[]>([]);
+  const [hasInitializedRanking, setHasInitializedRanking] = useState(false);
   const [totalResponses, setTotalResponses] = useState(0);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+
+  // Sensors for drag interactions
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8, // Requires 8px movement before drag starts
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   useEffect(() => {
     loadPollData();
     const cleanup = subscribeToUpdates();
     return cleanup;
-  }, [componentId]);
+  }, [componentId, userResponse]);
 
   const loadPollData = async () => {
     try {
@@ -81,8 +168,11 @@ export const PollStudentView: React.FC<PollStudentViewProps> = ({ componentId, p
         }));
         setOptions(mockOptions);
         
-        // Only set ranking order if it hasn't been set yet (preserve user's drag order)
-        setRankingOrder(prev => prev.length === 0 ? mockOptions : prev);
+        // CRITICAL: Only set ranking order if it hasn't been initialized yet (preserve user's drag order)
+        if (mockPollData.poll_type === 'ranking' && !hasInitializedRanking) {
+          setRankingOrder([...mockOptions].sort((a, b) => a.option_order - b.option_order));
+          setHasInitializedRanking(true);
+        }
 
         // Check for existing responses in database
         const { data: { user } } = await supabase.auth.getUser();
@@ -138,7 +228,12 @@ export const PollStudentView: React.FC<PollStudentViewProps> = ({ componentId, p
 
         if (optionsError) throw optionsError;
         setOptions(pollOptions || []);
-        setRankingOrder(pollOptions || []);
+        
+        // CRITICAL: Only set ranking order if it hasn't been initialized yet
+        if (pollComponent.poll_type === 'ranking' && !hasInitializedRanking) {
+          setRankingOrder(pollOptions || []);
+          setHasInitializedRanking(true);
+        }
 
         // Get user's existing response
         const { data: { user } } = await supabase.auth.getUser();
@@ -185,6 +280,13 @@ export const PollStudentView: React.FC<PollStudentViewProps> = ({ componentId, p
   };
 
   const subscribeToUpdates = () => {
+    // CRITICAL: Don't subscribe to updates for ranking polls while user is ranking
+    // This prevents interruptions during drag operations
+    if (pollData?.poll_type === 'ranking' && !userResponse) {
+      console.log('Skipping realtime updates for ranking poll (user not voted yet)');
+      return () => {};
+    }
+
     const channel = supabase
       .channel('poll-updates')
       .on(
@@ -195,7 +297,10 @@ export const PollStudentView: React.FC<PollStudentViewProps> = ({ componentId, p
           table: 'poll_responses',
         },
         () => {
-          loadPollData();
+          // Only reload if not currently ranking or has already voted
+          if (pollData?.poll_type !== 'ranking' || userResponse) {
+            loadPollData();
+          }
         }
       )
       .on(
@@ -206,7 +311,10 @@ export const PollStudentView: React.FC<PollStudentViewProps> = ({ componentId, p
           table: 'poll_options',
         },
         () => {
-          loadPollData();
+          // Only reload if not currently ranking or has already voted
+          if (pollData?.poll_type !== 'ranking' || userResponse) {
+            loadPollData();
+          }
         }
       )
       .subscribe();
@@ -325,14 +433,20 @@ export const PollStudentView: React.FC<PollStudentViewProps> = ({ componentId, p
     }
   };
 
-  const handleRankingDragEnd = (result: DropResult) => {
-    if (!result.destination) return;
+  // Handle drag end with @dnd-kit
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
 
-    const items = Array.from(rankingOrder);
-    const [reorderedItem] = items.splice(result.source.index, 1);
-    items.splice(result.destination.index, 0, reorderedItem);
+    if (!over || active.id === over.id) {
+      return;
+    }
 
-    setRankingOrder(items);
+    setRankingOrder((items) => {
+      const oldIndex = items.findIndex((item) => item.id === active.id);
+      const newIndex = items.findIndex((item) => item.id === over.id);
+
+      return arrayMove(items, oldIndex, newIndex);
+    });
   };
 
   const calculatePercentage = (voteCount: number) => {
@@ -426,43 +540,40 @@ export const PollStudentView: React.FC<PollStudentViewProps> = ({ componentId, p
             )}
 
             {pollData.poll_type === 'ranking' && (
-              <div className="space-y-2">
-                <p className="text-sm text-muted-foreground mb-4">Drag to reorder from most to least preferred:</p>
-                <DragDropContext onDragEnd={handleRankingDragEnd}>
-                  <Droppable droppableId="poll-ranking-list">
-                    {(provided, snapshot) => (
-                      <div 
-                        {...provided.droppableProps} 
-                        ref={provided.innerRef} 
-                        className={`space-y-2 ${snapshot.isDraggingOver ? 'bg-accent/20 rounded-lg p-2' : ''}`}
-                      >
-                        {rankingOrder.map((option, index) => (
-                          <Draggable 
-                            key={`draggable-${option.id}`} 
-                            draggableId={`draggable-${option.id}`} 
-                            index={index}
-                          >
-                            {(provided, snapshot) => (
-                              <div
-                                ref={provided.innerRef}
-                                {...provided.draggableProps}
-                                {...provided.dragHandleProps}
-                                className={`flex items-center gap-3 p-3 bg-background border-2 rounded-md transition-all cursor-grab active:cursor-grabbing ${
-                                  snapshot.isDragging ? 'shadow-lg scale-105 border-primary' : 'border-border hover:border-primary/50'
-                                }`}
-                              >
-                                <GripVertical className="h-5 w-5 text-muted-foreground flex-shrink-0" />
-                                <span className="font-bold text-lg min-w-[2rem]">{index + 1}.</span>
-                                <span className="flex-1">{option.option_text}</span>
-                              </div>
-                            )}
-                          </Draggable>
-                        ))}
-                        {provided.placeholder}
-                      </div>
-                    )}
-                  </Droppable>
-                </DragDropContext>
+              <div className="space-y-4">
+                <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
+                  <p className="text-sm text-emerald-800">
+                    📋 <strong>Drag to rank:</strong> Move items up or down to show your preference (1 = most preferred)
+                  </p>
+                </div>
+
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <p className="text-sm text-blue-800">
+                    <strong>Keyboard users:</strong> Tab to an item, press Space to pick it up, 
+                    use Arrow keys to move it, and press Space again to drop it.
+                  </p>
+                </div>
+
+                <DndContext
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={handleDragEnd}
+                >
+                  <SortableContext
+                    items={rankingOrder.map(opt => opt.id)}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    <div className="space-y-3">
+                      {rankingOrder.map((option, index) => (
+                        <SortableRankingItem
+                          key={option.id}
+                          option={option}
+                          index={index}
+                        />
+                      ))}
+                    </div>
+                  </SortableContext>
+                </DndContext>
               </div>
             )}
 
@@ -501,16 +612,15 @@ export const PollStudentView: React.FC<PollStudentViewProps> = ({ componentId, p
                 {options.map((option) => {
                   const percentage = calculatePercentage(option.vote_count);
                   return (
-                    <div key={option.id} className="space-y-1">
-                      <div className="flex justify-between text-sm">
+                    <div key={option.id} className="space-y-2">
+                      <div className="flex justify-between items-center text-sm">
                         <span className="font-medium">{option.option_text}</span>
-                        <span className="text-muted-foreground">
-                          {pollData.show_percentages && `${percentage}%`}
-                          {pollData.show_percentages && pollData.show_vote_counts && ' '}
-                          {pollData.show_vote_counts && `(${option.vote_count} ${option.vote_count === 1 ? 'vote' : 'votes'})`}
-                        </span>
+                        <div className="flex gap-2 text-muted-foreground">
+                          {pollData.show_vote_counts && <span>{option.vote_count} votes</span>}
+                          {pollData.show_percentages && <span>({percentage}%)</span>}
+                        </div>
                       </div>
-                      <Progress value={percentage} className="h-6" />
+                      <Progress value={percentage} className="h-2" />
                     </div>
                   );
                 })}
@@ -518,35 +628,30 @@ export const PollStudentView: React.FC<PollStudentViewProps> = ({ componentId, p
             )}
 
             {pollData.poll_type === 'rating_scale' && (
-              <div className="space-y-4">
-                <div className="text-center">
-                  <div className="flex items-center justify-center gap-1 mb-2">
-                    {[1, 2, 3, 4, 5].map((rating) => (
-                      <Star
-                        key={rating}
-                        className={`h-8 w-8 ${
-                          rating <= Math.round(ratingValue)
-                            ? 'fill-yellow-400 text-yellow-400'
-                            : 'text-gray-300'
-                        }`}
-                      />
-                    ))}
-                  </div>
-                  <p className="text-2xl font-bold">Average Rating: {ratingValue.toFixed(1)} / 5</p>
+              <div className="text-center space-y-2">
+                <div className="text-4xl font-bold text-primary">
+                  {(options.reduce((acc, opt) => acc + opt.vote_count, 0) / Math.max(totalResponses, 1)).toFixed(1)}
+                </div>
+                <div className="text-sm text-muted-foreground">Average Rating (out of 5)</div>
+                <div className="flex justify-center gap-1 mt-2">
+                  {[1, 2, 3, 4, 5].map((rating) => (
+                    <Star
+                      key={rating}
+                      className={`h-6 w-6 ${
+                        rating <= Math.round(options.reduce((acc, opt) => acc + opt.vote_count, 0) / Math.max(totalResponses, 1))
+                          ? 'fill-yellow-400 text-yellow-400'
+                          : 'text-gray-300'
+                      }`}
+                    />
+                  ))}
                 </div>
               </div>
             )}
 
-            <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground pt-2">
+            <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground pt-4 border-t">
               <Users className="h-4 w-4" />
-              <span>{totalResponses} {totalResponses === 1 ? 'rating' : 'ratings'} submitted</span>
+              <span>{totalResponses} total {totalResponses === 1 ? 'response' : 'responses'}</span>
             </div>
-
-            {pollData.allow_change_vote && (
-              <Button variant="outline" onClick={() => setUserResponse(null)} className="w-full">
-                Change Vote
-              </Button>
-            )}
           </div>
         )}
       </CardContent>
