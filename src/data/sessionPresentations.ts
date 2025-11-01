@@ -16,6 +16,63 @@ export interface SessionPresentation {
 }
 
 export const sessionPresentations: Record<string, SessionPresentation> = {
+  "AI-Assisted Skill Practice: Redefining Roleplay": {
+    sessionTitle: "AI-Assisted Skill Practice: Redefining Roleplay",
+    embedUrl: "https://www.canva.com/design/DAG0dxt2rcs/view?embed",
+    slideCount: 20,
+    slides: [
+      {
+        slideNumber: 1,
+        title: "Title Slide",
+        content: "Amplified Leveraged Professional Impact - Practical Tools & Techniques. Applied AI Conference 2025."
+      },
+      {
+        slideNumber: 2,
+        title: "AI Assisted Skill Practice",
+        content: "Applied AI Conference 2025. Presented by Tyler Moberg, AI Learning Specialist."
+      },
+      {
+        slideNumber: 3,
+        title: "10,000 Hours",
+        content: "The concept of mastery through extensive practice. Discussion point: Agree or Disagree with the 10,000 hour rule for skill development."
+      },
+      {
+        slideNumber: 4,
+        title: "Deliberate Practice",
+        content: "Zoning in on the specific skills you struggle with and using immediate feedback to correct your mistakes in real time. This focused approach accelerates learning and skill development."
+      },
+      {
+        slideNumber: 5,
+        title: "Real-World Application",
+        content: "Exploring how AI can facilitate deliberate practice in professional settings, enabling individuals to practice difficult conversations, presentations, and skill-based scenarios in a safe environment."
+      },
+      {
+        slideNumber: 6,
+        title: "AI-Powered Role Play",
+        content: "Using AI to simulate realistic scenarios for skill practice, providing immediate feedback and allowing for multiple iterations without risk."
+      },
+      {
+        slideNumber: 7,
+        title: "Practical Implementation",
+        content: "Step-by-step guide to implementing AI-assisted skill practice in your organization or personal development routine."
+      },
+      {
+        slideNumber: 8,
+        title: "Case Studies",
+        content: "Real examples of AI-assisted skill practice improving professional capabilities across different industries and skill sets."
+      },
+      {
+        slideNumber: 9,
+        title: "Tools and Platforms",
+        content: "Overview of available AI platforms and tools that can be used for skill practice and roleplay scenarios."
+      },
+      {
+        slideNumber: 10,
+        title: "Best Practices",
+        content: "Guidelines for effective AI-assisted skill practice including setting clear objectives, creating realistic scenarios, and incorporating feedback loops."
+      }
+    ]
+  },
   "Saving Lives and Millions: AI Transforms Avalanche Forecasting": {
     sessionTitle: "Saving Lives and Millions: AI Transforms Avalanche Forecasting",
     embedUrl: "https://docs.google.com/presentation/d/1oJCks_F4e1ADcLgjsLFi5hY5MLepQux0/embed?start=false&loop=false&delayms=3000",
