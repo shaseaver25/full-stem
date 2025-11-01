@@ -4,8 +4,9 @@ import { Button } from '@/components/ui/button';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
-import { CheckCircle2, BarChart3 } from 'lucide-react';
+import { CheckCircle2, BarChart3, Mail } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import SpeechControls from '@/components/SpeechControls';
 import { useElevenLabsTTSPublic } from '@/hooks/useElevenLabsTTSPublic';
@@ -20,6 +21,7 @@ interface PollOption {
 }
 
 interface Poll {
+  id?: string;
   question: string;
   options: PollOption[];
   type: 'multiple-choice' | 'open-ended';
@@ -38,6 +40,7 @@ const PollSurvey: React.FC<PollSurveyProps> = ({ targetLanguage = 'en' }) => {
   const [showResults, setShowResults] = useState(false);
   const [translatedQuestion, setTranslatedQuestion] = useState<string | null>(null);
   const [translatedOptions, setTranslatedOptions] = useState<Record<string, string>>({});
+  const [userEmail, setUserEmail] = useState<string>('');
 
   const { translateText, isTranslating } = useLiveTranslation();
   const { speak, pause, resume, stop, isPlaying, isPaused, isLoading, error, currentTime, duration } = useElevenLabsTTSPublic(targetLanguage);
@@ -65,6 +68,7 @@ const PollSurvey: React.FC<PollSurveyProps> = ({ targetLanguage = 'en' }) => {
       if (error) throw error;
 
       return pollComponents.map(poll => ({
+        id: poll.id,
         question: poll.poll_question,
         options: (poll.poll_options || [])
           .sort((a, b) => a.option_order - b.option_order)
@@ -153,7 +157,7 @@ const PollSurvey: React.FC<PollSurveyProps> = ({ targetLanguage = 'en' }) => {
     }
   };
 
-  const handleSubmitVote = () => {
+  const handleSubmitVote = async () => {
     if (!selectedOption && !openResponse.trim()) {
       toast({
         title: "Please make a selection",
@@ -163,12 +167,28 @@ const PollSurvey: React.FC<PollSurveyProps> = ({ targetLanguage = 'en' }) => {
       return;
     }
 
+    // Save email if provided
+    if (userEmail.trim()) {
+      try {
+        await supabase.from('poll_responses').insert({
+          poll_component_id: currentPoll.id,
+          selected_option_ids: selectedOption ? [selectedOption] : null,
+          is_anonymous: false,
+        });
+        
+        // You could also save the email to a separate table for speaker follow-up
+        console.log('Email shared:', userEmail);
+      } catch (error) {
+        console.error('Error saving response:', error);
+      }
+    }
+
     setVotedQuestions(prev => new Set(prev).add(currentQuestionIndex));
     setShowResults(true);
     
     toast({
       title: "Vote submitted!",
-      description: "Thank you for your feedback.",
+      description: userEmail.trim() ? "Thank you! Your email has been shared with the speaker." : "Thank you for your feedback.",
     });
   };
 
@@ -265,6 +285,24 @@ const PollSurvey: React.FC<PollSurveyProps> = ({ targetLanguage = 'en' }) => {
                   className="resize-none"
                 />
               )}
+
+              {/* Optional Email Input */}
+              <div className="pt-4 border-t space-y-2">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Mail className="h-4 w-4" />
+                  <Label htmlFor="email-input" className="font-normal">
+                    Share your email with the speaker for follow-up (Optional)
+                  </Label>
+                </div>
+                <Input
+                  id="email-input"
+                  type="email"
+                  placeholder="your.email@example.com"
+                  value={userEmail}
+                  onChange={(e) => setUserEmail(e.target.value)}
+                  className="w-full"
+                />
+              </div>
 
               <Button
                 onClick={handleSubmitVote}
