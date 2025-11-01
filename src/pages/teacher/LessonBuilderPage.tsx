@@ -85,6 +85,14 @@ export default function LessonBuilderPage() {
 
       if (componentsError) throw componentsError;
 
+      // Log quiz components when loading
+      componentsData?.forEach((comp, index) => {
+        if (comp.component_type === 'quiz') {
+          console.log(`🔍 Loaded quiz component ${index}:`, JSON.stringify(comp.content, null, 2));
+          console.log(`🔍 Has quizData:`, !!(comp.content as any)?.quizData);
+        }
+      });
+
       setComponents(componentsData || []);
     } catch (error) {
       console.error('Error loading lesson:', error);
@@ -203,17 +211,28 @@ export default function LessonBuilderPage() {
           throw new Error(`${invalidComponents.length} component(s) are missing required fields`);
         }
 
-        const componentsToInsert = components.map((comp, index) => ({
-          lesson_id: savedLessonId!,
-          component_type: comp.component_type,
-          content: comp.content || {},
-          order: index,
-          enabled: comp.enabled !== false,
-          is_assignable: comp.is_assignable || false,
-          reading_level: comp.reading_level || null,
-          language_code: comp.language_code || 'en',
-          read_aloud: comp.read_aloud !== false,
-        }));
+        const componentsToInsert = components.map((comp, index) => {
+          // Special logging for quiz components
+          if (comp.component_type === 'quiz') {
+            console.log(`🎯 Quiz component ${index} content:`, JSON.stringify(comp.content, null, 2));
+            console.log(`🎯 Quiz component ${index} has quizData:`, !!comp.content?.quizData);
+            if (comp.content?.quizData) {
+              console.log(`🎯 Quiz has ${comp.content.quizData.questions?.length || 0} questions`);
+            }
+          }
+          
+          return {
+            lesson_id: savedLessonId!,
+            component_type: comp.component_type,
+            content: comp.content || {},
+            order: index,
+            enabled: comp.enabled !== false,
+            is_assignable: comp.is_assignable || false,
+            reading_level: comp.reading_level || null,
+            language_code: comp.language_code || 'en',
+            read_aloud: comp.read_aloud !== false,
+          };
+        });
 
         console.log('📝 Components to insert:', componentsToInsert);
 

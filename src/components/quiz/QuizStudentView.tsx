@@ -206,9 +206,14 @@ export function QuizStudentView({ componentId }: QuizStudentViewProps) {
 
       if (componentError) throw componentError;
 
+      console.log('🔍 QuizStudentView: Loaded component content:', JSON.stringify(component?.content, null, 2));
+      
       const quizDataFromContent = (component?.content as any)?.quizData;
+      console.log('🔍 QuizStudentView: quizData exists?', !!quizDataFromContent);
       
       if (!quizDataFromContent) {
+        console.error('❌ QuizStudentView: No quizData found in component.content');
+        console.error('❌ QuizStudentView: Available keys in content:', Object.keys(component?.content || {}));
         throw new Error('Quiz has not been configured yet. Please ask your teacher to configure the quiz using the Quiz Builder.');
       }
 
