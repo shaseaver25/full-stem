@@ -8,11 +8,12 @@ export function segmentWords(text: string, language?: string): string[] {
     // Use Intl.Segmenter for proper international word segmentation
     const segmenter = new (Intl as any).Segmenter(language, { granularity: 'word' });
     return Array.from(segmenter.segment(text))
-      .map((segment: any) => segment.segment)
-      .filter((word: string) => word.trim().length > 0);
+      .filter((segment: any) => segment.isWordLike) // Only include word-like segments
+      .map((segment: any) => String(segment.segment)) // Ensure it's a string
+      .filter((word: string) => word && word.trim().length > 0);
   } catch {
     // Fallback for environments without Intl.Segmenter support
-    return text.split(/(\s+)/).filter(token => token.trim().length > 0);
+    return text.split(/(\s+)/).filter(token => token && token.trim().length > 0);
   }
 }
 
@@ -21,8 +22,9 @@ export function segmentWords(text: string, language?: string): string[] {
  * Strips punctuation and uses grapheme length
  */
 export function calculateWordWeight(word: string): number {
-  // Strip punctuation and get grapheme length
-  const cleanWord = word.replace(/[^\p{L}\p{N}]/gu, '');
+  // Ensure word is a string and strip punctuation to get grapheme length
+  const wordStr = String(word || '');
+  const cleanWord = wordStr.replace(/[^\p{L}\p{N}]/gu, '');
   return cleanWord.length || 1;
 }
 
