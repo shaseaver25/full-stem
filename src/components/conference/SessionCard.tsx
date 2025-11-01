@@ -54,19 +54,21 @@ const SessionCard: React.FC<SessionCardProps> = ({ session, onJoin }) => {
     <Card className="hover:shadow-lg transition-shadow duration-300 bg-white">
       <CardHeader>
         <div className="mb-3">
-          <div className="flex items-center gap-2 mb-2">
-            <h4 className="font-semibold text-sm text-gray-900">
-              {session.speakers.length === 1 
-                ? session.speakers[0].name 
-                : `${session.speakers[0].name} & ${session.speakers.length - 1} other${session.speakers.length > 2 ? 's' : ''}`
-              }
-            </h4>
-            {session.isKeynote && (
-              <Badge className="bg-purple-100 text-purple-700 border-purple-200 text-xs">
-                Keynote
-              </Badge>
-            )}
-          </div>
+          {session.speakers.length > 0 && (
+            <div className="flex items-center gap-2 mb-2">
+              <h4 className="font-semibold text-sm text-gray-900">
+                {session.speakers.length === 1 
+                  ? session.speakers[0].name 
+                  : `${session.speakers[0].name} & ${session.speakers.length - 1} other${session.speakers.length > 2 ? 's' : ''}`
+                }
+              </h4>
+              {session.isKeynote && (
+                <Badge className="bg-purple-100 text-purple-700 border-purple-200 text-xs">
+                  Keynote
+                </Badge>
+              )}
+            </div>
+          )}
           {session.badges.length > 0 && (
             <div className="flex flex-wrap gap-1">
               {session.badges.map((badge, idx) => (
