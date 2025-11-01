@@ -250,8 +250,10 @@ export function QuizBuilderComponent({ initialData, onSave, lessonId }: QuizBuil
         }
       });
 
-      // Check data first as it may contain error details even when error is set
-      if (data?.error) {
+      console.log('Edge function response:', { data, error });
+
+      // Check data first - edge function returns error details in response body
+      if (data) {
         if (data.error === 'insufficient_content') {
           toast({
             title: '⚠️ Insufficient Lesson Content',
@@ -261,12 +263,21 @@ export function QuizBuilderComponent({ initialData, onSave, lessonId }: QuizBuil
           });
           return;
         }
-        throw new Error(data.message || data.error);
+        
+        if (data.error) {
+          throw new Error(data.message || data.error);
+        }
       }
 
-      // If no data error but there's a network/invocation error
+      // If error is set but no data, handle the error
       if (error) {
+        console.error('Edge function error:', error);
         throw new Error(error.message || 'Failed to connect to AI service');
+      }
+
+      // If no error and no data, something went wrong
+      if (!data) {
+        throw new Error('No response from AI service');
       }
 
       console.log('AI generated questions:', data);
