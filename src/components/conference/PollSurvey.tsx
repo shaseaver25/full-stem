@@ -29,9 +29,10 @@ interface PollSurveyProps {
 
 const PollSurvey: React.FC<PollSurveyProps> = ({ targetLanguage = 'en' }) => {
   const { toast } = useToast();
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedOption, setSelectedOption] = useState<string>('');
   const [openResponse, setOpenResponse] = useState<string>('');
-  const [hasVoted, setHasVoted] = useState(false);
+  const [votedQuestions, setVotedQuestions] = useState<Set<number>>(new Set());
   const [showResults, setShowResults] = useState(false);
   const [translatedQuestion, setTranslatedQuestion] = useState<string | null>(null);
   const [translatedOptions, setTranslatedOptions] = useState<Record<string, string>>({});
@@ -39,28 +40,52 @@ const PollSurvey: React.FC<PollSurveyProps> = ({ targetLanguage = 'en' }) => {
   const { translateText, isTranslating } = useLiveTranslation();
   const { speak, pause, resume, stop, isPlaying, isPaused, isLoading, error, currentTime, duration } = useElevenLabsTTSPublic(targetLanguage);
 
-  // Sample poll data
-  const [poll] = useState<Poll>({
-    question: "What aspect of this session did you find most valuable?",
-    options: [
-      { id: '1', text: 'Practical examples and case studies', votes: 45 },
-      { id: '2', text: 'Technical implementation details', votes: 32 },
-      { id: '3', text: 'Strategic insights and best practices', votes: 28 },
-      { id: '4', text: 'Q&A and discussion', votes: 15 },
-    ],
-    type: 'multiple-choice'
-  });
+  // Multiple poll questions
+  const [polls] = useState<Poll[]>([
+    {
+      question: "What aspect of this session did you find most valuable?",
+      options: [
+        { id: '1', text: 'Practical examples and case studies', votes: 45 },
+        { id: '2', text: 'Technical implementation details', votes: 32 },
+        { id: '3', text: 'Strategic insights and best practices', votes: 28 },
+        { id: '4', text: 'Q&A and discussion', votes: 15 },
+      ],
+      type: 'multiple-choice'
+    },
+    {
+      question: "How likely are you to apply AI techniques in your work?",
+      options: [
+        { id: '1', text: 'Very likely - already planning', votes: 52 },
+        { id: '2', text: 'Somewhat likely - exploring options', votes: 38 },
+        { id: '3', text: 'Neutral - still learning', votes: 18 },
+        { id: '4', text: 'Unlikely - not applicable', votes: 12 },
+      ],
+      type: 'multiple-choice'
+    },
+    {
+      question: "What additional topics would you like to see covered?",
+      options: [
+        { id: '1', text: 'Advanced AI model training', votes: 34 },
+        { id: '2', text: 'Real-world deployment strategies', votes: 41 },
+        { id: '3', text: 'Ethics and responsible AI', votes: 29 },
+        { id: '4', text: 'Cost optimization and scaling', votes: 26 },
+      ],
+      type: 'multiple-choice'
+    }
+  ]);
 
-  const totalVotes = poll.options.reduce((sum, option) => sum + option.votes, 0);
+  const currentPoll = polls[currentQuestionIndex];
+  const totalVotes = currentPoll.options.reduce((sum, option) => sum + option.votes, 0);
+  const hasVoted = votedQuestions.has(currentQuestionIndex);
 
   useEffect(() => {
     const translatePoll = async () => {
       if (targetLanguage !== 'en') {
-        const translatedQ = await translateText({ text: poll.question, targetLanguage });
+        const translatedQ = await translateText({ text: currentPoll.question, targetLanguage });
         setTranslatedQuestion(translatedQ);
 
         const translatedOpts: Record<string, string> = {};
-        for (const option of poll.options) {
+        for (const option of currentPoll.options) {
           const translated = await translateText({ text: option.text, targetLanguage });
           if (translated) {
             translatedOpts[option.id] = translated;
@@ -73,14 +98,33 @@ const PollSurvey: React.FC<PollSurveyProps> = ({ targetLanguage = 'en' }) => {
       }
     };
     translatePoll();
-  }, [targetLanguage, poll]);
+  }, [targetLanguage, currentPoll, currentQuestionIndex]);
+
+  // Reset selection when question changes
+  useEffect(() => {
+    setSelectedOption('');
+    setOpenResponse('');
+    setShowResults(false);
+  }, [currentQuestionIndex]);
 
   const handleReadAloud = () => {
-    const questionText = translatedQuestion || poll.question;
-    const optionsText = poll.options
+    const questionText = translatedQuestion || currentPoll.question;
+    const optionsText = currentPoll.options
       .map((opt, idx) => `Option ${idx + 1}: ${translatedOptions[opt.id] || opt.text}`)
       .join('. ');
     speak(`${questionText}. ${optionsText}`);
+  };
+
+  const handleNextQuestion = () => {
+    if (currentQuestionIndex < polls.length - 1) {
+      setCurrentQuestionIndex(currentQuestionIndex + 1);
+    }
+  };
+
+  const handlePreviousQuestion = () => {
+    if (currentQuestionIndex > 0) {
+      setCurrentQuestionIndex(currentQuestionIndex - 1);
+    }
   };
 
   const handleSubmitVote = () => {
@@ -93,7 +137,7 @@ const PollSurvey: React.FC<PollSurveyProps> = ({ targetLanguage = 'en' }) => {
       return;
     }
 
-    setHasVoted(true);
+    setVotedQuestions(prev => new Set(prev).add(currentQuestionIndex));
     setShowResults(true);
     
     toast({
@@ -113,7 +157,7 @@ const PollSurvey: React.FC<PollSurveyProps> = ({ targetLanguage = 'en' }) => {
         <div className="flex items-center justify-between flex-wrap gap-2">
           <div className="flex items-center gap-2">
             <BarChart3 className="h-5 w-5 text-primary" />
-            <CardTitle className="text-lg">Live Poll</CardTitle>
+            <CardTitle className="text-lg">Live Poll - Question {currentQuestionIndex + 1} of {polls.length}</CardTitle>
           </div>
           <div className="flex items-center gap-2">
             <SpeechControls
@@ -144,16 +188,16 @@ const PollSurvey: React.FC<PollSurveyProps> = ({ targetLanguage = 'en' }) => {
       <CardContent className="space-y-4">
         <div className="space-y-4">
           <h3 className="font-medium text-foreground">
-            {isTranslating ? 'Translating...' : (translatedQuestion || poll.question)}
+            {isTranslating ? 'Translating...' : (translatedQuestion || currentPoll.question)}
           </h3>
 
           {!hasVoted && !showResults ? (
             // Voting Interface
             <div className="space-y-4">
-              {poll.type === 'multiple-choice' ? (
+              {currentPoll.type === 'multiple-choice' ? (
                 <RadioGroup value={selectedOption} onValueChange={setSelectedOption}>
                   <div className="space-y-3">
-                    {poll.options.map((option) => (
+                    {currentPoll.options.map((option) => (
                       <div key={option.id} className="flex items-center space-x-2">
                         <RadioGroupItem value={option.id} id={option.id} />
                         <Label 
@@ -195,7 +239,7 @@ const PollSurvey: React.FC<PollSurveyProps> = ({ targetLanguage = 'en' }) => {
               )}
 
               <div className="space-y-3">
-                {poll.options.map((option) => {
+                {currentPoll.options.map((option) => {
                   const percentage = getPercentage(option.votes);
                   const isSelected = option.id === selectedOption && hasVoted;
                   
@@ -234,6 +278,26 @@ const PollSurvey: React.FC<PollSurveyProps> = ({ targetLanguage = 'en' }) => {
               )}
             </div>
           )}
+
+          {/* Navigation Buttons */}
+          <div className="flex gap-2 pt-4 border-t">
+            <Button
+              variant="outline"
+              onClick={handlePreviousQuestion}
+              disabled={currentQuestionIndex === 0}
+              className="flex-1"
+            >
+              ← Previous
+            </Button>
+            <Button
+              variant="outline"
+              onClick={handleNextQuestion}
+              disabled={currentQuestionIndex === polls.length - 1}
+              className="flex-1"
+            >
+              Next →
+            </Button>
+          </div>
         </div>
       </CardContent>
     </Card>
