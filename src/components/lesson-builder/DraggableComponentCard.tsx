@@ -14,6 +14,7 @@ import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import { LocalFileUpload } from './LocalFileUpload';
 import { SlideTextExtractor } from './SlideTextExtractor';
 import { QuizBuilderComponent } from '@/components/quiz/QuizBuilderComponent';
+import { PollBuilderComponent } from '@/components/poll/PollBuilderComponent';
 
 interface LessonComponent {
   id?: string;
@@ -43,6 +44,7 @@ const componentTypeLabels: Record<string, string> = {
   page: 'Page',
   video: 'Multimedia',
   quiz: 'Quiz/Assessment',
+  poll: 'Poll/Survey',
   discussion: 'Discussion',
   codingEditor: 'Coding IDE',
   desmos: 'Desmos Activity',
@@ -65,6 +67,7 @@ export function DraggableComponentCard({
 }: DraggableComponentCardProps) {
   const [isExpanded, setIsExpanded] = useState(true);
   const [isQuizBuilderOpen, setIsQuizBuilderOpen] = useState(false);
+  const [isPollBuilderOpen, setIsPollBuilderOpen] = useState(false);
 
   const handleContentChange = (field: string, value: any) => {
     onUpdate(index, {
@@ -413,6 +416,66 @@ export function DraggableComponentCard({
                     console.log('💾 Quiz Builder: Saving quiz data to component:', quizData);
                     handleContentChange('quizData', quizData);
                     setIsQuizBuilderOpen(false);
+                  }}
+                />
+              </DialogContent>
+            </Dialog>
+          </div>
+        );
+
+      case 'poll':
+        return (
+          <div className="space-y-4">
+            <div className="p-4 bg-[#D1FAE5] border-2 border-[#065F46] rounded-lg">
+              <p className="font-semibold text-[#065F46] mb-2">📊 Poll/Survey Component</p>
+              <p className="text-sm text-muted-foreground">
+                Poll content is managed through the dedicated Poll Builder interface. 
+                Click the "Configure Poll" button below to create questions, set poll options, configure display settings, and more.
+              </p>
+              {component.content?.pollData ? (
+                <div className="mt-3 p-2 bg-green-50 border border-green-500 rounded text-sm text-green-800">
+                  ✓ Poll configured: {component.content.pollData.poll_question}
+                </div>
+              ) : (
+                <div className="mt-3 p-2 bg-yellow-50 border border-yellow-500 rounded text-sm text-yellow-800">
+                  ⚠️ Poll not configured yet
+                </div>
+              )}
+            </div>
+            <Button 
+              onClick={() => setIsPollBuilderOpen(true)}
+              className="w-full"
+              variant="default"
+            >
+              <Settings className="h-4 w-4 mr-2" />
+              {component.content?.pollData ? 'Edit Poll Configuration' : 'Configure Poll'}
+            </Button>
+
+            <div className="flex items-center justify-between p-3 border rounded-lg">
+              <div className="flex items-center gap-2">
+                <Volume2 className="h-4 w-4 text-muted-foreground" />
+                <Label htmlFor={`read-aloud-poll-${index}`}>Enable Read Aloud</Label>
+              </div>
+              <input
+                type="checkbox"
+                id={`read-aloud-poll-${index}`}
+                checked={component.read_aloud || false}
+                onChange={(e) => onUpdate(index, { read_aloud: e.target.checked })}
+                className="h-4 w-4"
+              />
+            </div>
+            
+            <Dialog open={isPollBuilderOpen} onOpenChange={setIsPollBuilderOpen}>
+              <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>Poll Builder</DialogTitle>
+                </DialogHeader>
+                <PollBuilderComponent 
+                  componentId={component.id || ''}
+                  initialData={component.content?.pollData}
+                  onSave={() => {
+                    console.log('💾 Poll Builder: Poll saved');
+                    setIsPollBuilderOpen(false);
                   }}
                 />
               </DialogContent>
