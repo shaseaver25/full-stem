@@ -2,6 +2,13 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Card, CardContent } from '@/components/ui/card';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { 
   ChevronLeft, 
   ChevronRight, 
@@ -13,12 +20,28 @@ import {
   Pause,
   Play,
   HelpCircle,
-  X
+  X,
+  Languages
 } from 'lucide-react';
 import { usePresentationTTS } from '@/hooks/usePresentationTTS';
 import { useLiveTranslation } from '@/hooks/useLiveTranslation';
 import { HighlightedText } from '@/components/lesson/HighlightedText';
 import { cn } from '@/lib/utils';
+
+const SUPPORTED_LANGUAGES = [
+  { code: 'en', name: 'English' },
+  { code: 'es', name: 'Spanish' },
+  { code: 'fr', name: 'French' },
+  { code: 'de', name: 'German' },
+  { code: 'it', name: 'Italian' },
+  { code: 'pt', name: 'Portuguese' },
+  { code: 'ru', name: 'Russian' },
+  { code: 'ja', name: 'Japanese' },
+  { code: 'ko', name: 'Korean' },
+  { code: 'zh', name: 'Chinese' },
+  { code: 'ar', name: 'Arabic' },
+  { code: 'hi', name: 'Hindi' }
+];
 
 interface SlidesViewerProps {
   sessionTitle: string;
@@ -45,6 +68,7 @@ const SlidesViewer: React.FC<SlidesViewerProps> = ({
   const [viewedSlides, setViewedSlides] = useState<Set<number>>(new Set([0]));
   const [translatedContent, setTranslatedContent] = useState<string | null>(null);
   const [showKeyboardHelp, setShowKeyboardHelp] = useState(false);
+  const [selectedLanguage, setSelectedLanguage] = useState('en');
   
   const { speak, pause, resume, stop, isPlaying, isPaused, isLoading: isSpeaking, currentWordIndex, wordTimings } = usePresentationTTS();
   const { translateText, isTranslating } = useLiveTranslation();
@@ -163,24 +187,44 @@ const SlidesViewer: React.FC<SlidesViewerProps> = ({
     setIsFullscreen(!isFullscreen);
   };
 
+  // Language change handler
+  const handleLanguageChange = async (langCode: string) => {
+    setSelectedLanguage(langCode);
+    
+    if (langCode !== 'en') {
+      const languageName = SUPPORTED_LANGUAGES.find(l => l.code === langCode)?.name || langCode;
+      const translated = await translateText({
+        text: currentSlideContent,
+        targetLanguage: languageName,
+        sourceLanguage: 'auto'
+      });
+      if (translated) {
+        setTranslatedContent(translated);
+      }
+    } else {
+      setTranslatedContent(null);
+    }
+  };
+
   // Read aloud
   const handleReadAloud = async () => {
     let textToRead = currentSlideContent;
     
-    if (targetLanguage !== 'en' && translatedContent) {
+    if (selectedLanguage !== 'en' && translatedContent) {
       textToRead = translatedContent;
     }
 
     await speak(textToRead);
   };
 
-  // Translate content when language or slide changes
+  // Translate content when slide changes (if not English)
   useEffect(() => {
     const translateCurrentSlide = async () => {
-      if (targetLanguage !== 'en') {
+      if (selectedLanguage !== 'en') {
+        const languageName = SUPPORTED_LANGUAGES.find(l => l.code === selectedLanguage)?.name || selectedLanguage;
         const translated = await translateText({
           text: currentSlideContent,
-          targetLanguage,
+          targetLanguage: languageName,
           sourceLanguage: 'auto'
         });
         if (translated) {
@@ -195,7 +239,7 @@ const SlidesViewer: React.FC<SlidesViewerProps> = ({
     if (currentSlideContent) {
       translateCurrentSlide();
     }
-  }, [targetLanguage, currentSlide]);
+  }, [selectedLanguage, currentSlide, currentSlideContent, translateText]);
 
   // Touch gesture support
   useEffect(() => {
@@ -393,11 +437,29 @@ const SlidesViewer: React.FC<SlidesViewerProps> = ({
                           <p className="text-xs text-muted-foreground">Text with word-by-word highlighting</p>
                         </div>
                       </div>
-                      {targetLanguage !== 'en' && translatedContent && (
-                        <span className="text-xs px-2 py-1 bg-primary/10 text-primary rounded">
-                          Translated
-                        </span>
-                      )}
+                      <div className="flex items-center gap-2">
+                        <Select value={selectedLanguage} onValueChange={handleLanguageChange} disabled={isTranslating}>
+                          <SelectTrigger 
+                            className="w-40" 
+                            aria-label={`Select language. Currently ${SUPPORTED_LANGUAGES.find(l => l.code === selectedLanguage)?.name}`}
+                          >
+                            <Languages className="h-4 w-4 mr-2" />
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {SUPPORTED_LANGUAGES.map(lang => (
+                              <SelectItem key={lang.code} value={lang.code}>
+                                {lang.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        {selectedLanguage !== 'en' && translatedContent && (
+                          <span className="text-xs px-2 py-1 bg-primary/10 text-primary rounded">
+                            Translated
+                          </span>
+                        )}
+                      </div>
                     </div>
                     <div className="prose prose-sm max-w-none dark:prose-invert">
                       <p className="text-sm leading-relaxed">
