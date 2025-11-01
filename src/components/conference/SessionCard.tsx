@@ -5,36 +5,23 @@ import { Badge } from '@/components/ui/badge';
 import { QrCode, ChevronRight } from 'lucide-react';
 import QRCodeLib from 'qrcode';
 
-interface Session {
-  id: string;
-  title: string;
-  description: string;
-  speakers: Array<{
-    name: string;
-    bio: string;
-    headshotUrl: string;
-    linkedInUrl: string;
-  }>;
-  badges: string[];
-  isKeynote: boolean;
-  lessonId: string;
-}
-
 interface SessionCardProps {
-  session: Session;
-  onJoin: (sessionId: string, lessonId: string) => void;
+  title: string;
+  room: string;
+  time: string;
+  onJoin: () => void;
 }
 
-const SessionCard: React.FC<SessionCardProps> = ({ session, onJoin }) => {
+const SessionCard: React.FC<SessionCardProps> = ({ title, room, time, onJoin }) => {
   const [showQR, setShowQR] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
     if (showQR && canvasRef.current) {
-      const url = `${window.location.origin}/conference/session/${session.id}?lesson=${session.lessonId}`;
+      const sessionUrl = `${window.location.origin}/conference/demo`;
       QRCodeLib.toCanvas(
         canvasRef.current,
-        url,
+        sessionUrl,
         {
           width: 200,
           margin: 2,
@@ -48,58 +35,48 @@ const SessionCard: React.FC<SessionCardProps> = ({ session, onJoin }) => {
         }
       );
     }
-  }, [showQR, session]);
+  }, [showQR]);
 
   return (
-    <Card className="hover:shadow-lg transition-shadow duration-300 bg-white">
+    <Card 
+      className="hover:shadow-lg hover:scale-[1.02] transition-all duration-300 bg-card"
+      role="article"
+      aria-label={`Session: ${title}`}
+    >
       <CardHeader>
-        <div className="mb-3">
-          {session.speakers.length > 0 && (
-            <div className="flex items-center gap-2 mb-2">
-              <h4 className="font-semibold text-sm text-gray-900">
-                {session.speakers.length === 1 
-                  ? session.speakers[0].name 
-                  : `${session.speakers[0].name} & ${session.speakers.length - 1} other${session.speakers.length > 2 ? 's' : ''}`
-                }
-              </h4>
-              {session.isKeynote && (
-                <Badge className="bg-purple-100 text-purple-700 border-purple-200 text-xs">
-                  Keynote
-                </Badge>
-              )}
-            </div>
-          )}
-          {session.badges.length > 0 && (
-            <div className="flex flex-wrap gap-1">
-              {session.badges.map((badge, idx) => (
-                <Badge key={idx} variant="outline" className="text-xs">
-                  {badge}
-                </Badge>
-              ))}
-            </div>
-          )}
+        <div className="mb-3 space-y-2">
+          <Badge variant="outline" className="text-xs font-normal">
+            {room}
+          </Badge>
+          <Badge variant="secondary" className="text-xs font-normal ml-2">
+            {time}
+          </Badge>
         </div>
-        <CardTitle className="text-lg mb-2 line-clamp-2">{session.title}</CardTitle>
-        <CardDescription className="text-gray-600 line-clamp-3">
-          {session.description}
-        </CardDescription>
+        <CardTitle 
+          className="text-lg mb-2 line-clamp-3 text-card-foreground"
+          role="heading"
+          aria-level={3}
+        >
+          {title}
+        </CardTitle>
       </CardHeader>
 
       <CardContent className="space-y-4">
-
         {/* QR Code Section */}
         {showQR ? (
-          <div className="bg-gray-50 rounded-lg p-4 text-center">
-            <p className="text-sm text-gray-600 mb-3">Scan to join on your phone</p>
+          <div className="bg-muted rounded-lg p-4 text-center">
+            <p className="text-sm text-muted-foreground mb-3">Scan to view session</p>
             <canvas
               ref={canvasRef}
-              className="mx-auto border-4 border-white rounded-lg shadow-sm"
+              className="mx-auto border-4 border-background rounded-lg shadow-sm"
+              aria-label="QR code for session access"
             />
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setShowQR(false)}
               className="mt-3"
+              aria-label="Hide QR code"
             >
               Hide QR Code
             </Button>
@@ -107,33 +84,34 @@ const SessionCard: React.FC<SessionCardProps> = ({ session, onJoin }) => {
         ) : (
           <div className="flex gap-2">
             <Button
-              onClick={() => onJoin(session.id, session.lessonId)}
-              className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+              onClick={onJoin}
+              className="flex-1 bg-gradient-to-r from-primary to-secondary hover:opacity-90"
               size="lg"
+              aria-label={`Join ${title} session`}
             >
               Join Session
-              <ChevronRight className="h-4 w-4 ml-2" />
+              <ChevronRight className="h-4 w-4 ml-2" aria-hidden="true" />
             </Button>
             <Button
               variant="outline"
               size="lg"
               onClick={() => setShowQR(true)}
-              className="border-gray-300"
+              aria-label="Show QR code"
             >
-              <QrCode className="h-4 w-4" />
+              <QrCode className="h-4 w-4" aria-hidden="true" />
             </Button>
           </div>
         )}
 
         {/* Quick Stats */}
-        <div className="flex items-center justify-center gap-4 pt-2 text-xs text-gray-500">
+        <div className="flex items-center justify-center gap-4 pt-2 text-xs text-muted-foreground" role="status" aria-label="Session features">
           <span className="flex items-center gap-1">
-            <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+            <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" aria-hidden="true"></span>
             Interactive Polls
           </span>
-          <span>•</span>
+          <span aria-hidden="true">•</span>
           <span>Anonymous</span>
-          <span>•</span>
+          <span aria-hidden="true">•</span>
           <span>Real-time</span>
         </div>
       </CardContent>
