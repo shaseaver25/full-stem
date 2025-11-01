@@ -9,6 +9,8 @@ import { BarChart3, Users, Star, Check, GripVertical } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { getRateLimiter } from '@/middleware/rateLimit';
+import SpeechControls from '@/components/SpeechControls';
+import { useElevenLabsTTSPublic } from '@/hooks/useElevenLabsTTSPublic';
 import {
   DndContext,
   closestCenter,
@@ -123,6 +125,9 @@ export const PollStudentView: React.FC<PollStudentViewProps> = ({ componentId, p
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
+  // TTS functionality
+  const { speak, pause, resume, stop, isPlaying, isPaused, isLoading: ttsLoading, error: ttsError, currentTime, duration } = useElevenLabsTTSPublic('en');
+
   // Sensors for drag interactions
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -134,6 +139,15 @@ export const PollStudentView: React.FC<PollStudentViewProps> = ({ componentId, p
       coordinateGetter: sortableKeyboardCoordinates,
     })
   );
+
+  // Handle read aloud
+  const handleReadAloud = () => {
+    const questionText = pollData?.poll_question || '';
+    const optionsText = options
+      .map((opt, idx) => `Option ${idx + 1}: ${opt.option_text}`)
+      .join('. ');
+    speak(`${questionText}. ${optionsText}`);
+  };
 
   useEffect(() => {
     loadPollData();
@@ -442,10 +456,24 @@ export const PollStudentView: React.FC<PollStudentViewProps> = ({ componentId, p
   return (
     <Card className="w-full max-w-2xl mx-auto">
       <CardHeader className="bg-[#D1FAE5] border-b-2 border-[#065F46]">
-        <CardTitle className="flex items-center gap-2 text-[#065F46]">
-          <BarChart3 className="h-5 w-5" />
-          {hasVoted && showResults() ? 'Poll Results' : 'Quick Poll'}
-        </CardTitle>
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <CardTitle className="flex items-center gap-2 text-[#065F46]">
+            <BarChart3 className="h-5 w-5" />
+            {hasVoted && showResults() ? 'Poll Results' : 'Quick Poll'}
+          </CardTitle>
+          <SpeechControls
+            isPlaying={isPlaying}
+            isPaused={isPaused}
+            isLoading={ttsLoading}
+            error={ttsError}
+            currentTime={currentTime}
+            duration={duration}
+            onPlay={handleReadAloud}
+            onPause={pause}
+            onResume={resume}
+            onStop={stop}
+          />
+        </div>
       </CardHeader>
       <CardContent className="space-y-6 pt-6">
         <h3 className="text-xl font-semibold text-center">{pollData.poll_question}</h3>
