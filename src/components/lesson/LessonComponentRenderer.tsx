@@ -311,7 +311,7 @@ export function LessonComponentRenderer({
 
   // Render poll component
   if (component_type === 'poll') {
-    return <PollStudentView componentId={id} />;
+    return <PollStudentView componentId={id} pollData={content?.pollData} />;
   }
 
   return (

@@ -32,9 +32,10 @@ interface PollData {
 
 interface PollStudentViewProps {
   componentId: string;
+  pollData?: any; // Poll data from lesson component content
 }
 
-export const PollStudentView: React.FC<PollStudentViewProps> = ({ componentId }) => {
+export const PollStudentView: React.FC<PollStudentViewProps> = ({ componentId, pollData: propPollData }) => {
   const [pollData, setPollData] = useState<PollData | null>(null);
   const [options, setOptions] = useState<PollOption[]>([]);
   const [userResponse, setUserResponse] = useState<any>(null);
@@ -54,63 +55,124 @@ export const PollStudentView: React.FC<PollStudentViewProps> = ({ componentId })
     try {
       setLoading(true);
 
-      // Get poll component
-      const { data: pollComponent, error: pollError } = await supabase
-        .from('poll_components')
-        .select('*')
-        .eq('component_id', componentId)
-        .single();
+      // If poll data is provided from props, use it
+      if (propPollData) {
+        const mockPollData: PollData = {
+          id: componentId, // Use componentId as temporary ID
+          poll_question: propPollData.question,
+          poll_type: propPollData.pollType,
+          show_results_timing: propPollData.resultsTimingValue,
+          allow_anonymous: propPollData.allowAnonymous,
+          allow_change_vote: propPollData.allowChangeVote,
+          chart_type: propPollData.chartType,
+          show_percentages: propPollData.showPercentages,
+          show_vote_counts: propPollData.showVoteCounts,
+          is_closed: false
+        };
+        setPollData(mockPollData);
 
-      if (pollError) throw pollError;
-      setPollData(pollComponent as PollData);
+        // Create mock options from prop data
+        const mockOptions: PollOption[] = propPollData.options.map((opt: any, index: number) => ({
+          id: opt.id,
+          option_text: opt.text,
+          option_order: opt.order || index,
+          vote_count: 0
+        }));
+        setOptions(mockOptions);
+        setRankingOrder(mockOptions);
 
-      // Get poll options
-      const { data: pollOptions, error: optionsError } = await supabase
-        .from('poll_options')
-        .select('*')
-        .eq('poll_component_id', pollComponent.id)
-        .order('option_order');
+        // Check for existing responses in database
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data: response } = await supabase
+            .from('poll_responses')
+            .select('*')
+            .eq('poll_component_id', componentId)
+            .eq('user_id', user.id)
+            .maybeSingle();
 
-      if (optionsError) throw optionsError;
-      setOptions(pollOptions || []);
-      setRankingOrder(pollOptions || []);
+          if (response) {
+            setUserResponse(response);
+            if (response.selected_option_ids) {
+              setSelectedOptions(response.selected_option_ids);
+            }
+            if (response.rating_value) {
+              setRatingValue(response.rating_value);
+            }
+            if (response.ranking_order) {
+              const orderMap = response.ranking_order as Record<string, number>;
+              const ordered = [...mockOptions].sort((a, b) => 
+                (orderMap[a.id] || 999) - (orderMap[b.id] || 999)
+              );
+              setRankingOrder(ordered);
+            }
+          }
 
-      // Get user's existing response
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { data: response } = await supabase
-          .from('poll_responses')
+          // Get total response count
+          const { count } = await supabase
+            .from('poll_responses')
+            .select('*', { count: 'exact', head: true })
+            .eq('poll_component_id', componentId);
+          setTotalResponses(count || 0);
+        }
+      } else {
+        // Fallback to database query
+        const { data: pollComponent, error: pollError } = await supabase
+          .from('poll_components')
+          .select('*')
+          .eq('component_id', componentId)
+          .single();
+
+        if (pollError) throw pollError;
+        setPollData(pollComponent as PollData);
+
+        // Get poll options
+        const { data: pollOptions, error: optionsError } = await supabase
+          .from('poll_options')
           .select('*')
           .eq('poll_component_id', pollComponent.id)
-          .eq('user_id', user.id)
-          .maybeSingle();
+          .order('option_order');
 
-        if (response) {
-          setUserResponse(response);
-          if (response.selected_option_ids) {
-            setSelectedOptions(response.selected_option_ids);
-          }
-          if (response.rating_value) {
-            setRatingValue(response.rating_value);
-          }
-          if (response.ranking_order) {
-            // Reconstruct ranking order
-            const orderMap = response.ranking_order as Record<string, number>;
-            const ordered = [...pollOptions].sort((a, b) => 
-              (orderMap[a.id] || 999) - (orderMap[b.id] || 999)
-            );
-            setRankingOrder(ordered);
+        if (optionsError) throw optionsError;
+        setOptions(pollOptions || []);
+        setRankingOrder(pollOptions || []);
+
+        // Get user's existing response
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data: response } = await supabase
+            .from('poll_responses')
+            .select('*')
+            .eq('poll_component_id', pollComponent.id)
+            .eq('user_id', user.id)
+            .maybeSingle();
+
+          if (response) {
+            setUserResponse(response);
+            if (response.selected_option_ids) {
+              setSelectedOptions(response.selected_option_ids);
+            }
+            if (response.rating_value) {
+              setRatingValue(response.rating_value);
+            }
+            if (response.ranking_order) {
+              const orderMap = response.ranking_order as Record<string, number>;
+              const ordered = [...pollOptions].sort((a, b) => 
+                (orderMap[a.id] || 999) - (orderMap[b.id] || 999)
+              );
+              setRankingOrder(ordered);
+            }
           }
         }
+
+        // Get total response count
+        const { count } = await supabase
+          .from('poll_responses')
+          .select('*', { count: 'exact', head: true })
+          .eq('poll_component_id', pollComponent.id);
+
+        setTotalResponses(count || 0);
       }
-
-      // Get total response count
-      const { count } = await supabase
-        .from('poll_responses')
-        .select('*', { count: 'exact', head: true })
-        .eq('poll_component_id', pollComponent.id);
-
-      setTotalResponses(count || 0);
     } catch (error) {
       console.error('Error loading poll:', error);
       toast.error('Failed to load poll');
@@ -176,8 +238,56 @@ export const PollStudentView: React.FC<PollStudentViewProps> = ({ componentId })
 
     setSubmitting(true);
     try {
+      // If using prop data, ensure database records exist first
+      if (propPollData) {
+        // Check if poll_component exists
+        const { data: existingPoll } = await supabase
+          .from('poll_components')
+          .select('id')
+          .eq('component_id', componentId)
+          .maybeSingle();
+
+        if (!existingPoll) {
+          // Create poll_component record
+          const { data: newPoll, error: pollError } = await supabase
+            .from('poll_components')
+            .insert({
+              component_id: componentId,
+              poll_question: pollData.poll_question,
+              poll_type: pollData.poll_type,
+              show_results_timing: pollData.show_results_timing,
+              allow_anonymous: pollData.allow_anonymous,
+              allow_change_vote: pollData.allow_change_vote,
+              chart_type: pollData.chart_type,
+              show_percentages: pollData.show_percentages,
+              show_vote_counts: pollData.show_vote_counts,
+              is_closed: false
+            })
+            .select()
+            .single();
+
+          if (pollError) throw pollError;
+
+          // Create poll_options records
+          const optionsToInsert = options.map(opt => ({
+            poll_component_id: newPoll.id,
+            option_text: opt.option_text,
+            option_order: opt.option_order
+          }));
+
+          const { error: optionsError } = await supabase
+            .from('poll_options')
+            .insert(optionsToInsert);
+
+          if (optionsError) throw optionsError;
+
+          // Update local pollData with real ID
+          setPollData({ ...pollData, id: newPoll.id });
+        }
+      }
+
       const responseData: any = {
-        poll_component_id: pollData.id,
+        poll_component_id: propPollData ? componentId : pollData.id,
         user_id: pollData.allow_anonymous ? null : user.id,
         is_anonymous: pollData.allow_anonymous,
       };
