@@ -49,10 +49,23 @@ export function parseConferenceSessions(csvContent: string): SessionBlock[] {
     sessions: sessions.sort((a, b) => a.room.localeCompare(b.room))
   }));
   
-  // Sort blocks by time
+  // Sort blocks by time chronologically
   return blocks.sort((a, b) => {
-    const timeA = a.timeSlot.split('–')[0];
-    const timeB = b.timeSlot.split('–')[0];
-    return timeA.localeCompare(timeB);
+    const parseTime = (timeStr: string): number => {
+      const timePart = timeStr.split('–')[0].trim();
+      const [time, period] = timePart.split(/(am|pm)/i);
+      const [hours, minutes] = time.split(':').map(Number);
+      
+      let hour24 = hours;
+      if (period.toLowerCase() === 'pm' && hours !== 12) {
+        hour24 = hours + 12;
+      } else if (period.toLowerCase() === 'am' && hours === 12) {
+        hour24 = 0;
+      }
+      
+      return hour24 * 60 + (minutes || 0);
+    };
+    
+    return parseTime(a.timeSlot) - parseTime(b.timeSlot);
   });
 }
