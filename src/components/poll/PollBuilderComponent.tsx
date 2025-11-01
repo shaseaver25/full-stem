@@ -29,7 +29,7 @@ export const PollBuilderComponent: React.FC<PollBuilderProps> = ({
   onSave
 }) => {
   const [pollQuestion, setPollQuestion] = useState('');
-  const [pollType, setPollType] = useState<'single_choice' | 'multiple_choice' | 'rating_scale' | 'ranking'>('single_choice');
+  const [pollType, setPollType] = useState<'single_choice' | 'multiple_choice' | 'rating_scale' | 'ranking' | 'text_response'>('single_choice');
   const [options, setOptions] = useState<PollOption[]>([
     { id: crypto.randomUUID(), option_text: '', option_order: 0 },
     { id: crypto.randomUUID(), option_text: '', option_order: 1 }
@@ -85,7 +85,7 @@ export const PollBuilderComponent: React.FC<PollBuilderProps> = ({
       if (pollData) {
         setPollComponentId(pollData.id);
         setPollQuestion(pollData.poll_question);
-        setPollType(pollData.poll_type as 'single_choice' | 'multiple_choice' | 'rating_scale' | 'ranking');
+        setPollType(pollData.poll_type as 'single_choice' | 'multiple_choice' | 'rating_scale' | 'ranking' | 'text_response');
         setShowResultsTiming(pollData.show_results_timing as 'before_voting' | 'after_voting' | 'never');
         setAllowAnonymous(pollData.allow_anonymous);
         setAllowChangeVote(pollData.allow_change_vote);
@@ -143,12 +143,12 @@ export const PollBuilderComponent: React.FC<PollBuilderProps> = ({
       return;
     }
 
-    if (pollType !== 'rating_scale' && options.some(opt => !opt.option_text.trim())) {
+    if (pollType !== 'rating_scale' && pollType !== 'text_response' && options.some(opt => !opt.option_text.trim())) {
       toast.error('All options must have text');
       return;
     }
 
-    if (pollType !== 'rating_scale' && options.length < 2) {
+    if (pollType !== 'rating_scale' && pollType !== 'text_response' && options.length < 2) {
       toast.error('At least 2 options required');
       return;
     }
@@ -164,7 +164,7 @@ export const PollBuilderComponent: React.FC<PollBuilderProps> = ({
       chart_type: chartType,
       show_percentages: showPercentages,
       show_vote_counts: showVoteCounts,
-      options: pollType === 'rating_scale' ? [] : options.map(opt => ({
+      options: (pollType === 'rating_scale' || pollType === 'text_response') ? [] : options.map(opt => ({
         id: opt.id,
         option_text: opt.option_text,
         option_order: opt.option_order
@@ -209,12 +209,13 @@ export const PollBuilderComponent: React.FC<PollBuilderProps> = ({
               <SelectItem value="multiple_choice">Multiple Choice (checkboxes)</SelectItem>
               <SelectItem value="rating_scale">Rating Scale (1-5 stars)</SelectItem>
               <SelectItem value="ranking">Ranking (drag to order)</SelectItem>
+              <SelectItem value="text_response">Text Response (open-ended)</SelectItem>
             </SelectContent>
           </Select>
         </div>
 
         {/* Answer Options */}
-        {pollType !== 'rating_scale' && (
+        {pollType !== 'rating_scale' && pollType !== 'text_response' && (
           <div className="space-y-2">
             <Label>Answer Options</Label>
             <Card>

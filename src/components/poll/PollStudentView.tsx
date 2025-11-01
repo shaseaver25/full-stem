@@ -37,7 +37,7 @@ interface PollOption {
 interface PollData {
   id: string;
   poll_question: string;
-  poll_type: 'single_choice' | 'multiple_choice' | 'rating_scale' | 'ranking';
+  poll_type: 'single_choice' | 'multiple_choice' | 'rating_scale' | 'ranking' | 'text_response';
   show_results_timing: 'before_voting' | 'after_voting' | 'never';
   allow_anonymous: boolean;
   allow_change_vote: boolean;
@@ -115,6 +115,7 @@ export const PollStudentView: React.FC<PollStudentViewProps> = ({ componentId, p
   const [options, setOptions] = useState<PollOption[]>([]);
   const [userResponse, setUserResponse] = useState<any>(null);
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
+  const [textResponse, setTextResponse] = useState('');
   const [ratingValue, setRatingValue] = useState<number>(0);
   const [rankingOrder, setRankingOrder] = useState<PollOption[]>([]);
   const [hasInitializedRanking, setHasInitializedRanking] = useState(false);
@@ -189,6 +190,9 @@ export const PollStudentView: React.FC<PollStudentViewProps> = ({ componentId, p
             setUserResponse(response);
             if (response.selected_option_ids) {
               setSelectedOptions(response.selected_option_ids);
+            }
+            if (response.response_text) {
+              setTextResponse(response.response_text);
             }
             if (response.rating_value) {
               setRatingValue(response.rating_value);
@@ -346,6 +350,10 @@ export const PollStudentView: React.FC<PollStudentViewProps> = ({ componentId, p
       toast.error('Please select a rating');
       return;
     }
+    if (pollData.poll_type === 'text_response' && !textResponse.trim()) {
+      toast.error('Please enter a response');
+      return;
+    }
 
     setSubmitting(true);
     try {
@@ -369,6 +377,8 @@ export const PollStudentView: React.FC<PollStudentViewProps> = ({ componentId, p
           rankingMap[option.id] = index + 1;
         });
         responseData.ranking_order = rankingMap;
+      } else if (pollData.poll_type === 'text_response') {
+        responseData.response_text = textResponse;
       }
 
       const { error } = await supabase
@@ -443,6 +453,21 @@ export const PollStudentView: React.FC<PollStudentViewProps> = ({ componentId, p
         {/* Show voting interface if not voted or can change vote */}
         {canVote && !showResults() && (
           <div className="space-y-4">
+            {pollData.poll_type === 'text_response' && (
+              <div className="space-y-2">
+                <textarea
+                  value={textResponse}
+                  onChange={(e) => setTextResponse(e.target.value)}
+                  placeholder="Enter your response..."
+                  className="w-full min-h-[120px] p-3 border rounded-md focus:ring-2 focus:ring-primary focus:border-transparent resize-y"
+                  maxLength={1000}
+                />
+                <p className="text-xs text-muted-foreground text-right">
+                  {textResponse.length} / 1000 characters
+                </p>
+              </div>
+            )}
+
             {pollData.poll_type === 'single_choice' && (
               <RadioGroup value={selectedOptions[0]} onValueChange={(value) => setSelectedOptions([value])}>
                 {options.map((option) => (
@@ -552,7 +577,27 @@ export const PollStudentView: React.FC<PollStudentViewProps> = ({ componentId, p
         {/* Show results */}
         {showResults() && (
           <div className="space-y-4">
-            {hasVoted && userResponse && (
+            {hasVoted && userResponse && pollData.poll_type === 'text_response' && (
+              <div className="p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-md">
+                <p className="font-semibold text-green-800 dark:text-green-200">✓ Your response has been recorded</p>
+                <p className="text-sm text-muted-foreground mt-1">Thank you for your feedback!</p>
+                {pollData.allow_change_vote && (
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => {
+                      setUserResponse(null);
+                      setTextResponse('');
+                    }}
+                    className="mt-3"
+                  >
+                    Change Your Response
+                  </Button>
+                )}
+              </div>
+            )}
+
+            {hasVoted && userResponse && pollData.poll_type !== 'text_response' && (
               <div className="flex items-center gap-2 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-md">
                 <Check className="h-5 w-5 text-green-600" />
                 <span className="font-medium">
@@ -563,7 +608,7 @@ export const PollStudentView: React.FC<PollStudentViewProps> = ({ componentId, p
               </div>
             )}
 
-            {pollData.poll_type !== 'rating_scale' && (
+            {pollData.poll_type !== 'rating_scale' && pollData.poll_type !== 'text_response' && (
               <div className="space-y-3">
                 {options.map((option) => {
                   const percentage = calculatePercentage(option.vote_count);

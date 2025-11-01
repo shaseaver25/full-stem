@@ -2859,6 +2859,7 @@ export type Database = {
           ranking_order: Json | null
           rating_value: number | null
           responded_at: string | null
+          response_text: string | null
           selected_option_ids: string[] | null
           user_id: string | null
         }
@@ -2869,6 +2870,7 @@ export type Database = {
           ranking_order?: Json | null
           rating_value?: number | null
           responded_at?: string | null
+          response_text?: string | null
           selected_option_ids?: string[] | null
           user_id?: string | null
         }
@@ -2879,6 +2881,7 @@ export type Database = {
           ranking_order?: Json | null
           rating_value?: number | null
           responded_at?: string | null
+          response_text?: string | null
           selected_option_ids?: string[] | null
           user_id?: string | null
         }

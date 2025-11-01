@@ -15,6 +15,13 @@ interface PollOption {
   vote_count: number;
 }
 
+interface TextResponse {
+  id: string;
+  response_text: string;
+  responded_at: string;
+  is_anonymous: boolean;
+}
+
 interface PollData {
   id: string;
   poll_question: string;
@@ -34,6 +41,7 @@ interface PollTeacherLiveViewProps {
 export const PollTeacherLiveView: React.FC<PollTeacherLiveViewProps> = ({ componentId, classId }) => {
   const [pollData, setPollData] = useState<PollData | null>(null);
   const [options, setOptions] = useState<PollOption[]>([]);
+  const [textResponses, setTextResponses] = useState<TextResponse[]>([]);
   const [totalResponses, setTotalResponses] = useState(0);
   const [totalStudents, setTotalStudents] = useState(0);
   const [notVotedStudents, setNotVotedStudents] = useState<string[]>([]);
@@ -57,15 +65,27 @@ export const PollTeacherLiveView: React.FC<PollTeacherLiveViewProps> = ({ compon
       if (pollError) throw pollError;
       setPollData(pollComponent);
 
-      // Get poll options
-      const { data: pollOptions, error: optionsError } = await supabase
-        .from('poll_options')
-        .select('*')
-        .eq('poll_component_id', pollComponent.id)
-        .order('option_order');
+      // Get poll options or text responses based on type
+      if (pollComponent.poll_type === 'text_response') {
+        const { data: responses, error: responsesError } = await supabase
+          .from('poll_responses')
+          .select('id, response_text, responded_at, is_anonymous')
+          .eq('poll_component_id', pollComponent.id)
+          .not('response_text', 'is', null)
+          .order('responded_at', { ascending: false });
 
-      if (optionsError) throw optionsError;
-      setOptions(pollOptions || []);
+        if (responsesError) throw responsesError;
+        setTextResponses(responses || []);
+      } else {
+        const { data: pollOptions, error: optionsError } = await supabase
+          .from('poll_options')
+          .select('*')
+          .eq('poll_component_id', pollComponent.id)
+          .order('option_order');
+
+        if (optionsError) throw optionsError;
+        setOptions(pollOptions || []);
+      }
 
       // Get response count
       const { count: responseCount } = await supabase
@@ -200,16 +220,29 @@ export const PollTeacherLiveView: React.FC<PollTeacherLiveViewProps> = ({ compon
   };
 
   const handleExportResults = () => {
-    if (!pollData || !options) return;
+    if (!pollData) return;
 
-    const csvContent = [
-      ['Option', 'Votes', 'Percentage'],
-      ...options.map(opt => [
-        opt.option_text,
-        opt.vote_count.toString(),
-        `${calculatePercentage(opt.vote_count)}%`
-      ])
-    ].map(row => row.join(',')).join('\n');
+    let csvContent: string;
+
+    if (pollData.poll_type === 'text_response') {
+      csvContent = [
+        ['Response', 'Date', 'Anonymous'],
+        ...textResponses.map(resp => [
+          `"${resp.response_text.replace(/"/g, '""')}"`,
+          new Date(resp.responded_at).toLocaleString(),
+          resp.is_anonymous ? 'Yes' : 'No'
+        ])
+      ].map(row => row.join(',')).join('\n');
+    } else {
+      csvContent = [
+        ['Option', 'Votes', 'Percentage'],
+        ...options.map(opt => [
+          opt.option_text,
+          opt.vote_count.toString(),
+          `${calculatePercentage(opt.vote_count)}%`
+        ])
+      ].map(row => row.join(',')).join('\n');
+    }
 
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
@@ -221,18 +254,33 @@ export const PollTeacherLiveView: React.FC<PollTeacherLiveViewProps> = ({ compon
   };
 
   const handleCopyResults = () => {
-    if (!pollData || !options) return;
+    if (!pollData) return;
 
-    const text = [
-      `Poll: ${pollData.poll_question}`,
-      '',
-      'Results:',
-      ...options.map(opt => 
-        `${opt.option_text}: ${opt.vote_count} votes (${calculatePercentage(opt.vote_count)}%)`
-      ),
-      '',
-      `Total Responses: ${totalResponses}${totalStudents > 0 ? ` / ${totalStudents}` : ''} students`
-    ].join('\n');
+    let text: string;
+
+    if (pollData.poll_type === 'text_response') {
+      text = [
+        `Poll: ${pollData.poll_question}`,
+        '',
+        'Responses:',
+        ...textResponses.map((resp, idx) => 
+          `${idx + 1}. ${resp.response_text} ${resp.is_anonymous ? '(Anonymous)' : ''}`
+        ),
+        '',
+        `Total Responses: ${totalResponses}${totalStudents > 0 ? ` / ${totalStudents}` : ''} students`
+      ].join('\n');
+    } else {
+      text = [
+        `Poll: ${pollData.poll_question}`,
+        '',
+        'Results:',
+        ...options.map(opt => 
+          `${opt.option_text}: ${opt.vote_count} votes (${calculatePercentage(opt.vote_count)}%)`
+        ),
+        '',
+        `Total Responses: ${totalResponses}${totalStudents > 0 ? ` / ${totalStudents}` : ''} students`
+      ].join('\n');
+    }
 
     navigator.clipboard.writeText(text);
     toast.success('Results copied to clipboard');
@@ -328,24 +376,51 @@ export const PollTeacherLiveView: React.FC<PollTeacherLiveViewProps> = ({ compon
               </div>
             </div>
 
-            <div className="space-y-3">
-              {options.map((option) => {
-                const percentage = calculatePercentage(option.vote_count);
-                return (
-                  <div key={option.id} className="space-y-1">
-                    <div className="flex justify-between text-sm">
-                      <span className="font-medium">{option.option_text}</span>
-                      <span className="text-muted-foreground">
-                        {pollData.show_percentages && `${percentage}%`}
-                        {pollData.show_percentages && pollData.show_vote_counts && ' '}
-                        {pollData.show_vote_counts && `(${option.vote_count} ${option.vote_count === 1 ? 'vote' : 'votes'})`}
-                      </span>
+            {pollData.poll_type === 'text_response' ? (
+              <div className="space-y-3 max-h-[500px] overflow-y-auto">
+                {textResponses.length > 0 ? (
+                  textResponses.map((response, idx) => (
+                    <div key={response.id} className="p-4 border rounded-md bg-card">
+                      <div className="flex justify-between items-start mb-2">
+                        <span className="text-sm font-medium text-muted-foreground">Response #{idx + 1}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-muted-foreground">
+                            {new Date(response.responded_at).toLocaleString()}
+                          </span>
+                          {response.is_anonymous && (
+                            <Badge variant="secondary" className="text-xs">Anonymous</Badge>
+                          )}
+                        </div>
+                      </div>
+                      <p className="text-sm whitespace-pre-wrap">{response.response_text}</p>
                     </div>
-                    <Progress value={percentage} className="h-6" />
+                  ))
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No responses yet
                   </div>
-                );
-              })}
-            </div>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {options.map((option) => {
+                  const percentage = calculatePercentage(option.vote_count);
+                  return (
+                    <div key={option.id} className="space-y-1">
+                      <div className="flex justify-between text-sm">
+                        <span className="font-medium">{option.option_text}</span>
+                        <span className="text-muted-foreground">
+                          {pollData.show_percentages && `${percentage}%`}
+                          {pollData.show_percentages && pollData.show_vote_counts && ' '}
+                          {pollData.show_vote_counts && `(${option.vote_count} ${option.vote_count === 1 ? 'vote' : 'votes'})`}
+                        </span>
+                      </div>
+                      <Progress value={percentage} className="h-6" />
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           <div className="border-t pt-4" />
