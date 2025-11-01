@@ -13,6 +13,7 @@ import { HighlightedText } from './HighlightedText';
 import { DriveAttachmentsList } from '@/components/drive/DriveAttachmentsList';
 import { OneDriveAttachmentsList } from '@/components/onedrive/OneDriveAttachmentsList';
 import { QuizStudentView } from '@/components/quiz/QuizStudentView';
+import { PollStudentView } from '@/components/poll/PollStudentView';
 
 const SUPPORTED_LANGUAGES = [
   { code: 'en', name: 'English' },
@@ -43,6 +44,7 @@ const componentTypeLabels: Record<string, string> = {
   page: 'Page',
   video: 'Multimedia',
   quiz: 'Quiz/Assessment',
+  poll: 'Poll/Survey',
   discussion: 'Discussion',
   codingEditor: 'Coding IDE',
   activity: 'Activity',
@@ -305,6 +307,11 @@ export function LessonComponentRenderer({
   // Render quiz component
   if (component_type === 'quiz') {
     return <QuizStudentView componentId={id} read_aloud={read_aloud} quizData={content?.quizData} />;
+  }
+
+  // Render poll component
+  if (component_type === 'poll') {
+    return <PollStudentView componentId={id} />;
   }
 
   return (
