@@ -5,7 +5,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
-import { BarChart3, Users, Star, Check } from 'lucide-react';
+import { BarChart3, Users, Star, Check, GripVertical } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
@@ -425,22 +425,29 @@ export const PollStudentView: React.FC<PollStudentViewProps> = ({ componentId, p
 
             {pollData.poll_type === 'ranking' && (
               <div className="space-y-2">
-                <p className="text-sm text-muted-foreground mb-4">Drag to order from most to least preferred:</p>
+                <p className="text-sm text-muted-foreground mb-4">Drag to reorder from most to least preferred:</p>
                 <DragDropContext onDragEnd={handleRankingDragEnd}>
                   <Droppable droppableId="ranking">
-                    {(provided) => (
-                      <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-2">
+                    {(provided, snapshot) => (
+                      <div 
+                        {...provided.droppableProps} 
+                        ref={provided.innerRef} 
+                        className={`space-y-2 ${snapshot.isDraggingOver ? 'bg-accent/20 rounded-lg p-2' : ''}`}
+                      >
                         {rankingOrder.map((option, index) => (
                           <Draggable key={option.id} draggableId={option.id} index={index}>
-                            {(provided) => (
+                            {(provided, snapshot) => (
                               <div
                                 ref={provided.innerRef}
                                 {...provided.draggableProps}
                                 {...provided.dragHandleProps}
-                                className="flex items-center gap-3 p-3 bg-muted rounded-md"
+                                className={`flex items-center gap-3 p-3 bg-background border-2 rounded-md transition-all cursor-grab active:cursor-grabbing ${
+                                  snapshot.isDragging ? 'shadow-lg scale-105 border-primary' : 'border-border hover:border-primary/50'
+                                }`}
                               >
-                                <span className="font-bold text-lg">{index + 1}.</span>
-                                <span>{option.option_text}</span>
+                                <GripVertical className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                                <span className="font-bold text-lg min-w-[2rem]">{index + 1}.</span>
+                                <span className="flex-1">{option.option_text}</span>
                               </div>
                             )}
                           </Draggable>
