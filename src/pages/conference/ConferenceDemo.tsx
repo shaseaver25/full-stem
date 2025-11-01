@@ -185,7 +185,7 @@ const ConferenceDemo: React.FC = () => {
 
                 {/* Sessions Grid - Responsive */}
                 {block.sessions.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                     {block.sessions.map((session, sessionIndex) => (
                       <SessionCard
                         key={`${session.room}-${sessionIndex}`}
@@ -197,9 +197,11 @@ const ConferenceDemo: React.FC = () => {
                     ))}
                   </div>
                 ) : (
-                  <Card>
-                    <CardContent className="pt-6 text-center">
-                      <p className="text-muted-foreground">No sessions scheduled.</p>
+                  <Card className="border-dashed border-2">
+                    <CardContent className="pt-6 text-center py-12">
+                      <p className="text-muted-foreground text-sm">
+                        No sessions scheduled for this time.
+                      </p>
                     </CardContent>
                   </Card>
                 )}
