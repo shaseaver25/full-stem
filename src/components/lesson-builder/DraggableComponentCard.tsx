@@ -35,6 +35,7 @@ interface DraggableComponentCardProps {
   onDelete: (index: number) => void;
   dragHandleProps: DraggableProvidedDragHandleProps | null | undefined;
   isDragging: boolean;
+  lessonId?: string;
 }
 
 const componentTypeLabels: Record<string, string> = {
@@ -60,6 +61,7 @@ export function DraggableComponentCard({
   onDelete,
   dragHandleProps,
   isDragging,
+  lessonId,
 }: DraggableComponentCardProps) {
   const [isExpanded, setIsExpanded] = useState(true);
   const [isQuizBuilderOpen, setIsQuizBuilderOpen] = useState(false);
@@ -392,6 +394,7 @@ export function DraggableComponentCard({
                 </DialogHeader>
                 <QuizBuilderComponent 
                   initialData={component.content?.quizData}
+                  lessonId={lessonId}
                   onSave={(quizData) => {
                     console.log('💾 Quiz Builder: Saving quiz data to component:', quizData);
                     handleContentChange('quizData', quizData);

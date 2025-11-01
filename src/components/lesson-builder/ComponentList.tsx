@@ -19,9 +19,10 @@ interface ComponentListProps {
   onUpdate: (index: number, updates: Partial<LessonComponent>) => void;
   onDelete: (index: number) => void;
   onReorder: (components: LessonComponent[]) => void;
+  lessonId?: string;
 }
 
-export function ComponentList({ components, onUpdate, onDelete, onReorder }: ComponentListProps) {
+export function ComponentList({ components, onUpdate, onDelete, onReorder, lessonId }: ComponentListProps) {
   const handleDragEnd = (result: DropResult) => {
     if (!result.destination) return;
 
@@ -68,6 +69,7 @@ export function ComponentList({ components, onUpdate, onDelete, onReorder }: Com
                       onDelete={onDelete}
                       dragHandleProps={provided.dragHandleProps}
                       isDragging={snapshot.isDragging}
+                      lessonId={lessonId}
                     />
                   </div>
                 )}

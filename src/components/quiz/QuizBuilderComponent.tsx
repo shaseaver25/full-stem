@@ -7,9 +7,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { CheckCircle2, Plus, Trash2, MoveUp, MoveDown, Lightbulb, Image as ImageIcon } from 'lucide-react';
+import { CheckCircle2, Plus, Trash2, MoveUp, MoveDown, Lightbulb, Image as ImageIcon, Sparkles, Loader2 } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { supabase } from '@/integrations/supabase/client';
 
 interface QuizQuestion {
   id: string;
@@ -33,11 +35,21 @@ interface QuizOption {
 interface QuizBuilderProps {
   initialData?: any;
   onSave: (quizData: any) => void;
+  lessonId?: string;
 }
 
-export function QuizBuilderComponent({ initialData, onSave }: QuizBuilderProps) {
+export function QuizBuilderComponent({ initialData, onSave, lessonId }: QuizBuilderProps) {
   const { toast } = useToast();
   const [saving, setSaving] = useState(false);
+  
+  // AI Generation state
+  const [showAIDialog, setShowAIDialog] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [questionCountAI, setQuestionCountAI] = useState(5);
+  const [difficultyAI, setDifficultyAI] = useState('medium');
+  const [generatedQuestions, setGeneratedQuestions] = useState<QuizQuestion[]>([]);
+  const [showPreviewDialog, setShowPreviewDialog] = useState(false);
+  const [previewIndex, setPreviewIndex] = useState(0);
   
   // Quiz settings
   const [title, setTitle] = useState(initialData?.title || '');
@@ -215,6 +227,98 @@ export function QuizBuilderComponent({ initialData, onSave }: QuizBuilderProps) 
     setQuestions(updated);
   };
 
+  const generateQuestionsWithAI = async () => {
+    if (!lessonId) {
+      toast({
+        title: 'Error',
+        description: 'Lesson ID is required to generate questions',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    setIsGenerating(true);
+    setShowAIDialog(false);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-quiz-questions', {
+        body: {
+          lessonId,
+          questionCount: questionCountAI,
+          questionTypes: ['multiple_choice'],
+          difficulty: difficultyAI
+        }
+      });
+
+      if (error) throw error;
+
+      if (data.error) {
+        if (data.error === 'insufficient_content') {
+          toast({
+            title: '⚠️ Insufficient Lesson Content',
+            description: data.message,
+            variant: 'destructive',
+            duration: 7000
+          });
+          return;
+        }
+        throw new Error(data.error);
+      }
+
+      console.log('AI generated questions:', data);
+      
+      if (data.questions && data.questions.length > 0) {
+        setGeneratedQuestions(data.questions);
+        setShowPreviewDialog(true);
+        setPreviewIndex(0);
+        
+        toast({
+          title: '✨ Questions Generated!',
+          description: `Generated ${data.questions.length} questions. Review them before adding to your quiz.`,
+        });
+      } else {
+        throw new Error('No questions were generated');
+      }
+
+    } catch (error: any) {
+      console.error('Error generating questions:', error);
+      toast({
+        title: '❌ Generation Failed',
+        description: error.message || 'Failed to generate quiz questions. Please try again.',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const addGeneratedQuestions = () => {
+    const newQuestions = [...questions, ...generatedQuestions];
+    newQuestions.forEach((q, i) => q.question_order = i);
+    setQuestions(newQuestions);
+    setShowPreviewDialog(false);
+    setGeneratedQuestions([]);
+    
+    toast({
+      title: '✅ Questions Added!',
+      description: `Added ${generatedQuestions.length} AI-generated questions to your quiz.`,
+    });
+  };
+
+  const deleteGeneratedQuestion = (index: number) => {
+    const updated = generatedQuestions.filter((_, i) => i !== index);
+    setGeneratedQuestions(updated);
+    if (updated.length === 0) {
+      setShowPreviewDialog(false);
+      toast({
+        title: 'All Questions Removed',
+        description: 'No questions to add. Generate new ones or create manually.',
+      });
+    } else if (previewIndex >= updated.length) {
+      setPreviewIndex(updated.length - 1);
+    }
+  };
+
   const totalPoints = questions.reduce((sum, q) => sum + q.points, 0);
 
   return (
@@ -344,10 +448,37 @@ export function QuizBuilderComponent({ initialData, onSave }: QuizBuilderProps) 
             <CardTitle className="text-base">Questions</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
+            {/* AI Generate Button */}
+            {lessonId && (
+              <Button
+                onClick={() => setShowAIDialog(true)}
+                disabled={isGenerating}
+                className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-semibold py-6 mb-4"
+              >
+                {isGenerating ? (
+                  <>
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                    Generating Questions...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="mr-2 h-5 w-5" />
+                    ✨ Generate Questions with AI
+                  </>
+                )}
+              </Button>
+            )}
+
+            {lessonId && (
+              <div className="text-center text-sm text-muted-foreground my-2">
+                ────────────── OR ──────────────
+              </div>
+            )}
+
             {/* Add Question Dropdown */}
             <Select onValueChange={(v) => addQuestion(v as QuizQuestion['question_type'])}>
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="+ Add Question" />
+                <SelectValue placeholder="+ Add Question Manually" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="multiple_choice">Multiple Choice</SelectItem>
@@ -602,6 +733,227 @@ export function QuizBuilderComponent({ initialData, onSave }: QuizBuilderProps) 
           </Button>
         </div>
       </CardContent>
+
+      {/* AI Generation Dialog */}
+      <Dialog open={showAIDialog} onOpenChange={setShowAIDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-purple-500" />
+              ✨ AI Quiz Generator
+            </DialogTitle>
+            <DialogDescription>
+              I'll analyze your lesson content and create quiz questions based on the material students have learned.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-6 py-4">
+            <Alert>
+              <Lightbulb className="h-4 w-4" />
+              <AlertDescription>
+                <strong>💡 Tips for Better Questions:</strong>
+                <ul className="mt-2 space-y-1 text-sm">
+                  <li>• Add more detailed content to your lesson for better questions</li>
+                  <li>• Include key vocabulary and concepts in your Pages</li>
+                  <li>• Currently using Page content only (MVP version)</li>
+                </ul>
+              </AlertDescription>
+            </Alert>
+
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>STEP 1: How many questions?</Label>
+                <Select value={String(questionCountAI)} onValueChange={(v) => setQuestionCountAI(Number(v))}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="5">5 questions</SelectItem>
+                    <SelectItem value="10">10 questions</SelectItem>
+                    <SelectItem value="15">15 questions</SelectItem>
+                    <SelectItem value="20">20 questions</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>STEP 2: Question type</Label>
+                <div className="text-sm text-muted-foreground p-3 bg-muted rounded-md">
+                  ✓ Multiple Choice (MVP - only type available currently)
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>STEP 3: Difficulty level</Label>
+                <RadioGroup value={difficultyAI} onValueChange={setDifficultyAI}>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="easy" id="easy" />
+                    <Label htmlFor="easy" className="font-normal cursor-pointer">
+                      Easy - Basic recall and comprehension
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="medium" id="medium" />
+                    <Label htmlFor="medium" className="font-normal cursor-pointer">
+                      Medium - Application and analysis
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="hard" id="hard" />
+                    <Label htmlFor="hard" className="font-normal cursor-pointer">
+                      Hard - Synthesis and evaluation
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="mixed" id="mixed" />
+                    <Label htmlFor="mixed" className="font-normal cursor-pointer">
+                      Mixed - Variety of difficulty levels
+                    </Label>
+                  </div>
+                </RadioGroup>
+              </div>
+
+              <div className="text-sm text-muted-foreground p-3 bg-muted rounded-md">
+                📊 Points per question: 2 (can be adjusted after generation)
+              </div>
+            </div>
+          </div>
+
+          <div className="flex gap-3">
+            <Button variant="outline" onClick={() => setShowAIDialog(false)} className="flex-1">
+              Cancel
+            </Button>
+            <Button onClick={generateQuestionsWithAI} disabled={isGenerating} className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600">
+              {isGenerating ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Generating...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="mr-2 h-4 w-4" />
+                  Generate Questions
+                </>
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Preview Generated Questions Dialog */}
+      <Dialog open={showPreviewDialog} onOpenChange={setShowPreviewDialog}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-purple-500" />
+              Review AI-Generated Questions
+            </DialogTitle>
+            <DialogDescription>
+              📊 Generated {generatedQuestions.length} questions based on your lesson content. Review each question below and click "Add to Quiz" when satisfied.
+            </DialogDescription>
+          </DialogHeader>
+
+          {generatedQuestions.length > 0 && (
+            <div className="space-y-4 py-4">
+              <div className="flex items-center justify-between">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPreviewIndex(Math.max(0, previewIndex - 1))}
+                  disabled={previewIndex === 0}
+                >
+                  ◀ Previous
+                </Button>
+                <span className="text-sm font-medium">
+                  Question {previewIndex + 1} of {generatedQuestions.length}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPreviewIndex(Math.min(generatedQuestions.length - 1, previewIndex + 1))}
+                  disabled={previewIndex === generatedQuestions.length - 1}
+                >
+                  Next ▶
+                </Button>
+              </div>
+
+              <Card className="border-2">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-sm">
+                      Question Type: Multiple Choice
+                    </CardTitle>
+                    <span className="text-sm text-muted-foreground">
+                      Points: {generatedQuestions[previewIndex].points}
+                    </span>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <p className="font-medium mb-3">{generatedQuestions[previewIndex].question_text}</p>
+                    
+                    <div className="space-y-2">
+                      <Label className="text-sm">Options:</Label>
+                      {generatedQuestions[previewIndex].options.map((opt, i) => (
+                        <div key={opt.id} className="flex items-center gap-2">
+                          <div className={`w-6 h-6 flex items-center justify-center rounded ${opt.is_correct ? 'bg-green-100 text-green-700' : 'bg-muted'}`}>
+                            {opt.is_correct ? '✓' : String.fromCharCode(65 + i)}
+                          </div>
+                          <span className={opt.is_correct ? 'font-medium' : ''}>{opt.option_text}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {generatedQuestions[previewIndex].hint_text && (
+                    <div className="p-3 bg-blue-50 rounded-md">
+                      <div className="flex items-start gap-2">
+                        <Lightbulb className="h-4 w-4 mt-0.5 text-blue-600" />
+                        <div>
+                          <p className="text-sm font-medium text-blue-900">Hint:</p>
+                          <p className="text-sm text-blue-700">{generatedQuestions[previewIndex].hint_text}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {generatedQuestions[previewIndex].explanation && (
+                    <div className="p-3 bg-green-50 rounded-md">
+                      <div className="flex items-start gap-2">
+                        <CheckCircle2 className="h-4 w-4 mt-0.5 text-green-600" />
+                        <div>
+                          <p className="text-sm font-medium text-green-900">Explanation:</p>
+                          <p className="text-sm text-green-700">{generatedQuestions[previewIndex].explanation}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="flex gap-2 pt-2">
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => deleteGeneratedQuestion(previewIndex)}
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Delete This Question
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          <div className="flex gap-3">
+            <Button variant="outline" onClick={() => setShowPreviewDialog(false)} className="flex-1">
+              Cancel
+            </Button>
+            <Button onClick={addGeneratedQuestions} className="flex-1 bg-green-600 hover:bg-green-700">
+              ✅ Add All to Quiz ({generatedQuestions.length} questions)
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }

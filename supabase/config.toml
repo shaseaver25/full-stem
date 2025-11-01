@@ -142,4 +142,7 @@ verify_jwt = true
 [functions.extract-slide-text]
 verify_jwt = true
 
+[functions.generate-quiz-questions]
+verify_jwt = true
+
 

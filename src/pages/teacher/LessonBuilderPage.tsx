@@ -411,6 +411,7 @@ export default function LessonBuilderPage() {
                         onUpdate={handleUpdateComponent}
                         onDelete={handleDeleteComponent}
                         onReorder={handleReorderComponents}
+                        lessonId={lessonId}
                       />
                     </div>
 
