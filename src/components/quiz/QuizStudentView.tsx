@@ -197,23 +197,22 @@ export function QuizStudentView({ componentId }: QuizStudentViewProps) {
   const loadQuiz = async () => {
     setLoading(true);
     try {
-      const { data: quizComponent, error: quizError } = await (supabase as any)
-        .from('quiz_components')
-        .select('*')
-        .eq('component_id', componentId)
+      // Get the lesson component to access quiz data from content
+      const { data: component, error: componentError } = await supabase
+        .from('lesson_components')
+        .select('content')
+        .eq('id', componentId)
         .single();
 
-      if (quizError) throw quizError;
+      if (componentError) throw componentError;
 
-      const { data: questions, error: questionsError } = await (supabase as any)
-        .from('quiz_questions')
-        .select('*, quiz_question_options(*)')
-        .eq('quiz_component_id', quizComponent.id)
-        .order('question_order');
+      const quizDataFromContent = (component?.content as any)?.quizData;
+      
+      if (!quizDataFromContent) {
+        throw new Error('Quiz data not found in component');
+      }
 
-      if (questionsError) throw questionsError;
-
-      let formattedQuestions: QuizQuestion[] = questions.map((q: any) => ({
+      let formattedQuestions: QuizQuestion[] = (quizDataFromContent.questions || []).map((q: any) => ({
         id: q.id,
         question_order: q.question_order,
         question_type: q.question_type,
@@ -221,23 +220,21 @@ export function QuizStudentView({ componentId }: QuizStudentViewProps) {
         points: q.points,
         hint_text: q.hint_text,
         explanation: q.explanation,
-        options: (q.quiz_question_options || [])
-          .sort((a: any, b: any) => a.option_order - b.option_order)
-          .map((opt: any) => ({
-            id: opt.id,
-            option_order: opt.option_order,
-            option_text: opt.option_text,
-            is_correct: opt.is_correct
-          }))
+        options: (q.options || []).map((opt: any) => ({
+          id: opt.id,
+          option_order: opt.option_order,
+          option_text: opt.option_text,
+          is_correct: opt.is_correct
+        }))
       }));
 
       // Apply randomization if enabled
-      if (quizComponent.randomize_questions) {
+      if (quizDataFromContent.randomizeQuestions) {
         formattedQuestions = [...formattedQuestions].sort(() => Math.random() - 0.5);
         formattedQuestions.forEach((q, idx) => q.question_order = idx);
       }
 
-      if (quizComponent.randomize_answers) {
+      if (quizDataFromContent.randomizeAnswers) {
         formattedQuestions = formattedQuestions.map(q => ({
           ...q,
           options: [...q.options].sort(() => Math.random() - 0.5)
@@ -245,23 +242,23 @@ export function QuizStudentView({ componentId }: QuizStudentViewProps) {
       }
 
       setQuizData({
-        id: quizComponent.id,
-        title: quizComponent.title,
-        instructions: quizComponent.instructions,
-        time_limit_minutes: quizComponent.time_limit_minutes,
-        attempts_allowed: quizComponent.attempts_allowed,
-        randomize_questions: quizComponent.randomize_questions,
-        randomize_answers: quizComponent.randomize_answers,
-        show_correct_answers: quizComponent.show_correct_answers,
-        pass_threshold_percentage: quizComponent.pass_threshold_percentage,
-        points_total: quizComponent.points_total,
+        id: componentId,
+        title: quizDataFromContent.title,
+        instructions: quizDataFromContent.instructions || '',
+        time_limit_minutes: quizDataFromContent.timeLimitMinutes,
+        attempts_allowed: quizDataFromContent.attemptsAllowed,
+        randomize_questions: quizDataFromContent.randomizeQuestions,
+        randomize_answers: quizDataFromContent.randomizeAnswers,
+        show_correct_answers: quizDataFromContent.showCorrectAnswers,
+        pass_threshold_percentage: quizDataFromContent.passThreshold,
+        points_total: quizDataFromContent.pointsTotal,
         questions: formattedQuestions
       });
     } catch (error) {
       console.error('Error loading quiz:', error);
       toast({
         title: 'Error',
-        description: 'Failed to load quiz',
+        description: 'Failed to load quiz. Please make sure the quiz is configured.',
         variant: 'destructive'
       });
     } finally {
