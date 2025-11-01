@@ -1,260 +1,138 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
-import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
-import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { supabase } from '@/integrations/supabase/client';
-import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
-import { ArrowLeft, Users, WifiOff, Wifi } from 'lucide-react';
-import { toast } from 'sonner';
-import { PollStudentView } from '@/components/poll/PollStudentView';
-import { useConferenceMode } from '@/hooks/useConferenceMode';
+import { ArrowLeft, Clock, MapPin, User } from 'lucide-react';
+import SlidesViewer from '@/components/conference/SlidesViewer';
+import PollSurvey from '@/components/conference/PollSurvey';
 
-const ConferenceSession: React.FC = () => {
-  const { sessionId } = useParams();
-  const [searchParams] = useSearchParams();
+interface SessionData {
+  title: string;
+  time: string;
+  room: string;
+  speaker?: string;
+  description?: string;
+}
+
+const SessionPage: React.FC = () => {
   const navigate = useNavigate();
-  const lessonId = searchParams.get('lesson');
-
-  const [lesson, setLesson] = useState<any>(null);
-  const [components, setComponents] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const location = useLocation();
   
-  // SCALABILITY: Skip expensive auth/settings checks for conference mode
-  useConferenceMode();
+  // Get session data from navigation state
+  const sessionData = location.state as SessionData | null;
 
-  useEffect(() => {
-    const handleOnline = () => {
-      setIsOnline(true);
-      toast.success('You are back online');
-    };
-    const handleOffline = () => {
-      setIsOnline(false);
-      toast.error('You are offline');
-    };
-
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
-  }, []);
-
-  useEffect(() => {
-    if (lessonId) {
-      loadLesson();
-    }
-  }, [lessonId]);
-
-  const loadLesson = async () => {
-    if (!lessonId) return;
-
-    try {
-      setLoading(true);
-
-      // Load lesson
-      const { data: lessonData, error: lessonError } = await supabase
-        .from('lessons')
-        .select('*')
-        .eq('id', lessonId)
-        .single();
-
-      if (lessonError) throw lessonError;
-
-      setLesson(lessonData);
-
-      // Load components (slides, polls, etc.)
-      const { data: componentsData, error: componentsError } = await supabase
-        .from('lesson_components')
-        .select(`
-          *,
-          slide_component:slide_components(*),
-          poll_component:poll_components(
-            *,
-            options:poll_options(*)
-          )
-        `)
-        .eq('lesson_id', lessonId)
-        .order('component_order');
-
-      if (componentsError) throw componentsError;
-
-      // SCALABILITY FIX: Pre-create poll_component records to avoid race conditions
-      // with 600 concurrent users voting at the same time
-      for (const component of componentsData || []) {
-        if (component.component_type === 'poll' && !component.poll_component) {
-          // Extract poll data from content
-          const pollContent = component.content as any;
-          
-          // Create poll_component
-          const { data: newPoll, error: pollError } = await supabase
-            .from('poll_components')
-            .insert({
-              component_id: component.id,
-              poll_question: pollContent.poll_question,
-              poll_type: pollContent.poll_type,
-              show_results_timing: pollContent.show_results_timing || 'after_voting',
-              allow_anonymous: pollContent.allow_anonymous || true,
-              allow_change_vote: pollContent.allow_change_vote || false,
-              chart_type: pollContent.chart_type || 'bar',
-              show_percentages: pollContent.show_percentages || true,
-              show_vote_counts: pollContent.show_vote_counts || true,
-              is_closed: false
-            })
-            .select()
-            .single();
-
-          if (!pollError && newPoll) {
-            // Create poll_options
-            const optionsToInsert = (pollContent.options || []).map((opt: any, idx: number) => ({
-              poll_component_id: newPoll.id,
-              option_text: opt.option_text,
-              option_order: opt.option_order || idx
-            }));
-
-            const { data: createdOptions } = await supabase
-              .from('poll_options')
-              .insert(optionsToInsert)
-              .select();
-
-            // Update component with poll data including options
-            component.poll_component = {
-              ...newPoll,
-              options: createdOptions || []
-            };
-          }
-        }
-      }
-
-      setComponents(componentsData || []);
-    } catch (error) {
-      console.error('Error loading lesson:', error);
-      toast.error('Failed to load session content');
-    } finally {
-      setLoading(false);
-    }
+  // Fallback data if no state is provided
+  const session = sessionData || {
+    title: 'Conference Session',
+    time: 'TBD',
+    room: 'TBD',
+    speaker: '',
+    description: 'Session details not available'
   };
-
-  if (loading) {
-    return <LoadingSpinner size="lg" text="Loading session..." />;
-  }
-
-  if (!lesson) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <Card>
-          <CardContent className="pt-6">
-            <p className="text-gray-600">Session not found</p>
-            <Button onClick={() => navigate('/conference/demo')} className="mt-4">
-              Back to Sessions
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
 
   return (
     <>
       <Helmet>
-        <title>{lesson.title} - Conference Session</title>
+        <title>{session.title} - Applied AI Conference</title>
+        <meta name="description" content={session.description || 'Conference session'} />
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
       </Helmet>
 
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
         {/* Header */}
-        <header className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
+        <header className="bg-background/80 backdrop-blur-sm border-b sticky top-0 z-50">
           <div className="container mx-auto px-4 py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => navigate('/conference/demo')}
-                >
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  Back
-                </Button>
-                <div>
-                  <h1 className="text-xl font-bold text-gray-900">{lesson.title}</h1>
-                  <p className="text-sm text-gray-600">{lesson.description}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                {isOnline ? (
-                  <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                    <Wifi className="h-3 w-3 mr-1" />
-                    Live
-                  </Badge>
-                ) : (
-                  <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
-                    <WifiOff className="h-3 w-3 mr-1" />
-                    Offline
-                  </Badge>
-                )}
+            <div className="flex items-center gap-4">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate('/conference/demo')}
+                className="gap-2"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Back to Sessions
+              </Button>
+              <div className="flex-1">
+                <h1 className="text-xl font-bold text-foreground">Applied AI Conference</h1>
               </div>
             </div>
           </div>
         </header>
 
         {/* Main Content */}
-        <main className="container mx-auto px-4 py-8 max-w-4xl">
-          {components.length === 0 ? (
-            <Card>
-              <CardContent className="pt-6 text-center">
-                <p className="text-gray-600">No content available for this session yet.</p>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="space-y-6">
-              {components.map((component, index) => (
-                <Card key={component.id} className="overflow-hidden">
-                  {component.component_type === 'slide' && component.slide_component && (
-                    <div>
-                      <div className="bg-gradient-to-r from-blue-500 to-purple-500 px-6 py-3">
-                        <h2 className="text-white font-semibold">
-                          Slide {index + 1}: {component.slide_component.title}
-                        </h2>
-                      </div>
-                      <CardContent className="pt-6">
-                        <div 
-                          className="prose max-w-none"
-                          dangerouslySetInnerHTML={{ __html: component.slide_component.content }}
-                        />
-                      </CardContent>
-                    </div>
-                  )}
+        <main className="container mx-auto px-4 py-8 max-w-7xl">
+          {/* Session Header */}
+          <Card className="mb-8 bg-gradient-to-r from-primary to-secondary text-primary-foreground border-0">
+            <CardHeader>
+              <div className="flex flex-wrap gap-2 mb-3">
+                <Badge variant="secondary" className="text-xs font-medium flex items-center gap-1 bg-background/20">
+                  <Clock className="h-3 w-3" />
+                  {session.time}
+                </Badge>
+                <Badge variant="secondary" className="text-xs font-medium flex items-center gap-1 bg-background/20">
+                  <MapPin className="h-3 w-3" />
+                  {session.room}
+                </Badge>
+              </div>
+              
+              <CardTitle className="text-3xl mb-2">{session.title}</CardTitle>
+              
+              {session.speaker && (
+                <CardDescription className="text-primary-foreground/80 flex items-center gap-2 text-base">
+                  <User className="h-4 w-4" />
+                  {session.speaker}
+                </CardDescription>
+              )}
+              
+              {session.description && (
+                <CardDescription className="text-primary-foreground/70 mt-3">
+                  {session.description}
+                </CardDescription>
+              )}
+            </CardHeader>
+          </Card>
 
-                  {component.component_type === 'poll' && component.poll_component && (
-                    <div>
-                      <div className="bg-gradient-to-r from-emerald-500 to-teal-500 px-6 py-3">
-                        <div className="flex items-center justify-between">
-                          <h2 className="text-white font-semibold">
-                            Poll {index + 1}: {component.poll_component.question}
-                          </h2>
-                          <Badge className="bg-white/20 text-white">
-                            <Users className="h-3 w-3 mr-1" />
-                            Live
-                          </Badge>
-                        </div>
-                      </div>
-                      <CardContent className="pt-6">
-                        <PollStudentView componentId={component.id} />
-                      </CardContent>
-                    </div>
-                  )}
-                </Card>
-              ))}
+          {/* Two Column Layout */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Left Column - Slides (Takes 2/3 width on large screens) */}
+            <div className="lg:col-span-2 space-y-6">
+              <SlidesViewer sessionTitle={session.title} />
             </div>
-          )}
+
+            {/* Right Column - Poll/Survey (Takes 1/3 width on large screens) */}
+            <div className="lg:col-span-1 space-y-6">
+              <PollSurvey />
+              
+              {/* Session Info Card */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Session Information</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4 text-sm">
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+                      <span>Session is live</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <span className="w-2 h-2 bg-blue-400 rounded-full"></span>
+                      <span>Interactive polling enabled</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <span className="w-2 h-2 bg-purple-400 rounded-full"></span>
+                      <span>Anonymous participation</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
         </main>
       </div>
     </>
   );
 };
 
-export default ConferenceSession;
+export default SessionPage;

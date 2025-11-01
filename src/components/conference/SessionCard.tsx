@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -24,10 +25,25 @@ const SessionCard: React.FC<SessionCardProps> = ({
 }) => {
   const [showQR, setShowQR] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  
+  const navigate = useNavigate();
+  
+  const handleJoinClick = () => {
+    // Navigate to session page with session data
+    navigate(`/conference/session/${encodeURIComponent(title)}`, {
+      state: {
+        title,
+        room,
+        time,
+        speaker: presenter,
+        description
+      }
+    });
+  };
 
   useEffect(() => {
     if (showQR && canvasRef.current) {
-      const sessionUrl = `${window.location.origin}/conference/demo`;
+      const sessionUrl = `${window.location.origin}/conference/session/${encodeURIComponent(title)}`;
       QRCodeLib.toCanvas(
         canvasRef.current,
         sessionUrl,
@@ -44,7 +60,7 @@ const SessionCard: React.FC<SessionCardProps> = ({
         }
       );
     }
-  }, [showQR]);
+  }, [showQR, title]);
 
   return (
     <Card 
@@ -123,7 +139,7 @@ const SessionCard: React.FC<SessionCardProps> = ({
         ) : (
           <div className="flex gap-2 animate-fade-in">
             <Button
-              onClick={onJoin}
+              onClick={handleJoinClick}
               className="flex-1 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-sm transition-all duration-200"
               size="lg"
               aria-label={`Join ${title} session`}
