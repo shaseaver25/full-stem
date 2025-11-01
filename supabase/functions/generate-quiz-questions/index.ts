@@ -58,13 +58,13 @@ serve(async (req) => {
       );
     }
 
-    // Fetch lesson components (pages only for MVP)
+    // Fetch lesson components (pages and slides for content extraction)
     const { data: components, error: componentsError } = await supabase
       .from('lesson_components')
       .select('component_type, content, order')
       .eq('lesson_id', lessonId)
       .eq('enabled', true)
-      .in('component_type', ['page'])
+      .in('component_type', ['page', 'slides'])
       .order('order');
 
     if (componentsError) {
@@ -75,14 +75,14 @@ serve(async (req) => {
       );
     }
 
-    // Extract content from page components
+    // Extract content from page and slides components
     let extractedContent = '';
     let totalWords = 0;
 
     if (components && components.length > 0) {
       components.forEach((comp, index) => {
         if (comp.component_type === 'page') {
-          // Page components store content in 'body' field, not 'content' field
+          // Page components store content in 'body' field
           const pageContent = comp.content?.body || '';
           // Strip HTML tags for cleaner text
           const cleanText = pageContent.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
@@ -90,6 +90,27 @@ serve(async (req) => {
           totalWords += words;
           
           extractedContent += `\n[PAGE ${index + 1}]\n${cleanText}\n`;
+        } else if (comp.component_type === 'slides') {
+          // Slides components have text in slides array
+          const slides = comp.content?.slides || [];
+          slides.forEach((slide: any, slideIndex: number) => {
+            const slideText = slide.text || '';
+            const cleanText = slideText.replace(/\s+/g, ' ').trim();
+            const words = cleanText.split(' ').filter(w => w.length > 0).length;
+            totalWords += words;
+            
+            extractedContent += `\n[SLIDE ${slideIndex + 1}]\n${cleanText}\n`;
+            
+            // Also include notes if present
+            if (slide.notes) {
+              const notes = slide.notes.trim();
+              if (notes) {
+                const noteWords = notes.split(' ').filter(w => w.length > 0).length;
+                totalWords += noteWords;
+                extractedContent += `Notes: ${notes}\n`;
+              }
+            }
+          });
         }
       });
     }
