@@ -80,6 +80,8 @@ const MFASetup = React.lazy(() => import("./pages/MFASetup"));
 const MFAVerify = React.lazy(() => import("./pages/MFAVerify"));
 const DocsViewer = React.lazy(() => import("./pages/DocsViewer"));
 const PilotInterest = React.lazy(() => import("./pages/PilotInterest"));
+const ConferenceDemo = React.lazy(() => import("./pages/conference/ConferenceDemo"));
+const ConferenceSession = React.lazy(() => import("./pages/conference/ConferenceSession"));
 
 // Eagerly load these smaller components that are used for route protection
 import ProtectedTeacherRoute from "./components/teacher/ProtectedTeacherRoute";
@@ -194,6 +196,10 @@ function AppContent() {
         />
         <Route path="/trial" element={<ErrorBoundary><TrialPage /></ErrorBoundary>} />
         <Route path="/pilot-interest" element={<ErrorBoundary><PilotInterest /></ErrorBoundary>} />
+        
+        {/* Conference Demo Routes - Public Access */}
+        <Route path="/conference/demo" element={<ErrorBoundary><ConferenceDemo /></ErrorBoundary>} />
+        <Route path="/conference/session/:sessionId" element={<ErrorBoundary><ConferenceSession /></ErrorBoundary>} />
         
         {/* Demo Routes */}
         <Route path="/demo" element={<ErrorBoundary><DemoGate /></ErrorBoundary>} />
