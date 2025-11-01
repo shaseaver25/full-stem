@@ -386,6 +386,20 @@ export function DraggableComponentCard({
                 placeholder="e.g., Chapter 3 Quiz"
               />
             </div>
+
+            <div className="flex items-center justify-between p-3 border rounded-lg">
+              <div className="flex items-center gap-2">
+                <Volume2 className="h-4 w-4 text-muted-foreground" />
+                <Label htmlFor={`read-aloud-${index}`}>Enable Read Aloud</Label>
+              </div>
+              <input
+                type="checkbox"
+                id={`read-aloud-${index}`}
+                checked={component.read_aloud || false}
+                onChange={(e) => onUpdate(index, { read_aloud: e.target.checked })}
+                className="h-4 w-4"
+              />
+            </div>
             
             <Dialog open={isQuizBuilderOpen} onOpenChange={setIsQuizBuilderOpen}>
               <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
