@@ -349,9 +349,9 @@ export const PollStudentView: React.FC<PollStudentViewProps> = ({ componentId, p
 
     setSubmitting(true);
     try {
-      let actualPollId = pollData.id;
-
       // If using prop data, ensure database records exist first
+      let actualPollId: string;
+      
       if (propPollData) {
         // Check if poll_component exists
         const { data: existingPoll } = await supabase
@@ -400,6 +400,9 @@ export const PollStudentView: React.FC<PollStudentViewProps> = ({ componentId, p
           // Update local pollData with real ID
           setPollData({ ...pollData, id: actualPollId });
         }
+      } else {
+        // Not using prop data, use existing poll ID
+        actualPollId = pollData.id;
       }
 
       const responseData: any = {
