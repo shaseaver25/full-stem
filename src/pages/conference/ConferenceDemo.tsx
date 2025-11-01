@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet';
 import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import SessionCard from '@/components/conference/SessionCard';
 import { WifiOff, Wifi } from 'lucide-react';
 import { useConferenceMode } from '@/hooks/useConferenceMode';
-import { speakers } from '@/data/speakers';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Session {
   id: string;
@@ -30,52 +31,49 @@ const ConferenceDemo: React.FC = () => {
   // SCALABILITY: Skip expensive auth/settings checks for conference mode
   useConferenceMode();
 
-  // Normalize session title by removing panelist/co-presenter suffixes
-  const normalizeTitle = (title: string) => {
-    return title
-      .replace(/\s*\(Panelist\)\s*$/i, '')
-      .replace(/\s*\(Co-Presenter\)\s*$/i, '')
-      .replace(/\s*\(General\)\s*$/i, '')
-      .trim();
-  };
-
-  // Group speakers by session title
-  const sessionMap = new Map<string, Session>();
-  
-  speakers
-    .filter(speaker => !speaker.isCancelled)
-    .forEach(speaker => {
-      const normalizedTitle = normalizeTitle(speaker.title);
+  // Fetch conference classes (session time blocks)
+  const { data: conferenceClasses = [], isLoading } = useQuery({
+    queryKey: ['conference-classes'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('classes')
+        .select(`
+          id,
+          name,
+          description,
+          lessons (
+            id,
+            title,
+            description,
+            order_index
+          )
+        `)
+        .ilike('name', '%Applied AI Conference%')
+        .eq('published', true)
+        .order('name');
       
-      if (sessionMap.has(normalizedTitle)) {
-        // Add speaker to existing session
-        const session = sessionMap.get(normalizedTitle)!;
-        session.speakers.push({
-          name: speaker.name,
-          bio: speaker.bio,
-          headshotUrl: speaker.headshotUrl,
-          linkedInUrl: speaker.linkedInUrl,
-        });
-      } else {
-        // Create new session
-        sessionMap.set(normalizedTitle, {
-          id: speaker.id,
-          title: normalizedTitle,
-          description: speaker.description,
-          speakers: [{
-            name: speaker.name,
-            bio: speaker.bio,
-            headshotUrl: speaker.headshotUrl,
-            linkedInUrl: speaker.linkedInUrl,
-          }],
-          badges: speaker.badges,
-          isKeynote: speaker.isKeynote,
-          lessonId: 'cf34126a-045c-456f-9664-abd41c679f9a',
-        });
-      }
-    });
+      if (error) throw error;
+      return data || [];
+    }
+  });
 
-  const sessions: Session[] = Array.from(sessionMap.values());
+  // Group lessons into sessions by class
+  const sessionBlocks = conferenceClasses.map(classBlock => ({
+    id: classBlock.id,
+    name: classBlock.name.replace('Applied AI Conference - ', ''),
+    description: classBlock.description,
+    sessions: (classBlock.lessons || [])
+      .sort((a, b) => a.order_index - b.order_index)
+      .map(lesson => ({
+        id: lesson.id,
+        title: lesson.title,
+        description: lesson.description || '',
+        speakers: [],
+        badges: classBlock.name.includes('Keynote') ? ['Keynote Speaker'] : [],
+        isKeynote: classBlock.name.includes('Keynote'),
+        lessonId: lesson.id
+      }))
+  })).filter(block => block.sessions.length > 0);
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -133,7 +131,7 @@ const ConferenceDemo: React.FC = () => {
           {/* Welcome Card */}
           <Card className="mb-8 bg-gradient-to-r from-blue-600 to-purple-600 text-white border-0">
             <CardHeader>
-              <CardTitle className="text-3xl text-white">Welcome to Our Conference!</CardTitle>
+              <CardTitle className="text-3xl text-white">Welcome to Applied AI Conference!</CardTitle>
               <CardDescription className="text-blue-100">
                 Join any session below to participate in live polls and interactive content. No signup required!
               </CardDescription>
@@ -156,23 +154,43 @@ const ConferenceDemo: React.FC = () => {
             </CardContent>
           </Card>
 
-          {/* Sessions Grid */}
-          <div className="mb-6">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Conference Sessions</h2>
-            <p className="text-gray-600 mb-4">
-              {sessions.length} sessions available • Scan QR code or tap "Join Session" to participate
-            </p>
-          </div>
+          {isLoading ? (
+            <div className="text-center py-12">
+              <p className="text-gray-600">Loading conference sessions...</p>
+            </div>
+          ) : sessionBlocks.length === 0 ? (
+            <Card>
+              <CardContent className="pt-6 text-center">
+                <p className="text-gray-600">No conference sessions available at this time.</p>
+              </CardContent>
+            </Card>
+          ) : (
+            sessionBlocks.map((block) => (
+              <div key={block.id} className="mb-12">
+                {/* Block Header */}
+                <div className="mb-6 border-l-4 border-blue-600 pl-4">
+                  <h2 className="text-2xl font-bold text-gray-900">{block.name}</h2>
+                  {block.description && (
+                    <p className="text-gray-600 mt-1">{block.description}</p>
+                  )}
+                  <p className="text-sm text-gray-500 mt-2">
+                    {block.sessions.length} session{block.sessions.length !== 1 ? 's' : ''} in this block
+                  </p>
+                </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {sessions.map((session) => (
-              <SessionCard
-                key={session.id}
-                session={session}
-                onJoin={handleJoinSession}
-              />
-            ))}
-          </div>
+                {/* Sessions Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {block.sessions.map((session) => (
+                    <SessionCard
+                      key={session.id}
+                      session={session}
+                      onJoin={handleJoinSession}
+                    />
+                  ))}
+                </div>
+              </div>
+            ))
+          )}
 
           {/* Instructions Card */}
           <Card className="mt-8">
