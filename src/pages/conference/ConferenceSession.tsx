@@ -8,8 +8,6 @@ import { ArrowLeft, Clock, MapPin, User, Languages } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import SlidesViewer from '@/components/conference/SlidesViewer';
 import PollSurvey from '@/components/conference/PollSurvey';
-import SpeechControls from '@/components/SpeechControls';
-import { useElevenLabsTTSPublic } from '@/hooks/useElevenLabsTTSPublic';
 import { useLiveTranslation } from '@/hooks/useLiveTranslation';
 
 interface SessionData {
@@ -40,7 +38,6 @@ const SessionPage: React.FC = () => {
   const [targetLanguage, setTargetLanguage] = useState<string>('en');
   const [translatedDescription, setTranslatedDescription] = useState<string | null>(null);
   const { translateText, isTranslating } = useLiveTranslation();
-  const { speak, pause, resume, stop, isPlaying, isPaused, isLoading, error, currentTime, duration } = useElevenLabsTTSPublic(targetLanguage);
 
   const handleTranslate = async () => {
     if (!session.description) return;
@@ -48,11 +45,6 @@ const SessionPage: React.FC = () => {
     if (translated) {
       setTranslatedDescription(translated);
     }
-  };
-
-  const handleReadAloud = () => {
-    const textToRead = translatedDescription || session.description || '';
-    speak(textToRead);
   };
 
   return (
@@ -100,7 +92,7 @@ const SessionPage: React.FC = () => {
                 </Badge>
               </div>
 
-              {/* Language and Controls */}
+              {/* Language Selector */}
               <div className="flex items-center gap-3 mb-4 flex-wrap">
                 <Select value={targetLanguage} onValueChange={setTargetLanguage}>
                   <SelectTrigger className="w-[200px] bg-background/20 border-primary-foreground/20 text-primary-foreground">
@@ -126,23 +118,8 @@ const SessionPage: React.FC = () => {
                     disabled={isTranslating}
                     className="bg-background/20 hover:bg-background/30"
                   >
-                    {isTranslating ? 'Translating...' : 'Translate'}
+                    {isTranslating ? 'Translating...' : 'Translate Description'}
                   </Button>
-                )}
-
-                {session.description && (
-                  <SpeechControls
-                    isPlaying={isPlaying}
-                    isPaused={isPaused}
-                    isLoading={isLoading}
-                    error={error}
-                    currentTime={currentTime}
-                    duration={duration}
-                    onPlay={handleReadAloud}
-                    onPause={pause}
-                    onResume={resume}
-                    onStop={stop}
-                  />
                 )}
               </div>
               

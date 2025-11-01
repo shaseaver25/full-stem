@@ -1,148 +1,473 @@
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, Maximize2, Minimize2 } from 'lucide-react';
-import SpeechControls from '@/components/SpeechControls';
-import { useElevenLabsTTSPublic } from '@/hooks/useElevenLabsTTSPublic';
+import { Progress } from '@/components/ui/progress';
+import { 
+  ChevronLeft, 
+  ChevronRight, 
+  Maximize, 
+  Minimize,
+  Home,
+  Volume2,
+  VolumeX,
+  Pause,
+  Play,
+  HelpCircle,
+  X
+} from 'lucide-react';
+import { usePresentationTTS } from '@/hooks/usePresentationTTS';
 import { useLiveTranslation } from '@/hooks/useLiveTranslation';
+import { HighlightedText } from '@/components/lesson/HighlightedText';
+import { cn } from '@/lib/utils';
 
 interface SlidesViewerProps {
   sessionTitle: string;
-  slideCount?: number;
   targetLanguage?: string;
+  embedUrl?: string;
+  speakerNotes?: string;
 }
 
-const SlidesViewer: React.FC<SlidesViewerProps> = ({ sessionTitle, slideCount = 10, targetLanguage = 'en' }) => {
-  const [currentSlide, setCurrentSlide] = useState(1);
+const SlidesViewer: React.FC<SlidesViewerProps> = ({ 
+  sessionTitle, 
+  targetLanguage = 'en',
+  embedUrl,
+  speakerNotes 
+}) => {
+  const [currentSlide, setCurrentSlide] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [translatedContent, setTranslatedContent] = useState<string | null>(null);
-
+  const [viewedSlides, setViewedSlides] = useState<Set<number>>(new Set([0]));
+  const [translatedNotes, setTranslatedNotes] = useState<string | null>(null);
+  const [showKeyboardHelp, setShowKeyboardHelp] = useState(false);
+  
+  const { speak, pause, resume, stop, isPlaying, isPaused, isLoading: isSpeaking, currentWordIndex, wordTimings } = usePresentationTTS();
   const { translateText, isTranslating } = useLiveTranslation();
-  const { speak, pause, resume, stop, isPlaying, isPaused, isLoading, error, currentTime, duration } = useElevenLabsTTSPublic(targetLanguage);
 
-  const slideContent = `Slide content for "${sessionTitle}" would be displayed here`;
+  // For demo, assume 10 slides
+  const totalSlides = 10;
+  const progressPercentage = ((currentSlide + 1) / totalSlides) * 100;
+  const isCompleted = viewedSlides.size === totalSlides;
 
+  // Mark slide as viewed
   useEffect(() => {
-    const translateSlideContent = async () => {
-      if (targetLanguage !== 'en') {
-        const translated = await translateText({ text: slideContent, targetLanguage });
-        setTranslatedContent(translated);
-      } else {
-        setTranslatedContent(null);
+    setViewedSlides(prev => new Set(prev).add(currentSlide));
+  }, [currentSlide]);
+
+  // Navigation functions
+  const goToSlide = useCallback((index: number) => {
+    if (index >= 0 && index < totalSlides) {
+      setCurrentSlide(index);
+      const announcement = `Slide ${index + 1} of ${totalSlides}`;
+      const liveRegion = document.getElementById('slide-announcer');
+      if (liveRegion) {
+        liveRegion.textContent = announcement;
+      }
+    }
+  }, [totalSlides]);
+
+  const goToPrevious = useCallback(() => {
+    goToSlide(currentSlide - 1);
+  }, [currentSlide, goToSlide]);
+
+  const goToNext = useCallback(() => {
+    goToSlide(currentSlide + 1);
+  }, [currentSlide, goToSlide]);
+
+  const goToFirst = useCallback(() => {
+    goToSlide(0);
+  }, [goToSlide]);
+
+  const goToLast = useCallback(() => {
+    goToSlide(totalSlides - 1);
+  }, [totalSlides, goToSlide]);
+
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        return;
+      }
+
+      switch (e.key) {
+        case 'ArrowLeft':
+          e.preventDefault();
+          goToPrevious();
+          break;
+        case 'ArrowRight':
+        case ' ':
+          e.preventDefault();
+          goToNext();
+          break;
+        case 'Home':
+          e.preventDefault();
+          goToFirst();
+          break;
+        case 'End':
+          e.preventDefault();
+          goToLast();
+          break;
+        case 'f':
+        case 'F':
+          e.preventDefault();
+          toggleFullscreen();
+          break;
+        case 'Escape':
+          if (isFullscreen) {
+            e.preventDefault();
+            toggleFullscreen();
+          } else if (showKeyboardHelp) {
+            e.preventDefault();
+            setShowKeyboardHelp(false);
+          }
+          break;
+        case '?':
+          e.preventDefault();
+          setShowKeyboardHelp(!showKeyboardHelp);
+          break;
       }
     };
-    translateSlideContent();
-  }, [currentSlide, targetLanguage]);
 
-  const handlePrevSlide = () => {
-    setCurrentSlide(prev => Math.max(1, prev - 1));
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [currentSlide, totalSlides, isFullscreen, showKeyboardHelp, goToPrevious, goToNext, goToFirst, goToLast]);
+
+  const toggleFullscreen = () => {
+    setIsFullscreen(!isFullscreen);
   };
 
-  const handleNextSlide = () => {
-    setCurrentSlide(prev => Math.min(slideCount, prev + 1));
+  // Read aloud
+  const handleReadAloud = async () => {
+    let textToRead = speakerNotes || `Slide ${currentSlide + 1} of the presentation: ${sessionTitle}`;
+    
+    if (targetLanguage !== 'en' && translatedNotes) {
+      textToRead = translatedNotes;
+    }
+
+    await speak(textToRead);
   };
 
-  const handleReadAloud = () => {
-    const textToRead = translatedContent || slideContent;
-    speak(textToRead);
-  };
+  // Translate notes when language changes
+  useEffect(() => {
+    const translateContent = async () => {
+      if (targetLanguage !== 'en' && speakerNotes) {
+        const translated = await translateText({
+          text: speakerNotes,
+          targetLanguage,
+          sourceLanguage: 'auto'
+        });
+        if (translated) {
+          setTranslatedNotes(translated);
+        }
+      } else {
+        setTranslatedNotes(null);
+      }
+    };
+    translateContent();
+  }, [targetLanguage, speakerNotes]);
+
+  // Touch gesture support
+  useEffect(() => {
+    let touchStartX = 0;
+    let touchEndX = 0;
+
+    const handleTouchStart = (e: TouchEvent) => {
+      touchStartX = e.changedTouches[0].screenX;
+    };
+
+    const handleTouchEnd = (e: TouchEvent) => {
+      touchEndX = e.changedTouches[0].screenX;
+      handleSwipe();
+    };
+
+    const handleSwipe = () => {
+      const swipeThreshold = 50;
+      if (touchStartX - touchEndX > swipeThreshold) {
+        goToNext();
+      }
+      if (touchEndX - touchStartX > swipeThreshold) {
+        goToPrevious();
+      }
+    };
+
+    const container = document.getElementById('presentation-container');
+    if (container) {
+      container.addEventListener('touchstart', handleTouchStart);
+      container.addEventListener('touchend', handleTouchEnd);
+    }
+
+    return () => {
+      if (container) {
+        container.removeEventListener('touchstart', handleTouchStart);
+        container.removeEventListener('touchend', handleTouchEnd);
+      }
+    };
+  }, [goToNext, goToPrevious]);
+
+  const displayNotes = translatedNotes || speakerNotes;
 
   return (
-    <Card className="w-full">
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between flex-wrap gap-2">
-          <CardTitle className="text-lg">Presentation Slides</CardTitle>
-          <div className="flex items-center gap-2">
-            <SpeechControls
-              isPlaying={isPlaying}
-              isPaused={isPaused}
-              isLoading={isLoading}
-              error={error}
-              currentTime={currentTime}
-              duration={duration}
-              onPlay={handleReadAloud}
-              onPause={pause}
-              onResume={resume}
-              onStop={stop}
-            />
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setIsFullscreen(!isFullscreen)}
-              aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
-            >
-              {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
-            </Button>
-          </div>
+    <div 
+      className={cn(
+        "relative",
+        isFullscreen && "fixed inset-0 z-50 bg-background"
+      )}
+      id="presentation-container"
+      role="region"
+      aria-label={`Presentation viewer: ${sessionTitle}`}
+      aria-describedby="presentation-description"
+    >
+      {/* Screen reader description */}
+      <div id="presentation-description" className="sr-only">
+        Interactive presentation with {totalSlides} slides. 
+        Use arrow keys or Tab to navigate. Press question mark for keyboard shortcuts.
+      </div>
+
+      {/* Screen reader announcer */}
+      <div 
+        id="slide-announcer" 
+        className="sr-only" 
+        role="status" 
+        aria-live="polite"
+        aria-atomic="true"
+      />
+
+      {/* Top Controls Bar */}
+      <nav className="flex items-center justify-between gap-2 p-3 border-b bg-card" role="toolbar" aria-label="Presentation controls">
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={goToFirst}
+            disabled={currentSlide === 0}
+            aria-label="Go to first slide"
+            title="Go to first slide (Home key)"
+          >
+            <Home className="h-4 w-4" />
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setShowKeyboardHelp(!showKeyboardHelp)}
+            aria-label="Show keyboard shortcuts"
+            aria-pressed={showKeyboardHelp}
+            title="Keyboard shortcuts (Press ? key)"
+          >
+            <HelpCircle className="h-4 w-4" />
+          </Button>
         </div>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {/* Slide Display Area */}
-        <div className="relative bg-muted rounded-lg aspect-video flex items-center justify-center overflow-hidden">
-          <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-primary/5 to-secondary/5">
-            <div className="text-center space-y-4 p-8">
-              <div className="text-6xl font-bold text-primary/20">
-                {currentSlide}
+
+        <div className="flex-1 text-center">
+          <h1 className="font-semibold text-sm">{sessionTitle}</h1>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleFullscreen}
+            aria-label={isFullscreen ? "Exit fullscreen mode" : "Enter fullscreen mode"}
+            aria-pressed={isFullscreen}
+            title={isFullscreen ? "Exit fullscreen (ESC)" : "Enter fullscreen (F key)"}
+          >
+            {isFullscreen ? <Minimize className="h-4 w-4" /> : <Maximize className="h-4 w-4" />}
+          </Button>
+        </div>
+      </nav>
+
+      {/* Progress Bar */}
+      <div className="px-3 py-2 bg-card border-b" role="region" aria-label="Presentation progress">
+        <div className="flex items-center gap-3">
+          <Progress 
+            value={progressPercentage} 
+            className="flex-1" 
+            aria-label={`Presentation progress: ${Math.round(progressPercentage)} percent complete`}
+          />
+          <span className="text-sm text-muted-foreground whitespace-nowrap">
+            {Math.round(progressPercentage)}%
+          </span>
+        </div>
+      </div>
+
+      {/* Main Slide View */}
+      <main className="relative flex items-center justify-center min-h-[400px] bg-muted/30" role="main">
+        {/* Previous Button */}
+        <Button
+          variant="ghost"
+          size="icon"
+          className={cn(
+            "absolute left-4 z-10 h-12 w-12 rounded-full bg-background/80 backdrop-blur-sm shadow-lg",
+            currentSlide === 0 && "opacity-50"
+          )}
+          onClick={goToPrevious}
+          disabled={currentSlide === 0}
+          aria-label={`Previous slide. Currently on slide ${currentSlide + 1} of ${totalSlides}`}
+          title="Previous slide (Left arrow key)"
+        >
+          <ChevronLeft className="h-6 w-6" />
+        </Button>
+
+        {/* Slide Content */}
+        <div className="w-full max-w-5xl p-8 space-y-4">
+          {embedUrl ? (
+            <>
+              <div className="aspect-video w-full rounded-lg overflow-hidden shadow-lg">
+                <iframe
+                  src={embedUrl}
+                  className="w-full h-full"
+                  title={`${sessionTitle} - Slide ${currentSlide + 1}`}
+                  allowFullScreen
+                  allow="autoplay; fullscreen"
+                  aria-label={`Slide ${currentSlide + 1} of ${totalSlides}`}
+                />
               </div>
-              <p className="text-sm text-muted-foreground max-w-md">
-                {isTranslating ? 'Translating...' : (translatedContent || slideContent)}
-              </p>
+
+              {/* TTS Controls */}
+              {displayNotes && (
+                <div className="flex items-center justify-between gap-3 p-3 border rounded-lg bg-card">
+                  <div className="flex items-center gap-2">
+                    {!isPlaying ? (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleReadAloud}
+                        disabled={isSpeaking}
+                        aria-label="Read slide aloud"
+                      >
+                        <Volume2 className="h-4 w-4 mr-2" />
+                        Read Aloud
+                      </Button>
+                    ) : isPaused ? (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={resume}
+                        aria-label="Resume reading"
+                      >
+                        <Play className="h-4 w-4 mr-2" />
+                        Resume
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={pause}
+                        aria-label="Pause reading"
+                      >
+                        <Pause className="h-4 w-4 mr-2" />
+                        Pause
+                      </Button>
+                    )}
+                    
+                    {isPlaying && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={stop}
+                        aria-label="Stop reading"
+                      >
+                        <VolumeX className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+
+                  <div className="flex-1 text-sm text-muted-foreground">
+                    <HighlightedText 
+                      text={displayNotes}
+                      currentWordIndex={currentWordIndex}
+                      wordTimings={wordTimings}
+                    />
+                  </div>
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="aspect-video w-full rounded-lg overflow-hidden shadow-lg bg-gradient-to-br from-primary/5 to-secondary/5 flex items-center justify-center">
+              <div className="text-center space-y-4 p-8">
+                <div className="text-6xl font-bold text-primary/20">
+                  {currentSlide + 1}
+                </div>
+                <p className="text-sm text-muted-foreground max-w-md">
+                  Slide content for "{sessionTitle}" would be displayed here
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Next Button */}
+        <Button
+          variant="ghost"
+          size="icon"
+          className={cn(
+            "absolute right-4 z-10 h-12 w-12 rounded-full bg-background/80 backdrop-blur-sm shadow-lg",
+            currentSlide === totalSlides - 1 && "opacity-50"
+          )}
+          onClick={goToNext}
+          disabled={currentSlide === totalSlides - 1}
+          aria-label={`Next slide. Currently on slide ${currentSlide + 1} of ${totalSlides}`}
+          title="Next slide (Right arrow or Space key)"
+        >
+          <ChevronRight className="h-6 w-6" />
+        </Button>
+      </main>
+
+      {/* Bottom Status Bar */}
+      <div className="flex items-center justify-between p-3 border-t bg-card">
+        <div className="text-sm">
+          Slide <span className="text-primary font-medium">{currentSlide + 1}</span> of {totalSlides}
+        </div>
+        <div className="text-xs text-muted-foreground">
+          {!isCompleted ? (
+            <>View all slides to complete ({viewedSlides.size}/{totalSlides} viewed)</>
+          ) : (
+            <>✓ All slides viewed</>
+          )}
+        </div>
+      </div>
+
+      {/* Keyboard Help Modal */}
+      {showKeyboardHelp && (
+        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-card rounded-lg p-6 max-w-md w-full shadow-xl border">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold">Keyboard Shortcuts</h2>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowKeyboardHelp(false)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Next slide</span>
+                <kbd className="px-2 py-1 bg-muted rounded">→</kbd>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Previous slide</span>
+                <kbd className="px-2 py-1 bg-muted rounded">←</kbd>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">First slide</span>
+                <kbd className="px-2 py-1 bg-muted rounded">Home</kbd>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Last slide</span>
+                <kbd className="px-2 py-1 bg-muted rounded">End</kbd>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Fullscreen</span>
+                <kbd className="px-2 py-1 bg-muted rounded">F</kbd>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Exit fullscreen</span>
+                <kbd className="px-2 py-1 bg-muted rounded">Esc</kbd>
+              </div>
             </div>
           </div>
         </div>
-
-        {/* Slide Navigation Controls */}
-        <div className="flex items-center justify-between gap-4">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handlePrevSlide}
-            disabled={currentSlide === 1}
-            aria-label="Previous slide"
-          >
-            <ChevronLeft className="h-4 w-4 mr-1" />
-            Previous
-          </Button>
-          
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium">
-              Slide {currentSlide} of {slideCount}
-            </span>
-          </div>
-
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleNextSlide}
-            disabled={currentSlide === slideCount}
-            aria-label="Next slide"
-          >
-            Next
-            <ChevronRight className="h-4 w-4 ml-1" />
-          </Button>
-        </div>
-
-        {/* Slide Thumbnails */}
-        <div className="flex gap-2 overflow-x-auto pb-2">
-          {Array.from({ length: slideCount }, (_, i) => i + 1).map((slideNum) => (
-            <button
-              key={slideNum}
-              onClick={() => setCurrentSlide(slideNum)}
-              className={`flex-shrink-0 w-16 h-12 rounded border-2 transition-all ${
-                currentSlide === slideNum
-                  ? 'border-primary bg-primary/10'
-                  : 'border-border bg-muted hover:border-primary/50'
-              }`}
-              aria-label={`Go to slide ${slideNum}`}
-            >
-              <div className="flex items-center justify-center h-full text-xs font-medium">
-                {slideNum}
-              </div>
-            </button>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
+      )}
+    </div>
   );
 };
 
