@@ -349,6 +349,8 @@ export const PollStudentView: React.FC<PollStudentViewProps> = ({ componentId, p
 
     setSubmitting(true);
     try {
+      let actualPollId = pollData.id;
+
       // If using prop data, ensure database records exist first
       if (propPollData) {
         // Check if poll_component exists
@@ -358,7 +360,9 @@ export const PollStudentView: React.FC<PollStudentViewProps> = ({ componentId, p
           .eq('component_id', componentId)
           .maybeSingle();
 
-        if (!existingPoll) {
+        if (existingPoll) {
+          actualPollId = existingPoll.id;
+        } else {
           // Create poll_component record
           const { data: newPoll, error: pollError } = await supabase
             .from('poll_components')
@@ -374,14 +378,15 @@ export const PollStudentView: React.FC<PollStudentViewProps> = ({ componentId, p
               show_vote_counts: pollData.show_vote_counts,
               is_closed: false
             })
-            .select()
+            .select('id')
             .single();
 
           if (pollError) throw pollError;
+          actualPollId = newPoll.id;
 
           // Create poll_options records
           const optionsToInsert = options.map(opt => ({
-            poll_component_id: newPoll.id,
+            poll_component_id: actualPollId,
             option_text: opt.option_text,
             option_order: opt.option_order
           }));
@@ -393,12 +398,12 @@ export const PollStudentView: React.FC<PollStudentViewProps> = ({ componentId, p
           if (optionsError) throw optionsError;
 
           // Update local pollData with real ID
-          setPollData({ ...pollData, id: newPoll.id });
+          setPollData({ ...pollData, id: actualPollId });
         }
       }
 
       const responseData: any = {
-        poll_component_id: propPollData ? componentId : pollData.id,
+        poll_component_id: actualPollId,
         user_id: pollData.allow_anonymous ? null : user.id,
         is_anonymous: pollData.allow_anonymous,
       };
