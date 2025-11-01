@@ -3,6 +3,8 @@ export interface ParsedSession {
   title: string;
   room: string;
   timeBlock: string; // Normalized time block for grouping
+  speaker?: string;
+  description?: string;
 }
 
 export interface SessionBlock {
@@ -12,6 +14,7 @@ export interface SessionBlock {
 
 /**
  * Parse CSV content and group sessions by time blocks
+ * Format: Time,Room,Title,Speaker,Audience,Description,title_norm
  */
 export function parseConferenceSessions(csvContent: string): SessionBlock[] {
   console.log('CSV Parser - Input length:', csvContent.length);
@@ -21,34 +24,46 @@ export function parseConferenceSessions(csvContent: string): SessionBlock[] {
   
   // Skip header row
   for (let i = 1; i < lines.length; i++) {
-    const line = lines[i];
+    const line = lines[i].trim();
+    if (!line) continue;
     
-    // Find the room (always starts with "Breakout")
-    const roomMatch = line.match(/,(Breakout [^,]+)$/);
-    if (!roomMatch) {
-      console.log('CSV Parser - Line skipped (no room match):', line);
-      continue;
+    // Parse CSV with quoted fields (handles commas within quotes)
+    const parts: string[] = [];
+    let currentField = '';
+    let insideQuotes = false;
+    
+    for (let j = 0; j < line.length; j++) {
+      const char = line[j];
+      
+      if (char === '"') {
+        insideQuotes = !insideQuotes;
+      } else if (char === ',' && !insideQuotes) {
+        parts.push(currentField.trim());
+        currentField = '';
+      } else {
+        currentField += char;
+      }
     }
+    parts.push(currentField.trim()); // Add last field
     
-    const room = roomMatch[1];
-    const beforeRoom = line.substring(0, line.lastIndexOf(',' + room));
-    
-    // First comma separates time from title
-    const firstCommaIndex = beforeRoom.indexOf(',');
-    if (firstCommaIndex === -1) {
-      console.log('CSV Parser - Line skipped (no comma):', line);
-      continue;
+    if (parts.length >= 3) {
+      const time = parts[0];
+      const room = parts[1];
+      const title = parts[2];
+      const speaker = parts[3] || '';
+      const description = parts[5] || '';
+      
+      sessions.push({
+        time,
+        title,
+        room,
+        timeBlock: time,
+        speaker,
+        description
+      });
+      
+      console.log('CSV Parser - Parsed session:', { time, title, room, speaker });
     }
-    
-    const time = beforeRoom.substring(0, firstCommaIndex).trim();
-    const title = beforeRoom.substring(firstCommaIndex + 1).trim();
-    
-    sessions.push({
-      time,
-      title,
-      room,
-      timeBlock: time
-    });
   }
   
   console.log('CSV Parser - Total sessions parsed:', sessions.length);

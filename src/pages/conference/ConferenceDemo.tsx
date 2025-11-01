@@ -9,49 +9,6 @@ import { WifiOff, Wifi } from 'lucide-react';
 import { useConferenceMode } from '@/hooks/useConferenceMode';
 import { parseConferenceSessions } from '@/utils/csvParser';
 
-// CSV data embedded directly
-const CSV_DATA = `Time,Title,Room
-4:15–5:00pm,AI Is Taking My Job! A Spirited Debate on the Future of Work,Breakout 5 – Scooters
-9:45–10:30am,Beyond the Black Box: A Practitioner's Framework for Systematic Bias Assessment in AI Models,Breakout 1 – Woulfe North
-9:45–10:30am,Lean meets AI - The Future of Flow: Humans + LLMs by Design,Breakout 2 – Woulfe South
-9:45–10:30am,Embracing AI in the Classroom (and Industry),Breakout 5 – Scooters
-9:45–10:30am,Why Creatives Will Be The Next Tech Giants,Breakout 3 – Lyden
-9:45–10:30am,AI in Gastroenterology: Revolutionizing Care and Documentation,Breakout 6 – Dance (LL07)
-9:45–10:30am,Building Production‑Grade AI Agents,Breakout 4 – Dining
-10:45–11:30am,AI-Assisted Tools: 4-Part Prompt Pattern & Build Heuristic,Breakout 5 – Scooters
-10:45–11:30am,The Road to AI Autonomy: Swifty's Journey from Assistant to Agent,Breakout 1 – Woulfe North
-10:45–11:30am,Accessibility + AI: Why Keeping Humans in the Loop Matters,Breakout 2 – Woulfe South
-10:45–11:30am,How AI Keeps the Students Up at Night,Breakout 5 – Scooters
-10:45–11:30am,"Rebrand, Reskill, Rise: How GenAI Is Rewiring the Future of Work",Breakout 3 – Lyden
-10:45–11:30am,Agentic AI Versioning: Architecting at Scale,Breakout 6 – Dance (LL07)
-10:45–11:30am,Integration of Earth Observation data into machine learning models for On-farm Decisions,Breakout 4 – Dining
-11:45am–12:30pm,AI in the Byline: Redefining Who Gets to Tell the Story,Breakout 1 – Woulfe North
-11:45am–12:30pm,The Silent Leak Costing PI Firms Millions: How AI Patches Revenue Holes You Don't See,Breakout 2 – Woulfe South
-11:45am–12:30pm,AI at the Manufacturing Test Bench,Breakout 5 – Scooters
-11:45am–12:30pm,AI Solution Delivery & Development,Breakout 3 – Lyden
-11:45am–12:30pm,AI & the changing role of Supply Chain Plannerss,Breakout 6 – Dance (LL07)
-11:45am–12:30pm,Peering into the multiverse: Agent-based simulation,Breakout 4 – Dining
-1:15–2:00pm,A Pragmatic Guide to AI at Scale: Lessons from applying AI to enterprise systems,Breakout 1 – Woulfe North
-1:15–2:00pm,"Trust, But Verify: Evaluating the Evaluators of LLMs",Breakout 2 – Woulfe South
-1:15–2:00pm,"Beyond the Algorithm: Why 85% of AI Projects Fail and How to Beat the Odds",Breakout 5 – Scooters
-1:15–2:00pm,Regulating AI in International Legal Frameworks: Challenges and Opportunities for Digital Sovereignty,Breakout 3 – Lyden
-1:15–2:00pm,AI for Impact: Fixing the Web's 96% Accessibility Gap,Breakout 6 – Dance (LL07)
-1:15–2:00pm,Invisible AI: Boosting Office Productivity & Driving Public AI Literacy,Breakout 4 – Dining
-2:15–3:00pm,Building optimizations for latency sensitive agents,Breakout 1 – Woulfe North
-2:15–3:00pm,STOP USING AI & Start using AIE (an integrated environment),Breakout 2 – Woulfe South
-2:15–3:00pm,From Text to Structure: Unlocking AI's Hidden Superpower,Breakout 5 – Scooters
-2:15–3:00pm,"Strategic AI Leadership: Building Student, Teacher, and Administrator Competencies",Breakout 3 – Lyden
-2:15–3:00pm,Trace AI Infra - AI Infrastructure Monitoring Tool,Breakout 6 – Dance (LL07)
-2:15–3:00pm,LLMs as the Missing Link: From Paper Forms to Automated Flows,Breakout 4 – Dining
-3:15–4:00pm,Case Study: Building a SaaS product in 48 hours by leveraging Github Copilot.,Breakout 1 – Woulfe North
-3:15–4:00pm,"Click, Snap, Sell: How AI is Replacing Product Data Entry",Breakout 2 – Woulfe South
-3:15–4:00pm,Mini Workshop - Vibe Coding: Ship the Feel Before the Feature,Breakout 3 – Lyden
-3:15–4:00pm,Moving from AI Experimentation to Enterprise AI Solutions,Breakout 6 – Dance (LL07)
-3:15–4:00pm,Larry's Engineering Odyssey,Breakout 4 – Dining
-4:15–5:00pm,The Easiest Way to Run LLMs Locally: Meet Docker Model Runner,Breakout 1 – Woulfe North
-4:15–5:00pm,Talk Nerdy To Me: Generative AI You'll Actually Use,Breakout 2 – Woulfe South
-4:15–5:00pm,Empowering Educators with AI,Breakout 3 – Lyden
-4:15–5:00pm,TurboAQ,Breakout 4 – Dining`;
 
 const ConferenceDemo: React.FC = () => {
   const navigate = useNavigate();
@@ -60,13 +17,13 @@ const ConferenceDemo: React.FC = () => {
   // SCALABILITY: Skip expensive auth/settings checks for conference mode
   useConferenceMode();
 
-  // Parse CSV data for sessions
+  // Load and parse the CSV data from file
   const { data: sessionBlocks = [], isLoading } = useQuery({
     queryKey: ['conference-sessions-csv'],
     queryFn: async () => {
-      // Simulate async parsing
-      await new Promise(resolve => setTimeout(resolve, 100));
-      const blocks = parseConferenceSessions(CSV_DATA);
+      const response = await fetch('/src/data/conference-schedule.csv');
+      const csvContent = await response.text();
+      const blocks = parseConferenceSessions(csvContent);
       console.log('Parsed session blocks:', blocks);
       console.log('Total blocks:', blocks.length);
       console.log('Total sessions:', blocks.reduce((sum, b) => sum + b.sessions.length, 0));
@@ -199,6 +156,8 @@ const ConferenceDemo: React.FC = () => {
                         title={session.title}
                         room={session.room}
                         time={session.time}
+                        presenter={session.speaker}
+                        description={session.description}
                         onJoin={handleJoinSession}
                       />
                     ))}
