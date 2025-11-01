@@ -51,7 +51,7 @@ export class ErrorBoundary extends Component<Props, State> {
           <AlertTitle>Something went wrong</AlertTitle>
           <AlertDescription>
             <div className="space-y-2">
-              <p>The read-aloud feature encountered an error and needs to be reset.</p>
+              <p>An error occurred and the component needs to be reset.</p>
               {isDev && this.state.error && (
                 <details className="text-xs">
                   <summary className="cursor-pointer font-medium">Error Details (Dev)</summary>

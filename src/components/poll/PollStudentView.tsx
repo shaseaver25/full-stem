@@ -48,7 +48,8 @@ export const PollStudentView: React.FC<PollStudentViewProps> = ({ componentId, p
 
   useEffect(() => {
     loadPollData();
-    subscribeToUpdates();
+    const cleanup = subscribeToUpdates();
+    return cleanup;
   }, [componentId]);
 
   const loadPollData = async () => {
