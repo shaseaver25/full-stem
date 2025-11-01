@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import SlidesViewer from '@/components/conference/SlidesViewer';
 import PollSurvey from '@/components/conference/PollSurvey';
 import { useLiveTranslation } from '@/hooks/useLiveTranslation';
+import { sessionPresentations } from '@/data/sessionPresentations';
 
 interface SessionData {
   title: string;
@@ -33,6 +34,9 @@ const SessionPage: React.FC = () => {
     speaker: '',
     description: 'Session details not available'
   };
+
+  // Get presentation data if available
+  const presentationData = sessionPresentations[session.title];
 
   // Translation and TTS
   const [targetLanguage, setTargetLanguage] = useState<string>('en');
@@ -144,7 +148,12 @@ const SessionPage: React.FC = () => {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Left Column - Slides (Takes 2/3 width on large screens) */}
             <div className="lg:col-span-2 space-y-6">
-              <SlidesViewer sessionTitle={session.title} targetLanguage={targetLanguage} />
+              <SlidesViewer 
+                sessionTitle={session.title} 
+                targetLanguage={targetLanguage}
+                embedUrl={presentationData?.embedUrl}
+                speakerNotes={presentationData?.speakerNotes}
+              />
             </div>
 
             {/* Right Column - Poll/Survey (Takes 1/3 width on large screens) */}
