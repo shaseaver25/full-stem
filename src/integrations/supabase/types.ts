@@ -2767,6 +2767,7 @@ export type Database = {
           poll_question: string
           poll_type: string
           require_participation: boolean | null
+          session_title: string | null
           show_percentages: boolean | null
           show_results_timing: string | null
           show_vote_counts: boolean | null
@@ -2784,6 +2785,7 @@ export type Database = {
           poll_question: string
           poll_type: string
           require_participation?: boolean | null
+          session_title?: string | null
           show_percentages?: boolean | null
           show_results_timing?: string | null
           show_vote_counts?: boolean | null
@@ -2801,6 +2803,7 @@ export type Database = {
           poll_question?: string
           poll_type?: string
           require_participation?: boolean | null
+          session_title?: string | null
           show_percentages?: boolean | null
           show_results_timing?: string | null
           show_vote_counts?: boolean | null

@@ -29,9 +29,10 @@ interface Poll {
 
 interface PollSurveyProps {
   targetLanguage?: string;
+  sessionTitle?: string;
 }
 
-const PollSurvey: React.FC<PollSurveyProps> = ({ targetLanguage = 'en' }) => {
+const PollSurvey: React.FC<PollSurveyProps> = ({ targetLanguage = 'en', sessionTitle }) => {
   const { toast } = useToast();
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedOption, setSelectedOption] = useState<string>('');
@@ -47,9 +48,9 @@ const PollSurvey: React.FC<PollSurveyProps> = ({ targetLanguage = 'en' }) => {
 
   // Fetch polls from database
   const { data: pollsData, isLoading: pollsLoading } = useQuery({
-    queryKey: ['conference-polls'],
+    queryKey: ['conference-polls', sessionTitle],
     queryFn: async () => {
-      const { data: pollComponents, error } = await supabase
+      let query = supabase
         .from('poll_components')
         .select(`
           id,
@@ -64,6 +65,8 @@ const PollSurvey: React.FC<PollSurveyProps> = ({ targetLanguage = 'en' }) => {
         `)
         .eq('component_id', '00000000-0000-0000-0000-000000000001')
         .order('created_at');
+
+      const { data: pollComponents, error } = await query;
 
       if (error) throw error;
 

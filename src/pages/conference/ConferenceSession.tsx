@@ -158,7 +158,7 @@ const SessionPage: React.FC = () => {
 
             {/* Right Column - Poll/Survey (Takes 1/3 width on large screens) */}
             <div className="lg:col-span-1 space-y-6">
-              <PollSurvey targetLanguage={targetLanguage} />
+              <PollSurvey targetLanguage={targetLanguage} sessionTitle={session.title} />
               
               {/* Session Info Card */}
               <Card>
