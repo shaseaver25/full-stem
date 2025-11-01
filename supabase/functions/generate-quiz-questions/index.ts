@@ -82,10 +82,11 @@ serve(async (req) => {
     if (components && components.length > 0) {
       components.forEach((comp, index) => {
         if (comp.component_type === 'page') {
-          const pageContent = comp.content?.content || '';
+          // Page components store content in 'body' field, not 'content' field
+          const pageContent = comp.content?.body || '';
           // Strip HTML tags for cleaner text
           const cleanText = pageContent.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
-          const words = cleanText.split(' ').length;
+          const words = cleanText.split(' ').filter(w => w.length > 0).length;
           totalWords += words;
           
           extractedContent += `\n[PAGE ${index + 1}]\n${cleanText}\n`;
