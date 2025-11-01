@@ -50,9 +50,15 @@ const SlidesViewer: React.FC<SlidesViewerProps> = ({
   const currentSlideData = slides[currentSlide];
   const currentSlideContent = currentSlideData ? `${currentSlideData.title}. ${currentSlideData.content}` : `Slide ${currentSlide + 1} of the presentation: ${sessionTitle}`;
 
-  // Mark slide as viewed
+  // Mark slide as viewed and clear translated content
   useEffect(() => {
     setViewedSlides(prev => new Set(prev).add(currentSlide));
+    // Clear translated content when slide changes so new content shows immediately
+    setTranslatedContent(null);
+    // Stop any ongoing playback when slide changes
+    if (isPlaying) {
+      stop();
+    }
   }, [currentSlide]);
 
   // Navigation functions
@@ -151,7 +157,7 @@ const SlidesViewer: React.FC<SlidesViewerProps> = ({
   // Translate content when language or slide changes
   useEffect(() => {
     const translateCurrentSlide = async () => {
-      if (targetLanguage !== 'en' && currentSlideContent) {
+      if (targetLanguage !== 'en') {
         const translated = await translateText({
           text: currentSlideContent,
           targetLanguage,
@@ -164,8 +170,12 @@ const SlidesViewer: React.FC<SlidesViewerProps> = ({
         setTranslatedContent(null);
       }
     };
-    translateCurrentSlide();
-  }, [targetLanguage, currentSlide, currentSlideContent]);
+    
+    // Only translate if we have content
+    if (currentSlideContent) {
+      translateCurrentSlide();
+    }
+  }, [targetLanguage, currentSlide]);
 
   // Touch gesture support
   useEffect(() => {
