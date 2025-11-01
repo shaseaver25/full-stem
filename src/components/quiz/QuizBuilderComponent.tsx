@@ -974,7 +974,7 @@ export function QuizBuilderComponent({ initialData, onSave, lessonId }: QuizBuil
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-sm">
-                      Question Type: Multiple Choice
+                      Question Type: {generatedQuestions[previewIndex].question_type.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
                     </CardTitle>
                     <span className="text-sm text-muted-foreground">
                       Points: {generatedQuestions[previewIndex].points}
@@ -985,17 +985,27 @@ export function QuizBuilderComponent({ initialData, onSave, lessonId }: QuizBuil
                   <div>
                     <p className="font-medium mb-3">{generatedQuestions[previewIndex].question_text}</p>
                     
-                    <div className="space-y-2">
-                      <Label className="text-sm">Options:</Label>
-                      {generatedQuestions[previewIndex].options.map((opt, i) => (
-                        <div key={opt.id} className="flex items-center gap-2">
-                          <div className={`w-6 h-6 flex items-center justify-center rounded ${opt.is_correct ? 'bg-green-100 text-green-700' : 'bg-muted'}`}>
-                            {opt.is_correct ? '✓' : String.fromCharCode(65 + i)}
+                    {/* Only show options for question types that have them */}
+                    {generatedQuestions[previewIndex].question_type !== 'short_answer' && generatedQuestions[previewIndex].options && generatedQuestions[previewIndex].options.length > 0 && (
+                      <div className="space-y-2">
+                        <Label className="text-sm">Options:</Label>
+                        {generatedQuestions[previewIndex].options.map((opt, i) => (
+                          <div key={opt.id} className="flex items-center gap-2">
+                            <div className={`w-6 h-6 flex items-center justify-center rounded ${opt.is_correct ? 'bg-green-100 text-green-700' : 'bg-muted'}`}>
+                              {opt.is_correct ? '✓' : String.fromCharCode(65 + i)}
+                            </div>
+                            <span className={opt.is_correct ? 'font-medium' : ''}>{opt.option_text}</span>
                           </div>
-                          <span className={opt.is_correct ? 'font-medium' : ''}>{opt.option_text}</span>
-                        </div>
-                      ))}
-                    </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* For short answer, show that it expects a text response */}
+                    {generatedQuestions[previewIndex].question_type === 'short_answer' && (
+                      <div className="p-3 bg-muted rounded-md">
+                        <p className="text-sm text-muted-foreground">✍️ Students will provide a written answer to this question.</p>
+                      </div>
+                    )}
                   </div>
 
                   {generatedQuestions[previewIndex].hint_text && (
