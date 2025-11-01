@@ -358,6 +358,15 @@ export function DraggableComponentCard({
                 Quiz content is managed through the dedicated Quiz Builder interface. 
                 Click the "Configure Quiz" button below to add questions, set time limits, configure grading, and more.
               </p>
+              {component.content?.quizData ? (
+                <div className="mt-3 p-2 bg-green-50 border border-green-500 rounded text-sm text-green-800">
+                  ✓ Quiz configured with {component.content.quizData.questions?.length || 0} question(s)
+                </div>
+              ) : (
+                <div className="mt-3 p-2 bg-yellow-50 border border-yellow-500 rounded text-sm text-yellow-800">
+                  ⚠️ Quiz not configured yet
+                </div>
+              )}
             </div>
             <Button 
               onClick={() => setIsQuizBuilderOpen(true)}
@@ -365,7 +374,7 @@ export function DraggableComponentCard({
               variant="default"
             >
               <Settings className="h-4 w-4 mr-2" />
-              Configure Quiz
+              {component.content?.quizData ? 'Edit Quiz Configuration' : 'Configure Quiz'}
             </Button>
             <div>
               <Label>Quiz Title (optional override)</Label>
@@ -384,6 +393,7 @@ export function DraggableComponentCard({
                 <QuizBuilderComponent 
                   initialData={component.content?.quizData}
                   onSave={(quizData) => {
+                    console.log('💾 Quiz Builder: Saving quiz data to component:', quizData);
                     handleContentChange('quizData', quizData);
                     setIsQuizBuilderOpen(false);
                   }}

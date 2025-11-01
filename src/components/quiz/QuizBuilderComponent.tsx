@@ -62,6 +62,15 @@ export function QuizBuilderComponent({ initialData, onSave }: QuizBuilderProps) 
       return;
     }
 
+    if (questions.length === 0) {
+      toast({
+        title: 'Validation Error',
+        description: 'Please add at least one question',
+        variant: 'destructive'
+      });
+      return;
+    }
+
     setSaving(true);
     try {
       const pointsTotal = questions.reduce((sum, q) => sum + q.points, 0);
@@ -79,11 +88,13 @@ export function QuizBuilderComponent({ initialData, onSave }: QuizBuilderProps) 
         questions
       };
 
+      console.log('📝 Quiz Builder: Quiz data prepared:', quizData);
       onSave(quizData);
 
       toast({
-        title: 'Success',
-        description: 'Quiz configured successfully'
+        title: 'Quiz Configured ✅',
+        description: 'Remember to click "Save Lesson" to persist changes to the database!',
+        duration: 5000
       });
     } catch (error) {
       console.error('Error saving quiz:', error);

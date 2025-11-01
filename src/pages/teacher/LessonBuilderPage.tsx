@@ -284,6 +284,7 @@ export default function LessonBuilderPage() {
   const handleUpdateComponent = (index: number, updates: Partial<LessonComponent>) => {
     const updated = [...components];
     updated[index] = { ...updated[index], ...updates };
+    console.log(`📝 Updated component ${index}:`, updated[index]);
     setComponents(updated);
   };
 
