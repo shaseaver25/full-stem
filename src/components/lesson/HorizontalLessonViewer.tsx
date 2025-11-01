@@ -105,6 +105,12 @@ const componentTypeConfig: Record<string, {
     bgColor: 'bg-amber-50 dark:bg-amber-950/30',
     textColor: 'text-amber-800 dark:text-amber-200'
   },
+  'quiz': { 
+    icon: <CheckCircle2 className="w-4 h-4" />, 
+    label: 'Quiz',
+    bgColor: 'bg-cyan-50 dark:bg-cyan-950/30',
+    textColor: 'text-cyan-800 dark:text-cyan-200'
+  },
 };
 
 export default function HorizontalLessonViewer({ 

@@ -209,7 +209,7 @@ export function QuizStudentView({ componentId }: QuizStudentViewProps) {
       const quizDataFromContent = (component?.content as any)?.quizData;
       
       if (!quizDataFromContent) {
-        throw new Error('Quiz data not found in component');
+        throw new Error('Quiz has not been configured yet. Please ask your teacher to configure the quiz using the Quiz Builder.');
       }
 
       let formattedQuestions: QuizQuestion[] = (quizDataFromContent.questions || []).map((q: any) => ({
@@ -256,9 +256,10 @@ export function QuizStudentView({ componentId }: QuizStudentViewProps) {
       });
     } catch (error) {
       console.error('Error loading quiz:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to load quiz. Please make sure the quiz is configured.';
       toast({
-        title: 'Error',
-        description: 'Failed to load quiz. Please make sure the quiz is configured.',
+        title: 'Quiz Not Configured',
+        description: errorMessage,
         variant: 'destructive'
       });
     } finally {
