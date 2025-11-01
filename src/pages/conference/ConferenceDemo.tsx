@@ -24,6 +24,14 @@ interface Session {
   lessonId: string;
 }
 
+interface SessionBlock {
+  id: string;
+  name: string;
+  timeSlot: string;
+  description: string | null;
+  sessions: Session[];
+}
+
 const ConferenceDemo: React.FC = () => {
   const navigate = useNavigate();
   const [isOnline, setIsOnline] = useState(navigator.onLine);
@@ -58,22 +66,29 @@ const ConferenceDemo: React.FC = () => {
   });
 
   // Group lessons into sessions by class
-  const sessionBlocks = conferenceClasses.map(classBlock => ({
-    id: classBlock.id,
-    name: classBlock.name.replace('Applied AI Conference - ', ''),
-    description: classBlock.description,
-    sessions: (classBlock.lessons || [])
-      .sort((a, b) => a.order_index - b.order_index)
-      .map(lesson => ({
-        id: lesson.id,
-        title: lesson.title,
-        description: lesson.description || '',
-        speakers: [],
-        badges: classBlock.name.includes('Keynote') ? ['Keynote Speaker'] : [],
-        isKeynote: classBlock.name.includes('Keynote'),
-        lessonId: lesson.id
-      }))
-  })).filter(block => block.sessions.length > 0);
+  const sessionBlocks = conferenceClasses.map(classBlock => {
+    // Extract time from description
+    const timeMatch = classBlock.description?.match(/\(([^)]+)\)/);
+    const timeSlot = timeMatch ? timeMatch[1] : '';
+    
+    return {
+      id: classBlock.id,
+      name: classBlock.name.replace('Applied AI Conference - ', ''),
+      timeSlot,
+      description: classBlock.description,
+      sessions: (classBlock.lessons || [])
+        .sort((a, b) => a.order_index - b.order_index)
+        .map(lesson => ({
+          id: lesson.id,
+          title: lesson.title,
+          description: lesson.description || '',
+          speakers: [],
+          badges: classBlock.name.includes('Keynote') ? ['Keynote Speaker'] : [],
+          isKeynote: classBlock.name.includes('Keynote'),
+          lessonId: lesson.id
+        }))
+    };
+  }).filter(block => block.sessions.length > 0);
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -169,12 +184,16 @@ const ConferenceDemo: React.FC = () => {
               <div key={block.id} className="mb-12">
                 {/* Block Header */}
                 <div className="mb-6 border-l-4 border-blue-600 pl-4">
-                  <h2 className="text-2xl font-bold text-gray-900">{block.name}</h2>
-                  {block.description && (
-                    <p className="text-gray-600 mt-1">{block.description}</p>
-                  )}
+                  <div className="flex items-center gap-3 mb-1">
+                    <h2 className="text-2xl font-bold text-gray-900">{block.name}</h2>
+                    {block.timeSlot && (
+                      <Badge variant="outline" className="text-base font-normal">
+                        {block.timeSlot}
+                      </Badge>
+                    )}
+                  </div>
                   <p className="text-sm text-gray-500 mt-2">
-                    {block.sessions.length} session{block.sessions.length !== 1 ? 's' : ''} in this block
+                    {block.sessions.length} session{block.sessions.length !== 1 ? 's' : ''} available
                   </p>
                 </div>
 
