@@ -250,19 +250,23 @@ export function QuizBuilderComponent({ initialData, onSave, lessonId }: QuizBuil
         }
       });
 
-      if (error) throw error;
-
-      if (data.error) {
+      // Check data first as it may contain error details even when error is set
+      if (data?.error) {
         if (data.error === 'insufficient_content') {
           toast({
             title: '⚠️ Insufficient Lesson Content',
-            description: data.message,
+            description: data.message || 'Please add more content to your lesson before generating questions.',
             variant: 'destructive',
             duration: 7000
           });
           return;
         }
-        throw new Error(data.error);
+        throw new Error(data.message || data.error);
+      }
+
+      // If no data error but there's a network/invocation error
+      if (error) {
+        throw new Error(error.message || 'Failed to connect to AI service');
       }
 
       console.log('AI generated questions:', data);
