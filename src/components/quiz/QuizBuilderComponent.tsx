@@ -241,19 +241,39 @@ export function QuizBuilderComponent({ initialData, onSave, lessonId }: QuizBuil
     setShowAIDialog(false);
 
     try {
-      const { data, error } = await supabase.functions.invoke('generate-quiz-questions', {
-        body: {
-          lessonId,
-          questionCount: questionCountAI,
-          questionTypes: ['multiple_choice'],
-          difficulty: difficultyAI
+      // Get the session token for authentication
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        throw new Error('You must be logged in to generate questions');
+      }
+
+      // Manual fetch to properly handle error responses
+      const response = await fetch(
+        `https://irxzpsvzlihqitlicoql.supabase.co/functions/v1/generate-quiz-questions`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`,
+            'Content-Type': 'application/json',
+            'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlyeHpwc3Z6bGlocWl0bGljb3FsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA1MTEyMjIsImV4cCI6MjA2NjA4NzIyMn0.929IMktVJDlCZbuQYl57ipod6V96P3PcDxrCoLwrqCw',
+          },
+          body: JSON.stringify({
+            lessonId,
+            questionCount: questionCountAI,
+            questionTypes: ['multiple_choice'],
+            difficulty: difficultyAI
+          })
         }
-      });
+      );
 
-      console.log('Edge function response:', { data, error });
+      // Parse the JSON response regardless of status code
+      const data = await response.json();
+      
+      console.log('Edge function response:', { status: response.status, data });
 
-      // Check data first - edge function returns error details in response body
-      if (data) {
+      // Handle error responses
+      if (!response.ok) {
         if (data.error === 'insufficient_content') {
           toast({
             title: '⚠️ Insufficient Lesson Content',
@@ -264,24 +284,10 @@ export function QuizBuilderComponent({ initialData, onSave, lessonId }: QuizBuil
           return;
         }
         
-        if (data.error) {
-          throw new Error(data.message || data.error);
-        }
+        throw new Error(data.message || data.error || `Failed with status ${response.status}`);
       }
 
-      // If error is set but no data, handle the error
-      if (error) {
-        console.error('Edge function error:', error);
-        throw new Error(error.message || 'Failed to connect to AI service');
-      }
-
-      // If no error and no data, something went wrong
-      if (!data) {
-        throw new Error('No response from AI service');
-      }
-
-      console.log('AI generated questions:', data);
-      
+      // Handle successful response
       if (data.questions && data.questions.length > 0) {
         setGeneratedQuestions(data.questions);
         setShowPreviewDialog(true);
