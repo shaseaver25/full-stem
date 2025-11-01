@@ -32,6 +32,13 @@ const SlidesViewer: React.FC<SlidesViewerProps> = ({
   embedUrl,
   slides = []
 }) => {
+  console.log('SlidesViewer received:', { 
+    sessionTitle, 
+    slidesCount: slides.length, 
+    hasEmbedUrl: !!embedUrl,
+    firstSlide: slides[0]
+  });
+
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [viewedSlides, setViewedSlides] = useState<Set<number>>(new Set([0]));
@@ -49,6 +56,12 @@ const SlidesViewer: React.FC<SlidesViewerProps> = ({
   // Get current slide content
   const currentSlideData = slides[currentSlide];
   const currentSlideContent = currentSlideData ? `${currentSlideData.title}. ${currentSlideData.content}` : `Slide ${currentSlide + 1} of the presentation: ${sessionTitle}`;
+
+  console.log('Current slide info:', {
+    currentSlide,
+    currentSlideData,
+    currentSlideContent: currentSlideContent.substring(0, 100) + '...'
+  });
 
   // Mark slide as viewed and clear translated content
   useEffect(() => {
@@ -216,6 +229,15 @@ const SlidesViewer: React.FC<SlidesViewerProps> = ({
   }, [goToNext, goToPrevious]);
 
   const displayContent = translatedContent || currentSlideContent;
+
+  console.log('Slides Viewer Debug:', {
+    currentSlide,
+    hasSlides: slides.length > 0,
+    currentSlideData,
+    currentSlideContent,
+    displayContent,
+    totalSlides
+  });
 
   return (
     <div 
