@@ -334,10 +334,22 @@ const SlidesViewer: React.FC<SlidesViewerProps> = ({
                 />
               </div>
 
-              {/* TTS Controls */}
+              {/* Slide Text Content - Displayed prominently below slides */}
               {displayContent && (
-                <div className="flex items-center justify-between gap-3 p-3 border rounded-lg bg-card">
-                  <div className="flex items-center gap-2">
+                <div className="mt-6 space-y-4">
+                  {/* Text Display Card */}
+                  <div className="p-6 border rounded-lg bg-card">
+                    <div className="prose prose-sm max-w-none dark:prose-invert">
+                      <HighlightedText 
+                        text={displayContent}
+                        currentWordIndex={currentWordIndex}
+                        wordTimings={wordTimings}
+                      />
+                    </div>
+                  </div>
+
+                  {/* TTS Controls Row */}
+                  <div className="flex items-center justify-center gap-2">
                     {!isPlaying ? (
                       <Button
                         variant="outline"
@@ -381,14 +393,6 @@ const SlidesViewer: React.FC<SlidesViewerProps> = ({
                         <VolumeX className="h-4 w-4" />
                       </Button>
                     )}
-                  </div>
-
-                  <div className="flex-1 text-sm text-muted-foreground max-h-20 overflow-y-auto">
-                    <HighlightedText 
-                      text={displayContent}
-                      currentWordIndex={currentWordIndex}
-                      wordTimings={wordTimings}
-                    />
                   </div>
                 </div>
               )}
