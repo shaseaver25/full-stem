@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { QrCode, ChevronRight, User } from 'lucide-react';
+import { QrCode, ChevronRight } from 'lucide-react';
 import QRCodeLib from 'qrcode';
 
 interface Session {
@@ -53,68 +53,29 @@ const SessionCard: React.FC<SessionCardProps> = ({ session, onJoin }) => {
   return (
     <Card className="hover:shadow-lg transition-shadow duration-300 bg-white">
       <CardHeader>
-        <div className="flex items-start gap-3 mb-3">
-          {session.speakers.length === 1 ? (
-            <>
-              {session.speakers[0].headshotUrl ? (
-                <img 
-                  src={session.speakers[0].headshotUrl} 
-                  alt={session.speakers[0].name}
-                  className="w-12 h-12 rounded-full object-cover border-2 border-gray-200"
-                />
-              ) : (
-                <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center">
-                  <User className="h-6 w-6 text-gray-400" />
-                </div>
-              )}
-            </>
-          ) : (
-            <div className="flex -space-x-2">
-              {session.speakers.slice(0, 3).map((speaker, idx) => (
-                speaker.headshotUrl ? (
-                  <img 
-                    key={idx}
-                    src={speaker.headshotUrl} 
-                    alt={speaker.name}
-                    className="w-10 h-10 rounded-full object-cover border-2 border-white"
-                  />
-                ) : (
-                  <div key={idx} className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center border-2 border-white">
-                    <User className="h-5 w-5 text-gray-400" />
-                  </div>
-                )
-              ))}
-              {session.speakers.length > 3 && (
-                <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center border-2 border-white text-xs font-medium text-gray-600">
-                  +{session.speakers.length - 3}
-                </div>
-              )}
-            </div>
-          )}
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1">
-              <h4 className="font-semibold text-sm text-gray-900">
-                {session.speakers.length === 1 
-                  ? session.speakers[0].name 
-                  : `${session.speakers[0].name} & ${session.speakers.length - 1} other${session.speakers.length > 2 ? 's' : ''}`
-                }
-              </h4>
-              {session.isKeynote && (
-                <Badge className="bg-purple-100 text-purple-700 border-purple-200 text-xs">
-                  Keynote
-                </Badge>
-              )}
-            </div>
-            {session.badges.length > 0 && (
-              <div className="flex flex-wrap gap-1">
-                {session.badges.map((badge, idx) => (
-                  <Badge key={idx} variant="outline" className="text-xs">
-                    {badge}
-                  </Badge>
-                ))}
-              </div>
+        <div className="mb-3">
+          <div className="flex items-center gap-2 mb-2">
+            <h4 className="font-semibold text-sm text-gray-900">
+              {session.speakers.length === 1 
+                ? session.speakers[0].name 
+                : `${session.speakers[0].name} & ${session.speakers.length - 1} other${session.speakers.length > 2 ? 's' : ''}`
+              }
+            </h4>
+            {session.isKeynote && (
+              <Badge className="bg-purple-100 text-purple-700 border-purple-200 text-xs">
+                Keynote
+              </Badge>
             )}
           </div>
+          {session.badges.length > 0 && (
+            <div className="flex flex-wrap gap-1">
+              {session.badges.map((badge, idx) => (
+                <Badge key={idx} variant="outline" className="text-xs">
+                  {badge}
+                </Badge>
+              ))}
+            </div>
+          )}
         </div>
         <CardTitle className="text-lg mb-2 line-clamp-2">{session.title}</CardTitle>
         <CardDescription className="text-gray-600 line-clamp-3">
