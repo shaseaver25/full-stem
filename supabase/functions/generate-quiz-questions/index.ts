@@ -46,15 +46,15 @@ serve(async (req) => {
     // Fetch lesson details
     const { data: lesson, error: lessonError } = await supabase
       .from('lessons')
-      .select('title, description, learning_objectives')
+      .select('title, description, objectives')
       .eq('id', lessonId)
-      .single();
+      .maybeSingle();
 
-    if (lessonError) {
+    if (lessonError || !lesson) {
       console.error('Error fetching lesson:', lessonError);
       return new Response(
-        JSON.stringify({ error: 'Failed to fetch lesson details' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ error: 'Lesson not found or access denied' }),
+        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
@@ -132,7 +132,7 @@ OUTPUT FORMAT: Return ONLY valid JSON (no markdown, no other text), structured a
 LESSON INFORMATION:
 Title: ${lesson.title || 'Untitled Lesson'}
 ${lesson.description ? `Description: ${lesson.description}` : ''}
-${lesson.learning_objectives ? `Learning Objectives: ${lesson.learning_objectives}` : ''}
+${lesson.objectives && lesson.objectives.length > 0 ? `Learning Objectives: ${lesson.objectives.join(', ')}` : ''}
 
 CONTENT:
 ${extractedContent}
