@@ -28,6 +28,7 @@ interface QuizComponentData {
 
 interface QuizStudentViewProps {
   componentId: string;
+  read_aloud?: boolean;
 }
 
 interface QuizData {
@@ -62,7 +63,7 @@ interface QuizOption {
   is_correct: boolean;
 }
 
-export function QuizStudentView({ componentId }: QuizStudentViewProps) {
+export function QuizStudentView({ componentId, read_aloud = true }: QuizStudentViewProps) {
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [quizData, setQuizData] = useState<QuizData | null>(null);
@@ -704,16 +705,18 @@ export function QuizStudentView({ componentId }: QuizStudentViewProps) {
                   {showHint[currentQuestion.id] ? 'Hide' : 'Show'} Hint
                 </Button>
               )}
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={speakQuestion}
-                disabled={isSpeaking}
-                title="Read question aloud (Keyboard: R)"
-              >
-                <Volume2 className="h-4 w-4 mr-1" />
-                {isSpeaking ? 'Speaking...' : 'Read Aloud'}
-              </Button>
+              {read_aloud && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={speakQuestion}
+                  disabled={isSpeaking}
+                  title="Read question aloud (Keyboard: R)"
+                >
+                  <Volume2 className="h-4 w-4 mr-1" />
+                  {isSpeaking ? 'Speaking...' : 'Read Aloud'}
+                </Button>
+              )}
             </div>
           </div>
 
