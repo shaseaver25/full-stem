@@ -10,6 +10,8 @@ import { useToast } from '@/hooks/use-toast';
 import SpeechControls from '@/components/SpeechControls';
 import { useElevenLabsTTSPublic } from '@/hooks/useElevenLabsTTSPublic';
 import { useLiveTranslation } from '@/hooks/useLiveTranslation';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
 interface PollOption {
   id: string;
@@ -40,42 +42,66 @@ const PollSurvey: React.FC<PollSurveyProps> = ({ targetLanguage = 'en' }) => {
   const { translateText, isTranslating } = useLiveTranslation();
   const { speak, pause, resume, stop, isPlaying, isPaused, isLoading, error, currentTime, duration } = useElevenLabsTTSPublic(targetLanguage);
 
-  // Multiple poll questions
-  const [polls] = useState<Poll[]>([
-    {
-      question: "What aspect of this session did you find most valuable?",
-      options: [
-        { id: '1', text: 'Practical examples and case studies', votes: 45 },
-        { id: '2', text: 'Technical implementation details', votes: 32 },
-        { id: '3', text: 'Strategic insights and best practices', votes: 28 },
-        { id: '4', text: 'Q&A and discussion', votes: 15 },
-      ],
-      type: 'multiple-choice'
-    },
-    {
-      question: "How likely are you to apply AI techniques in your work?",
-      options: [
-        { id: '1', text: 'Very likely - already planning', votes: 52 },
-        { id: '2', text: 'Somewhat likely - exploring options', votes: 38 },
-        { id: '3', text: 'Neutral - still learning', votes: 18 },
-        { id: '4', text: 'Unlikely - not applicable', votes: 12 },
-      ],
-      type: 'multiple-choice'
-    },
-    {
-      question: "What additional topics would you like to see covered?",
-      options: [
-        { id: '1', text: 'Advanced AI model training', votes: 34 },
-        { id: '2', text: 'Real-world deployment strategies', votes: 41 },
-        { id: '3', text: 'Ethics and responsible AI', votes: 29 },
-        { id: '4', text: 'Cost optimization and scaling', votes: 26 },
-      ],
-      type: 'multiple-choice'
+  // Fetch polls from database
+  const { data: pollsData, isLoading: pollsLoading } = useQuery({
+    queryKey: ['conference-polls'],
+    queryFn: async () => {
+      const { data: pollComponents, error } = await supabase
+        .from('poll_components')
+        .select(`
+          id,
+          poll_question,
+          poll_type,
+          poll_options (
+            id,
+            option_text,
+            option_order,
+            vote_count
+          )
+        `)
+        .eq('component_id', '00000000-0000-0000-0000-000000000001')
+        .order('created_at');
+
+      if (error) throw error;
+
+      return pollComponents.map(poll => ({
+        question: poll.poll_question,
+        options: (poll.poll_options || [])
+          .sort((a, b) => a.option_order - b.option_order)
+          .map(opt => ({
+            id: opt.id,
+            text: opt.option_text,
+            votes: opt.vote_count || 0
+          })),
+        type: 'multiple-choice' as const
+      }));
     }
-  ]);
+  });
+
+  const polls = pollsData || [];
+  
+  if (pollsLoading) {
+    return (
+      <Card className="w-full">
+        <CardContent className="py-8">
+          <div className="text-center text-muted-foreground">Loading polls...</div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (polls.length === 0) {
+    return (
+      <Card className="w-full">
+        <CardContent className="py-8">
+          <div className="text-center text-muted-foreground">No polls available</div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   const currentPoll = polls[currentQuestionIndex];
-  const totalVotes = currentPoll.options.reduce((sum, option) => sum + option.votes, 0);
+  const totalVotes = currentPoll?.options?.reduce((sum, option) => sum + option.votes, 0) || 0;
   const hasVoted = votedQuestions.has(currentQuestionIndex);
 
   useEffect(() => {
@@ -150,6 +176,26 @@ const PollSurvey: React.FC<PollSurveyProps> = ({ targetLanguage = 'en' }) => {
     if (totalVotes === 0) return 0;
     return Math.round((votes / totalVotes) * 100);
   };
+
+  if (pollsLoading) {
+    return (
+      <Card className="w-full">
+        <CardContent className="py-8">
+          <div className="text-center text-muted-foreground">Loading polls...</div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (polls.length === 0) {
+    return (
+      <Card className="w-full">
+        <CardContent className="py-8">
+          <div className="text-center text-muted-foreground">No polls available</div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="w-full">
