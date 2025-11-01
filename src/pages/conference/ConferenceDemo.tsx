@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import SessionCard from '@/components/conference/SessionCard';
 import { WifiOff, Wifi } from 'lucide-react';
+import { useConferenceMode } from '@/hooks/useConferenceMode';
 
 interface Session {
   id: string;
@@ -19,6 +20,9 @@ interface Session {
 const ConferenceDemo: React.FC = () => {
   const navigate = useNavigate();
   const [isOnline, setIsOnline] = useState(navigator.onLine);
+  
+  // SCALABILITY: Skip expensive auth/settings checks for conference mode
+  useConferenceMode();
 
   // Demo sessions - in production, these would come from a database
   const sessions: Session[] = [

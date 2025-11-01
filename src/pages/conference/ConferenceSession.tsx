@@ -9,6 +9,7 @@ import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { ArrowLeft, Users, WifiOff, Wifi } from 'lucide-react';
 import { toast } from 'sonner';
 import { PollStudentView } from '@/components/poll/PollStudentView';
+import { useConferenceMode } from '@/hooks/useConferenceMode';
 
 const ConferenceSession: React.FC = () => {
   const { sessionId } = useParams();
@@ -20,6 +21,9 @@ const ConferenceSession: React.FC = () => {
   const [components, setComponents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
+  
+  // SCALABILITY: Skip expensive auth/settings checks for conference mode
+  useConferenceMode();
 
   useEffect(() => {
     const handleOnline = () => {
@@ -78,6 +82,53 @@ const ConferenceSession: React.FC = () => {
         .order('component_order');
 
       if (componentsError) throw componentsError;
+
+      // SCALABILITY FIX: Pre-create poll_component records to avoid race conditions
+      // with 600 concurrent users voting at the same time
+      for (const component of componentsData || []) {
+        if (component.component_type === 'poll' && !component.poll_component) {
+          // Extract poll data from content
+          const pollContent = component.content as any;
+          
+          // Create poll_component
+          const { data: newPoll, error: pollError } = await supabase
+            .from('poll_components')
+            .insert({
+              component_id: component.id,
+              poll_question: pollContent.poll_question,
+              poll_type: pollContent.poll_type,
+              show_results_timing: pollContent.show_results_timing || 'after_voting',
+              allow_anonymous: pollContent.allow_anonymous || true,
+              allow_change_vote: pollContent.allow_change_vote || false,
+              chart_type: pollContent.chart_type || 'bar',
+              show_percentages: pollContent.show_percentages || true,
+              show_vote_counts: pollContent.show_vote_counts || true,
+              is_closed: false
+            })
+            .select()
+            .single();
+
+          if (!pollError && newPoll) {
+            // Create poll_options
+            const optionsToInsert = (pollContent.options || []).map((opt: any, idx: number) => ({
+              poll_component_id: newPoll.id,
+              option_text: opt.option_text,
+              option_order: opt.option_order || idx
+            }));
+
+            const { data: createdOptions } = await supabase
+              .from('poll_options')
+              .insert(optionsToInsert)
+              .select();
+
+            // Update component with poll data including options
+            component.poll_component = {
+              ...newPoll,
+              options: createdOptions || []
+            };
+          }
+        }
+      }
 
       setComponents(componentsData || []);
     } catch (error) {

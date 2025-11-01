@@ -8,6 +8,7 @@ import { Progress } from '@/components/ui/progress';
 import { BarChart3, Users, Star, Check, GripVertical } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { getRateLimiter } from '@/middleware/rateLimit';
 import {
   DndContext,
   closestCenter,
@@ -281,37 +282,27 @@ export const PollStudentView: React.FC<PollStudentViewProps> = ({ componentId, p
 
   const subscribeToUpdates = () => {
     // CRITICAL: Don't subscribe to updates for ranking polls while user is ranking
-    // This prevents interruptions during drag operations
     if (pollData?.poll_type === 'ranking' && !userResponse) {
       console.log('Skipping realtime updates for ranking poll (user not voted yet)');
       return () => {};
     }
 
+    // SCALABILITY FIX: Subscribe only to THIS poll's updates, not all polls
+    // This reduces connection overhead from O(n) to O(1) per user
+    const pollComponentId = pollData?.id;
+    if (!pollComponentId) return () => {};
+
     const channel = supabase
-      .channel('poll-updates')
+      .channel(`poll-${componentId}`)
       .on(
         'postgres_changes',
         {
           event: '*',
           schema: 'public',
           table: 'poll_responses',
+          filter: `poll_component_id=eq.${pollComponentId}`,
         },
         () => {
-          // Only reload if not currently ranking or has already voted
-          if (pollData?.poll_type !== 'ranking' || userResponse) {
-            loadPollData();
-          }
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'poll_options',
-        },
-        () => {
-          // Only reload if not currently ranking or has already voted
           if (pollData?.poll_type !== 'ranking' || userResponse) {
             loadPollData();
           }
@@ -326,6 +317,15 @@ export const PollStudentView: React.FC<PollStudentViewProps> = ({ componentId, p
 
   const handleSubmit = async () => {
     if (!pollData) return;
+
+    // SCALABILITY: Rate limit poll submissions (5 per 10 seconds)
+    const rateLimiter = getRateLimiter('MUTATION');
+    const rateLimitResult = rateLimiter.attempt();
+    
+    if (!rateLimitResult.allowed) {
+      toast.error(`Please wait ${Math.ceil(rateLimitResult.retryAfter / 1000)} seconds before voting again`);
+      return;
+    }
 
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
@@ -349,61 +349,9 @@ export const PollStudentView: React.FC<PollStudentViewProps> = ({ componentId, p
 
     setSubmitting(true);
     try {
-      // If using prop data, ensure database records exist first
-      let actualPollId: string;
-      
-      if (propPollData) {
-        // Check if poll_component exists
-        const { data: existingPoll } = await supabase
-          .from('poll_components')
-          .select('id')
-          .eq('component_id', componentId)
-          .maybeSingle();
-
-        if (existingPoll) {
-          actualPollId = existingPoll.id;
-        } else {
-          // Create poll_component record
-          const { data: newPoll, error: pollError } = await supabase
-            .from('poll_components')
-            .insert({
-              component_id: componentId,
-              poll_question: pollData.poll_question,
-              poll_type: pollData.poll_type,
-              show_results_timing: pollData.show_results_timing,
-              allow_anonymous: pollData.allow_anonymous,
-              allow_change_vote: pollData.allow_change_vote,
-              chart_type: pollData.chart_type,
-              show_percentages: pollData.show_percentages,
-              show_vote_counts: pollData.show_vote_counts,
-              is_closed: false
-            })
-            .select('id')
-            .single();
-
-          if (pollError) throw pollError;
-          actualPollId = newPoll.id;
-
-          // Create poll_options records
-          const optionsToInsert = options.map(opt => ({
-            poll_component_id: actualPollId,
-            option_text: opt.option_text,
-            option_order: opt.option_order
-          }));
-
-          const { error: optionsError } = await supabase
-            .from('poll_options')
-            .insert(optionsToInsert);
-
-          if (optionsError) throw optionsError;
-
-          // Update local pollData with real ID
-          setPollData({ ...pollData, id: actualPollId });
-        }
-      } else {
-        // Not using prop data, use existing poll ID
-        actualPollId = pollData.id;
-      }
+      // SCALABILITY FIX: Poll records should be pre-created by ConferenceSession
+      // to avoid race conditions with 600 concurrent users
+      const actualPollId = pollData.id;
 
       const responseData: any = {
         poll_component_id: actualPollId,
