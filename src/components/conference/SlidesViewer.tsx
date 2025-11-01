@@ -363,6 +363,22 @@ const SlidesViewer: React.FC<SlidesViewerProps> = ({
                 />
               </div>
 
+              {/* Navigation Instructions Banner */}
+              <div className="mt-4 p-4 border rounded-lg bg-primary/5 border-primary/20">
+                <div className="flex items-start gap-3">
+                  <div className="p-2 bg-primary/10 rounded-lg flex-shrink-0">
+                    <ChevronRight className="h-5 w-5 text-primary" />
+                  </div>
+                  <div className="space-y-1">
+                    <h3 className="font-semibold text-sm text-primary">How to Navigate</h3>
+                    <p className="text-xs text-muted-foreground">
+                      Use the <strong>circular arrow buttons on the left and right</strong> of the slides to navigate and update the text below. 
+                      You can also use <strong>keyboard arrow keys</strong> or press <strong>?</strong> for more shortcuts.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
               {/* Slide Text Panel - Shows current slide text with TTS controls */}
               {displayContent && (
                 <Card className="mt-4">
