@@ -72,9 +72,9 @@ export const PollStudentView: React.FC<PollStudentViewProps> = ({ componentId, p
         };
         setPollData(mockPollData);
 
-        // Create mock options from prop data
+        // Create mock options from prop data with stable string IDs
         const mockOptions: PollOption[] = propPollData.options.map((opt: any, index: number) => ({
-          id: opt.id,
+          id: `option-${index}`, // Use stable string ID for drag and drop
           option_text: opt.option_text,
           option_order: opt.option_order || index,
           vote_count: 0
@@ -427,7 +427,7 @@ export const PollStudentView: React.FC<PollStudentViewProps> = ({ componentId, p
               <div className="space-y-2">
                 <p className="text-sm text-muted-foreground mb-4">Drag to reorder from most to least preferred:</p>
                 <DragDropContext onDragEnd={handleRankingDragEnd}>
-                  <Droppable droppableId="ranking">
+                  <Droppable droppableId="poll-ranking-list">
                     {(provided, snapshot) => (
                       <div 
                         {...provided.droppableProps} 
@@ -435,7 +435,11 @@ export const PollStudentView: React.FC<PollStudentViewProps> = ({ componentId, p
                         className={`space-y-2 ${snapshot.isDraggingOver ? 'bg-accent/20 rounded-lg p-2' : ''}`}
                       >
                         {rankingOrder.map((option, index) => (
-                          <Draggable key={option.id} draggableId={option.id} index={index}>
+                          <Draggable 
+                            key={`draggable-${option.id}`} 
+                            draggableId={`draggable-${option.id}`} 
+                            index={index}
+                          >
                             {(provided, snapshot) => (
                               <div
                                 ref={provided.innerRef}
