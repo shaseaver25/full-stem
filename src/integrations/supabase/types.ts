@@ -2754,6 +2754,144 @@ export type Database = {
         }
         Relationships: []
       }
+      poll_components: {
+        Row: {
+          allow_anonymous: boolean | null
+          allow_change_vote: boolean | null
+          chart_type: string | null
+          close_poll_at: string | null
+          component_id: string
+          created_at: string | null
+          id: string
+          is_closed: boolean | null
+          poll_question: string
+          poll_type: string
+          require_participation: boolean | null
+          show_percentages: boolean | null
+          show_results_timing: string | null
+          show_vote_counts: boolean | null
+          updated_at: string | null
+        }
+        Insert: {
+          allow_anonymous?: boolean | null
+          allow_change_vote?: boolean | null
+          chart_type?: string | null
+          close_poll_at?: string | null
+          component_id: string
+          created_at?: string | null
+          id?: string
+          is_closed?: boolean | null
+          poll_question: string
+          poll_type: string
+          require_participation?: boolean | null
+          show_percentages?: boolean | null
+          show_results_timing?: string | null
+          show_vote_counts?: boolean | null
+          updated_at?: string | null
+        }
+        Update: {
+          allow_anonymous?: boolean | null
+          allow_change_vote?: boolean | null
+          chart_type?: string | null
+          close_poll_at?: string | null
+          component_id?: string
+          created_at?: string | null
+          id?: string
+          is_closed?: boolean | null
+          poll_question?: string
+          poll_type?: string
+          require_participation?: boolean | null
+          show_percentages?: boolean | null
+          show_results_timing?: string | null
+          show_vote_counts?: boolean | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "poll_components_component_id_fkey"
+            columns: ["component_id"]
+            isOneToOne: true
+            referencedRelation: "lesson_components"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      poll_options: {
+        Row: {
+          created_at: string | null
+          id: string
+          option_order: number
+          option_text: string
+          poll_component_id: string
+          vote_count: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          option_order: number
+          option_text: string
+          poll_component_id: string
+          vote_count?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          option_order?: number
+          option_text?: string
+          poll_component_id?: string
+          vote_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "poll_options_poll_component_id_fkey"
+            columns: ["poll_component_id"]
+            isOneToOne: false
+            referencedRelation: "poll_components"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      poll_responses: {
+        Row: {
+          id: string
+          is_anonymous: boolean | null
+          poll_component_id: string
+          ranking_order: Json | null
+          rating_value: number | null
+          responded_at: string | null
+          selected_option_ids: string[] | null
+          user_id: string | null
+        }
+        Insert: {
+          id?: string
+          is_anonymous?: boolean | null
+          poll_component_id: string
+          ranking_order?: Json | null
+          rating_value?: number | null
+          responded_at?: string | null
+          selected_option_ids?: string[] | null
+          user_id?: string | null
+        }
+        Update: {
+          id?: string
+          is_anonymous?: boolean | null
+          poll_component_id?: string
+          ranking_order?: Json | null
+          rating_value?: number | null
+          responded_at?: string | null
+          selected_option_ids?: string[] | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "poll_responses_poll_component_id_fkey"
+            columns: ["poll_component_id"]
+            isOneToOne: false
+            referencedRelation: "poll_components"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           allowed_ips: string[] | null
