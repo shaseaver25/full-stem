@@ -562,12 +562,16 @@ export function DraggableComponentCard({
   };
 
   return (
-    <Card className={`transition-shadow ${isDragging ? 'shadow-lg' : ''}`}>
+    <Card className={`transition-all ${isDragging ? 'shadow-lg opacity-50 rotate-2' : ''}`}>
       <CardHeader>
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div {...dragHandleProps} className="cursor-grab active:cursor-grabbing">
-              <GripVertical className="h-5 w-5 text-muted-foreground" />
+          <div className="flex items-center gap-3">
+            <div 
+              {...dragHandleProps} 
+              className="cursor-grab active:cursor-grabbing hover:bg-accent p-2 rounded-md transition-colors group"
+              title="Drag to reorder"
+            >
+              <GripVertical className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
             </div>
             <CardTitle className="text-base">
               {componentTypeLabels[component.component_type] || component.component_type}
