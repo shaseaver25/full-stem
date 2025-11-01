@@ -471,10 +471,11 @@ export function DraggableComponentCard({
                   <DialogTitle>Poll Builder</DialogTitle>
                 </DialogHeader>
                 <PollBuilderComponent 
-                  componentId={component.id || ''}
+                  componentId={component.id}
                   initialData={component.content?.pollData}
-                  onSave={() => {
-                    console.log('💾 Poll Builder: Poll saved');
+                  onSave={(pollData) => {
+                    console.log('💾 Poll Builder: Saving poll data to component:', pollData);
+                    handleContentChange('pollData', pollData);
                     setIsPollBuilderOpen(false);
                   }}
                 />

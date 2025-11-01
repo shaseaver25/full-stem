@@ -18,9 +18,9 @@ interface PollOption {
 }
 
 interface PollBuilderProps {
-  componentId: string;
+  componentId?: string;
   initialData?: any;
-  onSave?: () => void;
+  onSave?: (pollData: any) => void;
 }
 
 export const PollBuilderComponent: React.FC<PollBuilderProps> = ({
@@ -46,17 +46,39 @@ export const PollBuilderComponent: React.FC<PollBuilderProps> = ({
 
   useEffect(() => {
     if (initialData) {
-      loadPollData();
+      loadPollDataFromInitial();
+    } else if (componentId) {
+      loadPollDataFromDatabase();
     }
-  }, [initialData]);
+  }, [initialData, componentId]);
 
-  const loadPollData = async () => {
+  const loadPollDataFromInitial = () => {
+    if (!initialData) return;
+    
+    setPollQuestion(initialData.poll_question || '');
+    setPollType(initialData.poll_type || 'single_choice');
+    setShowResultsTiming(initialData.show_results_timing || 'after_voting');
+    setAllowAnonymous(initialData.allow_anonymous ?? true);
+    setAllowChangeVote(initialData.allow_change_vote ?? false);
+    setRequireParticipation(initialData.require_participation ?? false);
+    setChartType(initialData.chart_type || 'bar');
+    setShowPercentages(initialData.show_percentages ?? true);
+    setShowVoteCounts(initialData.show_vote_counts ?? true);
+
+    if (initialData.options && initialData.options.length > 0) {
+      setOptions(initialData.options);
+    }
+  };
+
+  const loadPollDataFromDatabase = async () => {
+    if (!componentId) return;
+    
     try {
       const { data: pollData, error } = await supabase
         .from('poll_components')
         .select('*, poll_options(*)')
         .eq('component_id', componentId)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
 
@@ -115,7 +137,7 @@ export const PollBuilderComponent: React.FC<PollBuilderProps> = ({
     setOptions(items.map((item, idx) => ({ ...item, option_order: idx })));
   };
 
-  const handleSave = async () => {
+  const handleSave = () => {
     if (!pollQuestion.trim()) {
       toast.error('Poll question is required');
       return;
@@ -131,66 +153,26 @@ export const PollBuilderComponent: React.FC<PollBuilderProps> = ({
       return;
     }
 
-    setLoading(true);
-    try {
-      // Upsert poll component
-      const { data: pollData, error: pollError } = await supabase
-        .from('poll_components')
-        .upsert({
-          id: pollComponentId || undefined,
-          component_id: componentId,
-          poll_question: pollQuestion,
-          poll_type: pollType,
-          show_results_timing: showResultsTiming,
-          allow_anonymous: allowAnonymous,
-          allow_change_vote: allowChangeVote,
-          require_participation: requireParticipation,
-          chart_type: chartType,
-          show_percentages: showPercentages,
-          show_vote_counts: showVoteCounts,
-          updated_at: new Date().toISOString()
-        })
-        .select()
-        .single();
+    // Save poll data locally (not to database yet)
+    const pollData = {
+      poll_question: pollQuestion,
+      poll_type: pollType,
+      show_results_timing: showResultsTiming,
+      allow_anonymous: allowAnonymous,
+      allow_change_vote: allowChangeVote,
+      require_participation: requireParticipation,
+      chart_type: chartType,
+      show_percentages: showPercentages,
+      show_vote_counts: showVoteCounts,
+      options: pollType === 'rating_scale' ? [] : options.map(opt => ({
+        id: opt.id,
+        option_text: opt.option_text,
+        option_order: opt.option_order
+      }))
+    };
 
-      if (pollError) throw pollError;
-
-      const finalPollId = pollData.id;
-      setPollComponentId(finalPollId);
-
-      // Delete existing options if updating
-      if (pollComponentId) {
-        await supabase
-          .from('poll_options')
-          .delete()
-          .eq('poll_component_id', finalPollId);
-      }
-
-      // Insert new options (skip for rating scale)
-      if (pollType !== 'rating_scale') {
-        const optionsToInsert = options
-          .filter(opt => opt.option_text.trim())
-          .map(opt => ({
-            poll_component_id: finalPollId,
-            option_text: opt.option_text,
-            option_order: opt.option_order
-          }));
-
-        const { error: optionsError } = await supabase
-          .from('poll_options')
-          .insert(optionsToInsert);
-
-        if (optionsError) throw optionsError;
-      }
-
-      toast.success('Poll saved successfully');
-      onSave?.();
-    } catch (error) {
-      console.error('Error saving poll:', error);
-      toast.error('Failed to save poll');
-    } finally {
-      setLoading(false);
-    }
+    toast.success('Poll configuration saved');
+    onSave?.(pollData);
   };
 
   return (
