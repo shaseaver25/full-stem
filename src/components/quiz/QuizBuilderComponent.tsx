@@ -8,6 +8,7 @@ import { Switch } from '@/components/ui/switch';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CheckCircle2, Plus, Trash2, MoveUp, MoveDown, Lightbulb, Image as ImageIcon } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 
 interface QuizQuestion {
@@ -439,35 +440,46 @@ export function QuizBuilderComponent({ initialData, onSave }: QuizBuilderProps) 
 
                   {/* Short Answer - Correct Answers */}
                   {question.question_type === 'short_answer' && (
-                    <div className="space-y-2">
-                      <Label>Acceptable Answers (case-insensitive):</Label>
-                      <p className="text-xs text-muted-foreground">Add all acceptable variations of the correct answer.</p>
-                      {question.options.map((option, oIndex) => (
-                        <div key={option.id} className="flex items-center gap-2">
-                          <Input
-                            value={option.option_text}
-                            onChange={(e) => updateOption(qIndex, oIndex, { option_text: e.target.value })}
-                            placeholder={`Acceptable answer ${oIndex + 1}`}
-                            className="flex-1"
-                          />
-                          {question.options.length > 1 && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => deleteOption(qIndex, oIndex)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          )}
-                        </div>
-                      ))}
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => addOption(qIndex)}
-                      >
-                        <Plus className="h-4 w-4 mr-1" /> Add Alternative Answer
-                      </Button>
+                    <div className="space-y-3">
+                      <Alert className="bg-blue-50 border-blue-200">
+                        <Lightbulb className="h-4 w-4 text-blue-600" />
+                        <AlertDescription className="text-sm">
+                          <strong>AI-Powered Grading:</strong> Short answer questions are automatically graded using AI. 
+                          The AI will compare student answers to your acceptable answers and determine if they're semantically similar, 
+                          even if the wording is different. You can review and override AI grades later.
+                        </AlertDescription>
+                      </Alert>
+                      
+                      <div className="space-y-2">
+                        <Label>Acceptable Answers (case-insensitive):</Label>
+                        <p className="text-xs text-muted-foreground">Add all acceptable variations of the correct answer. The AI will use these as reference points.</p>
+                        {question.options.map((option, oIndex) => (
+                          <div key={option.id} className="flex items-center gap-2">
+                            <Input
+                              value={option.option_text}
+                              onChange={(e) => updateOption(qIndex, oIndex, { option_text: e.target.value })}
+                              placeholder={`Acceptable answer ${oIndex + 1}`}
+                              className="flex-1"
+                            />
+                            {question.options.length > 1 && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => deleteOption(qIndex, oIndex)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </div>
+                        ))}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => addOption(qIndex)}
+                        >
+                          <Plus className="h-4 w-4 mr-1" /> Add Alternative Answer
+                        </Button>
+                      </div>
                     </div>
                   )}
 

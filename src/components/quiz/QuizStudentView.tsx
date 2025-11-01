@@ -74,7 +74,7 @@ export function QuizStudentView({ componentId }: QuizStudentViewProps) {
   const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
   const [completed, setCompleted] = useState(false);
   const [score, setScore] = useState<number | null>(null);
-  const [feedback, setFeedback] = useState<Record<string, { correct: boolean; explanation?: string }>>({});
+  const [feedback, setFeedback] = useState<Record<string, { correct: boolean; explanation?: string; aiGraded?: boolean }>>({});
   const [attemptNumber, setAttemptNumber] = useState(1);
   const [remainingAttempts, setRemainingAttempts] = useState<number | null>(null);
   const [currentAttemptId, setCurrentAttemptId] = useState<string | null>(null);
@@ -397,11 +397,13 @@ export function QuizStudentView({ componentId }: QuizStudentViewProps) {
     try {
       // Calculate score
       let totalScore = 0;
-      const newFeedback: Record<string, { correct: boolean; explanation?: string }> = {};
+      const newFeedback: Record<string, { correct: boolean; explanation?: string; aiGraded?: boolean }> = {};
 
-      quizData.questions.forEach(question => {
+      // Process each question
+      for (const question of quizData.questions) {
         const userAnswer = answers[question.id];
         let isCorrect = false;
+        let aiGraded = false;
 
         if (question.question_type === 'multiple_choice' || question.question_type === 'true_false') {
           const correctOption = question.options.find(opt => opt.is_correct);
@@ -412,13 +414,40 @@ export function QuizStudentView({ componentId }: QuizStudentViewProps) {
           isCorrect = correctOptionIds.length === userAnswerArray.length && 
                       correctOptionIds.every(id => userAnswerArray.includes(id));
         } else if (question.question_type === 'short_answer') {
-          // For short answer, accept any of the correct options (case-insensitive)
-          const correctAnswers = question.options.map(opt => opt.option_text.toLowerCase().trim());
-          const userAnswerText = (userAnswer || '').toLowerCase().trim();
-          isCorrect = correctAnswers.includes(userAnswerText);
+          // Use AI grading for short answer questions
+          if (userAnswer && userAnswer.trim()) {
+            try {
+              const acceptableAnswers = question.options.map(opt => opt.option_text);
+              
+              const { data: gradeData, error: gradeError } = await supabase.functions.invoke(
+                'grade-short-answer',
+                {
+                  body: {
+                    studentAnswer: userAnswer,
+                    acceptableAnswers
+                  }
+                }
+              );
+
+              if (gradeError) {
+                console.error('AI grading error:', gradeError);
+                // Fallback to exact match
+                const correctAnswers = acceptableAnswers.map(ans => ans.toLowerCase().trim());
+                const userAnswerText = userAnswer.toLowerCase().trim();
+                isCorrect = correctAnswers.includes(userAnswerText);
+              } else {
+                isCorrect = gradeData.isCorrect;
+                aiGraded = true;
+              }
+            } catch (error) {
+              console.error('Error calling AI grading:', error);
+              // Fallback to exact match
+              const correctAnswers = question.options.map(opt => opt.option_text.toLowerCase().trim());
+              const userAnswerText = (userAnswer || '').toLowerCase().trim();
+              isCorrect = correctAnswers.includes(userAnswerText);
+            }
+          }
         } else if (question.question_type === 'fill_blank') {
-          // For fill in blank, check if user filled all blanks correctly
-          // Expected format: question.options contains correct answers for each blank
           const userAnswers = userAnswer || [];
           const correctAnswers = question.options.map(opt => opt.option_text.toLowerCase().trim());
           isCorrect = correctAnswers.length === userAnswers.length &&
@@ -433,9 +462,10 @@ export function QuizStudentView({ componentId }: QuizStudentViewProps) {
 
         newFeedback[question.id] = {
           correct: isCorrect,
-          explanation: question.explanation
+          explanation: question.explanation,
+          aiGraded
         };
-      });
+      }
 
       setScore(totalScore);
       setFeedback(newFeedback);
@@ -573,6 +603,12 @@ export function QuizStudentView({ componentId }: QuizStudentViewProps) {
               <span>✅ Correct:</span>
               <span className="font-semibold">
                 {Object.values(feedback).filter(f => f.correct).length}/{quizData.questions.length} questions
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span>🤖 AI Graded:</span>
+              <span className="font-semibold text-blue-600">
+                {Object.values(feedback).filter(f => f.aiGraded).length} questions
               </span>
             </div>
             <div className="flex justify-between">
