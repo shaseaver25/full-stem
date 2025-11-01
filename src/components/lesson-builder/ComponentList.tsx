@@ -50,10 +50,14 @@ export function ComponentList({ components, onUpdate, onDelete, onReorder, lesso
             ref={provided.innerRef}
             className="space-y-4"
           >
-            {components.map((component, index) => (
+            {components.map((component, index) => {
+              // Use component.id if available, otherwise create a stable ID
+              const stableId = component.id || `${component.component_type}-${component.order || index}`;
+              
+              return (
               <Draggable
-                key={`${component.component_type}-${index}`}
-                draggableId={`${component.component_type}-${index}`}
+                key={stableId}
+                draggableId={stableId}
                 index={index}
               >
                 {(provided, snapshot) => (
@@ -74,7 +78,8 @@ export function ComponentList({ components, onUpdate, onDelete, onReorder, lesso
                   </div>
                 )}
               </Draggable>
-            ))}
+            );
+            })}
             {provided.placeholder}
           </div>
         )}
