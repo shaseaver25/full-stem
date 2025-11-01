@@ -736,7 +736,7 @@ export function QuizBuilderComponent({ initialData, onSave, lessonId }: QuizBuil
 
       {/* AI Generation Dialog */}
       <Dialog open={showAIDialog} onOpenChange={setShowAIDialog}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Sparkles className="h-5 w-5 text-purple-500" />
@@ -842,8 +842,8 @@ export function QuizBuilderComponent({ initialData, onSave, lessonId }: QuizBuil
 
       {/* Preview Generated Questions Dialog */}
       <Dialog open={showPreviewDialog} onOpenChange={setShowPreviewDialog}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
+        <DialogContent className="max-w-3xl max-h-[85vh] flex flex-col">
+          <DialogHeader className="flex-shrink-0">
             <DialogTitle className="flex items-center gap-2">
               <Sparkles className="h-5 w-5 text-purple-500" />
               Review AI-Generated Questions
@@ -854,7 +854,7 @@ export function QuizBuilderComponent({ initialData, onSave, lessonId }: QuizBuil
           </DialogHeader>
 
           {generatedQuestions.length > 0 && (
-            <div className="space-y-4 py-4">
+            <div className="space-y-4 py-4 overflow-y-auto flex-1">
               <div className="flex items-center justify-between">
                 <Button
                   variant="outline"
@@ -944,7 +944,7 @@ export function QuizBuilderComponent({ initialData, onSave, lessonId }: QuizBuil
             </div>
           )}
 
-          <div className="flex gap-3">
+          <div className="flex gap-3 flex-shrink-0 pt-4 border-t">
             <Button variant="outline" onClick={() => setShowPreviewDialog(false)} className="flex-1">
               Cancel
             </Button>
