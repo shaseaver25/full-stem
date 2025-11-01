@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
+import { Card, CardContent } from '@/components/ui/card';
 import { 
   ChevronLeft, 
   ChevronRight, 
@@ -356,67 +357,84 @@ const SlidesViewer: React.FC<SlidesViewerProps> = ({
                 />
               </div>
 
-              {/* Slide Text Content - Displayed prominently below slides */}
+              {/* Slide Text Panel - Shows current slide text with TTS controls */}
               {displayContent && (
-                <div className="mt-6 space-y-4">
-                  {/* Text Display Card */}
-                  <div className="p-6 border rounded-lg bg-card">
-                    <div className="prose prose-sm max-w-none dark:prose-invert">
-                      <HighlightedText 
-                        text={displayContent}
-                        currentWordIndex={currentWordIndex}
-                        wordTimings={wordTimings}
-                      />
+                <Card className="mt-4">
+                  <CardContent className="p-4 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="p-2 bg-primary/10 rounded-lg">
+                          <Volume2 className="h-4 w-4 text-primary" />
+                        </div>
+                        <div>
+                          <h3 className="font-semibold text-sm">Slide {currentSlide + 1} Content</h3>
+                          <p className="text-xs text-muted-foreground">Text with word-by-word highlighting</p>
+                        </div>
+                      </div>
+                      {targetLanguage !== 'en' && translatedContent && (
+                        <span className="text-xs px-2 py-1 bg-primary/10 text-primary rounded">
+                          Translated
+                        </span>
+                      )}
                     </div>
-                  </div>
-
-                  {/* TTS Controls Row */}
-                  <div className="flex items-center justify-center gap-2">
-                    {!isPlaying ? (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={handleReadAloud}
-                        disabled={isSpeaking}
-                        aria-label="Read slide aloud"
-                      >
-                        <Volume2 className="h-4 w-4 mr-2" />
-                        Read Aloud
-                      </Button>
-                    ) : isPaused ? (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={resume}
-                        aria-label="Resume reading"
-                      >
-                        <Play className="h-4 w-4 mr-2" />
-                        Resume
-                      </Button>
-                    ) : (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={pause}
-                        aria-label="Pause reading"
-                      >
-                        <Pause className="h-4 w-4 mr-2" />
-                        Pause
-                      </Button>
-                    )}
+                    <div className="prose prose-sm max-w-none dark:prose-invert">
+                      <p className="text-sm leading-relaxed">
+                        <HighlightedText 
+                          text={displayContent}
+                          currentWordIndex={currentWordIndex}
+                          wordTimings={wordTimings}
+                        />
+                      </p>
+                    </div>
                     
-                    {isPlaying && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={stop}
-                        aria-label="Stop reading"
-                      >
-                        <VolumeX className="h-4 w-4" />
-                      </Button>
-                    )}
-                  </div>
-                </div>
+                    {/* TTS Controls */}
+                    <div className="flex items-center gap-2 pt-2 border-t">
+                      {!isPlaying ? (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={handleReadAloud}
+                          disabled={isSpeaking}
+                          aria-label="Read slide aloud"
+                        >
+                          <Volume2 className="h-4 w-4 mr-2" />
+                          Read Aloud
+                        </Button>
+                      ) : isPaused ? (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={resume}
+                          aria-label="Resume reading"
+                        >
+                          <Play className="h-4 w-4 mr-2" />
+                          Resume
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={pause}
+                          aria-label="Pause reading"
+                        >
+                          <Pause className="h-4 w-4 mr-2" />
+                          Pause
+                        </Button>
+                      )}
+                      
+                      {isPlaying && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={stop}
+                          aria-label="Stop reading"
+                        >
+                          <VolumeX className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
               )}
             </>
           ) : (
