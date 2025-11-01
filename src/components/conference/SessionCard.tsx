@@ -2,15 +2,19 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Clock, MapPin, QrCode, ChevronRight } from 'lucide-react';
+import { QrCode, ChevronRight, User } from 'lucide-react';
 import QRCodeLib from 'qrcode';
 
 interface Session {
   id: string;
   title: string;
   description: string;
-  time: string;
-  room: string;
+  speakerName: string;
+  speakerBio: string;
+  headshotUrl: string;
+  badges: string[];
+  isKeynote: boolean;
+  linkedInUrl: string;
   lessonId: string;
 }
 
@@ -47,29 +51,45 @@ const SessionCard: React.FC<SessionCardProps> = ({ session, onJoin }) => {
   return (
     <Card className="hover:shadow-lg transition-shadow duration-300 bg-white">
       <CardHeader>
-        <div className="flex items-start justify-between">
-          <div className="flex-1">
-            <CardTitle className="text-xl mb-2">{session.title}</CardTitle>
-            <CardDescription className="text-gray-600">
-              {session.description}
-            </CardDescription>
+        <div className="flex items-start gap-3 mb-3">
+          {session.headshotUrl ? (
+            <img 
+              src={session.headshotUrl} 
+              alt={session.speakerName}
+              className="w-12 h-12 rounded-full object-cover border-2 border-gray-200"
+            />
+          ) : (
+            <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center">
+              <User className="h-6 w-6 text-gray-400" />
+            </div>
+          )}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              <h4 className="font-semibold text-sm text-gray-900">{session.speakerName}</h4>
+              {session.isKeynote && (
+                <Badge className="bg-purple-100 text-purple-700 border-purple-200 text-xs">
+                  Keynote
+                </Badge>
+              )}
+            </div>
+            {session.badges.length > 0 && (
+              <div className="flex flex-wrap gap-1">
+                {session.badges.map((badge, idx) => (
+                  <Badge key={idx} variant="outline" className="text-xs">
+                    {badge}
+                  </Badge>
+                ))}
+              </div>
+            )}
           </div>
-          <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200">Live</Badge>
         </div>
+        <CardTitle className="text-lg mb-2 line-clamp-2">{session.title}</CardTitle>
+        <CardDescription className="text-gray-600 line-clamp-3">
+          {session.description}
+        </CardDescription>
       </CardHeader>
 
       <CardContent className="space-y-4">
-        {/* Session Details */}
-        <div className="space-y-2 text-sm">
-          <div className="flex items-center gap-2 text-gray-700">
-            <Clock className="h-4 w-4 text-gray-400" />
-            <span>{session.time}</span>
-          </div>
-          <div className="flex items-center gap-2 text-gray-700">
-            <MapPin className="h-4 w-4 text-gray-400" />
-            <span>{session.room}</span>
-          </div>
-        </div>
 
         {/* QR Code Section */}
         {showQR ? (

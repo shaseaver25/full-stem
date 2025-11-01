@@ -2,18 +2,22 @@ import React, { useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import SessionCard from '@/components/conference/SessionCard';
 import { WifiOff, Wifi } from 'lucide-react';
 import { useConferenceMode } from '@/hooks/useConferenceMode';
+import { speakers } from '@/data/speakers';
 
 interface Session {
   id: string;
   title: string;
   description: string;
-  time: string;
-  room: string;
+  speakerName: string;
+  speakerBio: string;
+  headshotUrl: string;
+  badges: string[];
+  isKeynote: boolean;
+  linkedInUrl: string;
   lessonId: string;
 }
 
@@ -24,41 +28,21 @@ const ConferenceDemo: React.FC = () => {
   // SCALABILITY: Skip expensive auth/settings checks for conference mode
   useConferenceMode();
 
-  // Demo sessions - in production, these would come from a database
-  const sessions: Session[] = [
-    {
-      id: 'session-1',
-      title: 'Interactive Polls in Education',
-      description: 'Learn how real-time polling transforms classroom engagement',
-      time: '10:00 AM - 11:00 AM',
-      room: 'Hall A',
-      lessonId: 'cf34126a-045c-456f-9664-abd41c679f9a', // Use actual lesson ID
-    },
-    {
-      id: 'session-2',
-      title: 'AI-Powered Learning',
-      description: 'Discover how AI personalizes student experiences',
-      time: '11:30 AM - 12:30 PM',
-      room: 'Hall B',
-      lessonId: 'cf34126a-045c-456f-9664-abd41c679f9a',
-    },
-    {
-      id: 'session-3',
-      title: 'Student Engagement Strategies',
-      description: 'Best practices for keeping students engaged',
-      time: '2:00 PM - 3:00 PM',
-      room: 'Hall C',
-      lessonId: 'cf34126a-045c-456f-9664-abd41c679f9a',
-    },
-    {
-      id: 'session-4',
-      title: 'Future of EdTech',
-      description: 'Emerging trends in educational technology',
-      time: '3:30 PM - 4:30 PM',
-      room: 'Hall D',
-      lessonId: 'cf34126a-045c-456f-9664-abd41c679f9a',
-    },
-  ];
+  // Map speakers to sessions - filter out cancelled sessions
+  const sessions: Session[] = speakers
+    .filter(speaker => !speaker.isCancelled)
+    .map(speaker => ({
+      id: speaker.id,
+      title: speaker.title,
+      description: speaker.description,
+      speakerName: speaker.name,
+      speakerBio: speaker.bio,
+      headshotUrl: speaker.headshotUrl,
+      badges: speaker.badges,
+      isKeynote: speaker.isKeynote,
+      linkedInUrl: speaker.linkedInUrl,
+      lessonId: 'cf34126a-045c-456f-9664-abd41c679f9a', // Default lesson for demo
+    }));
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -141,11 +125,13 @@ const ConferenceDemo: React.FC = () => {
 
           {/* Sessions Grid */}
           <div className="mb-6">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Today's Sessions</h2>
-            <p className="text-gray-600">Scan QR code or tap "Join Session" to participate</p>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Conference Sessions</h2>
+            <p className="text-gray-600 mb-4">
+              {sessions.length} sessions available • Scan QR code or tap "Join Session" to participate
+            </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {sessions.map((session) => (
               <SessionCard
                 key={session.id}
