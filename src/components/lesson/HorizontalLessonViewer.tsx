@@ -15,7 +15,8 @@ import {
   FileText,
   Lightbulb,
   Video,
-  Target
+  Target,
+  BarChart3
 } from 'lucide-react';
 import InlineReadAloud from '@/components/InlineReadAloud';
 import { LessonComponentRenderer } from './LessonComponentRenderer';
@@ -110,6 +111,12 @@ const componentTypeConfig: Record<string, {
     label: 'Quiz',
     bgColor: 'bg-cyan-50 dark:bg-cyan-950/30',
     textColor: 'text-cyan-800 dark:text-cyan-200'
+  },
+  'poll': { 
+    icon: <BarChart3 className="w-4 h-4" />, 
+    label: 'Poll/Survey',
+    bgColor: 'bg-emerald-50 dark:bg-emerald-950/30',
+    textColor: 'text-emerald-800 dark:text-emerald-200'
   },
 };
 

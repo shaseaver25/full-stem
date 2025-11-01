@@ -74,13 +74,15 @@ export const PollStudentView: React.FC<PollStudentViewProps> = ({ componentId, p
 
         // Create mock options from prop data with stable string IDs
         const mockOptions: PollOption[] = propPollData.options.map((opt: any, index: number) => ({
-          id: `option-${index}`, // Use stable string ID for drag and drop
+          id: opt.id || `option-${index}`, // Use original ID if available, otherwise stable string ID
           option_text: opt.option_text,
           option_order: opt.option_order || index,
           vote_count: 0
         }));
         setOptions(mockOptions);
-        setRankingOrder(mockOptions);
+        
+        // Only set ranking order if it hasn't been set yet (preserve user's drag order)
+        setRankingOrder(prev => prev.length === 0 ? mockOptions : prev);
 
         // Check for existing responses in database
         const { data: { user } } = await supabase.auth.getUser();
