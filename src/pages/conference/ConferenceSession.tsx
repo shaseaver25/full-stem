@@ -152,7 +152,7 @@ const SessionPage: React.FC = () => {
                 sessionTitle={session.title} 
                 targetLanguage={targetLanguage}
                 embedUrl={presentationData?.embedUrl}
-                speakerNotes={presentationData?.speakerNotes}
+                slides={presentationData?.slides}
               />
             </div>
 

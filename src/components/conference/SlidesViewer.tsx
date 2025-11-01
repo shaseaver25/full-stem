@@ -23,28 +23,32 @@ interface SlidesViewerProps {
   sessionTitle: string;
   targetLanguage?: string;
   embedUrl?: string;
-  speakerNotes?: string;
+  slides?: Array<{ slideNumber: number; title: string; content: string; }>;
 }
 
 const SlidesViewer: React.FC<SlidesViewerProps> = ({ 
   sessionTitle, 
   targetLanguage = 'en',
   embedUrl,
-  speakerNotes 
+  slides = []
 }) => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [viewedSlides, setViewedSlides] = useState<Set<number>>(new Set([0]));
-  const [translatedNotes, setTranslatedNotes] = useState<string | null>(null);
+  const [translatedContent, setTranslatedContent] = useState<string | null>(null);
   const [showKeyboardHelp, setShowKeyboardHelp] = useState(false);
   
   const { speak, pause, resume, stop, isPlaying, isPaused, isLoading: isSpeaking, currentWordIndex, wordTimings } = usePresentationTTS();
   const { translateText, isTranslating } = useLiveTranslation();
 
-  // For demo, assume 10 slides
-  const totalSlides = 10;
+  // Total slides from either slide data or default to 10
+  const totalSlides = slides.length > 0 ? slides.length : 10;
   const progressPercentage = ((currentSlide + 1) / totalSlides) * 100;
   const isCompleted = viewedSlides.size === totalSlides;
+
+  // Get current slide content
+  const currentSlideData = slides[currentSlide];
+  const currentSlideContent = currentSlideData ? `${currentSlideData.title}. ${currentSlideData.content}` : `Slide ${currentSlide + 1} of the presentation: ${sessionTitle}`;
 
   // Mark slide as viewed
   useEffect(() => {
@@ -135,33 +139,33 @@ const SlidesViewer: React.FC<SlidesViewerProps> = ({
 
   // Read aloud
   const handleReadAloud = async () => {
-    let textToRead = speakerNotes || `Slide ${currentSlide + 1} of the presentation: ${sessionTitle}`;
+    let textToRead = currentSlideContent;
     
-    if (targetLanguage !== 'en' && translatedNotes) {
-      textToRead = translatedNotes;
+    if (targetLanguage !== 'en' && translatedContent) {
+      textToRead = translatedContent;
     }
 
     await speak(textToRead);
   };
 
-  // Translate notes when language changes
+  // Translate content when language or slide changes
   useEffect(() => {
-    const translateContent = async () => {
-      if (targetLanguage !== 'en' && speakerNotes) {
+    const translateCurrentSlide = async () => {
+      if (targetLanguage !== 'en' && currentSlideContent) {
         const translated = await translateText({
-          text: speakerNotes,
+          text: currentSlideContent,
           targetLanguage,
           sourceLanguage: 'auto'
         });
         if (translated) {
-          setTranslatedNotes(translated);
+          setTranslatedContent(translated);
         }
       } else {
-        setTranslatedNotes(null);
+        setTranslatedContent(null);
       }
     };
-    translateContent();
-  }, [targetLanguage, speakerNotes]);
+    translateCurrentSlide();
+  }, [targetLanguage, currentSlide, currentSlideContent]);
 
   // Touch gesture support
   useEffect(() => {
@@ -201,7 +205,7 @@ const SlidesViewer: React.FC<SlidesViewerProps> = ({
     };
   }, [goToNext, goToPrevious]);
 
-  const displayNotes = translatedNotes || speakerNotes;
+  const displayContent = translatedContent || currentSlideContent;
 
   return (
     <div 
@@ -321,7 +325,7 @@ const SlidesViewer: React.FC<SlidesViewerProps> = ({
               </div>
 
               {/* TTS Controls */}
-              {displayNotes && (
+              {displayContent && (
                 <div className="flex items-center justify-between gap-3 p-3 border rounded-lg bg-card">
                   <div className="flex items-center gap-2">
                     {!isPlaying ? (
@@ -369,9 +373,9 @@ const SlidesViewer: React.FC<SlidesViewerProps> = ({
                     )}
                   </div>
 
-                  <div className="flex-1 text-sm text-muted-foreground">
+                  <div className="flex-1 text-sm text-muted-foreground max-h-20 overflow-y-auto">
                     <HighlightedText 
-                      text={displayNotes}
+                      text={displayContent}
                       currentWordIndex={currentWordIndex}
                       wordTimings={wordTimings}
                     />
@@ -386,7 +390,7 @@ const SlidesViewer: React.FC<SlidesViewerProps> = ({
                   {currentSlide + 1}
                 </div>
                 <p className="text-sm text-muted-foreground max-w-md">
-                  Slide content for "{sessionTitle}" would be displayed here
+                  {currentSlideData ? currentSlideData.title : `Slide ${currentSlide + 1}`}
                 </p>
               </div>
             </div>
