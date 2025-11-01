@@ -66,10 +66,17 @@ const ConferenceDemo: React.FC = () => {
     queryFn: async () => {
       // Simulate async parsing
       await new Promise(resolve => setTimeout(resolve, 100));
-      return parseConferenceSessions(CSV_DATA);
+      const blocks = parseConferenceSessions(CSV_DATA);
+      console.log('Parsed session blocks:', blocks);
+      console.log('Total blocks:', blocks.length);
+      console.log('Total sessions:', blocks.reduce((sum, b) => sum + b.sessions.length, 0));
+      return blocks;
     },
     staleTime: Infinity, // CSV data is static
   });
+
+  // Debug log
+  console.log('sessionBlocks in render:', sessionBlocks);
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
