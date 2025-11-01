@@ -11,6 +11,30 @@ import { toast } from 'sonner';
 import { getRateLimiter } from '@/middleware/rateLimit';
 import SpeechControls from '@/components/SpeechControls';
 import { useElevenLabsTTSPublic } from '@/hooks/useElevenLabsTTSPublic';
+import { useLiveTranslation } from '@/hooks/useLiveTranslation';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Languages } from 'lucide-react';
+
+const SUPPORTED_LANGUAGES = [
+  { code: 'en', name: 'English' },
+  { code: 'es', name: 'Spanish' },
+  { code: 'fr', name: 'French' },
+  { code: 'de', name: 'German' },
+  { code: 'it', name: 'Italian' },
+  { code: 'pt', name: 'Portuguese' },
+  { code: 'ru', name: 'Russian' },
+  { code: 'ja', name: 'Japanese' },
+  { code: 'ko', name: 'Korean' },
+  { code: 'zh', name: 'Chinese' },
+  { code: 'ar', name: 'Arabic' },
+  { code: 'hi', name: 'Hindi' }
+];
 import {
   DndContext,
   closestCenter,
@@ -57,10 +81,12 @@ interface PollStudentViewProps {
 // Separate SortableItem component for each ranking option
 function SortableRankingItem({ 
   option, 
-  index 
+  index,
+  translatedText
 }: { 
   option: PollOption; 
   index: number;
+  translatedText?: string;
 }) {
   const {
     attributes,
@@ -106,7 +132,7 @@ function SortableRankingItem({
 
       {/* Option Text */}
       <div className="flex-grow text-gray-900">
-        {option.option_text}
+        {translatedText || option.option_text}
       </div>
     </div>
   );
@@ -124,9 +150,13 @@ export const PollStudentView: React.FC<PollStudentViewProps> = ({ componentId, p
   const [totalResponses, setTotalResponses] = useState(0);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [selectedLanguage, setSelectedLanguage] = useState('en');
+  const [translatedQuestion, setTranslatedQuestion] = useState<string | null>(null);
+  const [translatedOptions, setTranslatedOptions] = useState<Record<string, string>>({});
 
-  // TTS functionality
-  const { speak, pause, resume, stop, isPlaying, isPaused, isLoading: ttsLoading, error: ttsError, currentTime, duration } = useElevenLabsTTSPublic('en');
+  // TTS and translation functionality
+  const { speak, pause, resume, stop, isPlaying, isPaused, isLoading: ttsLoading, error: ttsError, currentTime, duration } = useElevenLabsTTSPublic(selectedLanguage);
+  const { translateText, isTranslating } = useLiveTranslation();
 
   // Sensors for drag interactions
   const sensors = useSensors(
@@ -140,14 +170,57 @@ export const PollStudentView: React.FC<PollStudentViewProps> = ({ componentId, p
     })
   );
 
+  // Handle language change
+  const handleLanguageChange = async (langCode: string) => {
+    setSelectedLanguage(langCode);
+    
+    if (langCode !== 'en' && pollData) {
+      const languageName = SUPPORTED_LANGUAGES.find(l => l.code === langCode)?.name || langCode;
+      
+      // Translate question
+      const translatedQ = await translateText({
+        text: pollData.poll_question,
+        targetLanguage: languageName,
+        sourceLanguage: 'auto'
+      });
+      if (translatedQ) {
+        setTranslatedQuestion(translatedQ);
+      }
+
+      // Translate options
+      const translatedOpts: Record<string, string> = {};
+      for (const option of options) {
+        const translated = await translateText({
+          text: option.option_text,
+          targetLanguage: languageName,
+          sourceLanguage: 'auto'
+        });
+        if (translated) {
+          translatedOpts[option.id] = translated;
+        }
+      }
+      setTranslatedOptions(translatedOpts);
+    } else {
+      setTranslatedQuestion(null);
+      setTranslatedOptions({});
+    }
+  };
+
   // Handle read aloud
   const handleReadAloud = () => {
-    const questionText = pollData?.poll_question || '';
+    const questionText = translatedQuestion || pollData?.poll_question || '';
     const optionsText = options
-      .map((opt, idx) => `Option ${idx + 1}: ${opt.option_text}`)
+      .map((opt, idx) => `Option ${idx + 1}: ${translatedOptions[opt.id] || opt.option_text}`)
       .join('. ');
     speak(`${questionText}. ${optionsText}`);
   };
+
+  // Translate poll when language changes
+  useEffect(() => {
+    if (selectedLanguage !== 'en' && pollData && options.length > 0) {
+      handleLanguageChange(selectedLanguage);
+    }
+  }, [pollData, options]);
 
   useEffect(() => {
     loadPollData();
@@ -461,22 +534,42 @@ export const PollStudentView: React.FC<PollStudentViewProps> = ({ componentId, p
             <BarChart3 className="h-5 w-5" />
             {hasVoted && showResults() ? 'Poll Results' : 'Quick Poll'}
           </CardTitle>
-          <SpeechControls
-            isPlaying={isPlaying}
-            isPaused={isPaused}
-            isLoading={ttsLoading}
-            error={ttsError}
-            currentTime={currentTime}
-            duration={duration}
-            onPlay={handleReadAloud}
-            onPause={pause}
-            onResume={resume}
-            onStop={stop}
-          />
+          <div className="flex items-center gap-2">
+            <Select value={selectedLanguage} onValueChange={handleLanguageChange} disabled={isTranslating}>
+              <SelectTrigger 
+                className="w-40" 
+                aria-label={`Select language. Currently ${SUPPORTED_LANGUAGES.find(l => l.code === selectedLanguage)?.name}`}
+              >
+                <Languages className="h-4 w-4 mr-2" />
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {SUPPORTED_LANGUAGES.map(lang => (
+                  <SelectItem key={lang.code} value={lang.code}>
+                    {lang.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <SpeechControls
+              isPlaying={isPlaying}
+              isPaused={isPaused}
+              isLoading={ttsLoading}
+              error={ttsError}
+              currentTime={currentTime}
+              duration={duration}
+              onPlay={handleReadAloud}
+              onPause={pause}
+              onResume={resume}
+              onStop={stop}
+            />
+          </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-6 pt-6">
-        <h3 className="text-xl font-semibold text-center">{pollData.poll_question}</h3>
+        <h3 className="text-xl font-semibold text-center">
+          {isTranslating ? 'Translating...' : (translatedQuestion || pollData.poll_question)}
+        </h3>
 
         {/* Show voting interface if not voted or can change vote */}
         {canVote && !showResults() && (
@@ -501,7 +594,9 @@ export const PollStudentView: React.FC<PollStudentViewProps> = ({ componentId, p
                 {options.map((option) => (
                   <div key={option.id} className="flex items-center space-x-2">
                     <RadioGroupItem value={option.id} id={option.id} />
-                    <Label htmlFor={option.id}>{option.option_text}</Label>
+                    <Label htmlFor={option.id}>
+                      {translatedOptions[option.id] || option.option_text}
+                    </Label>
                   </div>
                 ))}
               </RadioGroup>
@@ -522,7 +617,9 @@ export const PollStudentView: React.FC<PollStudentViewProps> = ({ componentId, p
                         }
                       }}
                     />
-                    <Label htmlFor={option.id}>{option.option_text}</Label>
+                    <Label htmlFor={option.id}>
+                      {translatedOptions[option.id] || option.option_text}
+                    </Label>
                   </div>
                 ))}
               </div>
@@ -578,6 +675,7 @@ export const PollStudentView: React.FC<PollStudentViewProps> = ({ componentId, p
                           key={option.id}
                           option={option}
                           index={index}
+                          translatedText={translatedOptions[option.id]}
                         />
                       ))}
                     </div>
