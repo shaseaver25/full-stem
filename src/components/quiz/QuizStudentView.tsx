@@ -29,6 +29,7 @@ interface QuizComponentData {
 interface QuizStudentViewProps {
   componentId: string;
   read_aloud?: boolean;
+  quizData?: any; // Optional pre-loaded quiz data
 }
 
 interface QuizData {
@@ -63,7 +64,7 @@ interface QuizOption {
   is_correct: boolean;
 }
 
-export function QuizStudentView({ componentId, read_aloud = true }: QuizStudentViewProps) {
+export function QuizStudentView({ componentId, read_aloud = true, quizData: preloadedQuizData }: QuizStudentViewProps) {
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [quizData, setQuizData] = useState<QuizData | null>(null);
@@ -198,23 +199,34 @@ export function QuizStudentView({ componentId, read_aloud = true }: QuizStudentV
   const loadQuiz = async () => {
     setLoading(true);
     try {
-      // Get the lesson component to access quiz data from content
-      const { data: component, error: componentError } = await supabase
-        .from('lesson_components')
-        .select('content')
-        .eq('id', componentId)
-        .single();
-
-      if (componentError) throw componentError;
-
-      console.log('🔍 QuizStudentView: Loaded component content:', JSON.stringify(component?.content, null, 2));
+      let quizDataFromContent;
       
-      const quizDataFromContent = (component?.content as any)?.quizData;
+      // Use preloaded data if available, otherwise fetch from database
+      if (preloadedQuizData) {
+        console.log('🔍 QuizStudentView: Using preloaded quiz data');
+        quizDataFromContent = preloadedQuizData;
+      } else {
+        console.log('🔍 QuizStudentView: Fetching quiz data from database');
+        // Get the lesson component to access quiz data from content
+        const { data: component, error: componentError } = await supabase
+          .from('lesson_components')
+          .select('content')
+          .eq('id', componentId)
+          .single();
+
+        if (componentError) {
+          console.error('❌ QuizStudentView: Database error:', componentError);
+          throw componentError;
+        }
+
+        console.log('🔍 QuizStudentView: Loaded component content');
+        quizDataFromContent = (component?.content as any)?.quizData;
+      }
+      
       console.log('🔍 QuizStudentView: quizData exists?', !!quizDataFromContent);
       
       if (!quizDataFromContent) {
-        console.error('❌ QuizStudentView: No quizData found in component.content');
-        console.error('❌ QuizStudentView: Available keys in content:', Object.keys(component?.content || {}));
+        console.error('❌ QuizStudentView: No quizData found');
         throw new Error('Quiz has not been configured yet. Please ask your teacher to configure the quiz using the Quiz Builder.');
       }
 

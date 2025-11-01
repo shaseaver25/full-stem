@@ -304,7 +304,7 @@ export function LessonComponentRenderer({
 
   // Render quiz component
   if (component_type === 'quiz') {
-    return <QuizStudentView componentId={id} read_aloud={read_aloud} />;
+    return <QuizStudentView componentId={id} read_aloud={read_aloud} quizData={content?.quizData} />;
   }
 
   return (
