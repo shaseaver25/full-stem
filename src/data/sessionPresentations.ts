@@ -18,7 +18,7 @@ export interface SessionPresentation {
 export const sessionPresentations: Record<string, SessionPresentation> = {
   "AI-Assisted Skill Practice: Redefining Roleplay": {
     sessionTitle: "AI-Assisted Skill Practice: Redefining Roleplay",
-    embedUrl: "https://www.canva.com/design/DAG0dxt2rcs/view?embed",
+    embedUrl: "/presentations/ai-assisted-skill-practice.pdf",
     slideCount: 20,
     slides: [
       {
