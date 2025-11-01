@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -7,6 +7,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Progress } from '@/components/ui/progress';
 import { CheckCircle2, BarChart3 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import SpeechControls from '@/components/SpeechControls';
+import { useElevenLabsTTSPublic } from '@/hooks/useElevenLabsTTSPublic';
+import { useLiveTranslation } from '@/hooks/useLiveTranslation';
 
 interface PollOption {
   id: string;
@@ -20,12 +23,21 @@ interface Poll {
   type: 'multiple-choice' | 'open-ended';
 }
 
-const PollSurvey: React.FC = () => {
+interface PollSurveyProps {
+  targetLanguage?: string;
+}
+
+const PollSurvey: React.FC<PollSurveyProps> = ({ targetLanguage = 'en' }) => {
   const { toast } = useToast();
   const [selectedOption, setSelectedOption] = useState<string>('');
   const [openResponse, setOpenResponse] = useState<string>('');
   const [hasVoted, setHasVoted] = useState(false);
   const [showResults, setShowResults] = useState(false);
+  const [translatedQuestion, setTranslatedQuestion] = useState<string | null>(null);
+  const [translatedOptions, setTranslatedOptions] = useState<Record<string, string>>({});
+
+  const { translateText, isTranslating } = useLiveTranslation();
+  const { speak, pause, resume, stop, isPlaying, isPaused, isLoading, error, currentTime, duration } = useElevenLabsTTSPublic(targetLanguage);
 
   // Sample poll data
   const [poll] = useState<Poll>({
@@ -40,6 +52,36 @@ const PollSurvey: React.FC = () => {
   });
 
   const totalVotes = poll.options.reduce((sum, option) => sum + option.votes, 0);
+
+  useEffect(() => {
+    const translatePoll = async () => {
+      if (targetLanguage !== 'en') {
+        const translatedQ = await translateText({ text: poll.question, targetLanguage });
+        setTranslatedQuestion(translatedQ);
+
+        const translatedOpts: Record<string, string> = {};
+        for (const option of poll.options) {
+          const translated = await translateText({ text: option.text, targetLanguage });
+          if (translated) {
+            translatedOpts[option.id] = translated;
+          }
+        }
+        setTranslatedOptions(translatedOpts);
+      } else {
+        setTranslatedQuestion(null);
+        setTranslatedOptions({});
+      }
+    };
+    translatePoll();
+  }, [targetLanguage, poll]);
+
+  const handleReadAloud = () => {
+    const questionText = translatedQuestion || poll.question;
+    const optionsText = poll.options
+      .map((opt, idx) => `Option ${idx + 1}: ${translatedOptions[opt.id] || opt.text}`)
+      .join('. ');
+    speak(`${questionText}. ${optionsText}`);
+  };
 
   const handleSubmitVote = () => {
     if (!selectedOption && !openResponse.trim()) {
@@ -68,26 +110,42 @@ const PollSurvey: React.FC = () => {
   return (
     <Card className="w-full">
       <CardHeader>
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-2">
           <div className="flex items-center gap-2">
             <BarChart3 className="h-5 w-5 text-primary" />
             <CardTitle className="text-lg">Live Poll</CardTitle>
           </div>
-          {!showResults && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowResults(!showResults)}
-            >
-              View Results
-            </Button>
-          )}
+          <div className="flex items-center gap-2">
+            <SpeechControls
+              isPlaying={isPlaying}
+              isPaused={isPaused}
+              isLoading={isLoading}
+              error={error}
+              currentTime={currentTime}
+              duration={duration}
+              onPlay={handleReadAloud}
+              onPause={pause}
+              onResume={resume}
+              onStop={stop}
+            />
+            {!showResults && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowResults(!showResults)}
+              >
+                View Results
+              </Button>
+            )}
+          </div>
         </div>
         <CardDescription>Your responses are anonymous</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-4">
-          <h3 className="font-medium text-foreground">{poll.question}</h3>
+          <h3 className="font-medium text-foreground">
+            {isTranslating ? 'Translating...' : (translatedQuestion || poll.question)}
+          </h3>
 
           {!hasVoted && !showResults ? (
             // Voting Interface
@@ -102,7 +160,7 @@ const PollSurvey: React.FC = () => {
                           htmlFor={option.id}
                           className="font-normal cursor-pointer flex-1"
                         >
-                          {option.text}
+                          {translatedOptions[option.id] || option.text}
                         </Label>
                       </div>
                     ))}
@@ -142,12 +200,12 @@ const PollSurvey: React.FC = () => {
                   const isSelected = option.id === selectedOption && hasVoted;
                   
                   return (
-                    <div key={option.id} className="space-y-2">
-                      <div className="flex justify-between items-center text-sm">
-                        <span className={`${isSelected ? 'font-semibold text-primary' : 'text-foreground'}`}>
-                          {option.text}
-                          {isSelected && ' ✓'}
-                        </span>
+                      <div key={option.id} className="space-y-2">
+                        <div className="flex justify-between items-center text-sm">
+                          <span className={`${isSelected ? 'font-semibold text-primary' : 'text-foreground'}`}>
+                            {translatedOptions[option.id] || option.text}
+                            {isSelected && ' ✓'}
+                          </span>
                         <span className="text-muted-foreground font-medium">
                           {percentage}%
                         </span>

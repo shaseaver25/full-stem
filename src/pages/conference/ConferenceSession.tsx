@@ -1,12 +1,16 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Clock, MapPin, User } from 'lucide-react';
+import { ArrowLeft, Clock, MapPin, User, Languages } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import SlidesViewer from '@/components/conference/SlidesViewer';
 import PollSurvey from '@/components/conference/PollSurvey';
+import SpeechControls from '@/components/SpeechControls';
+import { useElevenLabsTTSPublic } from '@/hooks/useElevenLabsTTSPublic';
+import { useLiveTranslation } from '@/hooks/useLiveTranslation';
 
 interface SessionData {
   title: string;
@@ -30,6 +34,25 @@ const SessionPage: React.FC = () => {
     room: 'TBD',
     speaker: '',
     description: 'Session details not available'
+  };
+
+  // Translation and TTS
+  const [targetLanguage, setTargetLanguage] = useState<string>('en');
+  const [translatedDescription, setTranslatedDescription] = useState<string | null>(null);
+  const { translateText, isTranslating } = useLiveTranslation();
+  const { speak, pause, resume, stop, isPlaying, isPaused, isLoading, error, currentTime, duration } = useElevenLabsTTSPublic(targetLanguage);
+
+  const handleTranslate = async () => {
+    if (!session.description) return;
+    const translated = await translateText({ text: session.description, targetLanguage });
+    if (translated) {
+      setTranslatedDescription(translated);
+    }
+  };
+
+  const handleReadAloud = () => {
+    const textToRead = translatedDescription || session.description || '';
+    speak(textToRead);
   };
 
   return (
@@ -76,6 +99,52 @@ const SessionPage: React.FC = () => {
                   {session.room}
                 </Badge>
               </div>
+
+              {/* Language and Controls */}
+              <div className="flex items-center gap-3 mb-4 flex-wrap">
+                <Select value={targetLanguage} onValueChange={setTargetLanguage}>
+                  <SelectTrigger className="w-[200px] bg-background/20 border-primary-foreground/20 text-primary-foreground">
+                    <Languages className="h-4 w-4 mr-2" />
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="en">English</SelectItem>
+                    <SelectItem value="es">Spanish</SelectItem>
+                    <SelectItem value="fr">French</SelectItem>
+                    <SelectItem value="de">German</SelectItem>
+                    <SelectItem value="zh">Chinese</SelectItem>
+                    <SelectItem value="ja">Japanese</SelectItem>
+                    <SelectItem value="ar">Arabic</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                {targetLanguage !== 'en' && (
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={handleTranslate}
+                    disabled={isTranslating}
+                    className="bg-background/20 hover:bg-background/30"
+                  >
+                    {isTranslating ? 'Translating...' : 'Translate'}
+                  </Button>
+                )}
+
+                {session.description && (
+                  <SpeechControls
+                    isPlaying={isPlaying}
+                    isPaused={isPaused}
+                    isLoading={isLoading}
+                    error={error}
+                    currentTime={currentTime}
+                    duration={duration}
+                    onPlay={handleReadAloud}
+                    onPause={pause}
+                    onResume={resume}
+                    onStop={stop}
+                  />
+                )}
+              </div>
               
               <CardTitle className="text-3xl mb-2">{session.title}</CardTitle>
               
@@ -88,7 +157,7 @@ const SessionPage: React.FC = () => {
               
               {session.description && (
                 <CardDescription className="text-primary-foreground/70 mt-3">
-                  {session.description}
+                  {translatedDescription || session.description}
                 </CardDescription>
               )}
             </CardHeader>
@@ -98,12 +167,12 @@ const SessionPage: React.FC = () => {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Left Column - Slides (Takes 2/3 width on large screens) */}
             <div className="lg:col-span-2 space-y-6">
-              <SlidesViewer sessionTitle={session.title} />
+              <SlidesViewer sessionTitle={session.title} targetLanguage={targetLanguage} />
             </div>
 
             {/* Right Column - Poll/Survey (Takes 1/3 width on large screens) */}
             <div className="lg:col-span-1 space-y-6">
-              <PollSurvey />
+              <PollSurvey targetLanguage={targetLanguage} />
               
               {/* Session Info Card */}
               <Card>
