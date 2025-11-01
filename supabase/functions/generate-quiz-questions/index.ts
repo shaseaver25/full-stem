@@ -114,21 +114,25 @@ serve(async (req) => {
     console.log(`Extracted ${totalWords} words from ${components?.length || 0} components`);
 
     // Create AI prompt for quiz generation
+    const questionTypesStr = questionTypes.join(', ');
     const systemPrompt = `You are an expert educational assessment designer. Your task is to create high-quality quiz questions based on lesson content provided by a teacher.
 
 REQUIREMENTS:
 1. Questions must be directly based on the provided content (not general knowledge)
 2. Questions must be clear, unambiguous, and grade-appropriate
 3. For multiple choice: Create 4 plausible options with only ONE correct answer
-4. Distractors (wrong answers) should be plausible but clearly incorrect to someone who learned the material
-5. Avoid trick questions or overly complex language
-6. Include brief explanations for correct answers
-7. Vary question difficulty according to specified level: ${difficulty || 'medium'}
-8. Focus on understanding, not just memorization
+4. For true/false: Create clear statements that are definitively true or false based on content
+5. For multiple select: Create 4-6 options with 2-3 correct answers
+6. For short answer: Provide 2-3 acceptable answer variations
+7. Distractors (wrong answers) should be plausible but clearly incorrect to someone who learned the material
+8. Avoid trick questions or overly complex language
+9. Include brief explanations for correct answers
+10. Vary question difficulty according to specified level: ${difficulty || 'medium'}
+11. Focus on understanding, not just memorization
 
 OUTPUT FORMAT: Return ONLY valid JSON (no markdown, no other text), structured as an array of question objects.`;
 
-    const userPrompt = `Create ${questionCount || 5} multiple choice quiz questions from the following lesson content.
+    const userPrompt = `Create ${questionCount || 5} quiz questions from the following lesson content.
 
 LESSON INFORMATION:
 Title: ${lesson.title || 'Untitled Lesson'}
@@ -140,33 +144,82 @@ ${extractedContent}
 
 REQUIREMENTS:
 - Number of questions: ${questionCount || 5}
-- Question type: Multiple Choice only
+- Question types to generate: ${questionTypesStr}
 - Difficulty level: ${difficulty || 'medium'}
 - Points per question: 2
+- Mix the question types across all questions
 
-Return a JSON array of questions in this EXACT format:
-[
-  {
-    "question_type": "multiple_choice",
-    "question_text": "What is the primary function of X?",
-    "question_order": 1,
-    "points": 2,
-    "hint": "Think about what X does with Y.",
-    "explanation": "The correct answer is A because...",
-    "options": [
-      {"text": "Correct answer", "is_correct": true},
-      {"text": "Plausible distractor 1", "is_correct": false},
-      {"text": "Plausible distractor 2", "is_correct": false},
-      {"text": "Plausible distractor 3", "is_correct": false}
-    ]
-  }
-]
+Return a JSON array of questions in these formats:
+
+MULTIPLE CHOICE:
+{
+  "question_type": "multiple_choice",
+  "question_text": "What is the primary function of X?",
+  "question_order": 0,
+  "points": 2,
+  "hint": "Think about what X does with Y.",
+  "explanation": "The correct answer is A because...",
+  "options": [
+    {"text": "Correct answer", "is_correct": true},
+    {"text": "Plausible distractor 1", "is_correct": false},
+    {"text": "Plausible distractor 2", "is_correct": false},
+    {"text": "Plausible distractor 3", "is_correct": false}
+  ]
+}
+
+TRUE/FALSE:
+{
+  "question_type": "true_false",
+  "question_text": "X is responsible for Y in the system.",
+  "question_order": 1,
+  "points": 2,
+  "hint": "Consider the role of X.",
+  "explanation": "This is true/false because...",
+  "options": [
+    {"text": "True", "is_correct": true},
+    {"text": "False", "is_correct": false}
+  ]
+}
+
+MULTIPLE SELECT:
+{
+  "question_type": "multiple_select",
+  "question_text": "Which of the following are characteristics of X? (Select all that apply)",
+  "question_order": 2,
+  "points": 2,
+  "hint": "There are multiple correct answers.",
+  "explanation": "The correct answers are A, B, and C because...",
+  "options": [
+    {"text": "Correct characteristic 1", "is_correct": true},
+    {"text": "Correct characteristic 2", "is_correct": true},
+    {"text": "Incorrect characteristic 1", "is_correct": false},
+    {"text": "Incorrect characteristic 2", "is_correct": false},
+    {"text": "Correct characteristic 3", "is_correct": true}
+  ]
+}
+
+SHORT ANSWER:
+{
+  "question_type": "short_answer",
+  "question_text": "What is the main purpose of X?",
+  "question_order": 3,
+  "points": 2,
+  "hint": "Focus on the primary function.",
+  "explanation": "The answer should mention...",
+  "options": [
+    {"text": "Primary acceptable answer", "is_correct": true},
+    {"text": "Alternative phrasing 1", "is_correct": true},
+    {"text": "Alternative phrasing 2", "is_correct": true}
+  ]
+}
 
 IMPORTANT: 
 - Ensure questions test comprehension from the provided content
 - Make sure all questions are directly answerable from the provided content
 - Use proper terminology from the content
 - For multiple choice, make distractors plausible but clearly wrong
+- For multiple select, ensure 2-3 correct answers are clear from the content
+- For short answer, provide variations of acceptable answers
 - Return ONLY the JSON array, no other text or markdown formatting`;
 
     console.log('Calling Lovable AI for quiz question generation...');
@@ -238,9 +291,24 @@ IMPORTANT:
     // Validate questions
     const validQuestions = questions.filter((q: any) => {
       if (!q.question_text || !q.question_type) return false;
-      if (q.question_type !== 'multiple_choice') return false;
-      if (!q.options || q.options.length !== 4) return false;
-      if (!q.options.some((opt: any) => opt.is_correct)) return false;
+      
+      // Validate based on question type
+      if (q.question_type === 'multiple_choice') {
+        if (!q.options || q.options.length !== 4) return false;
+        if (q.options.filter((opt: any) => opt.is_correct).length !== 1) return false;
+      } else if (q.question_type === 'true_false') {
+        if (!q.options || q.options.length !== 2) return false;
+        if (q.options.filter((opt: any) => opt.is_correct).length !== 1) return false;
+      } else if (q.question_type === 'multiple_select') {
+        if (!q.options || q.options.length < 4) return false;
+        const correctCount = q.options.filter((opt: any) => opt.is_correct).length;
+        if (correctCount < 2) return false;
+      } else if (q.question_type === 'short_answer') {
+        if (!q.options || q.options.length < 1) return false;
+      } else {
+        return false; // Unknown question type
+      }
+      
       return true;
     });
 

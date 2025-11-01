@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import { CheckCircle2, Plus, Trash2, MoveUp, MoveDown, Lightbulb, Image as ImageIcon, Sparkles, Loader2 } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
@@ -47,6 +48,7 @@ export function QuizBuilderComponent({ initialData, onSave, lessonId }: QuizBuil
   const [isGenerating, setIsGenerating] = useState(false);
   const [questionCountAI, setQuestionCountAI] = useState(5);
   const [difficultyAI, setDifficultyAI] = useState('medium');
+  const [selectedQuestionTypes, setSelectedQuestionTypes] = useState<string[]>(['multiple_choice']);
   const [generatedQuestions, setGeneratedQuestions] = useState<QuizQuestion[]>([]);
   const [showPreviewDialog, setShowPreviewDialog] = useState(false);
   const [previewIndex, setPreviewIndex] = useState(0);
@@ -261,7 +263,7 @@ export function QuizBuilderComponent({ initialData, onSave, lessonId }: QuizBuil
           body: JSON.stringify({
             lessonId,
             questionCount: questionCountAI,
-            questionTypes: ['multiple_choice'],
+            questionTypes: selectedQuestionTypes,
             difficulty: difficultyAI
           })
         }
@@ -798,9 +800,75 @@ export function QuizBuilderComponent({ initialData, onSave, lessonId }: QuizBuil
               </div>
 
               <div className="space-y-2">
-                <Label>STEP 2: Question type</Label>
-                <div className="text-sm text-muted-foreground p-3 bg-muted rounded-md">
-                  ✓ Multiple Choice (MVP - only type available currently)
+                <Label>STEP 2: Question types (select one or more)</Label>
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="type-mc"
+                      checked={selectedQuestionTypes.includes('multiple_choice')}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setSelectedQuestionTypes([...selectedQuestionTypes, 'multiple_choice']);
+                        } else {
+                          setSelectedQuestionTypes(selectedQuestionTypes.filter(t => t !== 'multiple_choice'));
+                        }
+                      }}
+                    />
+                    <Label htmlFor="type-mc" className="font-normal cursor-pointer">
+                      Multiple Choice - Select one correct answer from 4 options
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="type-tf"
+                      checked={selectedQuestionTypes.includes('true_false')}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setSelectedQuestionTypes([...selectedQuestionTypes, 'true_false']);
+                        } else {
+                          setSelectedQuestionTypes(selectedQuestionTypes.filter(t => t !== 'true_false'));
+                        }
+                      }}
+                    />
+                    <Label htmlFor="type-tf" className="font-normal cursor-pointer">
+                      True/False - Binary choice questions
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="type-ms"
+                      checked={selectedQuestionTypes.includes('multiple_select')}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setSelectedQuestionTypes([...selectedQuestionTypes, 'multiple_select']);
+                        } else {
+                          setSelectedQuestionTypes(selectedQuestionTypes.filter(t => t !== 'multiple_select'));
+                        }
+                      }}
+                    />
+                    <Label htmlFor="type-ms" className="font-normal cursor-pointer">
+                      Multiple Select - Choose all correct answers
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="type-sa"
+                      checked={selectedQuestionTypes.includes('short_answer')}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setSelectedQuestionTypes([...selectedQuestionTypes, 'short_answer']);
+                        } else {
+                          setSelectedQuestionTypes(selectedQuestionTypes.filter(t => t !== 'short_answer'));
+                        }
+                      }}
+                    />
+                    <Label htmlFor="type-sa" className="font-normal cursor-pointer">
+                      Short Answer - Type the answer (AI graded)
+                    </Label>
+                  </div>
+                  {selectedQuestionTypes.length === 0 && (
+                    <p className="text-sm text-destructive">⚠️ Select at least one question type</p>
+                  )}
                 </div>
               </div>
 
@@ -844,7 +912,11 @@ export function QuizBuilderComponent({ initialData, onSave, lessonId }: QuizBuil
             <Button variant="outline" onClick={() => setShowAIDialog(false)} className="flex-1">
               Cancel
             </Button>
-            <Button onClick={generateQuestionsWithAI} disabled={isGenerating} className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600">
+            <Button 
+              onClick={generateQuestionsWithAI} 
+              disabled={isGenerating || selectedQuestionTypes.length === 0} 
+              className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+            >
               {isGenerating ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
