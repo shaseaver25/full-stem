@@ -12,12 +12,14 @@ interface Session {
   id: string;
   title: string;
   description: string;
-  speakerName: string;
-  speakerBio: string;
-  headshotUrl: string;
+  speakers: Array<{
+    name: string;
+    bio: string;
+    headshotUrl: string;
+    linkedInUrl: string;
+  }>;
   badges: string[];
   isKeynote: boolean;
-  linkedInUrl: string;
   lessonId: string;
 }
 
@@ -28,21 +30,52 @@ const ConferenceDemo: React.FC = () => {
   // SCALABILITY: Skip expensive auth/settings checks for conference mode
   useConferenceMode();
 
-  // Map speakers to sessions - filter out cancelled sessions
-  const sessions: Session[] = speakers
+  // Normalize session title by removing panelist/co-presenter suffixes
+  const normalizeTitle = (title: string) => {
+    return title
+      .replace(/\s*\(Panelist\)\s*$/i, '')
+      .replace(/\s*\(Co-Presenter\)\s*$/i, '')
+      .replace(/\s*\(General\)\s*$/i, '')
+      .trim();
+  };
+
+  // Group speakers by session title
+  const sessionMap = new Map<string, Session>();
+  
+  speakers
     .filter(speaker => !speaker.isCancelled)
-    .map(speaker => ({
-      id: speaker.id,
-      title: speaker.title,
-      description: speaker.description,
-      speakerName: speaker.name,
-      speakerBio: speaker.bio,
-      headshotUrl: speaker.headshotUrl,
-      badges: speaker.badges,
-      isKeynote: speaker.isKeynote,
-      linkedInUrl: speaker.linkedInUrl,
-      lessonId: 'cf34126a-045c-456f-9664-abd41c679f9a', // Default lesson for demo
-    }));
+    .forEach(speaker => {
+      const normalizedTitle = normalizeTitle(speaker.title);
+      
+      if (sessionMap.has(normalizedTitle)) {
+        // Add speaker to existing session
+        const session = sessionMap.get(normalizedTitle)!;
+        session.speakers.push({
+          name: speaker.name,
+          bio: speaker.bio,
+          headshotUrl: speaker.headshotUrl,
+          linkedInUrl: speaker.linkedInUrl,
+        });
+      } else {
+        // Create new session
+        sessionMap.set(normalizedTitle, {
+          id: speaker.id,
+          title: normalizedTitle,
+          description: speaker.description,
+          speakers: [{
+            name: speaker.name,
+            bio: speaker.bio,
+            headshotUrl: speaker.headshotUrl,
+            linkedInUrl: speaker.linkedInUrl,
+          }],
+          badges: speaker.badges,
+          isKeynote: speaker.isKeynote,
+          lessonId: 'cf34126a-045c-456f-9664-abd41c679f9a',
+        });
+      }
+    });
+
+  const sessions: Session[] = Array.from(sessionMap.values());
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
