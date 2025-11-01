@@ -76,18 +76,26 @@ export function parseConferenceSessions(csvContent: string): SessionBlock[] {
   // Sort blocks by time chronologically
   const sortedBlocks = blocks.sort((a, b) => {
     const parseTime = (timeStr: string): number => {
-      const timePart = timeStr.split('–')[0].trim();
-      const match = timePart.match(/(\d+):(\d+)(am|pm)/i);
+      // Time format: "9:45–10:30am" or "11:45am–12:30pm"
+      // Extract the period (am/pm) from the end of the string
+      const periodMatch = timeStr.match(/(am|pm)$/i);
+      if (!periodMatch) {
+        console.warn('CSV Parser - No period found in time:', timeStr);
+        return 0;
+      }
+      const period = periodMatch[1];
       
-      if (!match) {
+      // Extract the start time (before the dash)
+      const startTimeMatch = timeStr.match(/^(\d+):(\d+)/);
+      if (!startTimeMatch) {
         console.warn('CSV Parser - Invalid time format:', timeStr);
         return 0;
       }
       
-      const [, hoursStr, minutesStr, period] = match;
-      const hours = parseInt(hoursStr, 10);
-      const minutes = parseInt(minutesStr, 10);
+      const hours = parseInt(startTimeMatch[1], 10);
+      const minutes = parseInt(startTimeMatch[2], 10);
       
+      // Convert to 24-hour format
       let hour24 = hours;
       if (period.toLowerCase() === 'pm' && hours !== 12) {
         hour24 = hours + 12;
@@ -95,14 +103,15 @@ export function parseConferenceSessions(csvContent: string): SessionBlock[] {
         hour24 = 0;
       }
       
-      return hour24 * 60 + minutes;
+      const totalMinutes = hour24 * 60 + minutes;
+      console.log(`Parsing ${timeStr}: ${hour24}:${minutes} = ${totalMinutes} minutes`);
+      return totalMinutes;
     };
     
     return parseTime(a.timeSlot) - parseTime(b.timeSlot);
   });
   
-  console.log('CSV Parser - Final sorted blocks:', sortedBlocks.length);
-  console.log('CSV Parser - Sample block:', sortedBlocks[0]);
+  console.log('CSV Parser - Final sorted blocks:', sortedBlocks.map(b => b.timeSlot));
   
   return sortedBlocks;
 }
