@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import InlineReadAloud from '@/components/InlineReadAloud';
 import { LessonComponent } from '@/hooks/useLessonComponents';
-import { FileText, Video, Code, MessageSquare, CheckSquare, Volume2, Languages, CheckCircle2 } from 'lucide-react';
+import { FileText, Video, Code, MessageSquare, CheckSquare, Volume2, Languages, CheckCircle2, BarChart3 } from 'lucide-react';
 import { DiscussionComponent } from './DiscussionComponent';
 import { PresentationViewer } from './PresentationViewer';
 import { usePresentationTTS } from '@/hooks/usePresentationTTS';
@@ -311,7 +311,17 @@ export function LessonComponentRenderer({
 
   // Render poll component
   if (component_type === 'poll') {
-    return <PollStudentView componentId={id} pollData={content?.pollData} />;
+    return (
+      <div className="space-y-4">
+        {showTypeLabel && (
+          <Badge variant="outline" className="mb-3">
+            <BarChart3 className="w-3 h-3 mr-1" />
+            {componentTypeLabels['poll'] || 'Poll/Survey'}
+          </Badge>
+        )}
+        <PollStudentView componentId={id} pollData={content?.pollData} />
+      </div>
+    );
   }
 
   return (
