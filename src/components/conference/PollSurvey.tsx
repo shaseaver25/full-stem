@@ -63,7 +63,7 @@ const PollSurvey: React.FC<PollSurveyProps> = ({ targetLanguage = 'en', sessionT
             vote_count
           )
         `)
-        .eq('component_id', '00000000-0000-0000-0000-000000000001')
+        .eq('component_id', '7ee7e0ff-a807-4f45-ad16-5fda4f4a2b15')
         .order('created_at');
 
       const { data: pollComponents, error } = await query;
