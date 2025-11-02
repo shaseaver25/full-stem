@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,30 +10,41 @@ import SlidesViewer from '@/components/conference/SlidesViewer';
 import PollSurvey from '@/components/conference/PollSurvey';
 import { useLiveTranslation } from '@/hooks/useLiveTranslation';
 import { sessionPresentations } from '@/data/sessionPresentations';
-
-interface SessionData {
-  title: string;
-  time: string;
-  room: string;
-  speaker?: string;
-  description?: string;
-}
+import { useSessionData, findSessionByTitle, SessionData } from '@/hooks/useSessionData';
 
 const SessionPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { sessionId } = useParams<{ sessionId: string }>();
   
-  // Get session data from navigation state
-  const sessionData = location.state as SessionData | null;
-
-  // Fallback data if no state is provided
-  const session = sessionData || {
+  // Get session data from navigation state (for internal navigation)
+  const stateSessionData = location.state as SessionData | null;
+  
+  // Fetch all sessions from CSV
+  const { data: allSessions, isLoading } = useSessionData();
+  
+  // State for the current session
+  const [session, setSession] = useState<SessionData>({
     title: 'Conference Session',
     time: 'TBD',
     room: 'TBD',
     speaker: '',
     description: 'Session details not available'
-  };
+  });
+
+  // Find session by URL parameter or use state
+  useEffect(() => {
+    if (stateSessionData) {
+      // Use navigation state if available (internal navigation)
+      setSession(stateSessionData);
+    } else if (sessionId && allSessions) {
+      // Look up session from CSV using URL parameter (external links)
+      const foundSession = findSessionByTitle(allSessions, sessionId);
+      if (foundSession) {
+        setSession(foundSession);
+      }
+    }
+  }, [sessionId, allSessions, stateSessionData]);
 
   // Get presentation data if available
   const presentationData = sessionPresentations[session.title];
@@ -50,6 +61,18 @@ const SessionPage: React.FC = () => {
       setTranslatedDescription(translated);
     }
   };
+
+  // Show loading state while fetching session data
+  if (isLoading && !stateSessionData) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading session...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
