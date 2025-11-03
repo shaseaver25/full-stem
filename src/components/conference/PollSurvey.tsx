@@ -80,7 +80,7 @@ const PollSurvey: React.FC<PollSurveyProps> = ({ targetLanguage = 'en', sessionT
             text: opt.option_text,
             votes: opt.vote_count || 0
           })),
-        type: 'multiple-choice' as const
+        type: poll.poll_type === 'open_ended' ? 'open-ended' : 'multiple-choice'
       }));
     }
   });
