@@ -8,11 +8,16 @@ import { Switch } from '@/components/ui/switch';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { CheckCircle2, Plus, Trash2, MoveUp, MoveDown, Lightbulb, Image as ImageIcon, Sparkles, Loader2 } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
+import { CheckCircle2, Plus, Trash2, MoveUp, MoveDown, Lightbulb, Image as ImageIcon, Sparkles, Loader2, BookmarkPlus, BookOpen, Check } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
+import { QuestionBankModal } from './QuestionBankModal';
+import { ImageUploadInput } from './ImageUploadInput';
+import { useAddToQuestionBank, useBulkAddToQuestionBank, type QuestionBankQuestion } from '@/hooks/useQuestionBank';
 
 interface QuizQuestion {
   id: string;
@@ -52,6 +57,12 @@ export function QuizBuilderComponent({ initialData, onSave, lessonId }: QuizBuil
   const [generatedQuestions, setGeneratedQuestions] = useState<QuizQuestion[]>([]);
   const [showPreviewDialog, setShowPreviewDialog] = useState(false);
   const [previewIndex, setPreviewIndex] = useState(0);
+
+  // Question Bank state
+  const [showQuestionBankModal, setShowQuestionBankModal] = useState(false);
+  const [savedQuestionIds, setSavedQuestionIds] = useState<Set<string>>(new Set());
+  const addToQuestionBank = useAddToQuestionBank();
+  const bulkAddToQuestionBank = useBulkAddToQuestionBank();
   
   // Quiz settings
   const [title, setTitle] = useState(initialData?.title || '');
@@ -342,6 +353,79 @@ export function QuizBuilderComponent({ initialData, onSave, lessonId }: QuizBuil
     }
   };
 
+  // Question Bank functions
+  const handleSaveToQuestionBank = async (questionIndex: number) => {
+    const question = questions[questionIndex];
+    const questionBankData: Omit<QuestionBankQuestion, 'id' | 'created_at' | 'updated_at' | 'user_id'> = {
+      question_text: question.question_text,
+      question_type: question.question_type,
+      image_url: question.question_image_url,
+      hint: question.hint_text,
+      explanation: question.explanation,
+      points: question.points,
+      difficulty: undefined,
+      tags: title ? [title] : undefined,
+      options: question.options.map(opt => ({
+        id: opt.id,
+        question_id: '',
+        option_text: opt.option_text,
+        is_correct: opt.is_correct,
+        option_order: opt.option_order,
+      })),
+    };
+
+    await addToQuestionBank.mutateAsync(questionBankData);
+    setSavedQuestionIds(prev => new Set(prev).add(question.id));
+  };
+
+  const handleBulkSaveToQuestionBank = async () => {
+    const questionsData: Omit<QuestionBankQuestion, 'id' | 'created_at' | 'updated_at' | 'user_id'>[] = questions.map(q => ({
+      question_text: q.question_text,
+      question_type: q.question_type,
+      image_url: q.question_image_url,
+      hint: q.hint_text,
+      explanation: q.explanation,
+      points: q.points,
+      difficulty: undefined,
+      tags: title ? [title] : undefined,
+      options: q.options.map(opt => ({
+        id: opt.id,
+        question_id: '',
+        option_text: opt.option_text,
+        is_correct: opt.is_correct,
+        option_order: opt.option_order,
+      })),
+    }));
+
+    await bulkAddToQuestionBank.mutateAsync(questionsData);
+    setSavedQuestionIds(new Set(questions.map(q => q.id)));
+  };
+
+  const handleAddFromQuestionBank = (bankQuestions: QuestionBankQuestion[]) => {
+    const newQuestions: QuizQuestion[] = bankQuestions.map((bq, idx) => ({
+      id: crypto.randomUUID(),
+      question_order: questions.length + idx,
+      question_type: bq.question_type,
+      question_text: bq.question_text,
+      question_image_url: bq.image_url,
+      points: bq.points,
+      hint_text: bq.hint,
+      explanation: bq.explanation,
+      options: bq.options?.map(opt => ({
+        id: crypto.randomUUID(),
+        option_order: opt.option_order,
+        option_text: opt.option_text,
+        is_correct: opt.is_correct,
+      })) || [],
+    }));
+
+    setQuestions([...questions, ...newQuestions]);
+    toast({
+      title: 'Success',
+      description: `Added ${bankQuestions.length} question(s) from question bank`,
+    });
+  };
+
   const totalPoints = questions.reduce((sum, q) => sum + q.points, 0);
 
   return (
@@ -471,6 +555,29 @@ export function QuizBuilderComponent({ initialData, onSave, lessonId }: QuizBuil
             <CardTitle className="text-base">Questions</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
+            {/* Quick Action Buttons */}
+            <div className="flex gap-2 mb-4">
+              <Button
+                onClick={() => setShowQuestionBankModal(true)}
+                variant="outline"
+                className="flex-1"
+              >
+                <BookOpen className="mr-2 h-4 w-4" />
+                Browse Question Bank
+              </Button>
+              {questions.length > 0 && (
+                <Button
+                  onClick={handleBulkSaveToQuestionBank}
+                  variant="outline"
+                  className="flex-1"
+                  disabled={bulkAddToQuestionBank.isPending}
+                >
+                  <BookmarkPlus className="mr-2 h-4 w-4" />
+                  Save All to Bank
+                </Button>
+              )}
+            </div>
+
             {/* AI Generate Button */}
             {lessonId && (
               <Button
@@ -517,8 +624,34 @@ export function QuizBuilderComponent({ initialData, onSave, lessonId }: QuizBuil
               <Card key={question.id} className="border-2">
                 <CardHeader>
                   <div className="flex items-center justify-between">
-                    <CardTitle className="text-sm">Question {qIndex + 1}</CardTitle>
                     <div className="flex items-center gap-2">
+                      <CardTitle className="text-sm">Question {qIndex + 1}</CardTitle>
+                      {savedQuestionIds.has(question.id) && (
+                        <Badge variant="secondary" className="text-xs">
+                          <Check className="h-3 w-3 mr-1" />
+                          Saved
+                        </Badge>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleSaveToQuestionBank(qIndex)}
+                        disabled={addToQuestionBank.isPending || savedQuestionIds.has(question.id)}
+                      >
+                        {savedQuestionIds.has(question.id) ? (
+                          <>
+                            <Check className="h-4 w-4 mr-1" />
+                            Saved
+                          </>
+                        ) : (
+                          <>
+                            <BookmarkPlus className="h-4 w-4 mr-1" />
+                            Save to Bank
+                          </>
+                        )}
+                      </Button>
                       <Label className="text-xs">Points:</Label>
                       <Input
                         type="number"
@@ -559,6 +692,40 @@ export function QuizBuilderComponent({ initialData, onSave, lessonId }: QuizBuil
                       placeholder="Enter your question..."
                       rows={2}
                     />
+                  </div>
+
+                  {/* Question Image */}
+                  <div className="space-y-2">
+                    <Label>Question Image (Optional)</Label>
+                    <Tabs defaultValue="upload">
+                      <TabsList className="grid w-full grid-cols-2">
+                        <TabsTrigger value="upload">Upload Image</TabsTrigger>
+                        <TabsTrigger value="url">Image URL</TabsTrigger>
+                      </TabsList>
+                      <TabsContent value="upload">
+                        <ImageUploadInput
+                          onUpload={(url) => updateQuestion(qIndex, { question_image_url: url })}
+                          currentImage={question.question_image_url}
+                          onRemove={() => updateQuestion(qIndex, { question_image_url: undefined })}
+                        />
+                      </TabsContent>
+                      <TabsContent value="url">
+                        <Input
+                          placeholder="Paste image URL"
+                          value={question.question_image_url || ''}
+                          onChange={(e) => updateQuestion(qIndex, { question_image_url: e.target.value })}
+                        />
+                        {question.question_image_url && (
+                          <div className="mt-2">
+                            <img
+                              src={question.question_image_url}
+                              alt="Question"
+                              className="max-w-xs rounded border"
+                            />
+                          </div>
+                        )}
+                      </TabsContent>
+                    </Tabs>
                   </div>
 
                   {/* Options for MC/TF/MS */}
@@ -1057,6 +1224,13 @@ export function QuizBuilderComponent({ initialData, onSave, lessonId }: QuizBuil
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Question Bank Modal */}
+      <QuestionBankModal
+        open={showQuestionBankModal}
+        onOpenChange={setShowQuestionBankModal}
+        onAddQuestions={handleAddFromQuestionBank}
+      />
     </Card>
   );
 }
