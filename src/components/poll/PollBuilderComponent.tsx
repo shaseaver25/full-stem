@@ -6,10 +6,11 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { BarChart3, Trash2, Plus, GripVertical } from 'lucide-react';
+import { BarChart3, Trash2, Plus, GripVertical, Sparkles } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
+import { useGeneratePollQuestions } from '@/hooks/useGeneratePollQuestions';
 
 interface PollOption {
   id: string;
@@ -21,15 +22,17 @@ interface PollBuilderProps {
   componentId?: string;
   initialData?: any;
   onSave?: (pollData: any) => void;
+  lessonId?: string;
 }
 
 export const PollBuilderComponent: React.FC<PollBuilderProps> = ({
   componentId,
   initialData,
-  onSave
+  onSave,
+  lessonId
 }) => {
   const [pollQuestion, setPollQuestion] = useState('');
-  const [pollType, setPollType] = useState<'single_choice' | 'multiple_choice' | 'rating_scale' | 'ranking' | 'text_response'>('single_choice');
+  const [pollType, setPollType] = useState<'single_choice' | 'multiple_choice' | 'rating_scale' | 'ranking' | 'text_response' | 'word_cloud'>('single_choice');
   const [options, setOptions] = useState<PollOption[]>([
     { id: crypto.randomUUID(), option_text: '', option_order: 0 },
     { id: crypto.randomUUID(), option_text: '', option_order: 1 }
@@ -43,6 +46,8 @@ export const PollBuilderComponent: React.FC<PollBuilderProps> = ({
   const [showVoteCounts, setShowVoteCounts] = useState(true);
   const [loading, setLoading] = useState(false);
   const [pollComponentId, setPollComponentId] = useState<string | null>(null);
+  
+  const generatePollMutation = useGeneratePollQuestions();
 
   useEffect(() => {
     if (initialData) {
@@ -85,7 +90,7 @@ export const PollBuilderComponent: React.FC<PollBuilderProps> = ({
       if (pollData) {
         setPollComponentId(pollData.id);
         setPollQuestion(pollData.poll_question);
-        setPollType(pollData.poll_type as 'single_choice' | 'multiple_choice' | 'rating_scale' | 'ranking' | 'text_response');
+        setPollType(pollData.poll_type as 'single_choice' | 'multiple_choice' | 'rating_scale' | 'ranking' | 'text_response' | 'word_cloud');
         setShowResultsTiming(pollData.show_results_timing as 'before_voting' | 'after_voting' | 'never');
         setAllowAnonymous(pollData.allow_anonymous);
         setAllowChangeVote(pollData.allow_change_vote);
@@ -137,18 +142,44 @@ export const PollBuilderComponent: React.FC<PollBuilderProps> = ({
     setOptions(items.map((item, idx) => ({ ...item, option_order: idx })));
   };
 
+  const handleGenerateWithAI = async () => {
+    if (!lessonId) {
+      toast.error('Lesson ID is required for AI generation');
+      return;
+    }
+
+    const result = await generatePollMutation.mutateAsync({
+      lessonId,
+      pollType: pollType as 'single_choice' | 'rating_scale' | 'word_cloud',
+      questionCount: 1,
+    });
+
+    if (result && result.length > 0) {
+      const generated = result[0];
+      setPollQuestion(generated.question || generated.prompt || '');
+      
+      if (pollType === 'single_choice' && generated.options) {
+        setOptions(generated.options.map((opt: string, idx: number) => ({
+          id: crypto.randomUUID(),
+          option_text: opt,
+          option_order: idx
+        })));
+      }
+    }
+  };
+
   const handleSave = () => {
     if (!pollQuestion.trim()) {
       toast.error('Poll question is required');
       return;
     }
 
-    if (pollType !== 'rating_scale' && pollType !== 'text_response' && options.some(opt => !opt.option_text.trim())) {
+    if (pollType !== 'rating_scale' && pollType !== 'text_response' && pollType !== 'word_cloud' && options.some(opt => !opt.option_text.trim())) {
       toast.error('All options must have text');
       return;
     }
 
-    if (pollType !== 'rating_scale' && pollType !== 'text_response' && options.length < 2) {
+    if (pollType !== 'rating_scale' && pollType !== 'text_response' && pollType !== 'word_cloud' && options.length < 2) {
       toast.error('At least 2 options required');
       return;
     }
@@ -164,7 +195,7 @@ export const PollBuilderComponent: React.FC<PollBuilderProps> = ({
       chart_type: chartType,
       show_percentages: showPercentages,
       show_vote_counts: showVoteCounts,
-      options: (pollType === 'rating_scale' || pollType === 'text_response') ? [] : options.map(opt => ({
+      options: (pollType === 'rating_scale' || pollType === 'text_response' || pollType === 'word_cloud') ? [] : options.map(opt => ({
         id: opt.id,
         option_text: opt.option_text,
         option_order: opt.option_order
@@ -186,7 +217,20 @@ export const PollBuilderComponent: React.FC<PollBuilderProps> = ({
       <CardContent className="space-y-6 pt-6">
         {/* Poll Question */}
         <div className="space-y-2">
-          <Label htmlFor="poll-question">Poll Question</Label>
+          <div className="flex items-center justify-between">
+            <Label htmlFor="poll-question">Poll Question</Label>
+            {lessonId && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleGenerateWithAI}
+                disabled={generatePollMutation.isPending}
+              >
+                <Sparkles className="h-4 w-4 mr-2" />
+                {generatePollMutation.isPending ? 'Generating...' : 'Generate with AI'}
+              </Button>
+            )}
+          </div>
           <Input
             id="poll-question"
             value={pollQuestion}
@@ -210,12 +254,13 @@ export const PollBuilderComponent: React.FC<PollBuilderProps> = ({
               <SelectItem value="rating_scale">Rating Scale (1-5 stars)</SelectItem>
               <SelectItem value="ranking">Ranking (drag to order)</SelectItem>
               <SelectItem value="text_response">Text Response (open-ended)</SelectItem>
+              <SelectItem value="word_cloud">Word Cloud (text responses visualized)</SelectItem>
             </SelectContent>
           </Select>
         </div>
 
         {/* Answer Options */}
-        {pollType !== 'rating_scale' && pollType !== 'text_response' && (
+        {pollType !== 'rating_scale' && pollType !== 'text_response' && pollType !== 'word_cloud' && (
           <div className="space-y-2">
             <Label>Answer Options</Label>
             <Card>
