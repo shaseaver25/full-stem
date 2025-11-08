@@ -145,4 +145,7 @@ verify_jwt = true
 [functions.generate-quiz-questions]
 verify_jwt = true
 
+[functions.generate-poll-questions]
+verify_jwt = true
+
 

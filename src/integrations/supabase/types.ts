@@ -2864,6 +2864,7 @@ export type Database = {
           responded_at: string | null
           response_text: string | null
           selected_option_ids: string[] | null
+          text_response: string | null
           user_id: string | null
         }
         Insert: {
@@ -2875,6 +2876,7 @@ export type Database = {
           responded_at?: string | null
           response_text?: string | null
           selected_option_ids?: string[] | null
+          text_response?: string | null
           user_id?: string | null
         }
         Update: {
@@ -2886,6 +2888,7 @@ export type Database = {
           responded_at?: string | null
           response_text?: string | null
           selected_option_ids?: string[] | null
+          text_response?: string | null
           user_id?: string | null
         }
         Relationships: [
@@ -3019,6 +3022,86 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "Lessons"
             referencedColumns: ["Lesson ID"]
+          },
+        ]
+      }
+      quiz_question_bank: {
+        Row: {
+          created_at: string | null
+          difficulty: string | null
+          explanation: string | null
+          hint: string | null
+          id: string
+          image_url: string | null
+          points: number | null
+          question_text: string
+          question_type: string
+          tags: string[] | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          difficulty?: string | null
+          explanation?: string | null
+          hint?: string | null
+          id?: string
+          image_url?: string | null
+          points?: number | null
+          question_text: string
+          question_type: string
+          tags?: string[] | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          difficulty?: string | null
+          explanation?: string | null
+          hint?: string | null
+          id?: string
+          image_url?: string | null
+          points?: number | null
+          question_text?: string
+          question_type?: string
+          tags?: string[] | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      quiz_question_bank_options: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_correct: boolean | null
+          option_order: number | null
+          option_text: string
+          question_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_correct?: boolean | null
+          option_order?: number | null
+          option_text: string
+          question_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_correct?: boolean | null
+          option_order?: number | null
+          option_text?: string
+          question_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quiz_question_bank_options_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "quiz_question_bank"
+            referencedColumns: ["id"]
           },
         ]
       }
