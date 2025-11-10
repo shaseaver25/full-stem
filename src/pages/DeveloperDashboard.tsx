@@ -5,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Code, Users, FileText, Settings, Shield, Database, Plus, AlertTriangle, Zap, Activity } from 'lucide-react';
+import { Code, Users, FileText, Settings, Shield, Database, Plus, AlertTriangle, Zap, Activity, DollarSign } from 'lucide-react';
 import Header from '@/components/Header';
 import UserImpersonation from '@/components/developer/UserImpersonation';
 import ImpersonationLogs from '@/components/developer/ImpersonationLogs';
@@ -22,6 +22,7 @@ import { MFARequiredBanner } from '@/components/system/MFARequiredBanner';
 import { useMFAEnforcement } from '@/hooks/useMFAEnforcement';
 import { getMode } from '@/utils/env';
 import { CreateTestStudentsButton } from '@/components/admin/CreateTestStudentsButton';
+import { AICostsPanel } from '@/components/developer/AICostsPanel';
 
 const DeveloperDashboard = () => {
   const { user } = useAuth();
@@ -84,7 +85,7 @@ const DeveloperDashboard = () => {
         </div>
 
         <Tabs defaultValue="sandbox" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-8">
+          <TabsList className="grid w-full grid-cols-9">
             <TabsTrigger value="sandbox" className="flex items-center gap-2">
               <Database className="h-4 w-4" />
               Sandbox
@@ -104,6 +105,10 @@ const DeveloperDashboard = () => {
             <TabsTrigger value="errors" className="flex items-center gap-2">
               <Zap className="h-4 w-4" />
               Errors
+            </TabsTrigger>
+            <TabsTrigger value="ai-costs" className="flex items-center gap-2">
+              <DollarSign className="h-4 w-4" />
+              AI Costs
             </TabsTrigger>
             <TabsTrigger value="content" className="flex items-center gap-2">
               <FileText className="h-4 w-4" />
@@ -171,6 +176,10 @@ const DeveloperDashboard = () => {
 
           <TabsContent value="errors" className="space-y-4">
             <ErrorLogViewer />
+          </TabsContent>
+
+          <TabsContent value="ai-costs" className="space-y-4">
+            <AICostsPanel />
           </TabsContent>
 
           <TabsContent value="content" className="space-y-6">
