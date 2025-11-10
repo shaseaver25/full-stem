@@ -8,7 +8,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -49,24 +49,24 @@ serve(async (req) => {
       );
     }
 
-    if (!openAIApiKey) {
-      console.error('OpenAI API key not found in environment variables');
+    if (!lovableApiKey) {
+      console.error('Lovable API key not found in environment variables');
       return new Response(
         JSON.stringify({ error: 'Translation service is not properly configured' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log('Calling OpenAI API for translation...');
+    console.log('Calling Lovable AI for translation...');
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
+        'Authorization': `Bearer ${lovableApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'google/gemini-2.5-flash',
         messages: [
           {
             role: 'system',
@@ -93,16 +93,37 @@ The goal is to make the content feel natural and accessible to everyday speakers
             content: text
           }
         ],
-        max_completion_tokens: 3000,
+        max_tokens: 3000,
       }),
     });
 
-    console.log('OpenAI API response status:', response.status);
+    console.log('Lovable AI response status:', response.status);
 
     const data = await response.json();
     
     if (!response.ok) {
-      console.error('OpenAI API error:', data);
+      console.error('Lovable AI error:', data);
+      
+      // Handle rate limit errors
+      if (response.status === 429) {
+        return new Response(
+          JSON.stringify({ 
+            error: 'Rate limit exceeded. Please wait a moment and try again.' 
+          }),
+          { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      
+      // Handle payment required errors
+      if (response.status === 402) {
+        return new Response(
+          JSON.stringify({ 
+            error: 'AI service requires payment. Please contact support.' 
+          }),
+          { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      
       return new Response(
         JSON.stringify({ 
           error: data.error?.message || 'Translation service unavailable' 
@@ -121,8 +142,8 @@ The goal is to make the content feel natural and accessible to everyday speakers
       const outputTokens = usage.completion_tokens || 0;
       const totalTokens = usage.total_tokens || inputTokens + outputTokens;
       
-      // GPT-4o-mini pricing: $0.150 per 1M input, $0.600 per 1M output
-      const estimatedCost = (inputTokens / 1000000) * 0.150 + (outputTokens / 1000000) * 0.600;
+      // Gemini 2.5 Flash pricing: $0.075 per 1M input, $0.30 per 1M output
+      const estimatedCost = (inputTokens / 1000000) * 0.075 + (outputTokens / 1000000) * 0.30;
 
       const supabaseClient = createClient(
         Deno.env.get('SUPABASE_URL') ?? '',
@@ -132,7 +153,7 @@ The goal is to make the content feel natural and accessible to everyday speakers
       await supabaseClient.from('ai_usage_logs').insert({
         user_id: user?.id || null,
         action_type: 'translation',
-        model: 'gpt-4o-mini',
+        model: 'google/gemini-2.5-flash',
         tokens_used: totalTokens,
         estimated_cost: estimatedCost,
         metadata: {

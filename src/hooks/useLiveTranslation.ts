@@ -46,11 +46,21 @@ export const useLiveTranslation = () => {
 
       if (error) {
         console.error('Translation error:', error);
-        toast({
-          title: "Translation Error",
-          description: error.message || "Failed to translate text. Please try again.",
-          variant: "destructive",
-        });
+        
+        // Check if it's a rate limit error
+        if (error.message && error.message.includes('429')) {
+          toast({
+            title: "Translation Temporarily Unavailable",
+            description: "Please wait a moment before translating more content.",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Translation Error",
+            description: error.message || "Failed to translate text. Please try again.",
+            variant: "destructive",
+          });
+        }
         return null;
       }
 

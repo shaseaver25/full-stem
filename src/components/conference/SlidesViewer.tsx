@@ -185,7 +185,7 @@ const SlidesViewer: React.FC<SlidesViewerProps> = ({
     setIsFullscreen(!isFullscreen);
   };
 
-  // Language change handler - translates ALL slides
+  // Language change handler - translates ALL slides with delays
   const handleLanguageChange = async (langCode: string) => {
     setSelectedLanguage(langCode);
     
@@ -193,17 +193,27 @@ const SlidesViewer: React.FC<SlidesViewerProps> = ({
       const languageName = SUPPORTED_LANGUAGES.find(l => l.code === langCode)?.name || langCode;
       const translationsMap = new Map<number, string>();
       
-      // Translate all slides
+      // Translate all slides with a small delay between each to avoid rate limits
       for (let i = 0; i < slides.length; i++) {
         const slideData = slides[i];
         const slideContent = `${slideData.title}. ${slideData.content}`;
-        const translated = await translateText({
-          text: slideContent,
-          targetLanguage: languageName,
-          sourceLanguage: 'auto'
-        });
-        if (translated) {
-          translationsMap.set(i, translated);
+        
+        try {
+          const translated = await translateText({
+            text: slideContent,
+            targetLanguage: languageName,
+            sourceLanguage: 'auto'
+          });
+          if (translated) {
+            translationsMap.set(i, translated);
+          }
+        } catch (error) {
+          console.error(`Failed to translate slide ${i + 1}:`, error);
+        }
+        
+        // Add 300ms delay between translations to avoid rate limits
+        if (i < slides.length - 1) {
+          await new Promise(resolve => setTimeout(resolve, 300));
         }
       }
       

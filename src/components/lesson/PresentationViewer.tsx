@@ -216,7 +216,7 @@ export function PresentationViewer({
     await speak(textToRead);
   };
 
-  // Handle translation - translate ALL slides
+  // Handle translation - translate ALL slides with delays
   const handleLanguageChange = async (langCode: string) => {
     setSelectedLanguage(langCode);
     
@@ -225,20 +225,29 @@ export function PresentationViewer({
       return;
     }
 
-    // Translate all slides
+    // Translate all slides with delays to avoid rate limits
     const languageName = SUPPORTED_LANGUAGES.find(l => l.code === langCode)?.name || langCode;
     const newTranslations = new Map<number, string>();
     
     for (let i = 0; i < slides.length; i++) {
       const slideData = slides[i];
       if (slideData?.text) {
-        const translated = await translateText({
-          text: slideData.text,
-          targetLanguage: languageName,
-          sourceLanguage: 'auto'
-        });
-        if (translated) {
-          newTranslations.set(i, translated);
+        try {
+          const translated = await translateText({
+            text: slideData.text,
+            targetLanguage: languageName,
+            sourceLanguage: 'auto'
+          });
+          if (translated) {
+            newTranslations.set(i, translated);
+          }
+        } catch (error) {
+          console.error(`Failed to translate slide ${i + 1}:`, error);
+        }
+        
+        // Add 300ms delay between translations to avoid rate limits
+        if (i < slides.length - 1) {
+          await new Promise(resolve => setTimeout(resolve, 300));
         }
       }
     }
