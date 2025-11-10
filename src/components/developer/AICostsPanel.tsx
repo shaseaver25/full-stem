@@ -19,7 +19,11 @@ import { format, startOfDay, startOfWeek, startOfMonth, subDays, eachDayOfInterv
 import { toast } from '@/hooks/use-toast';
 
 // Helper functions
-const formatCurrency = (amount: number) => `$${amount.toFixed(2)}`;
+const formatCurrency = (amount: number) => {
+  if (amount === 0) return '$0.00';
+  if (amount < 0.01) return `$${amount.toFixed(4)}`;
+  return `$${amount.toFixed(2)}`;
+};
 
 const formatActionType = (type: string) => {
   const map: Record<string, string> = {
