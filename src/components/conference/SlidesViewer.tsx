@@ -66,7 +66,7 @@ const SlidesViewer: React.FC<SlidesViewerProps> = ({
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [viewedSlides, setViewedSlides] = useState<Set<number>>(new Set([0]));
-  const [translatedContent, setTranslatedContent] = useState<string | null>(null);
+  const [translatedSlides, setTranslatedSlides] = useState<Map<number, string>>(new Map());
   const [showKeyboardHelp, setShowKeyboardHelp] = useState(false);
   const [selectedLanguage, setSelectedLanguage] = useState('en');
   
@@ -88,11 +88,9 @@ const SlidesViewer: React.FC<SlidesViewerProps> = ({
     currentSlideContent: currentSlideContent.substring(0, 100) + '...'
   });
 
-  // Mark slide as viewed and clear translated content
+  // Mark slide as viewed
   useEffect(() => {
     setViewedSlides(prev => new Set(prev).add(currentSlide));
-    // Clear translated content when slide changes so new content shows immediately
-    setTranslatedContent(null);
     // Stop any ongoing playback when slide changes
     if (isPlaying) {
       stop();
@@ -187,59 +185,41 @@ const SlidesViewer: React.FC<SlidesViewerProps> = ({
     setIsFullscreen(!isFullscreen);
   };
 
-  // Language change handler
+  // Language change handler - translates ALL slides
   const handleLanguageChange = async (langCode: string) => {
     setSelectedLanguage(langCode);
     
     if (langCode !== 'en') {
       const languageName = SUPPORTED_LANGUAGES.find(l => l.code === langCode)?.name || langCode;
-      const translated = await translateText({
-        text: currentSlideContent,
-        targetLanguage: languageName,
-        sourceLanguage: 'auto'
-      });
-      if (translated) {
-        setTranslatedContent(translated);
+      const translationsMap = new Map<number, string>();
+      
+      // Translate all slides
+      for (let i = 0; i < slides.length; i++) {
+        const slideData = slides[i];
+        const slideContent = `${slideData.title}. ${slideData.content}`;
+        const translated = await translateText({
+          text: slideContent,
+          targetLanguage: languageName,
+          sourceLanguage: 'auto'
+        });
+        if (translated) {
+          translationsMap.set(i, translated);
+        }
       }
+      
+      setTranslatedSlides(translationsMap);
     } else {
-      setTranslatedContent(null);
+      setTranslatedSlides(new Map());
     }
   };
 
   // Read aloud
   const handleReadAloud = async () => {
-    let textToRead = currentSlideContent;
-    
-    if (selectedLanguage !== 'en' && translatedContent) {
-      textToRead = translatedContent;
-    }
-
+    const translatedText = translatedSlides.get(currentSlide);
+    const textToRead = (selectedLanguage !== 'en' && translatedText) ? translatedText : currentSlideContent;
     await speak(textToRead);
   };
 
-  // Translate content when slide changes (if not English)
-  useEffect(() => {
-    const translateCurrentSlide = async () => {
-      if (selectedLanguage !== 'en') {
-        const languageName = SUPPORTED_LANGUAGES.find(l => l.code === selectedLanguage)?.name || selectedLanguage;
-        const translated = await translateText({
-          text: currentSlideContent,
-          targetLanguage: languageName,
-          sourceLanguage: 'auto'
-        });
-        if (translated) {
-          setTranslatedContent(translated);
-        }
-      } else {
-        setTranslatedContent(null);
-      }
-    };
-    
-    // Only translate if we have content
-    if (currentSlideContent) {
-      translateCurrentSlide();
-    }
-  }, [selectedLanguage, currentSlide, currentSlideContent, translateText]);
 
   // Touch gesture support
   useEffect(() => {
@@ -279,7 +259,8 @@ const SlidesViewer: React.FC<SlidesViewerProps> = ({
     };
   }, [goToNext, goToPrevious]);
 
-  const displayContent = translatedContent || currentSlideContent;
+  const translatedText = translatedSlides.get(currentSlide);
+  const displayContent = (selectedLanguage !== 'en' && translatedText) ? translatedText : currentSlideContent;
 
   console.log('Slides Viewer Debug:', {
     currentSlide,
@@ -454,9 +435,9 @@ const SlidesViewer: React.FC<SlidesViewerProps> = ({
                             ))}
                           </SelectContent>
                         </Select>
-                        {selectedLanguage !== 'en' && translatedContent && (
+                        {selectedLanguage !== 'en' && translatedSlides.size > 0 && (
                           <span className="text-xs px-2 py-1 bg-primary/10 text-primary rounded">
-                            Translated
+                            Translated ({translatedSlides.size}/{slides.length})
                           </span>
                         )}
                       </div>
