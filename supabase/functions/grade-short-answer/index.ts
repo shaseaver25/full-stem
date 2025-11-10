@@ -132,9 +132,11 @@ If the student's answer is not a close match, respond with only the word: "incor
           tokens_used: totalTokens,
           estimated_cost: estimatedCost,
           metadata: {
-            student_answer_length: studentAnswer.length,
+            answer_length: studentAnswer.length,
+            score_given: isCorrect ? 1 : 0,
+            question_id: null, // Not available in current request
+            quiz_attempt_id: null, // Not available in current request
             acceptable_answers_count: acceptableAnswers.length,
-            is_correct: isCorrect,
             input_tokens: inputTokens,
             output_tokens: outputTokens
           }

@@ -170,10 +170,10 @@ serve(async (req) => {
         tokens_used: characterCount, // Store character count as "tokens" for TTS
         estimated_cost: estimatedCost,
         metadata: {
-          language_code: language_code,
-          voice_style: voice_style,
-          voice: VOICE_MAP[voice_style] || VOICE_MAP['default'],
           character_count: characterCount,
+          voice_style: voice_style,
+          language: language_code,
+          voice: VOICE_MAP[voice_style] || VOICE_MAP['default'],
           audio_format: 'mp3'
         }
       });

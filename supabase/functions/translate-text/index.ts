@@ -138,8 +138,8 @@ The goal is to make the content feel natural and accessible to everyday speakers
         metadata: {
           source_language: sourceLanguage,
           target_language: targetLanguage,
-          text_length: text.length,
-          translated_length: translatedText.length,
+          content_length: text.length,
+          from_cache: false, // Not cached since we generated it
           input_tokens: inputTokens,
           output_tokens: outputTokens
         }

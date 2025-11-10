@@ -191,9 +191,10 @@ Examples: "In one word, how does this make you feel?", "What's the most importan
         tokens_used: totalTokens,
         estimated_cost: estimatedCost,
         metadata: {
-          lesson_id: lessonId,
+          topic: lesson.title || 'Untitled',
+          num_polls_generated: questionCount,
+          poll_id: lessonId, // Using lesson_id as poll reference
           poll_type: pollType,
-          question_count: questionCount,
           input_tokens: inputTokens,
           output_tokens: outputTokens
         }

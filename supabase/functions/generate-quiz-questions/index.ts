@@ -313,13 +313,13 @@ IMPORTANT:
         tokens_used: totalTokens,
         estimated_cost: estimatedCost,
         metadata: {
-          lesson_id: lessonId,
-          question_count: questionCount,
+          lesson_content_length: totalWords,
+          num_questions_generated: questionCount,
+          quiz_id: lessonId, // Using lesson_id as quiz_id reference
           question_types: questionTypes,
           difficulty: difficulty,
           input_tokens: inputTokens,
-          output_tokens: outputTokens,
-          content_words: totalWords
+          output_tokens: outputTokens
         }
       });
       console.log('AI usage logged successfully');
