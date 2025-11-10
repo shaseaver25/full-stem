@@ -327,6 +327,42 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_usage_logs: {
+        Row: {
+          action_type: string
+          created_at: string
+          estimated_cost: number | null
+          id: string
+          metadata: Json | null
+          model: string | null
+          organization_id: string | null
+          tokens_used: number | null
+          user_id: string | null
+        }
+        Insert: {
+          action_type: string
+          created_at?: string
+          estimated_cost?: number | null
+          id?: string
+          metadata?: Json | null
+          model?: string | null
+          organization_id?: string | null
+          tokens_used?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          action_type?: string
+          created_at?: string
+          estimated_cost?: number | null
+          id?: string
+          metadata?: Json | null
+          model?: string | null
+          organization_id?: string | null
+          tokens_used?: number | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       assignment_grades: {
         Row: {
           created_at: string
