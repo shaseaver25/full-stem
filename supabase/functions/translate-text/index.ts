@@ -1,7 +1,7 @@
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
+import { crypto } from "https://deno.land/std@0.168.0/crypto/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -55,6 +55,104 @@ serve(async (req) => {
         JSON.stringify({ error: 'Translation service is not properly configured' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
+    }
+
+    // Generate MD5 hash for cache lookup
+    const encoder = new TextEncoder();
+    const data = encoder.encode(text);
+    const hashBuffer = await crypto.subtle.digest('MD5', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const contentHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+    console.log('Checking translation cache...', { contentHash, targetLanguage, sourceLanguage });
+
+    // Check cache first
+    try {
+      const supabaseClient = createClient(
+        Deno.env.get('SUPABASE_URL') ?? '',
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      );
+
+      const { data: cached, error: cacheError } = await supabaseClient
+        .from('translation_cache')
+        .select('id, translated_content, access_count')
+        .eq('content_hash', contentHash)
+        .eq('source_language', sourceLanguage)
+        .eq('target_language', targetLanguage)
+        .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
+        .limit(1)
+        .single();
+
+      if (cached && !cacheError) {
+        console.log('Cache hit! Returning cached translation', { cacheId: cached.id, accessCount: cached.access_count });
+
+        // Update cache stats (non-blocking)
+        supabaseClient
+          .from('translation_cache')
+          .update({
+            last_accessed_at: new Date().toISOString(),
+            access_count: (cached.access_count || 0) + 1
+          })
+          .eq('id', cached.id)
+          .then(() => console.log('Cache stats updated'))
+          .catch(err => console.error('Failed to update cache stats:', err));
+
+        // Log cache hit with $0 cost
+        try {
+          await supabaseClient.from('ai_usage_logs').insert({
+            user_id: user?.id || null,
+            action_type: 'translation',
+            model: 'google/gemini-2.5-flash',
+            tokens_used: 0,
+            estimated_cost: 0.00,
+            metadata: {
+              from_cache: true,
+              cache_hit: true,
+              source_language: sourceLanguage,
+              target_language: targetLanguage,
+              content_length: text.length,
+              cache_id: cached.id,
+              access_count: cached.access_count + 1
+            }
+          });
+          console.log('Cache hit logged to ai_usage_logs');
+        } catch (logError) {
+          console.error('Failed to log cache hit:', logError);
+        }
+
+        // Log to translation_logs for backward compatibility
+        if (user) {
+          try {
+            const supabaseClientWithAuth = createClient(
+              Deno.env.get('SUPABASE_URL') ?? '',
+              Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+              { global: { headers: { Authorization: authHeader } } }
+            );
+            
+            await supabaseClientWithAuth.from('translation_logs').insert({
+              user_id: user.id,
+              target_language: targetLanguage,
+              text_length: text.length,
+            });
+          } catch (logError) {
+            console.error('Failed to log translation:', logError);
+          }
+        }
+
+        return new Response(
+          JSON.stringify({
+            translatedText: cached.translated_content,
+            sourceLanguage,
+            targetLanguage,
+            fromCache: true
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      } else {
+        console.log('Cache miss, calling AI...', { cacheError: cacheError?.message });
+      }
+    } catch (error) {
+      console.error('Cache lookup failed, proceeding with AI call:', error);
     }
 
     console.log('Calling Lovable AI for translation...');
@@ -135,6 +233,33 @@ The goal is to make the content feel natural and accessible to everyday speakers
     const translatedText = data.choices[0].message.content;
     console.log('Translation completed successfully');
 
+    // Save to cache (non-blocking)
+    try {
+      const supabaseClient = createClient(
+        Deno.env.get('SUPABASE_URL') ?? '',
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      );
+
+      supabaseClient
+        .from('translation_cache')
+        .insert({
+          content_hash: contentHash,
+          source_language: sourceLanguage,
+          target_language: targetLanguage,
+          original_content: text,
+          translated_content: translatedText
+        })
+        .then(({ error }) => {
+          if (error && error.code !== '23505') { // Ignore duplicate key errors
+            console.error('Failed to save to cache:', error);
+          } else {
+            console.log('Translation saved to cache');
+          }
+        });
+    } catch (error) {
+      console.error('Cache save failed:', error);
+    }
+
     // Log AI usage to ai_usage_logs
     try {
       const usage = data.usage || {};
@@ -160,7 +285,8 @@ The goal is to make the content feel natural and accessible to everyday speakers
           source_language: sourceLanguage,
           target_language: targetLanguage,
           content_length: text.length,
-          from_cache: false, // Not cached since we generated it
+          from_cache: false,
+          cache_miss: true,
           input_tokens: inputTokens,
           output_tokens: outputTokens
         }
@@ -196,6 +322,7 @@ The goal is to make the content feel natural and accessible to everyday speakers
         translatedText,
         sourceLanguage,
         targetLanguage,
+        fromCache: false
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
