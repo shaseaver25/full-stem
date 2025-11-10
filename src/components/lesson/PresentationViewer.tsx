@@ -216,29 +216,34 @@ export function PresentationViewer({
     await speak(textToRead);
   };
 
-  // Handle translation
+  // Handle translation - translate ALL slides
   const handleLanguageChange = async (langCode: string) => {
     setSelectedLanguage(langCode);
     
     if (langCode === 'en') {
-      return; // No translation needed for English
+      setTranslatedTexts(new Map()); // Clear translations for English
+      return;
     }
 
-    // Translate current slide if not already translated
-    if (!translatedTexts.has(currentSlide)) {
-      const currentSlideData = slides[currentSlide];
-      if (currentSlideData?.text) {
-        const languageName = SUPPORTED_LANGUAGES.find(l => l.code === langCode)?.name || langCode;
+    // Translate all slides
+    const languageName = SUPPORTED_LANGUAGES.find(l => l.code === langCode)?.name || langCode;
+    const newTranslations = new Map<number, string>();
+    
+    for (let i = 0; i < slides.length; i++) {
+      const slideData = slides[i];
+      if (slideData?.text) {
         const translated = await translateText({
-          text: currentSlideData.text,
+          text: slideData.text,
           targetLanguage: languageName,
           sourceLanguage: 'auto'
         });
         if (translated) {
-          setTranslatedTexts(new Map(translatedTexts).set(currentSlide, translated));
+          newTranslations.set(i, translated);
         }
       }
     }
+    
+    setTranslatedTexts(newTranslations);
   };
 
   // Touch gesture support for mobile
@@ -569,9 +574,9 @@ export function PresentationViewer({
                             <p className="text-xs text-muted-foreground">Text with word-by-word highlighting</p>
                           </div>
                         </div>
-                        {selectedLanguage !== 'en' && (
+                        {selectedLanguage !== 'en' && translatedTexts.size > 0 && (
                           <span className="text-xs px-2 py-1 bg-primary/10 text-primary rounded">
-                            {SUPPORTED_LANGUAGES.find(l => l.code === selectedLanguage)?.name}
+                            {SUPPORTED_LANGUAGES.find(l => l.code === selectedLanguage)?.name} ({translatedTexts.size}/{slides.length})
                           </span>
                         )}
                       </div>
