@@ -7,11 +7,17 @@ import { useAuth } from '@/contexts/AuthContext';
  * Returns all roles the user has
  */
 export const useUserRole = () => {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [roles, setRoles] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    // Wait for auth to finish loading before checking roles
+    if (authLoading) {
+      setIsLoading(true);
+      return;
+    }
+
     if (!user?.id) {
       setRoles([]);
       setIsLoading(false);
@@ -41,7 +47,7 @@ export const useUserRole = () => {
     // Note: Real-time subscriptions disabled to prevent React Strict Mode issues
     // Roles will be fetched on mount and when user changes
     // If real-time updates are needed, implement at component level instead
-  }, [user?.id]);
+  }, [user?.id, authLoading]);
 
   return { roles, isLoading };
 };
