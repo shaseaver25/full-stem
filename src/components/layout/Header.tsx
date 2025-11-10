@@ -22,6 +22,12 @@ export default function Header({ onDemoClick, onRequestClick }: HeaderProps) {
     }
   }
 
+  const handleDashboardClick = () => {
+    if (user?.id) {
+      redirectToRoleDashboard(user.id, navigate)
+    }
+  }
+
   return (
     <header className="sticky top-0 z-50 backdrop-blur bg-white/80 border-b border-gray-200">
       <nav className="mx-auto max-w-7xl px-4 py-3 flex items-center justify-between">
@@ -42,6 +48,14 @@ export default function Header({ onDemoClick, onRequestClick }: HeaderProps) {
               <button onClick={onDemoClick} className="h-10 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-md transition-colors font-medium text-sm">Book a Demo</button>
             </>
           )}
+          {user && (
+            <button 
+              onClick={handleDashboardClick} 
+              className="h-10 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-md transition-colors font-medium text-sm"
+            >
+              Dashboard
+            </button>
+          )}
           <button 
             onClick={handleAuthAction} 
             className="h-10 px-4 py-2 bg-white text-gray-900 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors font-medium text-sm"
@@ -49,7 +63,15 @@ export default function Header({ onDemoClick, onRequestClick }: HeaderProps) {
             {user ? "Logout" : "Login"}
           </button>
         </div>
-        <div className="md:hidden">
+        <div className="md:hidden flex items-center gap-2">
+          {user && (
+            <button 
+              onClick={handleDashboardClick} 
+              className="h-10 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-md transition-colors font-medium text-sm"
+            >
+              Dashboard
+            </button>
+          )}
           <button 
             onClick={handleAuthAction} 
             className="h-10 px-4 py-2 bg-white text-gray-900 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors font-medium text-sm"
