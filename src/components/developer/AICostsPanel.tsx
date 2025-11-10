@@ -53,6 +53,8 @@ export const AICostsPanel = () => {
   const queryClient = useQueryClient();
   const [budgetThreshold, setBudgetThreshold] = useState<number>(100);
   const [newThreshold, setNewThreshold] = useState<string>('100');
+  const [logsLimit, setLogsLimit] = useState<number>(25);
+  const [showAllLogs, setShowAllLogs] = useState<boolean>(false);
 
   // Fetch AI usage logs
   const { data: usageLogs = [], isLoading: logsLoading } = useQuery({
@@ -144,7 +146,8 @@ export const AICostsPanel = () => {
   });
 
   // Recent logs with user emails
-  const recentLogs = usageLogs.slice(0, 25).map(log => {
+  const displayLimit = showAllLogs ? usageLogs.length : logsLimit;
+  const recentLogs = usageLogs.slice(0, displayLimit).map(log => {
     const profile = profiles.find(p => p.id === log.user_id);
     return {
       ...log,
@@ -364,9 +367,42 @@ export const AICostsPanel = () => {
 
       {/* Recent Usage Log */}
       <Card>
-        <CardHeader>
-          <CardTitle>Recent AI Usage</CardTitle>
-          <CardDescription>Last 25 AI API calls</CardDescription>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+          <div>
+            <CardTitle>Recent AI Usage</CardTitle>
+            <CardDescription>
+              {showAllLogs 
+                ? `Showing all ${usageLogs.length} AI calls` 
+                : `Showing ${Math.min(logsLimit, usageLogs.length)} of ${usageLogs.length} calls`}
+            </CardDescription>
+          </div>
+          <div className="flex gap-2">
+            {!showAllLogs && logsLimit < usageLogs.length && (
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => setLogsLimit(prev => Math.min(prev + 25, usageLogs.length))}
+              >
+                Load 25 More
+              </Button>
+            )}
+            {usageLogs.length > 25 && (
+              <Button 
+                variant={showAllLogs ? "default" : "outline"}
+                size="sm"
+                onClick={() => {
+                  setShowAllLogs(!showAllLogs);
+                  if (!showAllLogs) {
+                    setLogsLimit(usageLogs.length);
+                  } else {
+                    setLogsLimit(25);
+                  }
+                }}
+              >
+                {showAllLogs ? 'Show Recent' : 'Show All'}
+              </Button>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
