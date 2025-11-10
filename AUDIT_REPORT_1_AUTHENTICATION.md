@@ -167,6 +167,13 @@ const handleGoogleSignIn = async () => {
 
 **Implementation:** Follows security best practices precisely
 
+**✨ RECENTLY ENHANCED (November 10, 2025):**
+- ✅ Fixed authentication loading state race condition in `useUserRole` hook
+- ✅ Updated RLS policies to consistently use `user_roles` table across all features
+- ✅ Added navigation from landing page to role-specific dashboards
+- ✅ Enhanced developer visibility for AI usage logs (including anonymous calls)
+- See `DEVELOPMENT_SESSION_2025-11-10.md` for complete details
+
 #### Database Schema ✅ SECURE
 
 **Table:** `user_roles`
@@ -204,18 +211,29 @@ $$;
 - ✅ Redirects to `/access-denied` if unauthorized
 - ✅ Loading states handled properly
 
-**File:** `src/hooks/useUserRole.ts` (Lines 14-44)
+**File:** `src/hooks/useUserRole.ts` (Lines 14-50)
 ```typescript
-const { data, error } = await supabase
-  .from('user_roles')
-  .select('role')
-  .eq('user_id', user.id);
+const { user, loading: authLoading } = useAuth();
 
-setRoles(data?.map(r => r.role) || []);
+useEffect(() => {
+  // ✅ Wait for auth to finish loading before checking roles (FIXED Nov 10, 2025)
+  if (authLoading) {
+    setIsLoading(true);
+    return;
+  }
+
+  const { data, error } = await supabase
+    .from('user_roles')
+    .select('role')
+    .eq('user_id', user.id);
+
+  setRoles(data?.map(r => r.role) || []);
+}, [user?.id, authLoading]); // ✅ Now includes authLoading dependency
 ```
 - ✅ Queries user_roles table (not auth.users)
 - ✅ Returns array of roles (supports multi-role users)
 - ✅ Real-time updates disabled (prevents React Strict Mode issues)
+- ✅ **FIXED:** Now waits for auth context to load before checking roles (eliminates race conditions)
 
 **File:** `src/utils/roleRedirect.ts` (Lines 4-38)
 - ✅ Fetches all user roles
