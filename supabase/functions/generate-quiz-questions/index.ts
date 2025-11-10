@@ -12,6 +12,7 @@ serve(async (req) => {
   }
 
   try {
+    const authHeader = req.headers.get('Authorization');
     const { lessonId, questionCount, questionTypes, difficulty } = await req.json();
     
     if (!lessonId) {
@@ -283,6 +284,49 @@ IMPORTANT:
     let generatedText = aiData.choices[0].message.content;
 
     console.log('Raw AI response:', generatedText.substring(0, 200));
+
+    // Log AI usage
+    try {
+      const usage = aiData.usage || {};
+      const inputTokens = usage.prompt_tokens || 0;
+      const outputTokens = usage.completion_tokens || 0;
+      const totalTokens = usage.total_tokens || inputTokens + outputTokens;
+      
+      // Gemini pricing: ~$0.00025 per 1K input, ~$0.001 per 1K output
+      const estimatedCost = (inputTokens / 1000) * 0.00025 + (outputTokens / 1000) * 0.001;
+
+      // Get user_id if authenticated
+      let userId = null;
+      if (authHeader) {
+        try {
+          const tokenPayload = JSON.parse(atob(authHeader.replace('Bearer ', '').split('.')[1]));
+          userId = tokenPayload.sub;
+        } catch (e) {
+          console.log('Could not extract user_id from token');
+        }
+      }
+
+      await supabase.from('ai_usage_logs').insert({
+        user_id: userId,
+        action_type: 'quiz_generation',
+        model: 'google/gemini-2.5-flash',
+        tokens_used: totalTokens,
+        estimated_cost: estimatedCost,
+        metadata: {
+          lesson_id: lessonId,
+          question_count: questionCount,
+          question_types: questionTypes,
+          difficulty: difficulty,
+          input_tokens: inputTokens,
+          output_tokens: outputTokens,
+          content_words: totalWords
+        }
+      });
+      console.log('AI usage logged successfully');
+    } catch (logError) {
+      console.error('Failed to log AI usage:', logError);
+      // Don't fail the request if logging fails
+    }
 
     // Try to extract JSON from markdown code blocks if present
     const jsonMatch = generatedText.match(/```json\s*([\s\S]*?)\s*```/);

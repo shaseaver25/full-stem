@@ -114,7 +114,43 @@ The goal is to make the content feel natural and accessible to everyday speakers
     const translatedText = data.choices[0].message.content;
     console.log('Translation completed successfully');
 
-    // Optional: Log translation for analytics (only if authenticated)
+    // Log AI usage to ai_usage_logs
+    try {
+      const usage = data.usage || {};
+      const inputTokens = usage.prompt_tokens || 0;
+      const outputTokens = usage.completion_tokens || 0;
+      const totalTokens = usage.total_tokens || inputTokens + outputTokens;
+      
+      // GPT-4o-mini pricing: $0.150 per 1M input, $0.600 per 1M output
+      const estimatedCost = (inputTokens / 1000000) * 0.150 + (outputTokens / 1000000) * 0.600;
+
+      const supabaseClient = createClient(
+        Deno.env.get('SUPABASE_URL') ?? '',
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      );
+
+      await supabaseClient.from('ai_usage_logs').insert({
+        user_id: user?.id || null,
+        action_type: 'translation',
+        model: 'gpt-4o-mini',
+        tokens_used: totalTokens,
+        estimated_cost: estimatedCost,
+        metadata: {
+          source_language: sourceLanguage,
+          target_language: targetLanguage,
+          text_length: text.length,
+          translated_length: translatedText.length,
+          input_tokens: inputTokens,
+          output_tokens: outputTokens
+        }
+      });
+      console.log('AI usage logged successfully');
+    } catch (logError) {
+      console.error('Failed to log AI usage:', logError);
+      // Don't fail the request if logging fails
+    }
+
+    // Optional: Log to translation_logs for backward compatibility
     if (user) {
       try {
         const supabaseClient = createClient(

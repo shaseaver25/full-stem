@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -11,6 +12,7 @@ serve(async (req) => {
   }
 
   try {
+    const authHeader = req.headers.get('Authorization');
     const { studentAnswer, acceptableAnswers } = await req.json();
 
     if (!studentAnswer || !acceptableAnswers || !Array.isArray(acceptableAnswers)) {
@@ -97,6 +99,52 @@ If the student's answer is not a close match, respond with only the word: "incor
 
     // Parse the AI response
     const isCorrect = aiResponse.includes('correct') && !aiResponse.includes('incorrect');
+
+    // Log AI usage
+    try {
+      const usage = data.usage || {};
+      const inputTokens = usage.prompt_tokens || 0;
+      const outputTokens = usage.completion_tokens || 0;
+      const totalTokens = usage.total_tokens || inputTokens + outputTokens;
+      
+      // Gemini pricing: ~$0.00025 per 1K input, ~$0.001 per 1K output
+      const estimatedCost = (inputTokens / 1000) * 0.00025 + (outputTokens / 1000) * 0.001;
+
+      // Get user_id if authenticated
+      let userId = null;
+      if (authHeader) {
+        try {
+          const tokenPayload = JSON.parse(atob(authHeader.replace('Bearer ', '').split('.')[1]));
+          userId = tokenPayload.sub;
+        } catch (e) {
+          console.log('Could not extract user_id from token');
+        }
+      }
+
+      const supabaseUrl = Deno.env.get('SUPABASE_URL');
+      const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+      if (supabaseUrl && supabaseKey) {
+        const supabase = createClient(supabaseUrl, supabaseKey);
+        await supabase.from('ai_usage_logs').insert({
+          user_id: userId,
+          action_type: 'short_answer_grading',
+          model: 'google/gemini-2.5-flash',
+          tokens_used: totalTokens,
+          estimated_cost: estimatedCost,
+          metadata: {
+            student_answer_length: studentAnswer.length,
+            acceptable_answers_count: acceptableAnswers.length,
+            is_correct: isCorrect,
+            input_tokens: inputTokens,
+            output_tokens: outputTokens
+          }
+        });
+        console.log('AI usage logged successfully');
+      }
+    } catch (logError) {
+      console.error('Failed to log AI usage:', logError);
+      // Don't fail the request if logging fails
+    }
 
     return new Response(
       JSON.stringify({ 

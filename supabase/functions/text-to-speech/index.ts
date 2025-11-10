@@ -152,6 +152,37 @@ serve(async (req) => {
 
     console.log('TTS generation completed successfully');
 
+    // Log AI usage to ai_usage_logs
+    try {
+      const characterCount = text.length;
+      // ElevenLabs/OpenAI TTS pricing: ~$0.015 per 1K characters (OpenAI tts-1)
+      const estimatedCost = (characterCount / 1000) * 0.015;
+
+      const supabaseClient = createClient(
+        Deno.env.get('SUPABASE_URL') ?? '',
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      );
+
+      await supabaseClient.from('ai_usage_logs').insert({
+        user_id: user?.id || null,
+        action_type: 'tts',
+        model: 'openai/tts-1',
+        tokens_used: characterCount, // Store character count as "tokens" for TTS
+        estimated_cost: estimatedCost,
+        metadata: {
+          language_code: language_code,
+          voice_style: voice_style,
+          voice: VOICE_MAP[voice_style] || VOICE_MAP['default'],
+          character_count: characterCount,
+          audio_format: 'mp3'
+        }
+      });
+      console.log('AI usage logged successfully');
+    } catch (logError) {
+      console.error('Failed to log AI usage:', logError);
+      // Don't fail the request if logging fails
+    }
+
     // Cache the result (only if authenticated)
     if (user && authHeader) {
       try {
