@@ -12,6 +12,7 @@ import InlineReadAloud from '@/components/InlineReadAloud';
 import HorizontalLessonViewer from '@/components/lesson/HorizontalLessonViewer';
 import { FloatingDesmosCalculator } from '@/components/interactive/FloatingDesmosCalculator';
 import { useDesmosEnabled } from '@/hooks/useDesmosEnabled';
+import { DraggableFloatingButton } from '@/components/ui/DraggableFloatingButton';
 
 const StudentLessonPage = () => {
   const { lessonId } = useParams<{ lessonId: string }>();
@@ -170,15 +171,14 @@ const StudentLessonPage = () => {
         )}
       </div>
 
-      {/* Floating Desmos Calculator */}
+      {/* Floating Desmos Calculator Button */}
       {desmosSettings?.enabled && !showFloatingCalculator && lessonId && (
-        <Button
+        <DraggableFloatingButton
+          icon={<Calculator className="h-6 w-6" />}
+          label="Open Calculator"
           onClick={() => setShowFloatingCalculator(true)}
-          className="fixed bottom-6 right-6 rounded-full w-14 h-14 shadow-lg z-40"
-          size="icon"
-        >
-          <Calculator className="h-6 w-6" />
-        </Button>
+          initialPosition={{ x: window.innerWidth - 90, y: window.innerHeight - 90 }}
+        />
       )}
 
       {showFloatingCalculator && lessonId && (
