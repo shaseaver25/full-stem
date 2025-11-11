@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import * as React from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import Header from '@/components/Header';
@@ -58,6 +59,7 @@ const AdminQuizzes = () => {
     queryFn: async () => {
       console.log('Fetching quiz instances from lesson_components...');
       
+      // First, get quiz components with lessons and classes
       const { data, error } = await supabase
         .from('lesson_components')
         .select(`
@@ -73,14 +75,7 @@ const AdminQuizzes = () => {
             classes!inner (
               id,
               name,
-              teacher_id,
-              teacher_profiles!inner (
-                id,
-                user_id,
-                profiles!inner (
-                  full_name
-                )
-              )
+              teacher_id
             )
           )
         `)
@@ -94,12 +89,27 @@ const AdminQuizzes = () => {
 
       console.log('Raw quiz data:', data);
 
+      // Get unique teacher IDs
+      const teacherIds = [...new Set(data.map((item: any) => item.lessons?.classes?.teacher_id).filter(Boolean))];
+      
+      // Fetch teacher names separately
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, full_name')
+        .in('id', teacherIds);
+
+      if (profilesError) {
+        console.error('Error fetching profiles:', profilesError);
+      }
+
+      // Create a map of teacher_id to name
+      const teacherMap = new Map(profiles?.map(p => [p.id, p.full_name]) || []);
+
       // Transform the data
       const quizInstances: QuizInstance[] = data.map((item: any) => {
         const lesson = item.lessons;
         const classData = lesson?.classes;
-        const teacherProfile = classData?.teacher_profiles;
-        const profile = teacherProfile?.profiles;
+        const teacherId = classData?.teacher_id || '';
         
         const quizData = item.content?.quizData || {};
         const questions = quizData.questions || [];
@@ -111,8 +121,8 @@ const AdminQuizzes = () => {
           lesson_title: lesson?.title || 'Unknown Lesson',
           class_id: classData?.id || '',
           class_name: classData?.name || 'Unknown Class',
-          teacher_id: teacherProfile?.user_id || '',
-          teacher_name: profile?.full_name || 'Unknown Teacher',
+          teacher_id: teacherId,
+          teacher_name: teacherMap.get(teacherId) || 'Unknown Teacher',
           created_at: item.created_at,
           enabled: item.enabled ?? true,
           num_questions: questions.length,
@@ -130,9 +140,9 @@ const AdminQuizzes = () => {
     queryKey: ['quiz-teachers'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('teacher_profiles')
-        .select('id, user_id, profiles!inner(full_name)')
-        .order('profiles(full_name)');
+        .from('profiles')
+        .select('id, full_name')
+        .order('full_name');
 
       if (error) throw error;
       return data;
@@ -208,13 +218,16 @@ const AdminQuizzes = () => {
     },
   });
 
-  if (error) {
-    toast({
-      title: 'Error loading quizzes',
-      description: 'Failed to fetch quiz data. Please try again.',
-      variant: 'destructive',
-    });
-  }
+  // Show error toast only once when error occurs
+  React.useEffect(() => {
+    if (error) {
+      toast({
+        title: 'Error loading quizzes',
+        description: 'Failed to fetch quiz data. Please try again.',
+        variant: 'destructive',
+      });
+    }
+  }, [error, toast]);
 
   const filteredQuizzes = quizzes?.filter((quiz) => {
     const matchesSearch = 
@@ -345,8 +358,8 @@ const AdminQuizzes = () => {
                   <SelectContent>
                     <SelectItem value="all">All Teachers</SelectItem>
                     {teachers?.map((teacher: any) => (
-                      <SelectItem key={teacher.user_id} value={teacher.user_id}>
-                        {teacher.profiles?.full_name || 'Unknown'}
+                      <SelectItem key={teacher.id} value={teacher.id}>
+                        {teacher.full_name || 'Unknown'}
                       </SelectItem>
                     ))}
                   </SelectContent>
