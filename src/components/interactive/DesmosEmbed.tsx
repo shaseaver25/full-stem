@@ -46,6 +46,8 @@ const DesmosEmbed: React.FC<DesmosEmbedProps> = ({
 
   // Load Desmos API
   useEffect(() => {
+    console.log('DesmosEmbed useEffect triggered, mode:', mode);
+    
     if (mode === 'activity') {
       setIsLoading(false);
       return;
@@ -53,27 +55,40 @@ const DesmosEmbed: React.FC<DesmosEmbedProps> = ({
 
     // Check if Desmos API is already loaded
     if (window.Desmos) {
+      console.log('Desmos API already loaded, initializing...');
       initializeCalculator();
       return;
     }
 
+    console.log('Loading Desmos API script...');
     // Load Desmos API script
     const script = document.createElement('script');
-    script.src = 'https://www.desmos.com/api/v1.7/calculator.js';
+    script.src = 'https://www.desmos.com/api/v1.9/calculator.js?apiKey=dcb31709b452b1cf9dc26972add0fda6';
     script.async = true;
     script.onload = () => {
+      console.log('Desmos script loaded successfully');
       initializeCalculator();
     };
     script.onerror = (error) => {
       console.error('Failed to load Desmos script:', error);
+      console.error('Script src:', script.src);
       toast({
         title: 'Error Loading Desmos',
-        description: 'Failed to load Desmos calculator. Please refresh the page.',
+        description: 'Failed to load Desmos calculator. Please check your internet connection.',
         variant: 'destructive',
       });
       setIsLoading(false);
     };
+    
+    // Check if script already exists
+    const existingScript = document.querySelector('script[src*="desmos.com"]');
+    if (existingScript) {
+      console.log('Desmos script already in DOM');
+      return;
+    }
+    
     document.head.appendChild(script);
+    console.log('Desmos script added to document head');
 
     return () => {
       if (calculatorInstanceRef.current) {
@@ -83,9 +98,23 @@ const DesmosEmbed: React.FC<DesmosEmbedProps> = ({
   }, [mode]);
 
   const initializeCalculator = () => {
-    if (!calculatorRef.current || !window.Desmos) return;
+    console.log('initializeCalculator called');
+    console.log('calculatorRef.current:', !!calculatorRef.current);
+    console.log('window.Desmos:', !!window.Desmos);
+    
+    if (!calculatorRef.current || !window.Desmos) {
+      console.error('Cannot initialize: missing ref or Desmos API');
+      setIsLoading(false);
+      toast({
+        title: 'Error',
+        description: 'Calculator container not ready',
+        variant: 'destructive',
+      });
+      return;
+    }
 
     try {
+      console.log('Creating Desmos GraphingCalculator...');
       const calculator = window.Desmos.GraphingCalculator(calculatorRef.current, {
         expressions: !readOnly,
         settingsMenu: !readOnly,
