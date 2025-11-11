@@ -91,19 +91,19 @@ export function AccessibilityToolbar() {
       {/* Desktop Toolbar - Hidden on mobile */}
       <div
         ref={toolbarRef}
-        className={`hidden md:flex fixed bg-card shadow-lg border rounded-full items-center gap-2 px-3 py-2 z-50 transition-all duration-200 hover:shadow-xl ${
-          isDragging ? 'cursor-grabbing' : 'cursor-grab'
-        }`}
+        className="hidden md:flex fixed bg-card shadow-lg border rounded-full items-center gap-2 px-3 py-2 z-50 transition-all duration-200 hover:shadow-xl"
         style={{
           left: `${position.x}px`,
           top: `${position.y}px`,
         }}
         role="toolbar"
         aria-label="Accessibility Toolbar"
-        onMouseDown={handleMouseDown}
       >
         {/* Drag Handle */}
-        <div className="cursor-grab px-1">
+        <div 
+          className={`px-1 ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+          onMouseDown={handleMouseDown}
+        >
           <Move className="h-4 w-4 text-muted-foreground" />
         </div>
         
