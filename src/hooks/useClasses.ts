@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
-// Fetch all classes for a teacher
+// Fetch all classes for a teacher (or all classes if developer)
 export const useClasses = () => {
   return useQuery({
     queryKey: ['classes'],
@@ -12,7 +12,26 @@ export const useClasses = () => {
       const { data: user } = await supabase.auth.getUser();
       if (!user?.user?.id) throw new Error('User not authenticated');
 
-      // Get the teacher profile first
+      // Check if user is a developer
+      const { data: roles } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.user.id);
+
+      const isDeveloper = roles?.some(r => r.role === 'developer');
+
+      // If developer, fetch all classes
+      if (isDeveloper) {
+        const { data, error } = await supabase
+          .from('classes')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        return data || [];
+      }
+
+      // Otherwise, fetch only teacher's classes
       const { data: teacherProfile } = await supabase
         .from('teacher_profiles')
         .select('id')
