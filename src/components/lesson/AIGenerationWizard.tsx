@@ -540,15 +540,16 @@ export default function AIGenerationWizard({
               <label className="text-sm font-medium mb-2 block">Request Specific Components</label>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3 p-4 bg-muted/50 rounded-lg">
                 {[
-                  { value: 'instructions', label: 'Instructions' },
+                  { value: 'slides', label: 'Slides' },
                   { value: 'page', label: 'Page/Content' },
-                  { value: 'multimedia', label: 'Multimedia' },
-                  { value: 'activity', label: 'Activity' },
+                  { value: 'video', label: 'Video/Multimedia' },
                   { value: 'discussion', label: 'Discussion' },
+                  { value: 'codingEditor', label: 'Coding IDE' },
+                  { value: 'activity', label: 'Activity' },
                   { value: 'assignment', label: 'Assignment' },
                   { value: 'reflection', label: 'Reflection' },
+                  { value: 'instructions', label: 'Instructions' },
                   { value: 'resources', label: 'Resources' },
-                  { value: 'coding', label: 'Coding IDE' },
                 ].map((component) => (
                   <label key={component.value} className="flex items-center gap-2 cursor-pointer">
                     <input
