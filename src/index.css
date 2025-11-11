@@ -149,3 +149,68 @@ html.focus-mode * {
   animation: none !important;
   transition-duration: 0.15s !important;
 }
+
+/* Desmos Calculator Accessibility */
+.desmos-calculator-container {
+  position: relative;
+}
+
+/* High Contrast Mode for Desmos */
+.desmos-calculator-container.high-contrast .dcg-calculator-api-container {
+  border: 2px solid hsl(0, 0%, 100%) !important;
+  background: hsl(0, 0%, 0%) !important;
+}
+
+.desmos-calculator-container.high-contrast .dcg-variable-slider,
+.desmos-calculator-container.high-contrast .dcg-variable-slider-container,
+.desmos-calculator-container.high-contrast .dcg-expression,
+.desmos-calculator-container.high-contrast .dcg-expressionlist {
+  background: hsl(0, 0%, 5%) !important;
+  color: hsl(0, 0%, 100%) !important;
+}
+
+.desmos-calculator-container.high-contrast button,
+.desmos-calculator-container.high-contrast .dcg-btn {
+  border: 2px solid hsl(0, 0%, 100%) !important;
+  background: hsl(0, 0%, 20%) !important;
+  color: hsl(0, 0%, 100%) !important;
+}
+
+.desmos-calculator-container.high-contrast button:hover,
+.desmos-calculator-container.high-contrast .dcg-btn:hover {
+  background: hsl(0, 0%, 30%) !important;
+}
+
+.desmos-calculator-container.high-contrast button:focus,
+.desmos-calculator-container.high-contrast .dcg-btn:focus {
+  outline: 3px solid hsl(173, 80%, 50%) !important;
+  outline-offset: 2px;
+}
+
+/* Dyslexia Font for Desmos */
+.desmos-calculator-container.dyslexia-font .dcg-calculator-api-container *,
+.desmos-calculator-container.dyslexia-font input,
+.desmos-calculator-container.dyslexia-font textarea,
+.desmos-calculator-container.dyslexia-font button {
+  font-family: 'OpenDyslexic', sans-serif !important;
+}
+
+/* Enhanced Focus Indicators for Desmos */
+.desmos-calculator-container :focus-visible {
+  outline: 3px solid hsl(var(--ring)) !important;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Screen Reader Only Class */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}

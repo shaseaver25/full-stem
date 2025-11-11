@@ -3182,6 +3182,47 @@ export type Database = {
           },
         ]
       }
+      student_math_sessions: {
+        Row: {
+          activity_id: string | null
+          calculator_state: Json
+          created_at: string
+          id: string
+          lesson_id: string | null
+          session_type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          activity_id?: string | null
+          calculator_state?: Json
+          created_at?: string
+          id?: string
+          lesson_id?: string | null
+          session_type?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          activity_id?: string | null
+          calculator_state?: Json
+          created_at?: string
+          id?: string
+          lesson_id?: string | null
+          session_type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_math_sessions_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       student_parent_relationships: {
         Row: {
           can_receive_communications: boolean | null
