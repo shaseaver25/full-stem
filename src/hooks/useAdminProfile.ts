@@ -61,8 +61,15 @@ export const useAdminProfile = () => {
 
     // Set up real-time subscription
     if (user?.id) {
+      const channelName = `admin_profile_${user.id}`;
+      
+      // Remove any existing channel with this name first
+      const existingChannel = supabase.channel(channelName);
+      supabase.removeChannel(existingChannel);
+
+      // Create new subscription
       const channel = supabase
-        .channel(`admin_profile_${user.id}`)
+        .channel(channelName)
         .on(
           'postgres_changes',
           {
@@ -82,6 +89,7 @@ export const useAdminProfile = () => {
         .subscribe();
 
       return () => {
+        channel.unsubscribe();
         supabase.removeChannel(channel);
       };
     }
