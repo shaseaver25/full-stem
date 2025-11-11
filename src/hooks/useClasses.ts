@@ -28,7 +28,8 @@ export const useClasses = () => {
           .order('created_at', { ascending: false });
 
         if (error) throw error;
-        return data || [];
+        // Filter out conference classes
+        return (data || []).filter(cls => !cls.name?.startsWith('Applied AI Conference'));
       }
 
       // Otherwise, fetch only teacher's classes
@@ -47,7 +48,8 @@ export const useClasses = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data || [];
+      // Filter out conference classes
+      return (data || []).filter(cls => !cls.name?.startsWith('Applied AI Conference'));
     },
   });
 };
