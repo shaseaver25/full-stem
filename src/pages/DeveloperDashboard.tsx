@@ -23,6 +23,7 @@ import { useMFAEnforcement } from '@/hooks/useMFAEnforcement';
 import { getMode } from '@/utils/env';
 import { CreateTestStudentsButton } from '@/components/admin/CreateTestStudentsButton';
 import { AICostsPanel } from '@/components/developer/AICostsPanel';
+import { MarkdownViewer } from '@/components/MarkdownViewer';
 
 const DeveloperDashboard = () => {
   const { user } = useAuth();
@@ -85,7 +86,7 @@ const DeveloperDashboard = () => {
         </div>
 
         <Tabs defaultValue="sandbox" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-9">
+          <TabsList className="grid w-full grid-cols-10">
             <TabsTrigger value="sandbox" className="flex items-center gap-2">
               <Database className="h-4 w-4" />
               Sandbox
@@ -121,6 +122,10 @@ const DeveloperDashboard = () => {
             <TabsTrigger value="settings" className="flex items-center gap-2">
               <Settings className="h-4 w-4" />
               Settings
+            </TabsTrigger>
+            <TabsTrigger value="reports" className="flex items-center gap-2">
+              <FileText className="h-4 w-4" />
+              Reports & Docs
             </TabsTrigger>
           </TabsList>
 
@@ -297,6 +302,21 @@ const DeveloperDashboard = () => {
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="reports" className="space-y-6">
+            <Alert className="bg-blue-50 border-blue-200">
+              <FileText className="h-4 w-4 text-blue-600" />
+              <AlertTitle>Internal Documentation Hub</AlertTitle>
+              <AlertDescription>
+                Access comprehensive reports and technical documentation about the platform architecture and development processes.
+              </AlertDescription>
+            </Alert>
+            
+            <MarkdownViewer 
+              filePath="/docs/DASHBOARD_ARCHITECTURE_REPORT.md"
+              title="Dashboard Architecture Report"
+            />
           </TabsContent>
         </Tabs>
       </div>
