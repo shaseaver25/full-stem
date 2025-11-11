@@ -14,6 +14,8 @@ Available component types to use in lessons:
 - PAGE: Rich text content with formatting, images, and read-aloud
 - VIDEO: Embedded video or audio content (YouTube, Vimeo, etc.)
 - DISCUSSION: AI-powered discussion prompts with threaded responses
+- QUIZ: Assessment with multiple question types (multiple choice, true/false, short answer, etc.)
+- POLL: Quick opinion polls and surveys for class engagement
 - CODING EDITOR: Live coding environment for programming lessons (e.g., Replit, CodeSandbox)
 - ACTIVITY: In-class activities, group work, and hands-on practice
 - ASSIGNMENT: Graded homework with points and due dates
@@ -42,6 +44,8 @@ Components should suggest these color themes:
 - Reflection: Light Amber (#FEF3C7)
 - Slides: Soft Indigo (#E0E7FF)
 - Coding Editor: Light Gray (#F3F4F6)
+- Quiz: Soft Cyan (#CFFAFE)
+- Poll: Soft Lime (#ECFCCB)
 
 4. MEDIA SUGGESTIONS (MANDATORY)
 For EVERY component, include in teacherNotes:
@@ -50,6 +54,8 @@ For EVERY component, include in teacherNotes:
 - [SUGGEST DIAGRAM: "specific concept"]
 - [SUGGEST SLIDES: "presentation topic"] - Use SLIDES component type for slide decks
 - [SUGGEST CODE: "coding environment"] - Use CODING EDITOR component type for programming
+- [SUGGEST QUIZ: "assessment topic"] - Use QUIZ component type for assessments
+- [SUGGEST POLL: "poll question"] - Use POLL component type for quick surveys
 Include: Alt text, Placement, Purpose, Component type recommendation
 
 5. LESSON FLOW
@@ -98,6 +104,8 @@ Return ONLY valid JSON matching the AILesson interface. No markdown, no code fen
     "COMPONENT 2 MEDIA: [SUGGEST VIDEO: 'search'], Use VIDEO component, Duration: [time]",
     "COMPONENT 3 MEDIA: [SUGGEST SLIDES: 'presentation topic'], Use SLIDES component",
     "COMPONENT 4 MEDIA: [SUGGEST CODE: 'coding environment'], Use CODING EDITOR component for programming",
+    "COMPONENT 5 MEDIA: [SUGGEST QUIZ: 'assessment topic'], Use QUIZ component with 5-10 questions",
+    "COMPONENT 6 MEDIA: [SUGGEST POLL: 'engagement question'], Use POLL component for quick check",
     "Progress Tracking: Show completion for each component",
     "Engagement Tips: [specific strategies]"
   ],

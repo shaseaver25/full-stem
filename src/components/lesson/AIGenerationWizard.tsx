@@ -280,6 +280,58 @@ export default function AIGenerationWizard({
       });
     }
 
+    // Extract QUIZ components from teacher notes or formative assessment
+    if (aiLesson.teacherNotes) {
+      const quizSuggestions = aiLesson.teacherNotes.filter(note => 
+        note.includes('[SUGGEST QUIZ:') || note.includes('QUIZ component')
+      );
+      
+      quizSuggestions.forEach((note, idx) => {
+        const match = note.match(/\[SUGGEST QUIZ:\s*["']([^"']+)["']\]/i);
+        if (match) {
+          components.push({
+            component_type: 'quiz',
+            content: {
+              title: `Quiz: ${match[1]}`,
+              description: `Assessment covering ${match[1]}. Teacher will need to add questions.`,
+              questions: [] // Teacher will add questions manually
+            },
+            order: order++,
+            enabled: true,
+            is_assignable: true,
+            read_aloud: false,
+            language_code: aiLesson.meta.language,
+          });
+        }
+      });
+    }
+
+    // Extract POLL components from teacher notes
+    if (aiLesson.teacherNotes) {
+      const pollSuggestions = aiLesson.teacherNotes.filter(note => 
+        note.includes('[SUGGEST POLL:') || note.includes('POLL component')
+      );
+      
+      pollSuggestions.forEach((note, idx) => {
+        const match = note.match(/\[SUGGEST POLL:\s*["']([^"']+)["']\]/i);
+        if (match) {
+          components.push({
+            component_type: 'poll',
+            content: {
+              title: 'Quick Poll',
+              question: match[1],
+              options: [] // Teacher will add poll options
+            },
+            order: order++,
+            enabled: true,
+            is_assignable: false,
+            read_aloud: false,
+            language_code: aiLesson.meta.language,
+          });
+        }
+      });
+    }
+
     return components;
   };
 
@@ -544,6 +596,8 @@ export default function AIGenerationWizard({
                   { value: 'page', label: 'Page/Content' },
                   { value: 'video', label: 'Video/Multimedia' },
                   { value: 'discussion', label: 'Discussion' },
+                  { value: 'quiz', label: 'Quiz' },
+                  { value: 'poll', label: 'Poll' },
                   { value: 'codingEditor', label: 'Coding IDE' },
                   { value: 'activity', label: 'Activity' },
                   { value: 'assignment', label: 'Assignment' },
