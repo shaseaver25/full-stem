@@ -3597,6 +3597,42 @@ export type Database = {
         }
         Relationships: []
       }
+      translation_cache: {
+        Row: {
+          access_count: number | null
+          content_hash: string
+          created_at: string
+          id: string
+          last_accessed_at: string
+          original_content: string
+          source_language: string
+          target_language: string
+          translated_content: string
+        }
+        Insert: {
+          access_count?: number | null
+          content_hash: string
+          created_at?: string
+          id?: string
+          last_accessed_at?: string
+          original_content: string
+          source_language?: string
+          target_language: string
+          translated_content: string
+        }
+        Update: {
+          access_count?: number | null
+          content_hash?: string
+          created_at?: string
+          id?: string
+          last_accessed_at?: string
+          original_content?: string
+          source_language?: string
+          target_language?: string
+          translated_content?: string
+        }
+        Relationships: []
+      }
       translation_logs: {
         Row: {
           created_at: string | null
