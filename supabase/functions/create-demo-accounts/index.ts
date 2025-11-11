@@ -69,6 +69,61 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+    const body = await req.json().catch(() => ({ mode: 'demo' }));
+    console.log('Received body:', JSON.stringify(body));
+    
+    // Handle custom user creation (for specific developer/admin accounts)
+    if (body.mode === 'custom') {
+      const { email, password, role, fullName } = body;
+      
+      console.log(`Creating custom ${role} account: ${email}`);
+      
+      // Check if user already exists
+      const { data: existingUsers } = await supabase.auth.admin.listUsers();
+      const userExists = existingUsers?.users.find(u => u.email === email);
+      
+      let userId: string;
+      
+      if (userExists) {
+        console.log(`User ${email} already exists, updating password...`);
+        userId = userExists.id;
+        await supabase.auth.admin.updateUserById(userId, { password });
+      } else {
+        const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
+          email,
+          password,
+          email_confirm: true,
+          user_metadata: { full_name: fullName || email.split('@')[0] }
+        });
+        
+        if (createError) throw createError;
+        userId = newUser.user!.id;
+      }
+      
+      // Upsert profile
+      await supabase.from('profiles').upsert({
+        id: userId,
+        email,
+        full_name: fullName || email.split('@')[0]
+      });
+      
+      // Upsert role
+      await supabase.from('user_roles').upsert({
+        user_id: userId,
+        role
+      }, { onConflict: 'user_id,role' });
+      
+      return new Response(
+        JSON.stringify({
+          success: true,
+          message: `${role} user ${userExists ? 'updated' : 'created'}: ${email}`,
+          userId,
+          password
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     console.log('Demo accounts creation started');
 
     const results = [];
