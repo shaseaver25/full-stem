@@ -65,9 +65,10 @@ const AdminPolls = () => {
         .select(`
           *,
           lesson_components!inner(
-            created_by,
-            lessons(
-              classes(
+            lesson_id,
+            lessons!inner(
+              class_id,
+              classes!inner(
                 teacher_id
               )
             )
@@ -77,8 +78,10 @@ const AdminPolls = () => {
 
       if (error) throw error;
 
-      // Get unique creator IDs
-      const creatorIds = [...new Set(data.map((p: any) => p.lesson_components?.created_by).filter(Boolean))];
+      // Get unique creator IDs (teachers)
+      const creatorIds = [...new Set(
+        data.map((p: any) => p.lesson_components?.lessons?.classes?.teacher_id).filter(Boolean)
+      )];
       
       // Fetch creator names
       const { data: profiles } = await supabase
@@ -91,8 +94,8 @@ const AdminPolls = () => {
       // Transform data
       return data.map((poll: any) => ({
         ...poll,
-        creator_id: poll.lesson_components?.created_by || '',
-        creator_name: creatorMap.get(poll.lesson_components?.created_by) || 'Unknown',
+        creator_id: poll.lesson_components?.lessons?.classes?.teacher_id || '',
+        creator_name: creatorMap.get(poll.lesson_components?.lessons?.classes?.teacher_id) || 'Unknown',
       })) as Poll[];
     },
   });
