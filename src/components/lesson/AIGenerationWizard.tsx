@@ -201,6 +201,85 @@ export default function AIGenerationWizard({
       });
     }
 
+    // Extract VIDEO components from teacher notes
+    if (aiLesson.teacherNotes) {
+      const videoSuggestions = aiLesson.teacherNotes.filter(note => 
+        note.includes('[SUGGEST VIDEO:') || note.includes('VIDEO component')
+      );
+      
+      videoSuggestions.forEach((note, idx) => {
+        const match = note.match(/\[SUGGEST VIDEO:\s*["']([^"']+)["']\]/i);
+        if (match) {
+          components.push({
+            component_type: 'video',
+            content: {
+              title: `Video: ${match[1]}`,
+              videoUrl: '', // Teacher will need to add the actual URL
+              description: `Suggested video topic: ${match[1]}`
+            },
+            order: order++,
+            enabled: true,
+            is_assignable: false,
+            read_aloud: false,
+            language_code: aiLesson.meta.language,
+          });
+        }
+      });
+    }
+
+    // Extract SLIDES components from teacher notes
+    if (aiLesson.teacherNotes) {
+      const slidesSuggestions = aiLesson.teacherNotes.filter(note => 
+        note.includes('[SUGGEST SLIDES:') || note.includes('SLIDES component')
+      );
+      
+      slidesSuggestions.forEach((note, idx) => {
+        const match = note.match(/\[SUGGEST SLIDES:\s*["']([^"']+)["']\]/i);
+        if (match) {
+          components.push({
+            component_type: 'slides',
+            content: {
+              title: `Slides: ${match[1]}`,
+              embedUrl: '', // Teacher will need to add the actual URL
+              description: `Suggested presentation topic: ${match[1]}`
+            },
+            order: order++,
+            enabled: true,
+            is_assignable: false,
+            read_aloud: true,
+            language_code: aiLesson.meta.language,
+          });
+        }
+      });
+    }
+
+    // Extract CODING EDITOR components from teacher notes
+    if (aiLesson.teacherNotes) {
+      const codeSuggestions = aiLesson.teacherNotes.filter(note => 
+        note.includes('[SUGGEST CODE:') || note.includes('CODING EDITOR component')
+      );
+      
+      codeSuggestions.forEach((note, idx) => {
+        const match = note.match(/\[SUGGEST CODE:\s*["']([^"']+)["']\]/i);
+        if (match) {
+          components.push({
+            component_type: 'codingEditor',
+            content: {
+              title: `Coding Exercise: ${match[1]}`,
+              embedUrl: '', // Teacher will need to add the actual URL (Replit, CodeSandbox, etc.)
+              starterCode: '',
+              description: `Suggested coding environment: ${match[1]}`
+            },
+            order: order++,
+            enabled: true,
+            is_assignable: false,
+            read_aloud: false,
+            language_code: aiLesson.meta.language,
+          });
+        }
+      });
+    }
+
     return components;
   };
 

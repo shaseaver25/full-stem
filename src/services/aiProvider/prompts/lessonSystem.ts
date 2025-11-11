@@ -9,6 +9,18 @@ CRITICAL REQUIREMENTS:
 - Celebrate progress and completion
 
 2. COMPONENT STRUCTURE
+Available component types to use in lessons:
+- SLIDES: Presentation content with visual slides (Google Slides, PowerPoint embed)
+- PAGE: Rich text content with formatting, images, and read-aloud
+- VIDEO: Embedded video or audio content (YouTube, Vimeo, etc.)
+- DISCUSSION: AI-powered discussion prompts with threaded responses
+- CODING EDITOR: Live coding environment for programming lessons (e.g., Replit, CodeSandbox)
+- ACTIVITY: In-class activities, group work, and hands-on practice
+- ASSIGNMENT: Graded homework with points and due dates
+- REFLECTION: Student reflection prompts for self-assessment
+- INSTRUCTIONS: Step-by-step procedural instructions
+- RESOURCES: Collection of supplementary materials and links
+
 Each component must include:
 - Clear title with appropriate icon emoji
 - Time estimate (realistic, not rushed)
@@ -21,20 +33,24 @@ Each component must include:
 3. COLOR CODING (Include in metadata)
 Components should suggest these color themes:
 - Instructions: Warm Yellow (#FEF3C7)
-- Reading/Content: Soft Blue (#DBEAFE)
+- Page/Reading: Soft Blue (#DBEAFE)
 - Activity/Practice: Light Green (#D1FAE5)
 - Discussion: Soft Purple (#E9D5FF)
 - Resources: Soft Orange (#FED7AA)
-- Multimedia: Light Teal (#CCFBF1)
+- Video/Multimedia: Light Teal (#CCFBF1)
 - Assignment: Soft Rose (#FCE7F3)
 - Reflection: Light Amber (#FEF3C7)
+- Slides: Soft Indigo (#E0E7FF)
+- Coding Editor: Light Gray (#F3F4F6)
 
 4. MEDIA SUGGESTIONS (MANDATORY)
 For EVERY component, include in teacherNotes:
 - [SUGGEST IMAGE: "specific search term"]
-- [SUGGEST VIDEO: "specific search term"]
+- [SUGGEST VIDEO: "specific search term"] - Use VIDEO component type for video URLs
 - [SUGGEST DIAGRAM: "specific concept"]
-Include: Alt text, Placement, Purpose
+- [SUGGEST SLIDES: "presentation topic"] - Use SLIDES component type for slide decks
+- [SUGGEST CODE: "coding environment"] - Use CODING EDITOR component type for programming
+Include: Alt text, Placement, Purpose, Component type recommendation
 
 5. LESSON FLOW
 - Hook/Warm-Up (5 min): Question, scenario, or surprising fact
@@ -79,7 +95,9 @@ Return ONLY valid JSON matching the AILesson interface. No markdown, no code fen
   "summativeAssessment": { "prompt": "Performance task", "rubric": ["Criterion with levels"] },
   "teacherNotes": [
     "COMPONENT 1 MEDIA: [SUGGEST IMAGE: 'search'], Alt: [description], Purpose: [reason]",
-    "COMPONENT 2 MEDIA: [SUGGEST VIDEO: 'search'], Duration: [time]",
+    "COMPONENT 2 MEDIA: [SUGGEST VIDEO: 'search'], Use VIDEO component, Duration: [time]",
+    "COMPONENT 3 MEDIA: [SUGGEST SLIDES: 'presentation topic'], Use SLIDES component",
+    "COMPONENT 4 MEDIA: [SUGGEST CODE: 'coding environment'], Use CODING EDITOR component for programming",
     "Progress Tracking: Show completion for each component",
     "Engagement Tips: [specific strategies]"
   ],
