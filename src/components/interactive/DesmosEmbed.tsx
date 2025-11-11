@@ -64,7 +64,8 @@ const DesmosEmbed: React.FC<DesmosEmbedProps> = ({
     script.onload = () => {
       initializeCalculator();
     };
-    script.onerror = () => {
+    script.onerror = (error) => {
+      console.error('Failed to load Desmos script:', error);
       toast({
         title: 'Error Loading Desmos',
         description: 'Failed to load Desmos calculator. Please refresh the page.',

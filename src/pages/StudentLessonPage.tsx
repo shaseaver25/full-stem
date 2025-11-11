@@ -20,6 +20,11 @@ const StudentLessonPage = () => {
   const [showFloatingCalculator, setShowFloatingCalculator] = useState(false);
   
   const { data: desmosSettings } = useDesmosEnabled(lessonId);
+  
+  // Debug logging
+  console.log('Desmos settings:', desmosSettings);
+  console.log('Show calculator:', showFloatingCalculator);
+  console.log('Lesson ID:', lessonId);
 
   // Fetch lesson with only student-visible content
   const { data: lesson, isLoading, error } = useQuery({
