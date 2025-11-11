@@ -45,67 +45,86 @@ export const useClassApi = () => {
   // Create class mutation
   const createClassMutation = useMutation({
     mutationFn: async (data: SaveClassData) => {
-      // Create the class first
-      const newClass = await classApi.create({
-        title: data.classData.title,
-        description: data.classData.description,
-        grade_level: data.classData.gradeLevel,
-        subject: data.classData.subject,
-        duration: data.classData.duration,
-        instructor: data.classData.instructor,
-        schedule: data.classData.schedule,
-        learning_objectives: data.classData.learningObjectives,
-        prerequisites: data.classData.prerequisites,
-        max_students: data.classData.maxStudents,
-      });
-
-      // Create lessons and activities
-      for (let i = 0; i < data.lessons.length; i++) {
-        const lesson = data.lessons[i];
-        const newLesson = await lessonApi.create({
-          class_id: newClass.id,
-          title: lesson.title,
-          description: lesson.description,
-          objectives: lesson.objectives,
-          materials: lesson.materials,
-          duration: lesson.duration,
-          order_index: lesson.order || i,
-          content: {
-            instructions: lesson.instructions,
-            videos: lesson.videos
-          }
+      try {
+        console.log('Creating class with data:', data);
+        
+        // Create the class first
+        const newClass = await classApi.create({
+          title: data.classData.title,
+          description: data.classData.description,
+          grade_level: data.classData.gradeLevel,
+          subject: data.classData.subject,
+          duration: data.classData.duration,
+          instructor: data.classData.instructor,
+          schedule: data.classData.schedule,
+          learning_objectives: data.classData.learningObjectives,
+          prerequisites: data.classData.prerequisites,
+          max_students: data.classData.maxStudents,
         });
 
-        // Create classroom activities as activities
-        for (const activity of data.classroomActivities) {
-          await activityApi.create({
-            lesson_id: newLesson.id,
-            title: activity.title,
-            description: activity.description,
-            activity_type: 'classroom',
-            resources: activity.materials,
-            instructions: activity.instructions,
-            estimated_time: activity.duration,
-            order_index: 0
-          });
+        console.log('Class created successfully:', newClass.id);
+
+        // Create lessons and activities
+        for (let i = 0; i < data.lessons.length; i++) {
+          const lesson = data.lessons[i];
+          console.log(`Creating lesson ${i + 1}/${data.lessons.length}:`, lesson.title);
+          
+          try {
+            const newLesson = await lessonApi.create({
+              class_id: newClass.id,
+              title: lesson.title,
+              description: lesson.description,
+              objectives: lesson.objectives,
+              materials: lesson.materials,
+              duration: lesson.duration,
+              order_index: lesson.order || i,
+              content: {
+                instructions: lesson.instructions,
+                videos: lesson.videos
+              }
+            });
+
+            console.log('Lesson created successfully:', newLesson.id);
+
+            // Create classroom activities as activities
+            for (const activity of data.classroomActivities) {
+              await activityApi.create({
+                lesson_id: newLesson.id,
+                title: activity.title,
+                description: activity.description,
+                activity_type: 'classroom',
+                resources: activity.materials,
+                instructions: activity.instructions,
+                estimated_time: activity.duration,
+                order_index: 0
+              });
+            }
+
+            // Create individual activities as activities
+            for (const activity of data.individualActivities) {
+              await activityApi.create({
+                lesson_id: newLesson.id,
+                title: activity.title,
+                description: activity.description,
+                activity_type: 'individual',
+                resources: activity.resources,
+                instructions: activity.instructions,
+                estimated_time: activity.estimatedTime,
+                order_index: 0
+              });
+            }
+          } catch (lessonError) {
+            console.error(`Failed to create lesson "${lesson.title}":`, lessonError);
+            throw new Error(`Failed to create lesson "${lesson.title}": ${lessonError instanceof Error ? lessonError.message : 'Unknown error'}`);
+          }
         }
 
-        // Create individual activities as activities
-        for (const activity of data.individualActivities) {
-          await activityApi.create({
-            lesson_id: newLesson.id,
-            title: activity.title,
-            description: activity.description,
-            activity_type: 'individual',
-            resources: activity.resources,
-            instructions: activity.instructions,
-            estimated_time: activity.estimatedTime,
-            order_index: 0
-          });
-        }
+        console.log('All lessons and activities created successfully');
+        return newClass;
+      } catch (error) {
+        console.error('Error in createClassMutation:', error);
+        throw error;
       }
-
-      return newClass;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['classes'] });
