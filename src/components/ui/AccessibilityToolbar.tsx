@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTheme } from 'next-themes';
 import { useAccessibility } from '@/contexts/AccessibilityContext';
 import { useFocusMode } from '@/contexts/FocusModeContext';
@@ -14,13 +14,17 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { Volume2, Globe, Contrast, Type, Accessibility, Eye, EyeOff, Moon, Sun } from 'lucide-react';
+import { Volume2, Globe, Contrast, Type, Accessibility, Eye, EyeOff, Moon, Sun, Move } from 'lucide-react';
 
 export function AccessibilityToolbar() {
   const { settings, updateSettings, isLoading } = useAccessibility();
   const { focusMode, setFocusMode } = useFocusMode();
   const { theme, setTheme } = useTheme();
   const [isExpanded, setIsExpanded] = useState(false);
+  const [position, setPosition] = useState({ x: 20, y: 20 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const toolbarRef = useRef<HTMLDivElement>(null);
 
   // Sync theme with accessibility settings
   useEffect(() => {
@@ -41,6 +45,43 @@ export function AccessibilityToolbar() {
     setTheme(newDarkMode ? 'dark' : 'light');
   };
 
+  const handleMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (toolbarRef.current) {
+      const rect = toolbarRef.current.getBoundingClientRect();
+      setDragOffset({
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top,
+      });
+      setIsDragging(true);
+    }
+  };
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (isDragging) {
+        setPosition({
+          x: e.clientX - dragOffset.x,
+          y: e.clientY - dragOffset.y,
+        });
+      }
+    };
+
+    const handleMouseUp = () => {
+      setIsDragging(false);
+    };
+
+    if (isDragging) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDragging, dragOffset]);
+
   if (isLoading) {
     return null;
   }
@@ -49,10 +90,23 @@ export function AccessibilityToolbar() {
     <TooltipProvider delayDuration={200}>
       {/* Desktop Toolbar - Hidden on mobile */}
       <div
-        className="hidden md:flex fixed bottom-5 right-5 bg-card shadow-lg border rounded-full items-center gap-2 px-3 py-2 z-50 transition-all duration-200 hover:shadow-xl"
+        ref={toolbarRef}
+        className={`hidden md:flex fixed bg-card shadow-lg border rounded-full items-center gap-2 px-3 py-2 z-50 transition-all duration-200 hover:shadow-xl ${
+          isDragging ? 'cursor-grabbing' : 'cursor-grab'
+        }`}
+        style={{
+          left: `${position.x}px`,
+          top: `${position.y}px`,
+        }}
         role="toolbar"
         aria-label="Accessibility Toolbar"
+        onMouseDown={handleMouseDown}
       >
+        {/* Drag Handle */}
+        <div className="cursor-grab px-1">
+          <Move className="h-4 w-4 text-muted-foreground" />
+        </div>
+        
         {/* Text-to-Speech */}
         <Tooltip>
           <TooltipTrigger asChild>

@@ -177,7 +177,7 @@ const StudentLessonPage = () => {
           icon={<Calculator className="h-6 w-6" />}
           label="Open Calculator"
           onClick={() => setShowFloatingCalculator(true)}
-          initialPosition={{ x: window.innerWidth - 90, y: window.innerHeight - 90 }}
+          initialPosition={{ x: window.innerWidth - 90, y: 20 }}
         />
       )}
 
