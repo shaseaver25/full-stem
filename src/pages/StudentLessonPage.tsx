@@ -181,8 +181,12 @@ const StudentLessonPage = () => {
         <DraggableFloatingButton
           icon={<Calculator className="h-6 w-6" />}
           label="Open Calculator"
-          onClick={() => setShowFloatingCalculator(true)}
-          initialPosition={{ x: window.innerWidth - 90, y: 20 }}
+          onClick={() => {
+            console.log('Calculator button clicked!');
+            setShowFloatingCalculator(true);
+          }}
+          initialPosition={{ x: window.innerWidth - 100, y: 80 }}
+          className="bg-primary text-primary-foreground hover:bg-primary/90"
         />
       )}
 
