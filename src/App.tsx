@@ -42,6 +42,8 @@ const ClassDetailPage = React.lazy(() => import("./pages/ClassDetailPage"));
 const UnifiedGradebookPage = React.lazy(() => import("./pages/UnifiedGradebookPage"));
 const AssignmentSubmissionsPage = React.lazy(() => import("./pages/AssignmentSubmissionsPage"));
 const AdminDashboard = React.lazy(() => import("./pages/AdminDashboard"));
+const AdminQuizzes = React.lazy(() => import("./pages/admin/AdminQuizzes"));
+const AdminPolls = React.lazy(() => import("./pages/admin/AdminPolls"));
 const BuildClassPage = React.lazy(() => import("./pages/BuildClassPage"));
 const LessonBuilderPage = React.lazy(() => import("./pages/teacher/LessonBuilderPage"));
 const AnalyticsDashboard = React.lazy(() => import("./pages/AnalyticsDashboard"));
@@ -278,6 +280,26 @@ function AppContent() {
               </RequireRole>
             </ErrorBoundary>
           } 
+        />
+        <Route 
+          path="/admin/quizzes" 
+          element={
+            <ErrorBoundary>
+              <RequireRole allowedRoles={['admin', 'super_admin', 'developer']}>
+                <AdminQuizzes />
+              </RequireRole>
+            </ErrorBoundary>
+          } 
+        />
+        <Route 
+          path="/admin/polls" 
+          element={
+            <ErrorBoundary>
+              <RequireRole allowedRoles={['admin', 'super_admin', 'developer']}>
+                <AdminPolls />
+              </RequireRole>
+            </ErrorBoundary>
+          }
         />
         <Route 
           path="/admin/build-class" 

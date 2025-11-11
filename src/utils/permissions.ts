@@ -1,5 +1,5 @@
 import type { UserRole } from '@/utils/roleUtils';
-import { LucideIcon, LayoutDashboard, Sparkles, FileEdit, BookOpen, FolderOpen, BarChart3, Settings, Plus, GraduationCap, Users, Home, ClipboardList } from 'lucide-react';
+import { LucideIcon, LayoutDashboard, Sparkles, FileEdit, BookOpen, FolderOpen, BarChart3, Settings, Plus, GraduationCap, Users, Home, ClipboardList, FileQuestion } from 'lucide-react';
 
 export interface NavigationItem {
   path: string;
@@ -115,6 +115,8 @@ export const getAllowedRoutes = (role: UserRole | null): string[] => {
       '/admin/ai-course-builder',
       '/admin/course-editor',
       '/admin/build-class',
+      '/admin/quizzes',
+      '/admin/polls',
       '/admin/advanced',
       '/dashboard/admin/analytics',
       '/content',
@@ -206,6 +208,8 @@ export const getPrimaryNavigationForRole = (role: UserRole | null): NavigationIt
       { path: '/admin/ai-course-builder', label: 'AI Builder', icon: Sparkles },
       { path: '/admin/course-editor', label: 'Course Editor', icon: FileEdit },
       { path: '/admin/build-class', label: 'Build Class', icon: Plus },
+      { path: '/admin/quizzes', label: 'All Quizzes', icon: FileQuestion },
+      { path: '/admin/polls', label: 'All Polls', icon: BarChart3 },
       { path: '/content', label: 'Content', icon: FolderOpen },
       { path: '/dashboard/admin/analytics', label: 'Analytics', icon: BarChart3 },
     ],

@@ -133,7 +133,7 @@ export const SchoolAdminDashboard = () => {
           <CardTitle>Quick Actions</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-2 md:grid-cols-3">
+          <div className="grid gap-2 md:grid-cols-3 lg:grid-cols-5">
             <Link to="/dashboard/admin/analytics">
               <Button variant="outline" className="w-full">
                 View Analytics
@@ -142,6 +142,16 @@ export const SchoolAdminDashboard = () => {
             <Link to="/content">
               <Button variant="outline" className="w-full">
                 Content Library
+              </Button>
+            </Link>
+            <Link to="/admin/quizzes">
+              <Button variant="outline" className="w-full">
+                All Quizzes
+              </Button>
+            </Link>
+            <Link to="/admin/polls">
+              <Button variant="outline" className="w-full">
+                All Polls
               </Button>
             </Link>
             <Link to="/admin/advanced">
