@@ -6,11 +6,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
-import { CheckCircle2, XCircle, Clock, Flag, Lightbulb, ChevronLeft, ChevronRight, AlertCircle, Volume2, Wifi, WifiOff } from 'lucide-react';
+import { CheckCircle2, XCircle, Clock, Flag, Lightbulb, ChevronLeft, ChevronRight, AlertCircle, Volume2, Wifi, WifiOff, Languages } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useTextToSpeech } from '@/hooks/useTextToSpeech';
+import { useTranslation } from '@/hooks/useTranslation';
+import { useAccessibility } from '@/contexts/AccessibilityContext';
 
 // Temporary type definitions until Supabase types are regenerated
 interface QuizComponentData {
@@ -83,8 +85,13 @@ export function QuizStudentView({ componentId, read_aloud = true, quizData: prel
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [pendingSave, setPendingSave] = useState(false);
+  const [translatedQuestions, setTranslatedQuestions] = useState<Record<string, string>>({});
+  const [translatedOptions, setTranslatedOptions] = useState<Record<string, Record<string, string>>>({});
+  const [showTranslation, setShowTranslation] = useState(false);
   
   const { speak, isPlaying, isLoading: isSpeaking } = useTextToSpeech();
+  const { translate, isTranslating, isEnabled: translationEnabled } = useTranslation();
+  const { settings } = useAccessibility();
 
   useEffect(() => {
     loadQuiz();
@@ -401,13 +408,50 @@ export function QuizStudentView({ componentId, read_aloud = true, quizData: prel
   const speakQuestion = () => {
     if (quizData && currentQuestionIndex < quizData.questions.length) {
       const question = quizData.questions[currentQuestionIndex];
-      const textToSpeak = `Question ${currentQuestionIndex + 1}. ${question.question_text}. ${
-        question.options.length > 0 
-          ? question.options.map((opt, idx) => `Option ${String.fromCharCode(65 + idx)}: ${opt.option_text}`).join('. ')
-          : ''
-      }`;
+      const questionText = showTranslation && translatedQuestions[question.id]
+        ? translatedQuestions[question.id]
+        : question.question_text;
+      
+      const optionsText = question.options.length > 0
+        ? question.options.map((opt, idx) => {
+            const optionText = showTranslation && translatedOptions[question.id]?.[opt.id]
+              ? translatedOptions[question.id][opt.id]
+              : opt.option_text;
+            return `Option ${String.fromCharCode(65 + idx)}: ${optionText}`;
+          }).join('. ')
+        : '';
+      
+      const textToSpeak = `Question ${currentQuestionIndex + 1}. ${questionText}. ${optionsText}`;
       speak(textToSpeak);
     }
+  };
+
+  const handleTranslateQuestion = async () => {
+    if (!quizData || currentQuestionIndex >= quizData.questions.length) return;
+    
+    const currentQuestion = quizData.questions[currentQuestionIndex];
+    
+    if (!showTranslation) {
+      const questionId = currentQuestion.id;
+      
+      // Translate question text
+      if (!translatedQuestions[questionId]) {
+        const translated = await translate(currentQuestion.question_text);
+        setTranslatedQuestions(prev => ({ ...prev, [questionId]: translated }));
+      }
+      
+      // Translate options
+      if (!translatedOptions[questionId]) {
+        const optionTranslations: Record<string, string> = {};
+        for (const option of currentQuestion.options) {
+          const translated = await translate(option.option_text);
+          optionTranslations[option.id] = translated;
+        }
+        setTranslatedOptions(prev => ({ ...prev, [questionId]: optionTranslations }));
+      }
+    }
+    
+    setShowTranslation(!showTranslation);
   };
 
   const submitQuiz = async () => {
@@ -704,7 +748,11 @@ export function QuizStudentView({ componentId, read_aloud = true, quizData: prel
               <p className="font-semibold text-lg">
                 Question {currentQuestionIndex + 1} ({currentQuestion.points} point{currentQuestion.points > 1 ? 's' : ''})
               </p>
-              <p className="mt-2">{currentQuestion.question_text}</p>
+              <p className="mt-2">
+                {showTranslation && translatedQuestions[currentQuestion.id]
+                  ? translatedQuestions[currentQuestion.id]
+                  : currentQuestion.question_text}
+              </p>
             </div>
             <div className="flex gap-2">
               {currentQuestion.hint_text && (
@@ -729,6 +777,18 @@ export function QuizStudentView({ componentId, read_aloud = true, quizData: prel
                   {isSpeaking ? 'Speaking...' : 'Read Aloud'}
                 </Button>
               )}
+              {translationEnabled && settings.preferredLanguage !== 'en' && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleTranslateQuestion}
+                  disabled={isTranslating}
+                  title="Translate question"
+                >
+                  <Languages className="h-4 w-4 mr-1" />
+                  {isTranslating ? 'Translating...' : showTranslation ? 'Show Original' : 'Translate'}
+                </Button>
+              )}
             </div>
           </div>
 
@@ -748,7 +808,9 @@ export function QuizStudentView({ componentId, read_aloud = true, quizData: prel
                 <div key={option.id} className="flex items-center space-x-2 p-3 rounded-lg bg-background hover:bg-accent">
                   <RadioGroupItem value={option.id} id={option.id} />
                   <Label htmlFor={option.id} className="flex-1 cursor-pointer">
-                    {option.option_text}
+                    {showTranslation && translatedOptions[currentQuestion.id]?.[option.id]
+                      ? translatedOptions[currentQuestion.id][option.id]
+                      : option.option_text}
                   </Label>
                 </div>
               ))}
@@ -775,7 +837,9 @@ export function QuizStudentView({ componentId, read_aloud = true, quizData: prel
                     }}
                   />
                   <Label htmlFor={option.id} className="flex-1 cursor-pointer">
-                    {option.option_text}
+                    {showTranslation && translatedOptions[currentQuestion.id]?.[option.id]
+                      ? translatedOptions[currentQuestion.id][option.id]
+                      : option.option_text}
                   </Label>
                 </div>
               ))}

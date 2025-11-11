@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { CheckCircle2, XCircle, ChevronLeft, ChevronRight, AlertCircle } from 'lucide-react';
+import { CheckCircle2, XCircle, ChevronLeft, ChevronRight, AlertCircle, Volume2, Languages } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useTextToSpeech } from '@/hooks/useTextToSpeech';
+import { useTranslation } from '@/hooks/useTranslation';
+import { useAccessibility } from '@/contexts/AccessibilityContext';
 
 interface QuizReviewModeProps {
   attemptId: string;
@@ -33,6 +36,12 @@ export function QuizReviewMode({ attemptId, onClose }: QuizReviewModeProps) {
   const [attempt, setAttempt] = useState<any>(null);
   const [questions, setQuestions] = useState<ReviewQuestion[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [translatedQuestions, setTranslatedQuestions] = useState<Record<string, string>>({});
+  const [showTranslation, setShowTranslation] = useState(false);
+  
+  const { speak, isPlaying, isLoading: isSpeaking, isEnabled: ttsEnabled } = useTextToSpeech();
+  const { translate, isTranslating, isEnabled: translationEnabled } = useTranslation();
+  const { settings } = useAccessibility();
 
   useEffect(() => {
     loadReviewData();
@@ -123,6 +132,47 @@ export function QuizReviewMode({ attemptId, onClose }: QuizReviewModeProps) {
     }
   };
 
+  const speakReviewQuestion = async () => {
+    const currentQuestion = questions[currentIndex];
+    if (!currentQuestion) return;
+    
+    const questionText = showTranslation && translatedQuestions[currentQuestion.id]
+      ? translatedQuestions[currentQuestion.id]
+      : currentQuestion.question_text;
+    
+    let textToSpeak = `Question ${currentIndex + 1}. ${questionText}. `;
+    
+    if (currentQuestion.question_type === 'multiple_choice' || currentQuestion.question_type === 'true_false') {
+      const userOption = currentQuestion.options.find(opt => opt.id === currentQuestion.userAnswer);
+      const correctOption = currentQuestion.options.find(opt => opt.is_correct);
+      textToSpeak += `Your answer: ${userOption?.option_text || 'Not answered'}. `;
+      textToSpeak += `Correct answer: ${correctOption?.option_text}. `;
+    }
+    
+    if (currentQuestion.isCorrect) {
+      textToSpeak += 'Your answer was correct.';
+    } else {
+      textToSpeak += 'Your answer was incorrect.';
+    }
+    
+    await speak(textToSpeak);
+  };
+
+  const handleTranslateQuestion = async () => {
+    const currentQuestion = questions[currentIndex];
+    if (!currentQuestion) return;
+    
+    if (!showTranslation) {
+      const questionId = currentQuestion.id;
+      if (!translatedQuestions[questionId]) {
+        const translated = await translate(currentQuestion.question_text);
+        setTranslatedQuestions(prev => ({ ...prev, [questionId]: translated }));
+      }
+    }
+    
+    setShowTranslation(!showTranslation);
+  };
+
   if (loading) {
     return <div className="p-4">Loading review...</div>;
   }
@@ -179,8 +229,38 @@ export function QuizReviewMode({ attemptId, onClose }: QuizReviewModeProps) {
                 {currentQuestion.isCorrect ? `+${currentQuestion.points} pts` : '0 pts'}
               </span>
             </div>
-            <p className="mt-2">{currentQuestion.question_text}</p>
+            <p className="mt-2">
+              {showTranslation && translatedQuestions[currentQuestion.id]
+                ? translatedQuestions[currentQuestion.id]
+                : currentQuestion.question_text}
+            </p>
           </div>
+        </div>
+
+        {/* TTS and Translation Buttons */}
+        <div className="flex gap-2 mb-4">
+          {ttsEnabled && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={speakReviewQuestion}
+              disabled={isSpeaking}
+            >
+              <Volume2 className="h-4 w-4 mr-1" />
+              {isSpeaking ? 'Speaking...' : 'Read Aloud'}
+            </Button>
+          )}
+          {translationEnabled && settings.preferredLanguage !== 'en' && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleTranslateQuestion}
+              disabled={isTranslating}
+            >
+              <Languages className="h-4 w-4 mr-1" />
+              {isTranslating ? 'Translating...' : showTranslation ? 'Show Original' : 'Translate'}
+            </Button>
+          )}
         </div>
 
         {/* Answer Display - Multiple Choice / True-False */}
