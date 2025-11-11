@@ -5,15 +5,17 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Volume2, Book, Globe, Languages, Loader2 } from 'lucide-react';
+import { Volume2, Book, Globe, Languages, Loader2, Calculator } from 'lucide-react';
 import { useLessonComponents } from '@/hooks/useLessonComponents';
 import { useLessonData } from '@/hooks/useLessonData';
 import { useLiveTranslation } from '@/hooks/useLiveTranslation';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
+import { useDesmosEnabled } from '@/hooks/useDesmosEnabled';
 import { useToast } from '@/hooks/use-toast';
 import { LessonComponentRenderer } from './LessonComponentRenderer';
 import InlineReadAloud from '@/components/InlineReadAloud';
 import DesmosSection from './DesmosSection';
+import { FloatingDesmosCalculator } from '@/components/interactive/FloatingDesmosCalculator';
 
 interface ModularLessonViewProps {
   lessonId: string;
@@ -33,6 +35,7 @@ const ModularLessonView: React.FC<ModularLessonViewProps> = ({
   console.log('ModularLessonView - components:', components);
   console.log('ModularLessonView - isLoading:', isLoading);
   const { lesson, getContentForReadingLevel } = useLessonData(lessonId);
+  const { data: desmosSettings } = useDesmosEnabled(lessonId);
   const { translateText, isTranslating } = useLiveTranslation();
   const { preferences, savePreferences } = useUserPreferences();
   const { toast } = useToast();
@@ -41,6 +44,7 @@ const ModularLessonView: React.FC<ModularLessonViewProps> = ({
   const [isReadingLevelMenuOpen, setIsReadingLevelMenuOpen] = useState(false);
   const [translatedContent, setTranslatedContent] = useState<string | null>(null);
   const [selectedLanguage, setSelectedLanguage] = useState<string>('');
+  const [showFloatingCalculator, setShowFloatingCalculator] = useState(false);
 
   // Get user's reading level preference
   const userReadingLevel = preferences?.['Reading Level'] || 'Grade 5';
@@ -597,9 +601,25 @@ const ModularLessonView: React.FC<ModularLessonViewProps> = ({
         ))}
       </Tabs>
 
-      {/* Desmos Tool Section */}
-      {lesson?.desmos_enabled && lesson?.desmos_type && (
-        <DesmosSection desmosType={lesson.desmos_type} />
+      {/* Floating Calculator Button - Always visible when enabled */}
+      {desmosSettings?.enabled && !showFloatingCalculator && (
+        <Button
+          className="fixed bottom-6 right-6 z-40 shadow-lg"
+          size="lg"
+          onClick={() => setShowFloatingCalculator(true)}
+          aria-label="Open Desmos Calculator"
+        >
+          <Calculator className="h-5 w-5 mr-2" />
+          Calculator
+        </Button>
+      )}
+
+      {/* Floating Calculator */}
+      {showFloatingCalculator && (
+        <FloatingDesmosCalculator
+          lessonId={lessonId}
+          onClose={() => setShowFloatingCalculator(false)}
+        />
       )}
     </div>
   );

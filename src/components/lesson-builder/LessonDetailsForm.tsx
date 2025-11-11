@@ -3,10 +3,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { Plus, Trash2 } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Plus, Trash2, Calculator } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useEffect, useState } from 'react';
+import { useParams, useSearchParams } from 'react-router-dom';
+import { useToast } from '@/hooks/use-toast';
 
 interface LessonDetailsFormProps {
   title: string;
@@ -33,6 +37,60 @@ export function LessonDetailsForm({
   classId,
   setClassId,
 }: LessonDetailsFormProps) {
+  const [searchParams] = useSearchParams();
+  const { lessonId: routeLessonId } = useParams();
+  const lessonId = routeLessonId || searchParams.get('lessonId');
+  const { toast } = useToast();
+  const [desmosEnabled, setDesmosEnabled] = useState(false);
+
+  // Load Desmos settings for existing lesson
+  useEffect(() => {
+    if (lessonId) {
+      supabase
+        .from('lessons')
+        .select('desmos_enabled')
+        .eq('id', lessonId)
+        .single()
+        .then(({ data }) => {
+          if (data) {
+            setDesmosEnabled(data.desmos_enabled || false);
+          }
+        });
+    }
+  }, [lessonId]);
+
+  const handleDesmosToggle = async (checked: boolean) => {
+    setDesmosEnabled(checked);
+    
+    // Save to database if lesson exists
+    if (lessonId) {
+      const { error } = await supabase
+        .from('lessons')
+        .update({ 
+          desmos_enabled: checked,
+          desmos_type: checked ? 'calculator' : null 
+        })
+        .eq('id', lessonId);
+
+      if (error) {
+        console.error('Error updating Desmos setting:', error);
+        toast({
+          title: 'Error',
+          description: 'Failed to update calculator setting',
+          variant: 'destructive',
+        });
+        setDesmosEnabled(!checked); // Revert on error
+      } else {
+        toast({
+          title: checked ? 'Calculator Enabled' : 'Calculator Disabled',
+          description: checked 
+            ? 'Students can now access the Desmos calculator from any page in this lesson'
+            : 'Calculator has been disabled for this lesson',
+        });
+      }
+    }
+  };
+
   const { data: classes } = useQuery({
     queryKey: ['teacher-classes'],
     queryFn: async () => {
@@ -152,6 +210,27 @@ export function LessonDetailsForm({
                 )}
               </div>
             ))}
+          </div>
+        </div>
+
+        <div className="border-t pt-4">
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <Calculator className="h-4 w-4 text-primary" />
+                <Label htmlFor="desmos-enabled" className="font-semibold">
+                  Enable Desmos Calculator
+                </Label>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Students can access a floating calculator from any page in this lesson
+              </p>
+            </div>
+            <Switch
+              id="desmos-enabled"
+              checked={desmosEnabled}
+              onCheckedChange={handleDesmosToggle}
+            />
           </div>
         </div>
       </CardContent>
