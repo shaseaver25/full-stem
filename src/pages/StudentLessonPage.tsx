@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { AlertCircle, BookOpen, Clock, ArrowLeft } from 'lucide-react';
+import { AlertCircle, BookOpen, Clock, ArrowLeft, Calculator } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,10 +10,15 @@ import { Badge } from '@/components/ui/badge';
 import Header from '@/components/Header';
 import InlineReadAloud from '@/components/InlineReadAloud';
 import HorizontalLessonViewer from '@/components/lesson/HorizontalLessonViewer';
+import { FloatingDesmosCalculator } from '@/components/interactive/FloatingDesmosCalculator';
+import { useDesmosEnabled } from '@/hooks/useDesmosEnabled';
 
 const StudentLessonPage = () => {
   const { lessonId } = useParams<{ lessonId: string }>();
   const navigate = useNavigate();
+  const [showFloatingCalculator, setShowFloatingCalculator] = useState(false);
+  
+  const { data: desmosSettings } = useDesmosEnabled(lessonId);
 
   // Fetch lesson with only student-visible content
   const { data: lesson, isLoading, error } = useQuery({
@@ -164,6 +169,24 @@ const StudentLessonPage = () => {
           />
         )}
       </div>
+
+      {/* Floating Desmos Calculator */}
+      {desmosSettings?.enabled && !showFloatingCalculator && lessonId && (
+        <Button
+          onClick={() => setShowFloatingCalculator(true)}
+          className="fixed bottom-6 right-6 rounded-full w-14 h-14 shadow-lg z-40"
+          size="icon"
+        >
+          <Calculator className="h-6 w-6" />
+        </Button>
+      )}
+
+      {showFloatingCalculator && lessonId && (
+        <FloatingDesmosCalculator
+          lessonId={lessonId}
+          onClose={() => setShowFloatingCalculator(false)}
+        />
+      )}
     </div>
   );
 };
