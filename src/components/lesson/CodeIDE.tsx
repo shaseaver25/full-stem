@@ -6,6 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Play, Download, RotateCcw, Copy } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { EditorShell } from './EditorShell';
+import { useEditorMode } from '@/hooks/useEditorMode';
 
 interface CodeIDEProps {
   content: {
@@ -24,6 +26,10 @@ const CodeIDE: React.FC<CodeIDEProps> = ({ content }) => {
   const [output, setOutput] = useState('');
   const [isRunning, setIsRunning] = useState(false);
   const { toast } = useToast();
+  
+  // Determine editor mode - defaults to 'pro' for now
+  // TODO: Pass actual user and lesson data when available
+  const editorMode = useEditorMode();
 
   const handleRunCode = async () => {
     setIsRunning(true);
@@ -190,21 +196,13 @@ const CodeIDE: React.FC<CodeIDEProps> = ({ content }) => {
             </div>
           </div>
           
-          <Card>
-            <CardContent className="p-0">
-              <textarea
-                value={code}
-                onChange={(e) => setCode(e.target.value)}
-                className="w-full h-96 p-4 font-mono text-sm border-0 resize-none focus:outline-none focus:ring-0"
-                style={{ 
-                  fontFamily: '"Fira Code", "Consolas", "Monaco", monospace',
-                  tabSize: 2
-                }}
-                placeholder="Write your code here..."
-                spellCheck={false}
-              />
-            </CardContent>
-          </Card>
+          <EditorShell
+            mode={editorMode}
+            language={language}
+            value={code}
+            onChange={setCode}
+            height="400px"
+          />
         </TabsContent>
         
         <TabsContent value="output" className="space-y-4">
