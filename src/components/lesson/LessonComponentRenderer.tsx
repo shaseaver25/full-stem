@@ -14,6 +14,7 @@ import { DriveAttachmentsList } from '@/components/drive/DriveAttachmentsList';
 import { OneDriveAttachmentsList } from '@/components/onedrive/OneDriveAttachmentsList';
 import { QuizStudentView } from '@/components/quiz/QuizStudentView';
 import { PollStudentView } from '@/components/poll/PollStudentView';
+import CodeIDE from './CodeIDE';
 
 const SUPPORTED_LANGUAGES = [
   { code: 'en', name: 'English' },
@@ -320,6 +321,21 @@ export function LessonComponentRenderer({
           </Badge>
         )}
         <PollStudentView componentId={id} pollData={content?.pollData} />
+      </div>
+    );
+  }
+
+  // Render coding IDE component
+  if (component_type === 'codingEditor') {
+    return (
+      <div className="space-y-4">
+        {showTypeLabel && (
+          <Badge variant="outline" className="mb-3">
+            <Code className="w-3 h-3 mr-1" />
+            {componentTypeLabels['codingEditor'] || 'Coding IDE'}
+          </Badge>
+        )}
+        <CodeIDE content={content} />
       </div>
     );
   }
