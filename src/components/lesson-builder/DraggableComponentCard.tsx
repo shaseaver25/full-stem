@@ -15,6 +15,7 @@ import { LocalFileUpload } from './LocalFileUpload';
 import { SlideTextExtractor } from './SlideTextExtractor';
 import { QuizBuilderComponent } from '@/components/quiz/QuizBuilderComponent';
 import { PollBuilderComponent } from '@/components/poll/PollBuilderComponent';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface LessonComponent {
   id?: string;
@@ -518,13 +519,64 @@ export function DraggableComponentCard({
                 placeholder="Coding exercise title"
               />
             </div>
+            
             <div>
-              <Label>IDE Embed URL or Code</Label>
+              <Label>Description</Label>
               <Textarea
-                value={component.content.code || ''}
-                onChange={(e) => handleContentChange('code', e.target.value)}
-                placeholder="Replit URL, CodeSandbox URL, or starter code"
+                value={component.content.description || ''}
+                onChange={(e) => handleContentChange('description', e.target.value)}
+                placeholder="Brief description of the coding exercise"
+                rows={2}
+              />
+            </div>
+
+            <div>
+              <Label>Starter Code</Label>
+              <Textarea
+                value={component.content.starterCode || ''}
+                onChange={(e) => handleContentChange('starterCode', e.target.value)}
+                placeholder="Initial code for students to start with"
+                rows={6}
+              />
+            </div>
+
+            <div>
+              <Label>Programming Language</Label>
+              <Select
+                value={component.content.language || 'javascript'}
+                onValueChange={(value) => handleContentChange('language', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select language" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="javascript">JavaScript</SelectItem>
+                  <SelectItem value="python">Python</SelectItem>
+                  <SelectItem value="java">Java</SelectItem>
+                  <SelectItem value="cpp">C++</SelectItem>
+                  <SelectItem value="html">HTML</SelectItem>
+                  <SelectItem value="css">CSS</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label>Instructions</Label>
+              <Textarea
+                value={component.content.instructions || ''}
+                onChange={(e) => handleContentChange('instructions', e.target.value)}
+                placeholder="What should students do? Step-by-step instructions..."
                 rows={4}
+              />
+            </div>
+
+            <div>
+              <Label>Expected Output</Label>
+              <Textarea
+                value={component.content.expectedOutput || ''}
+                onChange={(e) => handleContentChange('expectedOutput', e.target.value)}
+                placeholder="What output should students see when they run the correct code?"
+                rows={3}
               />
             </div>
           </>
