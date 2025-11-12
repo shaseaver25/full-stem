@@ -656,10 +656,31 @@ export function DraggableComponentCard({
             </CardTitle>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" onClick={() => setIsExpanded(!isExpanded)}>
-              {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="h-8"
+              aria-label={isExpanded ? "Collapse component" : "Expand component"}
+            >
+              {isExpanded ? (
+                <>
+                  <ChevronUp className="h-4 w-4 mr-1" />
+                  <span className="text-xs">Collapse</span>
+                </>
+              ) : (
+                <>
+                  <ChevronDown className="h-4 w-4 mr-1" />
+                  <span className="text-xs">Expand</span>
+                </>
+              )}
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => onDelete(index)}>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => onDelete(index)}
+              className="h-8 hover:bg-destructive/10"
+            >
               <Trash2 className="h-4 w-4 text-destructive" />
             </Button>
           </div>
