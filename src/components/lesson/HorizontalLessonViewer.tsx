@@ -118,6 +118,12 @@ const componentTypeConfig: Record<string, {
     bgColor: 'bg-emerald-50 dark:bg-emerald-950/30',
     textColor: 'text-emerald-800 dark:text-emerald-200'
   },
+  'flashcards': {
+    icon: <BookOpen className="w-4 h-4" />,
+    label: 'Flashcards',
+    bgColor: 'bg-violet-50 dark:bg-violet-950/30',
+    textColor: 'text-violet-800 dark:text-violet-200'
+  },
 };
 
 export default function HorizontalLessonViewer({ 

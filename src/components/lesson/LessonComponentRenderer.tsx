@@ -15,6 +15,7 @@ import { OneDriveAttachmentsList } from '@/components/onedrive/OneDriveAttachmen
 import { QuizStudentView } from '@/components/quiz/QuizStudentView';
 import { PollStudentView } from '@/components/poll/PollStudentView';
 import CodeIDE from './CodeIDE';
+import { FlashcardLesson } from '@/components/lessons/FlashcardLesson';
 
 const SUPPORTED_LANGUAGES = [
   { code: 'en', name: 'English' },
@@ -53,6 +54,7 @@ const componentTypeLabels: Record<string, string> = {
   reflection: 'Reflection',
   instructions: 'Instructions',
   resources: 'Resources',
+  flashcards: 'Flashcards',
 };
 
 // Separate component for video with controls to use hooks
@@ -337,6 +339,19 @@ export function LessonComponentRenderer({
         )}
         <CodeIDE content={content} />
       </div>
+    );
+  }
+
+  // Render flashcards component
+  if (component_type === 'flashcards') {
+    return (
+      <FlashcardLesson
+        cards={content.cards || []}
+        mode={content.mode || 'study'}
+        title={content.title}
+        description={content.description}
+        ttsEnabled={content.ttsEnabled}
+      />
     );
   }
 

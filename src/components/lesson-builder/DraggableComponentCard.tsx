@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { GripVertical, Trash2, ChevronDown, ChevronUp, Plus, Volume2, Settings } from 'lucide-react';
+import { GripVertical, Trash2, ChevronDown, ChevronUp, Plus, Volume2, Settings, Minus } from 'lucide-react';
 import { DraggableProvidedDragHandleProps } from 'react-beautiful-dnd';
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import { LocalFileUpload } from './LocalFileUpload';
@@ -578,6 +578,134 @@ export function DraggableComponentCard({
                 placeholder="What output should students see when they run the correct code?"
                 rows={3}
               />
+            </div>
+          </>
+        );
+
+      case 'flashcards':
+        const cards = component.content.cards || [];
+        
+        const addCard = () => {
+          const newCards = [...cards, { id: `card-${Date.now()}`, frontText: '', backText: '', imageUrl: '' }];
+          handleContentChange('cards', newCards);
+        };
+
+        const removeCard = (index: number) => {
+          const newCards = cards.filter((_: any, i: number) => i !== index);
+          handleContentChange('cards', newCards);
+        };
+
+        const updateCard = (index: number, field: string, value: string) => {
+          const newCards = [...cards];
+          newCards[index] = { ...newCards[index], [field]: value };
+          handleContentChange('cards', newCards);
+        };
+
+        return (
+          <>
+            <div>
+              <Label>Title</Label>
+              <Input
+                value={component.content.title || ''}
+                onChange={(e) => handleContentChange('title', e.target.value)}
+                placeholder="Flashcard set title"
+              />
+            </div>
+
+            <div>
+              <Label>Description</Label>
+              <Textarea
+                value={component.content.description || ''}
+                onChange={(e) => handleContentChange('description', e.target.value)}
+                placeholder="Brief description of this flashcard set"
+                rows={2}
+              />
+            </div>
+
+            <div>
+              <Label>Mode</Label>
+              <Select
+                value={component.content.mode || 'study'}
+                onValueChange={(value) => handleContentChange('mode', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select mode" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="study">Study Mode (flip cards)</SelectItem>
+                  <SelectItem value="quiz">Quiz Mode (mark known/review)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <Separator className="my-4" />
+
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <Label className="text-base font-semibold">Flashcards ({cards.length})</Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={addCard}
+                  className="flex items-center gap-1"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add Card
+                </Button>
+              </div>
+
+              {cards.length === 0 && (
+                <div className="text-center py-8 text-muted-foreground border-2 border-dashed rounded-lg">
+                  No cards yet. Click "Add Card" to create your first flashcard.
+                </div>
+              )}
+
+              {cards.map((card: any, index: number) => (
+                <Card key={card.id || index} className="bg-muted/30">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-sm">Card {index + 1}</CardTitle>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeCard(index)}
+                        className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                      >
+                        <Minus className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div>
+                      <Label className="text-xs">Front (Question/Term)</Label>
+                      <Input
+                        value={card.frontText || ''}
+                        onChange={(e) => updateCard(index, 'frontText', e.target.value)}
+                        placeholder="What students will see first"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs">Back (Answer/Definition)</Label>
+                      <Textarea
+                        value={card.backText || ''}
+                        onChange={(e) => updateCard(index, 'backText', e.target.value)}
+                        placeholder="The answer or definition"
+                        rows={2}
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs">Image URL (Optional)</Label>
+                      <Input
+                        value={card.imageUrl || ''}
+                        onChange={(e) => updateCard(index, 'imageUrl', e.target.value)}
+                        placeholder="https://example.com/image.jpg"
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
           </>
         );
