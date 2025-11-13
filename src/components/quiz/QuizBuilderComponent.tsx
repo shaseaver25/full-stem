@@ -76,6 +76,7 @@ export function QuizBuilderComponent({ initialData, onSave, lessonId }: QuizBuil
   
   // Questions
   const [questions, setQuestions] = useState<QuizQuestion[]>(initialData?.questions || []);
+  const [addQuestionType, setAddQuestionType] = useState<string>('');
 
   const saveQuiz = () => {
     if (!title.trim()) {
@@ -168,6 +169,7 @@ export function QuizBuilderComponent({ initialData, onSave, lessonId }: QuizBuil
         : []
     };
     setQuestions([...questions, newQuestion]);
+    setAddQuestionType(''); // Reset the select dropdown
   };
 
   const updateQuestion = (index: number, updates: Partial<QuizQuestion>) => {
@@ -606,7 +608,7 @@ export function QuizBuilderComponent({ initialData, onSave, lessonId }: QuizBuil
             )}
 
             {/* Add Question Dropdown */}
-            <Select onValueChange={(v) => addQuestion(v as QuizQuestion['question_type'])}>
+            <Select value={addQuestionType} onValueChange={(v) => addQuestion(v as QuizQuestion['question_type'])}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="+ Add Question Manually" />
               </SelectTrigger>
