@@ -6,6 +6,16 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { ArrowLeft, Save, Eye, ChevronUp, ChevronDown } from 'lucide-react';
 import { LessonDetailsForm } from '@/components/lesson-builder/LessonDetailsForm';
 import { ComponentList } from '@/components/lesson-builder/ComponentList';
@@ -16,6 +26,7 @@ import AIGenerationWizard from '@/components/lesson/AIGenerationWizard';
 import { parseSupabaseError } from '@/utils/supabaseErrorHandler';
 import { logError } from '@/utils/errorLogging';
 import { useLessonAutoSave } from '@/hooks/useLessonAutoSave';
+import { formatDistanceToNow } from 'date-fns';
 
 interface LessonComponent {
   id?: string;
@@ -55,6 +66,9 @@ export default function LessonBuilderPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [classId, setClassId] = useState<string>('');
   const [isMenuCollapsed, setIsMenuCollapsed] = useState(false);
+  const [lessonData, setLessonData] = useState<any>(null);
+  const [showRecoveryDialog, setShowRecoveryDialog] = useState(false);
+  const [recoveredDraft, setRecoveredDraft] = useState<any>(null);
 
   // Auto-save functionality
   const { loadDraft, clearDraft } = useLessonAutoSave(lessonId, components, title, objectives);
@@ -66,6 +80,44 @@ export default function LessonBuilderPage() {
       setClassId(classIdParam);
     }
   }, [searchParams]);
+
+  // Check for unsaved drafts on mount
+  useEffect(() => {
+    if (!lessonId || !lessonData) return;
+    
+    try {
+      // Load draft from localStorage
+      const draft = loadDraft(lessonId);
+      if (!draft) return;
+      
+      console.log('🔍 Checking for draft recovery:', {
+        draftSavedAt: draft.savedAt,
+        lessonUpdatedAt: lessonData.updated_at,
+        hasDraft: !!draft
+      });
+      
+      // Compare timestamps
+      const draftTime = new Date(draft.savedAt).getTime();
+      const dbTime = lessonData.updated_at ? new Date(lessonData.updated_at).getTime() : 0;
+      
+      // If draft is newer than database, offer recovery
+      if (draftTime > dbTime) {
+        console.log('💾 Found newer draft - offering recovery');
+        setRecoveredDraft(draft);
+        setShowRecoveryDialog(true);
+      } else {
+        console.log('✅ Database is up to date - no recovery needed');
+        // Clear old draft if database is newer
+        clearDraft(lessonId);
+      }
+    } catch (error) {
+      console.error('❌ Error loading draft:', error);
+      // Clear corrupted draft
+      if (lessonId) {
+        clearDraft(lessonId);
+      }
+    }
+  }, [lessonId, lessonData, loadDraft, clearDraft]);
 
   useEffect(() => {
     if (lessonId) {
@@ -85,6 +137,7 @@ export default function LessonBuilderPage() {
 
       if (lessonError) throw lessonError;
 
+      setLessonData(lessonData);
       setTitle(lessonData.title || '');
       setObjectives(lessonData.objectives || ['']);
       setClassId(lessonData.class_id);
@@ -355,6 +408,7 @@ export default function LessonBuilderPage() {
       // Clear auto-save draft
       if (savedLessonId) {
         clearDraft(savedLessonId);
+        console.log('🧹 Cleared draft after successful save');
       }
 
       // Reload lesson data to verify save
@@ -424,6 +478,88 @@ export default function LessonBuilderPage() {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Draft Recovery Dialog */}
+      <AlertDialog open={showRecoveryDialog} onOpenChange={setShowRecoveryDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <Save className="h-5 w-5 text-blue-500" />
+              Unsaved Changes Found
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-2">
+              <p>
+                We found unsaved work from{' '}
+                <span className="font-semibold text-foreground">
+                  {recoveredDraft && formatDistanceToNow(new Date(recoveredDraft.savedAt), { addSuffix: true })}
+                </span>
+                .
+              </p>
+              <p>
+                Would you like to restore your unsaved changes?
+              </p>
+              {recoveredDraft && (
+                <div className="mt-4 p-3 bg-muted rounded-md text-sm">
+                  <div className="font-medium mb-1">Draft contains:</div>
+                  <ul className="list-disc list-inside space-y-1 text-muted-foreground">
+                    <li>Title: {recoveredDraft.title || '(no title)'}</li>
+                    <li>{recoveredDraft.components?.length || 0} component(s)</li>
+                    {recoveredDraft.objectives && (
+                      <li>Learning objectives included</li>
+                    )}
+                  </ul>
+                </div>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel 
+              onClick={() => {
+                console.log('🗑️ User discarded draft');
+                if (lessonId) {
+                  clearDraft(lessonId);
+                }
+                setShowRecoveryDialog(false);
+                setRecoveredDraft(null);
+                toast.info('Draft discarded', {
+                  description: 'The auto-saved changes were removed.'
+                });
+              }}
+            >
+              Discard Draft
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={() => {
+                if (!recoveredDraft) return;
+                
+                console.log('♻️ Restoring draft:', recoveredDraft);
+                
+                // Restore the draft data into the component state
+                if (recoveredDraft.title) {
+                  setTitle(recoveredDraft.title);
+                }
+                if (recoveredDraft.objectives) {
+                  setObjectives(recoveredDraft.objectives);
+                }
+                if (recoveredDraft.components) {
+                  setComponents(recoveredDraft.components);
+                }
+                
+                setShowRecoveryDialog(false);
+                setRecoveredDraft(null);
+                
+                toast.success('Draft restored', {
+                  description: 'Your unsaved changes have been recovered. Remember to save!',
+                  duration: 5000,
+                });
+              }}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              Restore Draft
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <div className="border-b bg-card relative">
         <div 
           className={`container mx-auto px-4 transition-all duration-300 overflow-hidden ${
@@ -444,18 +580,26 @@ export default function LessonBuilderPage() {
                 </Button>
                 <h1 className="text-2xl font-bold">Lesson Builder</h1>
               </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => setIsPreview(!isPreview)}
-                >
-                  <Eye className="h-4 w-4 mr-2" />
-                  {isPreview ? 'Edit' : 'Preview'}
-                </Button>
-                <Button onClick={handleSave} disabled={isSaving}>
-                  <Save className="h-4 w-4 mr-2" />
-                  {isSaving ? 'Saving...' : 'Save Lesson'}
-                </Button>
+              <div className="flex items-center gap-4">
+                {lessonId && (
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+                    Auto-saving to your device
+                  </div>
+                )}
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsPreview(!isPreview)}
+                  >
+                    <Eye className="h-4 w-4 mr-2" />
+                    {isPreview ? 'Edit' : 'Preview'}
+                  </Button>
+                  <Button onClick={handleSave} disabled={isSaving}>
+                    <Save className="h-4 w-4 mr-2" />
+                    {isSaving ? 'Saving...' : 'Save Lesson'}
+                  </Button>
+                </div>
               </div>
             </div>
           )}
