@@ -162,6 +162,7 @@ const StudentLessonPage = () => {
           <HorizontalLessonViewer
             components={studentComponents as any}
             lessonTitle={lesson.title}
+            lessonId={lessonId}
             totalDuration={lesson.duration}
             onComplete={() => {
               // Optional: Track completion or show celebration
