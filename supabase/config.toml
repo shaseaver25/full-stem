@@ -148,4 +148,7 @@ verify_jwt = true
 [functions.generate-poll-questions]
 verify_jwt = true
 
+[functions.ai-tutor-chat]
+verify_jwt = true
+
 
