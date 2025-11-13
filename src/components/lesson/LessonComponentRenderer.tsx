@@ -277,13 +277,16 @@ export function LessonComponentRenderer({
 
   // Render special discussion component with AI features or new discussion forum
   if (component_type === 'discussion' && lessonId && lessonTitle) {
+    // Handle both old double-nested structure and new correct structure
+    const discussionContent = content.content?.prompt ? content.content : content;
+    
     // Check if this is the new discussion format (with prompt and settings)
-    if (content.prompt && content.settings) {
+    if (discussionContent.prompt && discussionContent.settings) {
       return (
         <div>
           {isTeacher && id && <DiscussionTeacherView lessonComponentId={id} />}
           <DiscussionLesson
-            content={content}
+            content={discussionContent}
             lessonComponentId={id}
             isStudent={!isTeacher}
           />
