@@ -16,6 +16,7 @@ import { SlideTextExtractor } from './SlideTextExtractor';
 import { QuizBuilderComponent } from '@/components/quiz/QuizBuilderComponent';
 import { PollBuilderComponent } from '@/components/poll/PollBuilderComponent';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { DiscussionEditor } from '@/components/lesson-components/DiscussionEditor';
 
 interface LessonComponent {
   id?: string;
@@ -486,27 +487,7 @@ export function DraggableComponentCard({
         );
 
       case 'discussion':
-        return (
-          <>
-            <div>
-              <Label>Discussion Prompt</Label>
-              <Textarea
-                value={component.content.prompt || ''}
-                onChange={(e) => handleContentChange('prompt', e.target.value)}
-                placeholder="What question should students discuss?"
-                rows={3}
-              />
-            </div>
-            <div>
-              <Label>Resources (optional)</Label>
-              <Input
-                value={component.content.resources || ''}
-                onChange={(e) => handleContentChange('resources', e.target.value)}
-                placeholder="Links or references"
-              />
-            </div>
-          </>
-        );
+        return <DiscussionEditor content={component.content} onChange={(newContent) => handleContentChange('content', newContent)} />;
 
       case 'codingEditor':
         return (

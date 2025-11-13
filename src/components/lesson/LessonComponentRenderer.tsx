@@ -6,6 +6,8 @@ import InlineReadAloud from '@/components/InlineReadAloud';
 import { LessonComponent } from '@/hooks/useLessonComponents';
 import { FileText, Video, Code, MessageSquare, CheckSquare, Volume2, Languages, CheckCircle2, BarChart3 } from 'lucide-react';
 import { DiscussionComponent } from './DiscussionComponent';
+import { DiscussionLesson } from '@/components/lesson-components/DiscussionLesson';
+import { DiscussionTeacherView } from '@/components/lesson-components/DiscussionTeacherView';
 import { PresentationViewer } from './PresentationViewer';
 import { usePresentationTTS } from '@/hooks/usePresentationTTS';
 import { useLiveTranslation } from '@/hooks/useLiveTranslation';
@@ -257,8 +259,23 @@ export function LessonComponentRenderer({
   const { content, component_type, read_aloud, language_code, id } = component;
   const textContent = content.body || content.text || content.prompt || '';
 
-  // Render special discussion component with AI features
+  // Render special discussion component with AI features or new discussion forum
   if (component_type === 'discussion' && lessonId && lessonTitle) {
+    // Check if this is the new discussion format (with prompt and settings)
+    if (content.prompt && content.settings) {
+      return (
+        <div>
+          {isTeacher && id && <DiscussionTeacherView lessonComponentId={id} />}
+          <DiscussionLesson
+            content={content}
+            lessonComponentId={id}
+            isStudent={!isTeacher}
+          />
+        </div>
+      );
+    }
+    
+    // Fall back to old AI-powered discussion component
     return (
       <DiscussionComponent
         componentId={id}
