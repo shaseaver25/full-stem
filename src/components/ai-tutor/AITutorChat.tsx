@@ -200,29 +200,24 @@ You: "I can't write your essay, but I can help you think through it! Let's start
 
 Remember: Your goal is to help them LEARN and THINK, not to do the work for them.`;
 
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': import.meta.env.VITE_ANTHROPIC_API_KEY || '',
-          'anthropic-version': '2023-06-01',
-        },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: 500,
-          system: systemPrompt,
+      // Call AI Tutor via Gemini edge function
+      const { data, error: functionError } = await supabase.functions.invoke('ai-tutor-chat', {
+        body: {
           messages: recentMessages,
-        }),
+          systemPrompt,
+        },
       });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Claude API error: ${response.status} - ${errorText}`);
+      if (functionError) {
+        throw new Error(functionError.message || 'Failed to get AI response');
       }
 
-      const data = await response.json();
-      const assistantMessage = data.content[0].text;
-      const tokensUsed = data.usage?.output_tokens || 0;
+      if (!data || !data.choices || !data.choices[0]) {
+        throw new Error('Invalid response from AI tutor');
+      }
+
+      const assistantMessage = data.choices[0].message.content;
+      const tokensUsed = data.usage?.completion_tokens || 0;
 
       const { error: saveAssistantError } = await supabase
         .from('ai_tutor_messages')
