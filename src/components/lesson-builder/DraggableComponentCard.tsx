@@ -487,7 +487,12 @@ export function DraggableComponentCard({
         );
 
       case 'discussion':
-        return <DiscussionEditor content={component.content} onChange={(newContent) => handleContentChange('content', newContent)} />;
+        return <DiscussionEditor 
+          content={component.content} 
+          onChange={(newContent) => {
+            onUpdate(index, { content: newContent });
+          }} 
+        />;
 
       case 'codingEditor':
         return (
