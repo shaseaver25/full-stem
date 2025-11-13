@@ -520,9 +520,9 @@ function AppContent() {
           path="/student/lesson/:lessonId" 
           element={
             <ErrorBoundary>
-              <ProtectedTeacherRoute requireOnboarding={true}>
+              <RequireRole allowedRoles={['student', 'super_admin', 'developer']}>
                 <StudentLessonPage />
-              </ProtectedTeacherRoute>
+              </RequireRole>
             </ErrorBoundary>
           } 
         />
