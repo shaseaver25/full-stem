@@ -78,7 +78,8 @@ function VideoComponentWithControls({
   const { speak, pause, resume, stop, isPlaying, isPaused, isLoading: isSpeaking, currentWordIndex, wordTimings } = usePresentationTTS();
   const { translateText, isTranslating } = useLiveTranslation();
 
-  let videoUrl = content.url;
+  // Check for uploaded files first, then fall back to url field
+  let videoUrl = content.uploadedFiles?.[0]?.url || content.url;
   
   // Convert YouTube URLs to embed format
   if (videoUrl && (videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be'))) {
