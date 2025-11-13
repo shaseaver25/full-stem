@@ -36,6 +36,7 @@ interface LessonComponent {
 interface HorizontalLessonViewerProps {
   components: LessonComponent[];
   lessonTitle: string;
+  lessonId?: string;
   totalDuration?: number;
   onComplete?: () => void;
 }
@@ -129,6 +130,7 @@ const componentTypeConfig: Record<string, {
 export default function HorizontalLessonViewer({ 
   components, 
   lessonTitle,
+  lessonId,
   totalDuration,
   onComplete 
 }: HorizontalLessonViewerProps) {
@@ -274,6 +276,8 @@ export default function HorizontalLessonViewer({
           <LessonComponentRenderer
             component={currentComponent as any}
             showTypeLabel={false}
+            lessonId={lessonId}
+            lessonTitle={lessonTitle}
           />
 
           {currentComponent.is_assignable && (
