@@ -70,9 +70,16 @@ export default function LessonBuilderPage() {
   const [showRecoveryDialog, setShowRecoveryDialog] = useState(false);
   const [recoveredDraft, setRecoveredDraft] = useState<any>(null);
   const justSavedRef = useRef(false);
+  const hasUserEditedRef = useRef(false);
+  const initialLoadCompleteRef = useRef(false);
 
-  // Auto-save functionality
-  const { loadDraft, clearDraft } = useLessonAutoSave(lessonId, components, title, objectives);
+  // Auto-save functionality (only after user makes edits)
+  const { loadDraft, clearDraft } = useLessonAutoSave(
+    lessonId,
+    hasUserEditedRef.current ? components : [],
+    hasUserEditedRef.current ? title : '',
+    hasUserEditedRef.current ? objectives : []
+  );
 
   useEffect(() => {
     // Check for classId in URL params (for new lessons)
@@ -84,7 +91,7 @@ export default function LessonBuilderPage() {
 
   // Check for unsaved drafts on mount
   useEffect(() => {
-    if (!lessonId || !lessonData) return;
+    if (!lessonId || !lessonData || !initialLoadCompleteRef.current) return;
     
     // Skip check if we just saved (prevents false positives from auto-save)
     if (justSavedRef.current) {
@@ -167,6 +174,10 @@ export default function LessonBuilderPage() {
       });
 
       setComponents(componentsData || []);
+      console.log("✅ Loaded lesson data:", { lesson: lessonData, components: componentsData });
+      
+      // Mark initial load as complete
+      initialLoadCompleteRef.current = true;
     } catch (error) {
       console.error('Error loading lesson:', error);
       logError(error, 'LessonBuilderPage.loadLesson');
@@ -417,6 +428,7 @@ export default function LessonBuilderPage() {
       if (savedLessonId) {
         clearDraft(savedLessonId);
         justSavedRef.current = true;
+        hasUserEditedRef.current = false; // Reset edit flag after save
         console.log('🧹 Cleared draft after successful save');
       }
 
@@ -456,6 +468,7 @@ export default function LessonBuilderPage() {
   };
 
   const handleAddComponent = (type: string) => {
+    hasUserEditedRef.current = true; // Mark that user has made edits
     const newComponent: LessonComponent = {
       component_type: type,
       content: {},
@@ -470,6 +483,7 @@ export default function LessonBuilderPage() {
   };
 
   const handleUpdateComponent = (index: number, updates: Partial<LessonComponent>) => {
+    hasUserEditedRef.current = true; // Mark that user has made edits
     const updated = [...components];
     updated[index] = { ...updated[index], ...updates };
     console.log(`📝 Updated component ${index}:`, updated[index]);
@@ -477,11 +491,13 @@ export default function LessonBuilderPage() {
   };
 
   const handleDeleteComponent = (index: number) => {
+    hasUserEditedRef.current = true; // Mark that user has made edits
     const updated = components.filter((_, i) => i !== index);
     setComponents(updated);
   };
 
   const handleReorderComponents = (newOrder: LessonComponent[]) => {
+    hasUserEditedRef.current = true; // Mark that user has made edits
     setComponents(newOrder.map((comp, index) => ({ ...comp, order: index })));
   };
 
