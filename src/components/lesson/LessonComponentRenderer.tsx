@@ -79,10 +79,13 @@ function VideoComponentWithControls({
   const { translateText, isTranslating } = useLiveTranslation();
 
   // Check for uploaded files first, then fall back to url field
-  let videoUrl = content.uploadedFiles?.[0]?.url || content.url;
+  const uploadedFile = content.uploadedFiles?.[0];
+  let videoUrl = uploadedFile?.url || content.url;
+  const isUploadedVideo = !!uploadedFile;
   
   // Convert YouTube URLs to embed format
-  if (videoUrl && (videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be'))) {
+  const isYouTube = videoUrl && (videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be'));
+  if (isYouTube) {
     const youtubeIdMatch = videoUrl.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
     if (youtubeIdMatch && youtubeIdMatch[1]) {
       videoUrl = `https://www.youtube.com/embed/${youtubeIdMatch[1]}`;
@@ -136,13 +139,25 @@ function VideoComponentWithControls({
       
       {videoUrl && (
         <div className="aspect-video w-full rounded-lg overflow-hidden shadow-lg bg-muted">
-          <iframe
-            src={videoUrl}
-            className="w-full h-full"
-            title={content.title || 'Video content'}
-            allowFullScreen
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          />
+          {isUploadedVideo ? (
+            <video
+              src={videoUrl}
+              className="w-full h-full"
+              title={content.title || 'Video content'}
+              controls
+              controlsList="nodownload"
+            >
+              Your browser does not support the video tag.
+            </video>
+          ) : (
+            <iframe
+              src={videoUrl}
+              className="w-full h-full"
+              title={content.title || 'Video content'}
+              allowFullScreen
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            />
+          )}
         </div>
       )}
 
