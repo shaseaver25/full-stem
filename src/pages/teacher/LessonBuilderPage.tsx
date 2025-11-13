@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -13,6 +13,9 @@ import { AddComponentButton } from '@/components/lesson-builder/AddComponentButt
 import { LessonPreview } from '@/components/lesson-builder/LessonPreview';
 import { LessonTemplateUpload } from '@/components/lesson-builder/LessonTemplateUpload';
 import AIGenerationWizard from '@/components/lesson/AIGenerationWizard';
+import { parseSupabaseError } from '@/utils/supabaseErrorHandler';
+import { logError } from '@/utils/errorLogging';
+import { useLessonAutoSave } from '@/hooks/useLessonAutoSave';
 
 interface LessonComponent {
   id?: string;
@@ -27,11 +30,17 @@ interface LessonComponent {
   read_aloud: boolean;
 }
 
+// Valid component types from database constraint
+const VALID_COMPONENT_TYPES = [
+  'slides', 'page', 'video', 'quiz', 'poll', 'discussion', 
+  'codingEditor', 'flashcards', 'desmos', 'activity', 
+  'assignment', 'assessment', 'reflection', 'instructions', 'resources'
+] as const;
+
 export default function LessonBuilderPage() {
   const { lessonId: routeLessonId } = useParams();
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { toast } = useToast();
   const [searchParams] = useSearchParams();
 
   // Get lessonId from either route params or query params
@@ -46,6 +55,9 @@ export default function LessonBuilderPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [classId, setClassId] = useState<string>('');
   const [isMenuCollapsed, setIsMenuCollapsed] = useState(false);
+
+  // Auto-save functionality
+  const { loadDraft, clearDraft } = useLessonAutoSave(lessonId, components, title, objectives);
 
   useEffect(() => {
     // Check for classId in URL params (for new lessons)
@@ -96,29 +108,76 @@ export default function LessonBuilderPage() {
       setComponents(componentsData || []);
     } catch (error) {
       console.error('Error loading lesson:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load lesson',
-        variant: 'destructive',
+      logError(error, 'LessonBuilderPage.loadLesson');
+      
+      const parsedError = parseSupabaseError(error);
+      toast.error(parsedError.title, {
+        description: parsedError.description,
       });
     }
   };
 
+  /**
+   * Validates components before attempting to save to database
+   * Prevents constraint violations by catching issues early
+   */
+  const validateComponents = (components: LessonComponent[]): { 
+    isValid: boolean; 
+    errors: string[] 
+  } => {
+    const errors: string[] = [];
+
+    components.forEach((comp, index) => {
+      // Check component_type constraint
+      if (!VALID_COMPONENT_TYPES.includes(comp.component_type as any)) {
+        errors.push(`Component ${index + 1} has invalid type: "${comp.component_type}"`);
+      }
+
+      // Check required fields
+      if (!comp.component_type) {
+        errors.push(`Component ${index + 1} is missing component_type`);
+      }
+
+      // Content should be an object
+      if (comp.content === null || comp.content === undefined) {
+        errors.push(`Component ${index + 1} is missing content`);
+      }
+
+      // Order should be a valid number
+      if (typeof comp.order !== 'number' || comp.order < 0) {
+        errors.push(`Component ${index + 1} has invalid order value`);
+      }
+
+      // Language code validation (if provided)
+      if (comp.language_code && !/^[a-z]{2}(-[A-Z]{2})?$/.test(comp.language_code)) {
+        errors.push(`Component ${index + 1} has invalid language code: "${comp.language_code}"`);
+      }
+
+      // Reading level validation (if provided)
+      if (comp.reading_level !== null && comp.reading_level !== undefined) {
+        if (comp.reading_level < 1 || comp.reading_level > 12) {
+          errors.push(`Component ${index + 1} has invalid reading level: ${comp.reading_level} (must be 1-12)`);
+        }
+      }
+    });
+
+    return {
+      isValid: errors.length === 0,
+      errors
+    };
+  };
+
   const handleSave = async () => {
     if (!title.trim()) {
-      toast({
-        title: 'Validation Error',
+      toast.error('Validation Error', {
         description: 'Lesson title is required',
-        variant: 'destructive',
       });
       return;
     }
 
     if (!classId) {
-      toast({
-        title: 'Validation Error',
+      toast.error('Validation Error', {
         description: 'Please select a class',
-        variant: 'destructive',
       });
       return;
     }
@@ -126,10 +185,8 @@ export default function LessonBuilderPage() {
     // Validate teacher profile exists
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      toast({
-        title: 'Authentication Error',
+      toast.error('Authentication Error', {
         description: 'You must be logged in to save lessons',
-        variant: 'destructive',
       });
       return;
     }
@@ -141,18 +198,24 @@ export default function LessonBuilderPage() {
       .single();
 
     if (!teacherProfile) {
-      toast({
-        title: 'Profile Error',
+      toast.error('Profile Error', {
         description: 'Teacher profile not found. Please complete your profile setup.',
-        variant: 'destructive',
       });
       return;
     }
 
     setIsSaving(true);
+    
+    // Show initial loading toast
+    const savingToastId = toast.loading('Saving lesson...', {
+      description: 'Validating and uploading components'
+    });
 
     try {
       let savedLessonId = lessonId;
+
+      // Update loading message for lesson save
+      toast.loading('Saving lesson details...', { id: savingToastId });
 
       if (lessonId) {
         const { error: updateError } = await supabase
@@ -185,31 +248,50 @@ export default function LessonBuilderPage() {
         console.log('💾 Current components state:', components);
         console.log('💾 Number of components to save:', components.length);
         
-        // Only proceed with save if there are components OR if user confirms deletion
-        if (components.length === 0) {
-          const existingComponents = await supabase
-            .from('lesson_components')
-            .select('id')
-            .eq('lesson_id', savedLessonId);
+        // Check for destructive deletion
+        const { data: existingComponents } = await supabase
+          .from('lesson_components')
+          .select('id, component_type')
+          .eq('lesson_id', savedLessonId);
+
+        if (existingComponents && existingComponents.length > 0 && components.length === 0) {
+          // User is about to delete all components - confirm this action
+          toast.dismiss(savingToastId);
           
-          if (existingComponents.data && existingComponents.data.length > 0) {
-            console.warn('⚠️ Attempting to save with no components but lesson has existing components');
-            toast({
-              title: 'Warning',
-              description: 'No components to save. Existing components will be preserved.',
-              variant: 'default',
+          const confirmed = window.confirm(
+            `Warning: You are about to delete all ${existingComponents.length} existing components. Are you sure?`
+          );
+          
+          if (!confirmed) {
+            toast.info('Save cancelled', {
+              description: 'No changes were made to your lesson.'
             });
             setIsSaving(false);
             return;
           }
+          
+          // Re-show saving toast
+          toast.loading('Saving lesson...', { id: savingToastId });
         }
         
-        // Validate all components have required fields
-        const invalidComponents = components.filter(comp => !comp.component_type || !comp.content);
-        if (invalidComponents.length > 0) {
-          console.error('❌ Invalid components detected:', invalidComponents);
-          throw new Error(`${invalidComponents.length} component(s) are missing required fields`);
+        // Client-side validation
+        const validation = validateComponents(components);
+        if (!validation.isValid) {
+          console.error('❌ Client-side validation failed:', validation.errors);
+          
+          toast.dismiss(savingToastId);
+          toast.error('Invalid lesson components', {
+            description: validation.errors.join('\n'),
+            duration: 8000,
+          });
+          
+          logError(new Error('Component validation failed: ' + validation.errors.join('; ')), 'LessonBuilderPage.validateComponents');
+          setIsSaving(false);
+          return;
         }
+
+        // Update loading message for components
+        toast.loading(`Saving ${components.length} components...`, { id: savingToastId });
 
         const componentsToInsert = components.map((comp, index) => {
           // Special logging for quiz components
@@ -261,10 +343,19 @@ export default function LessonBuilderPage() {
         console.log('✅ Successfully inserted components:', insertedData);
       }
 
-      toast({
-        title: 'Success',
-        description: 'Lesson saved successfully',
+      // Dismiss loading toast
+      toast.dismiss(savingToastId);
+      
+      // Show success
+      toast.success('Lesson saved successfully', {
+        description: `${components.length} component${components.length !== 1 ? 's' : ''} saved`,
+        duration: 3000,
       });
+
+      // Clear auto-save draft
+      if (savedLessonId) {
+        clearDraft(savedLessonId);
+      }
 
       // Reload lesson data to verify save
       if (lessonId) {
@@ -274,13 +365,28 @@ export default function LessonBuilderPage() {
       if (!lessonId) {
         navigate(`/teacher/lesson-builder/${savedLessonId}`);
       }
-    } catch (error) {
+    } catch (error: any) {
+      // Dismiss loading toast
+      toast.dismiss(savingToastId);
+      
       console.error('Error saving lesson:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to save lesson',
-        variant: 'destructive',
+      logError(error, 'LessonBuilderPage.handleSave');
+      
+      const parsedError = parseSupabaseError(error);
+      
+      toast.error(parsedError.title, {
+        description: parsedError.description,
+        action: parsedError.canRetry ? {
+          label: 'Retry',
+          onClick: () => handleSave()
+        } : undefined,
+        duration: parsedError.canRetry ? 6000 : 8000,
       });
+      
+      // Log technical details for debugging
+      if (parsedError.technicalDetails) {
+        console.error('Technical details:', parsedError.technicalDetails);
+      }
     } finally {
       setIsSaving(false);
     }
@@ -437,8 +543,7 @@ export default function LessonBuilderPage() {
                     onImportComplete={(importedLessonId, componentsCount) => {
                       console.log('✅ Import complete:', importedLessonId, componentsCount);
                       loadLesson();
-                      toast({
-                        title: 'Lesson Imported',
+                      toast.success('Lesson Imported', {
                         description: `${componentsCount} components created. Switch to Manual Build to edit.`,
                       });
                     }}
@@ -472,8 +577,7 @@ export default function LessonBuilderPage() {
                   classId={classId}
                   onComponentsGenerated={(newComponents) => {
                     loadLesson();
-                    toast({
-                      title: 'AI Components Added',
+                    toast.success('AI Components Added', {
                       description: 'Switch to Manual Build tab to view and edit them',
                     });
                   }}
