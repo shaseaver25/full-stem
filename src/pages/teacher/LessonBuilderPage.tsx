@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -69,6 +69,7 @@ export default function LessonBuilderPage() {
   const [lessonData, setLessonData] = useState<any>(null);
   const [showRecoveryDialog, setShowRecoveryDialog] = useState(false);
   const [recoveredDraft, setRecoveredDraft] = useState<any>(null);
+  const justSavedRef = useRef(false);
 
   // Auto-save functionality
   const { loadDraft, clearDraft } = useLessonAutoSave(lessonId, components, title, objectives);
@@ -85,6 +86,12 @@ export default function LessonBuilderPage() {
   useEffect(() => {
     if (!lessonId || !lessonData) return;
     
+    // Skip check if we just saved (prevents false positives from auto-save)
+    if (justSavedRef.current) {
+      justSavedRef.current = false;
+      return;
+    }
+    
     try {
       // Load draft from localStorage
       const draft = loadDraft(lessonId);
@@ -96,18 +103,19 @@ export default function LessonBuilderPage() {
         hasDraft: !!draft
       });
       
-      // Compare timestamps
+      // Compare timestamps with a 5-second buffer to avoid race conditions with auto-save
       const draftTime = new Date(draft.savedAt).getTime();
       const dbTime = lessonData.updated_at ? new Date(lessonData.updated_at).getTime() : 0;
+      const timeDifference = draftTime - dbTime;
       
-      // If draft is newer than database, offer recovery
-      if (draftTime > dbTime) {
+      // Only offer recovery if draft is significantly newer (more than 5 seconds)
+      if (timeDifference > 5000) {
         console.log('💾 Found newer draft - offering recovery');
         setRecoveredDraft(draft);
         setShowRecoveryDialog(true);
       } else {
         console.log('✅ Database is up to date - no recovery needed');
-        // Clear old draft if database is newer
+        // Clear old draft if database is newer or within buffer
         clearDraft(lessonId);
       }
     } catch (error) {
@@ -117,7 +125,7 @@ export default function LessonBuilderPage() {
         clearDraft(lessonId);
       }
     }
-  }, [lessonId, lessonData, loadDraft, clearDraft]);
+  }, [lessonId, lessonData]);
 
   useEffect(() => {
     if (lessonId) {
@@ -405,9 +413,10 @@ export default function LessonBuilderPage() {
         duration: 3000,
       });
 
-      // Clear auto-save draft
+      // Clear auto-save draft and mark that we just saved
       if (savedLessonId) {
         clearDraft(savedLessonId);
+        justSavedRef.current = true;
         console.log('🧹 Cleared draft after successful save');
       }
 
