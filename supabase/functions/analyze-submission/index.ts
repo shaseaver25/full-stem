@@ -78,7 +78,7 @@ serve(async (req) => {
       .from('assignment_submissions')
       .select(`
         *,
-        assignment:assignment_id (
+        class_assignments_new!assignment_id (
           id,
           title,
           instructions,
@@ -256,11 +256,9 @@ serve(async (req) => {
 });
 
 function buildAnalysisPrompt(submission: any, rubric: any | null): string {
-  const assignment = submission.assignment;
-  const studentWork = typeof submission.content === 'string' 
-    ? submission.content 
-    : JSON.stringify(submission.content, null, 2);
-
+  const assignment = submission.class_assignments_new;
+  const studentWork = submission.text_response || 'No text response provided';
+  
   let prompt = `Analyze the following student submission and provide a detailed assessment.
 
 ## Assignment
