@@ -157,21 +157,20 @@ serve(async (req) => {
     // Build the analysis prompt
     const prompt = buildAnalysisPrompt(submission, rubric);
 
-    // Call OpenAI
-    const openaiKey = Deno.env.get("OPENAI_API_KEY");
-    if (!openaiKey) {
-      throw new Error("OPENAI_API_KEY not configured");
+    // Call Lovable AI Gateway
+    const lovableApiKey = Deno.env.get("LOVABLE_API_KEY");
+    if (!lovableApiKey) {
+      throw new Error("LOVABLE_API_KEY not configured");
     }
 
-    const openaiResponse = await fetch("https://api.openai.com/v1/chat/completions", {
+    const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${openaiKey}`,
+        "Authorization": `Bearer ${lovableApiKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "gpt-4o",
-        temperature: 0.3,
+        model: "google/gemini-2.5-flash",
         messages: [
           {
             role: "system",
@@ -182,24 +181,78 @@ serve(async (req) => {
             content: prompt
           }
         ],
-        response_format: { type: "json_object" }
+        tools: [
+          {
+            type: "function",
+            function: {
+              name: "analyze_submission",
+              description: "Analyze a student submission and provide detailed assessment",
+              parameters: {
+                type: "object",
+                properties: {
+                  rubric_scores: {
+                    type: "object",
+                    additionalProperties: {
+                      type: "object",
+                      properties: {
+                        score: { type: "number" },
+                        maxScore: { type: "number" },
+                        feedback: { type: "string" }
+                      },
+                      required: ["score", "maxScore", "feedback"]
+                    }
+                  },
+                  overall_mastery: {
+                    type: "string",
+                    enum: ["emerging", "developing", "proficient", "advanced"]
+                  },
+                  confidence_score: { type: "number", minimum: 0, maximum: 1 },
+                  strengths: {
+                    type: "array",
+                    items: { type: "string" }
+                  },
+                  areas_for_growth: {
+                    type: "array",
+                    items: { type: "string" }
+                  },
+                  misconceptions: {
+                    type: "array",
+                    items: { type: "string" }
+                  },
+                  personalized_feedback: { type: "string" },
+                  recommended_action: { type: "string" }
+                },
+                required: ["rubric_scores", "overall_mastery", "confidence_score", "strengths", "areas_for_growth", "misconceptions", "personalized_feedback", "recommended_action"],
+                additionalProperties: false
+              }
+            }
+          }
+        ],
+        tool_choice: { type: "function", function: { name: "analyze_submission" } }
       }),
     });
 
-    if (!openaiResponse.ok) {
-      const error = await openaiResponse.text();
-      console.error("OpenAI API error:", error);
-      throw new Error(`OpenAI API error: ${openaiResponse.status}`);
+    if (!aiResponse.ok) {
+      const error = await aiResponse.text();
+      console.error("Lovable AI error:", error);
+      
+      if (aiResponse.status === 429) {
+        throw new Error("Rate limit exceeded. Please try again in a moment.");
+      }
+      if (aiResponse.status === 402) {
+        throw new Error("Credits exhausted. Please add credits to your Lovable workspace.");
+      }
+      throw new Error(`AI API error: ${aiResponse.status}`);
     }
 
-    const completion = await openaiResponse.json();
-    const rawOutput = completion.choices[0].message.content;
+    const completion = await aiResponse.json();
+    const toolCall = completion.choices[0].message.tool_calls?.[0];
     
-    if (!rawOutput) {
-      throw new Error('No response from AI model');
+    if (!toolCall || !toolCall.function.arguments) {
+      throw new Error('No structured response from AI model');
     }
 
-    const analysis: AnalysisResult = JSON.parse(rawOutput);
+    const analysis: AnalysisResult = JSON.parse(toolCall.function.arguments);
 
     // Store analysis in database
     const { data: analysisRecord, error: insertError } = await supabase
@@ -216,8 +269,8 @@ serve(async (req) => {
         personalized_feedback: analysis.personalized_feedback,
         recommended_action: analysis.recommended_action,
         analyzed_at: new Date().toISOString(),
-        model_used: 'gpt-4o',
-        raw_model_output: JSON.parse(rawOutput),
+        model_used: 'google/gemini-2.5-flash',
+        raw_model_output: analysis,
         teacher_reviewed: false,
         teacher_modified: false
       })
