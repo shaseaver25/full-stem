@@ -192,7 +192,7 @@ const DemoDataManagement = () => {
             </div>
             
             <Button 
-              onClick={() => seedDemoEnvironment()} 
+              onClick={() => seedDemoEnvironment(false)} 
               disabled={isSeedingEnvironment}
               className="w-full"
               variant="default"
