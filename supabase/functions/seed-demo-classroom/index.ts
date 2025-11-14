@@ -135,8 +135,10 @@ serve(async (req) => {
       .insert({
         id: teacherId,
         user_id: teacherId,
-        first_name: 'Sarah',
-        last_name: 'Johnson',
+        school_name: 'Lincoln Elementary School',
+        grade_levels: ['5'],
+        subjects: ['Science'],
+        years_experience: 8,
         onboarding_completed: true
       })
 
@@ -168,13 +170,14 @@ serve(async (req) => {
 
     console.log('Creating demo students...')
     
-    // Create 15 demo students
+    // Create 15 demo students - class_id should be null, enrollment happens via class_students
     const studentData = DEMO_SUBMISSIONS.photosynthesis.map((submission, index) => ({
       id: `demo_student_${String(index + 1).padStart(3, '0')}`,
       user_id: `demo_student_${String(index + 1).padStart(3, '0')}`,
       first_name: submission.name.split(' ')[0],
       last_name: submission.name.split(' ')[1],
-      grade_level: '5'
+      grade_level: '5',
+      class_id: null
     }))
 
     const { error: studentsError } = await supabase
