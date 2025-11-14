@@ -69,13 +69,13 @@ serve(async (req) => {
 
     // Update submission status to analyzing
     await supabase
-      .from('student_submissions')
+      .from('assignment_submissions')
       .update({ status: 'analyzing' })
       .eq('id', submissionId);
 
     // Fetch submission with assignment details
     const { data: submission, error: submissionError } = await supabase
-      .from('student_submissions')
+      .from('assignment_submissions')
       .select(`
         *,
         assignment:assignment_id (
@@ -93,7 +93,7 @@ serve(async (req) => {
     }
 
     // Verify user owns this submission or is a teacher
-    if (submission.student_id !== user.id) {
+    if (submission.user_id !== user.id) {
       // Check if user is teacher of the class
       const { data: assignment } = await supabase
         .from('class_assignments_new')
@@ -224,7 +224,7 @@ serve(async (req) => {
 
     // Update submission status to analyzed
     await supabase
-      .from('student_submissions')
+      .from('assignment_submissions')
       .update({ status: 'analyzed' })
       .eq('id', submissionId);
 
