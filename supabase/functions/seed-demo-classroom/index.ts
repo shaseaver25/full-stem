@@ -6,6 +6,18 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+// Demo UUIDs - deterministic for consistent seeding
+const DEMO_TEACHER_ID = '00000000-0000-0000-0001-000000000001'
+const DEMO_CLASS_ID = '00000000-0000-0000-0002-000000000001'
+const DEMO_ASSIGNMENT_IDS = [
+  '00000000-0000-0000-0003-000000000001',
+  '00000000-0000-0000-0003-000000000002',
+  '00000000-0000-0000-0003-000000000003'
+]
+const DEMO_STUDENT_IDS = Array.from({length: 15}, (_, i) => 
+  `00000000-0000-0000-0004-${String(i + 1).padStart(12, '0')}`
+)
+
 const DEMO_SUBMISSIONS = {
   photosynthesis: [
     {
@@ -106,21 +118,22 @@ serve(async (req) => {
       console.log('Resetting demo data...')
       
       // Delete in order to avoid foreign key constraints
-      await supabase.from('submission_analyses').delete().ilike('assignment_id', 'demo_%')
-      await supabase.from('assignment_submissions').delete().ilike('assignment_id', 'demo_%')
-      await supabase.from('class_assignments_new').delete().ilike('id', 'demo_%')
-      await supabase.from('class_students').delete().ilike('class_id', 'demo_%')
-      await supabase.from('students').delete().ilike('id', 'demo_%')
-      await supabase.from('classes').delete().ilike('id', 'demo_%')
-      await supabase.from('teacher_profiles').delete().ilike('id', 'demo_%')
+      // Match demo UUIDs (all start with 00000000-0000-0000)
+      await supabase.from('submission_analyses').delete().like('assignment_id', '00000000-0000-0000%')
+      await supabase.from('assignment_submissions').delete().like('assignment_id', '00000000-0000-0000%')
+      await supabase.from('class_assignments_new').delete().like('id', '00000000-0000-0000%')
+      await supabase.from('class_students').delete().like('class_id', '00000000-0000-0000%')
+      await supabase.from('students').delete().like('id', '00000000-0000-0000%')
+      await supabase.from('classes').delete().like('id', '00000000-0000-0000%')
+      await supabase.from('teacher_profiles').delete().like('id', '00000000-0000-0000%')
       
       console.log('Demo data reset complete')
     }
 
     console.log('Creating demo teacher...')
     
-    // Create demo teacher profile - only use fields that exist in schema
-    const teacherId = 'demo_teacher_001'
+    // Create demo teacher profile
+    const teacherId = DEMO_TEACHER_ID
     
     // First try to delete if exists
     await supabase
@@ -148,7 +161,7 @@ serve(async (req) => {
     console.log('Creating demo class...')
     
     // Create demo class
-    const classId = 'demo_class_001'
+    const classId = DEMO_CLASS_ID
     const { error: classError } = await supabase
       .from('classes')
       .upsert({
@@ -168,10 +181,10 @@ serve(async (req) => {
 
     console.log('Creating demo students...')
     
-    // Create 15 demo students - class_id should be null, enrollment happens via class_students
+    // Create 15 demo students
     const studentData = DEMO_SUBMISSIONS.photosynthesis.map((submission, index) => ({
-      id: `demo_student_${String(index + 1).padStart(3, '0')}`,
-      user_id: `demo_student_${String(index + 1).padStart(3, '0')}`,
+      id: DEMO_STUDENT_IDS[index],
+      user_id: DEMO_STUDENT_IDS[index],
       first_name: submission.name.split(' ')[0],
       last_name: submission.name.split(' ')[1],
       grade_level: '5',
@@ -210,7 +223,7 @@ serve(async (req) => {
     // Create 3 assignments
     const assignments = [
       {
-        id: 'demo_assignment_001',
+        id: DEMO_ASSIGNMENT_IDS[0],
         class_id: classId,
         title: 'Photosynthesis Explanation',
         description: 'Explain how plants make food from sunlight.',
@@ -228,7 +241,7 @@ serve(async (req) => {
         options: {}
       },
       {
-        id: 'demo_assignment_002',
+        id: DEMO_ASSIGNMENT_IDS[1],
         class_id: classId,
         title: 'Water Cycle Diagram & Description',
         description: 'Explain the water cycle.',
@@ -238,7 +251,7 @@ serve(async (req) => {
         options: {}
       },
       {
-        id: 'demo_assignment_003',
+        id: DEMO_ASSIGNMENT_IDS[2],
         class_id: classId,
         title: 'Animal Adaptations Essay',
         description: 'Explain animal adaptations.',
@@ -262,8 +275,8 @@ serve(async (req) => {
     
     // Create submissions for Assignment 1
     const submissionData = DEMO_SUBMISSIONS.photosynthesis.map((submission, index) => ({
-      assignment_id: 'demo_assignment_001',
-      user_id: `demo_student_${String(index + 1).padStart(3, '0')}`,
+      assignment_id: DEMO_ASSIGNMENT_IDS[0],
+      user_id: DEMO_STUDENT_IDS[index],
       text_response: submission.text,
       status: 'submitted',
       submitted_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString()
