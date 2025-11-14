@@ -88,8 +88,14 @@ serve(async (req) => {
       .eq('id', submissionId)
       .maybeSingle();
 
-    if (submissionError || !submission) {
-      throw new Error('Failed to fetch submission: ' + submissionError?.message);
+    console.log('Submission query result:', { submission, error: submissionError });
+
+    if (submissionError) {
+      throw new Error('Failed to fetch submission: ' + submissionError.message);
+    }
+
+    if (!submission) {
+      throw new Error(`No submission found with ID: ${submissionId}`);
     }
 
     // Verify user owns this submission or is a teacher
