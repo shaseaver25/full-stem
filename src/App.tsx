@@ -86,6 +86,7 @@ const PilotInterest = React.lazy(() => import("./pages/PilotInterest"));
 const ConferenceDemo = React.lazy(() => import("./pages/conference/ConferenceDemo"));
 const ConferenceSession = React.lazy(() => import("./pages/conference/ConferenceSession"));
 const EmbedContentPage = React.lazy(() => import("./pages/admin/embed-content"));
+const AdaptiveClassroomDemo = React.lazy(() => import("./pages/demo/adaptive-classroom"));
 
 // Eagerly load these smaller components that are used for route protection
 import ProtectedTeacherRoute from "./components/teacher/ProtectedTeacherRoute";
@@ -221,6 +222,16 @@ function AppContent() {
         <Route path="/demo" element={<ErrorBoundary><DemoGate /></ErrorBoundary>} />
         <Route path="/demo/start" element={<ErrorBoundary><DemoStart /></ErrorBoundary>} />
         <Route path="/demo/home" element={<ErrorBoundary><Index /></ErrorBoundary>} />
+        <Route 
+          path="/demo/adaptive-classroom" 
+          element={
+            <ErrorBoundary>
+              <RequireRole allowedRoles={['teacher', 'admin', 'super_admin', 'developer']}>
+                <AdaptiveClassroomDemo />
+              </RequireRole>
+            </ErrorBoundary>
+          } 
+        />
         <Route path="/course/excel" element={<ErrorBoundary><ExcelCourse /></ErrorBoundary>} />
         <Route path="/course/word" element={<ErrorBoundary><WordCourse /></ErrorBoundary>} />
         <Route path="/course/powerpoint" element={<ErrorBoundary><PowerPointCourse /></ErrorBoundary>} />

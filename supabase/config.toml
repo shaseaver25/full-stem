@@ -160,4 +160,7 @@ verify_jwt = false
 [functions.embed-existing-content]
 verify_jwt = true
 
+[functions.seed-demo-classroom]
+verify_jwt = false
+
 
