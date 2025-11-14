@@ -6,13 +6,16 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { StatusChip } from "@/components/common/StatusChip";
 import { SubmissionUploader } from "@/components/submission/SubmissionUploader";
 import { FileList } from "@/components/submission/FileList";
+import { SubmissionAnalysisFeedback } from "@/components/submission/SubmissionAnalysisFeedback";
 import { useSubmission } from "@/hooks/useSubmission";
-import { ArrowLeft, AlertCircle, CheckCircle, Upload } from "lucide-react";
+import { useSubmissionAnalysis } from "@/hooks/useSubmissionAnalysis";
+import { ArrowLeft, AlertCircle, CheckCircle, Upload, Loader2 } from "lucide-react";
 
 export default function StudentAssignmentSubmit() {
   const { id: assignmentId } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { submission, isLoading, addFile, removeFile, submit, resubmit, isSubmitting, isRemoving } = useSubmission(assignmentId!);
+  const { data: analysis, isLoading: isAnalysisLoading } = useSubmissionAnalysis(submission?.id || '');
   const [showConfirmation, setShowConfirmation] = useState(false);
 
   // Warn before navigating away if there are unsaved changes
@@ -109,9 +112,6 @@ export default function StudentAssignmentSubmit() {
               <FileList files={submission.files || []} canEdit={false} />
               
               <div className="text-center space-y-2">
-                <p className="text-muted-foreground">
-                  Your teacher will review your submission and provide feedback.
-                </p>
                 <Button asChild variant="outline">
                   <Link to="/student">Return to Dashboard</Link>
                 </Button>
@@ -119,6 +119,22 @@ export default function StudentAssignmentSubmit() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Show analyzing state or feedback */}
+        {!analysis && (
+          <Card>
+            <CardContent className="text-center py-8">
+              <Loader2 className="h-12 w-12 mx-auto mb-4 animate-spin text-primary" />
+              <p className="text-lg font-semibold">Analyzing Your Submission...</p>
+              <p className="text-sm text-muted-foreground mt-2">
+                Our AI is reviewing your work and preparing personalized feedback.
+              </p>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Show AI feedback when ready */}
+        {analysis && <SubmissionAnalysisFeedback analysis={analysis} />}
       </div>
     );
   }

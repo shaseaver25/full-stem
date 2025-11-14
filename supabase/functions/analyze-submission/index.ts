@@ -287,6 +287,35 @@ serve(async (req) => {
       .update({ status: 'analyzed' })
       .eq('id', submissionId);
 
+    // Get teacher info and create notification
+    const { data: assignmentInfo } = await supabase
+      .from('class_assignments_new')
+      .select(`
+        title,
+        classes!inner(
+          teacher_id,
+          teacher_profiles!inner(user_id)
+        )
+      `)
+      .eq('id', submission.assignments!.id)
+      .single();
+
+    if (assignmentInfo?.classes?.teacher_profiles?.user_id) {
+      await supabase
+        .from('notifications')
+        .insert({
+          user_id: assignmentInfo.classes.teacher_profiles.user_id,
+          title: 'New Submission Analyzed',
+          message: `A submission for "${assignmentInfo.title}" has been analyzed by AI.`,
+          type: 'submission',
+          metadata: {
+            submission_id: submissionId,
+            assignment_id: submission.assignment_id,
+            mastery: analysis.overall_mastery
+          }
+        });
+    }
+
     return new Response(
       JSON.stringify({
         success: true,
