@@ -85,6 +85,7 @@ const DocsViewer = React.lazy(() => import("./pages/DocsViewer"));
 const PilotInterest = React.lazy(() => import("./pages/PilotInterest"));
 const ConferenceDemo = React.lazy(() => import("./pages/conference/ConferenceDemo"));
 const ConferenceSession = React.lazy(() => import("./pages/conference/ConferenceSession"));
+const EmbedContentPage = React.lazy(() => import("./pages/admin/embed-content"));
 
 // Eagerly load these smaller components that are used for route protection
 import ProtectedTeacherRoute from "./components/teacher/ProtectedTeacherRoute";
@@ -354,6 +355,16 @@ function AppContent() {
             <ErrorBoundary>
               <RequireRole allowedRoles={['admin', 'super_admin', 'developer']}>
                 <AdvancedAdminPage />
+              </RequireRole>
+            </ErrorBoundary>
+          } 
+        />
+        <Route 
+          path="/admin/embed-content" 
+          element={
+            <ErrorBoundary>
+              <RequireRole allowedRoles={['admin', 'super_admin', 'developer']}>
+                <EmbedContentPage />
               </RequireRole>
             </ErrorBoundary>
           } 
