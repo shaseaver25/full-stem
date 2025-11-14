@@ -85,7 +85,6 @@ serve(async (req) => {
 
     // Create teacher auth user
     console.log('👨‍🏫 Creating demo teacher...')
-    const teacherEmail = 'demo.teacher@tailoredu.com'
     
     const { data: teacherAuth, error: teacherAuthError } = await supabase.auth.admin.createUser({
       email: teacherEmail,
