@@ -156,16 +156,16 @@ export default function AdaptiveClassroomDemo() {
           
           <Button
             onClick={handleSeedDemo}
-            disabled={seedMutation.isPending}
+            disabled={isSeeding}
           >
-            {seedMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+            {isSeeding && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
             Seed Demo Data
           </Button>
           
           <Button
             variant="destructive"
             onClick={handleResetDemo}
-            disabled={seedMutation.isPending}
+            disabled={isSeeding}
           >
             <RefreshCw className="h-4 w-4 mr-2" />
             Reset Demo
