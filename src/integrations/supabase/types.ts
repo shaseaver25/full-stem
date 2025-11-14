@@ -3920,6 +3920,47 @@ export type Database = {
         }
         Relationships: []
       }
+      teacher_analysis_reviews: {
+        Row: {
+          action_type: string
+          analysis_id: string
+          changes_made: Json | null
+          created_at: string
+          id: string
+          teacher_notes: string | null
+          teacher_user_id: string
+          updated_at: string
+        }
+        Insert: {
+          action_type: string
+          analysis_id: string
+          changes_made?: Json | null
+          created_at?: string
+          id?: string
+          teacher_notes?: string | null
+          teacher_user_id: string
+          updated_at?: string
+        }
+        Update: {
+          action_type?: string
+          analysis_id?: string
+          changes_made?: Json | null
+          created_at?: string
+          id?: string
+          teacher_notes?: string | null
+          teacher_user_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teacher_analysis_reviews_analysis_id_fkey"
+            columns: ["analysis_id"]
+            isOneToOne: false
+            referencedRelation: "submission_analyses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       teacher_profiles: {
         Row: {
           certification_status: string | null
