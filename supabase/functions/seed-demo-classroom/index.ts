@@ -14,9 +14,31 @@ const DEMO_ASSIGNMENT_IDS = [
   '00000000-0000-0000-0003-000000000002',
   '00000000-0000-0000-0003-000000000003'
 ]
-const DEMO_STUDENT_IDS = Array.from({length: 15}, (_, i) => 
-  `00000000-0000-0000-0004-${String(i + 1).padStart(12, '0')}`
-)
+
+// Demo student data with deterministic IDs
+const DEMO_STUDENTS = [
+  { firstName: 'Emma', lastName: 'Rodriguez', gradeLevel: '7th', readingLevel: 'Advanced' },
+  { firstName: 'Marcus', lastName: 'Chen', gradeLevel: '7th', readingLevel: 'Advanced' },
+  { firstName: 'Aisha', lastName: 'Patel', gradeLevel: '7th', readingLevel: 'Advanced' },
+  { firstName: 'Jake', lastName: 'Wilson', gradeLevel: '7th', readingLevel: 'Proficient' },
+  { firstName: 'Sofia', lastName: 'Martinez', gradeLevel: '7th', readingLevel: 'Proficient' },
+  { firstName: 'Tyler', lastName: 'Anderson', gradeLevel: '7th', readingLevel: 'Proficient' },
+  { firstName: 'Maya', lastName: 'Johnson', gradeLevel: '7th', readingLevel: 'Proficient' },
+  { firstName: 'Jamal', lastName: 'Williams', gradeLevel: '7th', readingLevel: 'Developing' },
+  { firstName: 'Olivia', lastName: 'Brown', gradeLevel: '7th', readingLevel: 'Developing' },
+  { firstName: 'Carlos', lastName: 'Garcia', gradeLevel: '7th', readingLevel: 'Developing' },
+  { firstName: 'Nina', lastName: 'Lee', gradeLevel: '7th', readingLevel: 'Developing' },
+  { firstName: 'David', lastName: 'Kim', gradeLevel: '7th', readingLevel: 'Emerging' },
+  { firstName: 'Jessica', lastName: 'Thompson', gradeLevel: '7th', readingLevel: 'Emerging' },
+  { firstName: 'Ryan', lastName: 'Davis', gradeLevel: '7th', readingLevel: 'Emerging' },
+  { firstName: 'Zoe', lastName: 'Miller', gradeLevel: '7th', readingLevel: 'Emerging' }
+].map((student, i) => ({
+  ...student,
+  id: `00000000-0000-0000-0004-${String(i + 1).padStart(12, '0')}`,
+  email: `${student.firstName.toLowerCase()}.${student.lastName.toLowerCase()}@demo.tailoredu.com`
+}))
+
+const DEMO_PASSWORD = 'DemoPassword2024!'
 
 const DEMO_SUBMISSIONS = {
   photosynthesis: [
