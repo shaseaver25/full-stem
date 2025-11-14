@@ -56,25 +56,35 @@ serve(async (req) => {
     
     // Delete teacher by email
     const teacherEmail = 'demo.teacher@tailoredu.com'
-    try {
-      const { data: teacherUser } = await supabase.auth.admin.getUserByEmail(teacherEmail)
-      if (teacherUser?.user) {
-        await supabase.auth.admin.deleteUser(teacherUser.user.id)
+    const { data: teacherUser, error: getTeacherError } = await supabase.auth.admin.getUserByEmail(teacherEmail)
+    
+    if (getTeacherError) {
+      console.log(`⚠️ Error fetching teacher: ${getTeacherError.message}`)
+    } else if (teacherUser) {
+      const deleteResult = await supabase.auth.admin.deleteUser(teacherUser.id)
+      if (deleteResult.error) {
+        console.log(`❌ Failed to delete teacher: ${deleteResult.error.message}`)
+      } else {
         console.log(`✅ Deleted teacher: ${teacherEmail}`)
       }
-    } catch (error) {
-      console.log(`⚠️ Teacher not found or already deleted: ${teacherEmail}`)
+    } else {
+      console.log(`⚠️ Teacher not found: ${teacherEmail}`)
     }
     
     // Delete students by email
     for (const student of DEMO_STUDENTS) {
-      try {
-        const { data: studentUser } = await supabase.auth.admin.getUserByEmail(student.email)
-        if (studentUser?.user) {
-          await supabase.auth.admin.deleteUser(studentUser.user.id)
+      const { data: studentUser, error: getStudentError } = await supabase.auth.admin.getUserByEmail(student.email)
+      
+      if (getStudentError) {
+        console.log(`⚠️ Error fetching student ${student.email}: ${getStudentError.message}`)
+      } else if (studentUser) {
+        const deleteResult = await supabase.auth.admin.deleteUser(studentUser.id)
+        if (deleteResult.error) {
+          console.log(`❌ Failed to delete student ${student.email}: ${deleteResult.error.message}`)
+        } else {
           console.log(`✅ Deleted student: ${student.email}`)
         }
-      } catch (error) {
+      } else {
         console.log(`⚠️ Student not found: ${student.email}`)
       }
     }
