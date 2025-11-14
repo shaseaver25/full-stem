@@ -96,10 +96,8 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const supabase = createClient(supabaseUrl, supabaseKey)
 
-    // Force schema cache reload
-    await supabase.rpc('reload_schema_cache').catch(() => {
-      console.log('Schema cache reload not available, continuing...')
-    })
+    // Schema cache is automatically handled by Supabase
+    console.log('🔄 Starting demo classroom seeding...')
 
     const { reset = false } = await req.json()
 
