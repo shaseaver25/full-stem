@@ -96,6 +96,11 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const supabase = createClient(supabaseUrl, supabaseKey)
 
+    // Force schema cache reload
+    await supabase.rpc('reload_schema_cache').catch(() => {
+      console.log('Schema cache reload not available, continuing...')
+    })
+
     const { reset = false } = await req.json()
 
     // If reset, delete existing demo data
@@ -116,11 +121,18 @@ serve(async (req) => {
 
     console.log('Creating demo teacher...')
     
-    // Create demo teacher profile
+    // Create demo teacher profile - only use fields that exist in schema
     const teacherId = 'demo_teacher_001'
+    
+    // First try to delete if exists
+    await supabase
+      .from('teacher_profiles')
+      .delete()
+      .eq('id', teacherId)
+    
     const { error: teacherError } = await supabase
       .from('teacher_profiles')
-      .upsert({
+      .insert({
         id: teacherId,
         user_id: teacherId,
         first_name: 'Sarah',
