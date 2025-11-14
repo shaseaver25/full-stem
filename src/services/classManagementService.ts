@@ -265,6 +265,17 @@ export const classManagementApi = {
       if (submissionError) throw submissionError;
     }
 
+    // Generate embedding for the assignment (async, non-blocking)
+    this.embedAssignmentAsync(data.id, assignmentData.classId, {
+      title: assignmentData.title,
+      description: assignmentData.description,
+      instructions: assignmentData.options?.instructions,
+      selected_components: assignmentData.selectedComponents,
+    }).catch(err => {
+      console.error('Error embedding assignment:', err);
+      // Don't throw - embedding is not critical for assignment creation
+    });
+
     return data;
   },
 
@@ -290,5 +301,67 @@ export const classManagementApi = {
 
     if (error) throw error;
     return data;
+  },
+
+  /**
+   * Asynchronously embed assignment in background
+   */
+  async embedAssignmentAsync(
+    assignmentId: string,
+    classId: string,
+    assignmentData: {
+      title: string;
+      description?: string;
+      instructions?: string;
+      selected_components?: any;
+    }
+  ) {
+    try {
+      // Fetch class details for metadata
+      const { data: classData } = await supabase
+        .from('classes')
+        .select('grade_level, subject')
+        .eq('id', classId)
+        .single();
+
+      // Build content string
+      const contentParts = [];
+      if (assignmentData.title) contentParts.push(`Title: ${assignmentData.title}`);
+      if (assignmentData.description) contentParts.push(`Description: ${assignmentData.description}`);
+      if (assignmentData.instructions) contentParts.push(`Instructions: ${assignmentData.instructions}`);
+      
+      const components = Array.isArray(assignmentData.selected_components)
+        ? assignmentData.selected_components
+        : [];
+      if (components.length > 0) {
+        contentParts.push(`Components: ${components.join(', ')}`);
+      }
+
+      const content = contentParts.join('\n\n');
+
+      // Build metadata
+      const metadata = {
+        grade_level: classData?.grade_level,
+        subject: classData?.subject,
+        content_type: 'assignment',
+      };
+
+      // Call embedding function
+      const { error } = await supabase.functions.invoke('embed-assignment', {
+        body: {
+          assignmentId,
+          content,
+          metadata,
+        },
+      });
+
+      if (error) {
+        console.error('Error calling embed-assignment:', error);
+      } else {
+        console.log('✓ Assignment embedded successfully:', assignmentId);
+      }
+    } catch (error) {
+      console.error('Error in embedAssignmentAsync:', error);
+    }
   },
 };
