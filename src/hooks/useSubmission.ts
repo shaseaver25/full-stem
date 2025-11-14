@@ -198,15 +198,32 @@ export const useSubmission = (assignmentId: string) => {
         },
       });
 
+      // Trigger AI analysis in the background
+      try {
+        supabase.functions.invoke('analyze-submission', {
+          body: {
+            submissionId: data.id,
+            rubricId: null,
+          },
+        }).then(result => {
+          if (result.error) {
+            console.error('Analysis failed:', result.error);
+          }
+        });
+      } catch (analysisError) {
+        console.error('Failed to trigger analysis:', analysisError);
+      }
+
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['submission', assignmentId, user?.id] });
       queryClient.invalidateQueries({ queryKey: ['student', 'assignments', user?.id] });
       queryClient.invalidateQueries({ queryKey: ['activity-log'] });
+      queryClient.invalidateQueries({ queryKey: ['submission-analysis'] });
       toast({
         title: "Assignment submitted!",
-        description: `Your assignment was submitted at ${new Date().toLocaleTimeString()}.`
+        description: "Your work is being analyzed. You'll see feedback in a moment."
       });
     }
   });
