@@ -418,3 +418,5 @@ export function AdaptiveTestPage() {
     </div>
   );
 }
+
+export default AdaptiveTestPage;

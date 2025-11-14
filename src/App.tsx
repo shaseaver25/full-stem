@@ -78,6 +78,7 @@ const ParentDashboard = React.lazy(() => import("./pages/parent/ParentDashboard"
 const BootstrapDemo = React.lazy(() => import("./pages/BootstrapDemo"));
 const AccessDenied = React.lazy(() => import("./pages/AccessDenied"));
 const SystemDashboard = React.lazy(() => import("./pages/SystemDashboard"));
+const AdaptiveTestPage = React.lazy(() => import("./components/AdaptiveTestPage"));
 const MFASetup = React.lazy(() => import("./pages/MFASetup"));
 const MFAVerify = React.lazy(() => import("./pages/MFAVerify"));
 const DocsViewer = React.lazy(() => import("./pages/DocsViewer"));
