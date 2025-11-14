@@ -327,6 +327,108 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_tutor_conversations: {
+        Row: {
+          id: string
+          is_flagged: boolean | null
+          last_message_at: string | null
+          lesson_id: string | null
+          message_count: number | null
+          started_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          id?: string
+          is_flagged?: boolean | null
+          last_message_at?: string | null
+          lesson_id?: string | null
+          message_count?: number | null
+          started_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          id?: string
+          is_flagged?: boolean | null
+          last_message_at?: string | null
+          lesson_id?: string | null
+          message_count?: number | null
+          started_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_tutor_conversations_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_tutor_messages: {
+        Row: {
+          content: string
+          conversation_id: string | null
+          created_at: string | null
+          id: string
+          role: string
+          tokens_used: number | null
+        }
+        Insert: {
+          content: string
+          conversation_id?: string | null
+          created_at?: string | null
+          id?: string
+          role: string
+          tokens_used?: number | null
+        }
+        Update: {
+          content?: string
+          conversation_id?: string | null
+          created_at?: string | null
+          id?: string
+          role?: string
+          tokens_used?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_tutor_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "ai_tutor_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_tutor_usage: {
+        Row: {
+          date: string
+          lesson_id: string
+          questions_asked: number | null
+          user_id: string
+        }
+        Insert: {
+          date?: string
+          lesson_id: string
+          questions_asked?: number | null
+          user_id: string
+        }
+        Update: {
+          date?: string
+          lesson_id?: string
+          questions_asked?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_tutor_usage_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ai_usage_logs: {
         Row: {
           action_type: string
@@ -1128,6 +1230,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      content_embeddings: {
+        Row: {
+          content_id: string
+          content_type: string
+          created_at: string
+          embedded_at: string
+          embedding_model: string
+          id: string
+          metadata: Json | null
+          pinecone_id: string
+        }
+        Insert: {
+          content_id: string
+          content_type: string
+          created_at?: string
+          embedded_at?: string
+          embedding_model?: string
+          id?: string
+          metadata?: Json | null
+          pinecone_id: string
+        }
+        Update: {
+          content_id?: string
+          content_type?: string
+          created_at?: string
+          embedded_at?: string
+          embedding_model?: string
+          id?: string
+          metadata?: Json | null
+          pinecone_id?: string
+        }
+        Relationships: []
       }
       content_library: {
         Row: {
@@ -3397,6 +3532,39 @@ export type Database = {
           },
         ]
       }
+      student_submissions: {
+        Row: {
+          assignment_id: string
+          content: Json
+          created_at: string
+          id: string
+          status: string
+          student_id: string
+          submitted_at: string
+          updated_at: string
+        }
+        Insert: {
+          assignment_id: string
+          content?: Json
+          created_at?: string
+          id?: string
+          status?: string
+          student_id: string
+          submitted_at?: string
+          updated_at?: string
+        }
+        Update: {
+          assignment_id?: string
+          content?: Json
+          created_at?: string
+          id?: string
+          status?: string
+          student_id?: string
+          submitted_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       students: {
         Row: {
           class_id: string | null
@@ -3452,6 +3620,80 @@ export type Database = {
             columns: ["class_id"]
             isOneToOne: false
             referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      submission_analyses: {
+        Row: {
+          analyzed_at: string
+          areas_for_growth: Json | null
+          confidence_score: number | null
+          created_at: string
+          id: string
+          misconceptions: Json | null
+          model_used: string | null
+          overall_mastery: string | null
+          personalized_feedback: string | null
+          raw_model_output: Json | null
+          recommended_action: string | null
+          rubric_id: string | null
+          rubric_scores: Json | null
+          strengths: Json | null
+          submission_id: string
+          teacher_modified: boolean | null
+          teacher_notes: string | null
+          teacher_reviewed: boolean | null
+          updated_at: string
+        }
+        Insert: {
+          analyzed_at?: string
+          areas_for_growth?: Json | null
+          confidence_score?: number | null
+          created_at?: string
+          id?: string
+          misconceptions?: Json | null
+          model_used?: string | null
+          overall_mastery?: string | null
+          personalized_feedback?: string | null
+          raw_model_output?: Json | null
+          recommended_action?: string | null
+          rubric_id?: string | null
+          rubric_scores?: Json | null
+          strengths?: Json | null
+          submission_id: string
+          teacher_modified?: boolean | null
+          teacher_notes?: string | null
+          teacher_reviewed?: boolean | null
+          updated_at?: string
+        }
+        Update: {
+          analyzed_at?: string
+          areas_for_growth?: Json | null
+          confidence_score?: number | null
+          created_at?: string
+          id?: string
+          misconceptions?: Json | null
+          model_used?: string | null
+          overall_mastery?: string | null
+          personalized_feedback?: string | null
+          raw_model_output?: Json | null
+          recommended_action?: string | null
+          rubric_id?: string | null
+          rubric_scores?: Json | null
+          strengths?: Json | null
+          submission_id?: string
+          teacher_modified?: boolean | null
+          teacher_notes?: string | null
+          teacher_reviewed?: boolean | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "submission_analyses_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: true
+            referencedRelation: "student_submissions"
             referencedColumns: ["id"]
           },
         ]
@@ -3993,6 +4235,10 @@ export type Database = {
         Returns: boolean
       }
       has_teacher_profile: { Args: { _user_id?: string }; Returns: boolean }
+      increment_tutor_usage: {
+        Args: { p_lesson_id: string; p_user_id: string }
+        Returns: undefined
+      }
       is_developer: { Args: { _user_id?: string }; Returns: boolean }
       is_super_admin: { Args: { _user_id?: string }; Returns: boolean }
       is_system_admin: { Args: { _user_id?: string }; Returns: boolean }
