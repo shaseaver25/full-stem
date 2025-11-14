@@ -1,14 +1,15 @@
 import { useState } from 'react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/integrations/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Loader2, RefreshCw, User, CheckCircle, Clock, AlertCircle } from 'lucide-react'
+import { Loader2, RefreshCw, User, CheckCircle, Clock, AlertCircle, Sparkles, Trash2 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { StudentAnalysisReviewModal } from '@/components/teacher/StudentAnalysisReviewModal'
+import { useSeedDemoEnvironment } from '@/hooks/useSeedDemoEnvironment'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 
 const MASTERY_COLORS = {
   advanced: 'bg-green-500',
@@ -31,9 +32,12 @@ export default function AdaptiveClassroomDemo() {
   const queryClient = useQueryClient()
   const [selectedStudent, setSelectedStudent] = useState<any>(null)
   const [viewAsTeacher, setViewAsTeacher] = useState(true)
+  
+  // Demo seeding hook
+  const { mutate: seedDemo, isPending: isSeeding } = useSeedDemoEnvironment()
 
-  // Fetch demo class
-  const { data: demoClass } = useQuery({
+  // Check if demo data exists
+  const { data: demoClass, isLoading: isCheckingDemo } = useQuery({
     queryKey: ['demo-class'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -107,41 +111,13 @@ export default function AdaptiveClassroomDemo() {
     }
   })
 
-  // Seed demo data mutation
-  const seedMutation = useMutation({
-    mutationFn: async (reset: boolean) => {
-      const { data, error } = await supabase.functions.invoke('seed-demo-classroom', {
-        body: { reset }
-      })
-      
-      if (error) throw error
-      return data
-    },
-    onSuccess: (data) => {
-      toast({
-        title: 'Demo Data Created',
-        description: `Created ${data.stats.students} students with ${data.stats.submissions} submissions. ${data.stats.analyzed} analyzed successfully.`
-      })
-      queryClient.invalidateQueries({ queryKey: ['demo-submissions'] })
-      queryClient.invalidateQueries({ queryKey: ['demo-assignments'] })
-      queryClient.invalidateQueries({ queryKey: ['demo-class'] })
-    },
-    onError: (error: any) => {
-      toast({
-        title: 'Error',
-        description: error.message,
-        variant: 'destructive'
-      })
-    }
-  })
-
   const handleSeedDemo = () => {
-    seedMutation.mutate(false)
+    seedDemo(false)
   }
 
   const handleResetDemo = () => {
-    if (confirm('Are you sure you want to reset all demo data? This will delete all demo submissions and analyses.')) {
-      seedMutation.mutate(true)
+    if (confirm('⚠️ This will delete all existing demo data and create fresh data. Continue?')) {
+      seedDemo(true)
     }
   }
 
