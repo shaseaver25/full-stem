@@ -86,7 +86,7 @@ serve(async (req) => {
         )
       `)
       .eq('id', submissionId)
-      .single();
+      .maybeSingle();
 
     if (submissionError || !submission) {
       throw new Error('Failed to fetch submission: ' + submissionError?.message);
