@@ -3276,6 +3276,88 @@ export type Database = {
           },
         ]
       }
+      rubric_criteria: {
+        Row: {
+          created_at: string | null
+          description: string
+          id: string
+          max_points: number
+          name: string
+          order_index: number
+          rubric_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description: string
+          id?: string
+          max_points?: number
+          name: string
+          order_index?: number
+          rubric_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string
+          id?: string
+          max_points?: number
+          name?: string
+          order_index?: number
+          rubric_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rubric_criteria_rubric_id_fkey"
+            columns: ["rubric_id"]
+            isOneToOne: false
+            referencedRelation: "rubrics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rubrics: {
+        Row: {
+          assignment_id: string | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          title: string
+          total_points: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          assignment_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          title: string
+          total_points?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          assignment_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          title?: string
+          total_points?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rubrics_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "class_assignments_new"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       student_goals: {
         Row: {
           ai_generated: boolean | null
