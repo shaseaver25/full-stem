@@ -54,18 +54,29 @@ serve(async (req) => {
     // Always clean up existing demo data first
     console.log('🧹 Cleaning up existing demo data...')
     
-    // Delete all users with @demo.tailoredu.com emails
+    // Delete teacher by email
+    const teacherEmail = 'demo.teacher@tailoredu.com'
     try {
-      const { data: allUsers } = await supabase.auth.admin.listUsers()
-      const demoUsers = allUsers?.users?.filter(u => u.email?.endsWith('@demo.tailoredu.com')) || []
-      
-      console.log(`Found ${demoUsers.length} demo users to delete`)
-      for (const user of demoUsers) {
-        await supabase.auth.admin.deleteUser(user.id)
-        console.log(`✅ Deleted auth user: ${user.email}`)
+      const { data: teacherUser } = await supabase.auth.admin.getUserByEmail(teacherEmail)
+      if (teacherUser?.user) {
+        await supabase.auth.admin.deleteUser(teacherUser.user.id)
+        console.log(`✅ Deleted teacher: ${teacherEmail}`)
       }
     } catch (error) {
-      console.log('⚠️ Error deleting demo users:', error)
+      console.log(`⚠️ Teacher not found or already deleted: ${teacherEmail}`)
+    }
+    
+    // Delete students by email
+    for (const student of DEMO_STUDENTS) {
+      try {
+        const { data: studentUser } = await supabase.auth.admin.getUserByEmail(student.email)
+        if (studentUser?.user) {
+          await supabase.auth.admin.deleteUser(studentUser.user.id)
+          console.log(`✅ Deleted student: ${student.email}`)
+        }
+      } catch (error) {
+        console.log(`⚠️ Student not found: ${student.email}`)
+      }
     }
     
     // Database cleanup (cascading deletes will handle related data)
