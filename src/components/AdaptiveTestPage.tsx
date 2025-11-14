@@ -67,11 +67,11 @@ export function AdaptiveTestPage() {
 
       // Create the submission
       const { data: submission, error: submissionError } = await supabase
-        .from('student_submissions')
+        .from('assignment_submissions')
         .insert({
-          student_id: user.id,
+          user_id: user.id,
           assignment_id: assignmentId,
-          content: { text: studentWork },
+          text_response: studentWork,
           status: 'submitted',
           submitted_at: new Date().toISOString(),
         })
