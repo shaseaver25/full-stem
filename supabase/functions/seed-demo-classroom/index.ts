@@ -51,22 +51,26 @@ serve(async (req) => {
 
     const { reset } = await req.json().catch(() => ({ reset: false }))
 
-    // Reset: Delete all demo auth users and data
-    if (reset) {
-      console.log('🧹 Resetting demo environment...')
+    // Always clean up existing demo data first
+    console.log('🧹 Cleaning up existing demo data...')
+    
+    // Delete all users with @demo.tailoredu.com emails
+    try {
+      const { data: allUsers } = await supabase.auth.admin.listUsers()
+      const demoUsers = allUsers?.users?.filter(u => u.email?.endsWith('@demo.tailoredu.com')) || []
       
-      const { data: users } = await supabase.auth.admin.listUsers()
-      const demoUsers = users?.users.filter(u => u.email?.endsWith('@demo.tailoredu.com')) || []
-      
+      console.log(`Found ${demoUsers.length} demo users to delete`)
       for (const user of demoUsers) {
         await supabase.auth.admin.deleteUser(user.id)
-        console.log(`✅ Deleted: ${user.email}`)
+        console.log(`✅ Deleted auth user: ${user.email}`)
       }
-      
-      // Database cleanup handled by cascading deletes
-      await supabase.from('teacher_profiles').delete().eq('id', DEMO_TEACHER_ID)
-      await supabase.from('classes').delete().eq('id', DEMO_CLASS_ID)
+    } catch (error) {
+      console.log('⚠️ Error deleting demo users:', error)
     }
+    
+    // Database cleanup (cascading deletes will handle related data)
+    await supabase.from('teacher_profiles').delete().eq('id', DEMO_TEACHER_ID)
+    await supabase.from('classes').delete().eq('id', DEMO_CLASS_ID)
 
     // Create teacher auth user
     console.log('👨‍🏫 Creating demo teacher...')
