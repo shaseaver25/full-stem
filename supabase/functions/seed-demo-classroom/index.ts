@@ -125,7 +125,6 @@ serve(async (req) => {
         user_id: teacherId,
         first_name: 'Sarah',
         last_name: 'Johnson',
-        email: 'demo.teacher@tailoredu.com',
         onboarding_completed: true
       })
 
@@ -163,7 +162,6 @@ serve(async (req) => {
       user_id: `demo_student_${String(index + 1).padStart(3, '0')}`,
       first_name: submission.name.split(' ')[0],
       last_name: submission.name.split(' ')[1],
-      email: `student${index + 1}@demo.tailoredu.com`,
       grade_level: '5'
     }))
 
