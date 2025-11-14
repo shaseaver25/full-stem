@@ -151,4 +151,7 @@ verify_jwt = true
 [functions.ai-tutor-chat]
 verify_jwt = true
 
+[functions.analyze-submission]
+verify_jwt = true
+
 
