@@ -6,16 +6,10 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-// Demo UUIDs - deterministic for consistent seeding
 const DEMO_TEACHER_ID = '00000000-0000-0000-0001-000000000001'
 const DEMO_CLASS_ID = '00000000-0000-0000-0002-000000000001'
-const DEMO_ASSIGNMENT_IDS = [
-  '00000000-0000-0000-0003-000000000001',
-  '00000000-0000-0000-0003-000000000002',
-  '00000000-0000-0000-0003-000000000003'
-]
+const DEMO_PASSWORD = 'DemoPassword2024!'
 
-// Demo student data with deterministic IDs
 const DEMO_STUDENTS = [
   { firstName: 'Emma', lastName: 'Rodriguez', gradeLevel: '7th', readingLevel: 'Advanced' },
   { firstName: 'Marcus', lastName: 'Chen', gradeLevel: '7th', readingLevel: 'Advanced' },
@@ -32,333 +26,172 @@ const DEMO_STUDENTS = [
   { firstName: 'Jessica', lastName: 'Thompson', gradeLevel: '7th', readingLevel: 'Emerging' },
   { firstName: 'Ryan', lastName: 'Davis', gradeLevel: '7th', readingLevel: 'Emerging' },
   { firstName: 'Zoe', lastName: 'Miller', gradeLevel: '7th', readingLevel: 'Emerging' }
-].map((student, i) => ({
-  ...student,
+].map((s, i) => ({
+  ...s,
   id: `00000000-0000-0000-0004-${String(i + 1).padStart(12, '0')}`,
-  email: `${student.firstName.toLowerCase()}.${student.lastName.toLowerCase()}@demo.tailoredu.com`
+  email: `${s.firstName.toLowerCase()}.${s.lastName.toLowerCase()}@demo.tailoredu.com`
 }))
-
-const DEMO_PASSWORD = 'DemoPassword2024!'
-
-const DEMO_SUBMISSIONS = {
-  photosynthesis: [
-    {
-      name: 'Emma Rodriguez',
-      level: 'advanced',
-      text: 'Photosynthesis is the process where plants convert light energy into chemical energy. The inputs are carbon dioxide (CO2) from the air, water (H2O) from the roots, and sunlight energy. Inside the chloroplasts, specifically in the chlorophyll, light energy breaks apart water molecules in a process called photolysis. This releases oxygen as a byproduct. The plant then uses the hydrogen from water and carbon from CO2 to create glucose (C6H12O6), which is stored energy. The outputs are glucose for the plant\'s food and oxygen that we breathe. This process happens in two stages: light-dependent reactions and the Calvin cycle.'
-    },
-    {
-      name: 'Marcus Chen',
-      level: 'advanced',
-      text: 'Plants make their own food through photosynthesis, which happens in the chloroplasts of their leaves. The light-dependent reactions use sunlight to split water molecules, releasing oxygen and creating ATP and NADPH. Then in the Calvin cycle (light-independent reactions), the plant uses CO2 from the air plus the ATP and NADPH to build glucose molecules. The formula is: 6CO2 + 6H2O + light energy → C6H12O6 + 6O2. This means 6 molecules of carbon dioxide plus 6 molecules of water plus light makes 1 molecule of glucose and 6 molecules of oxygen. Without photosynthesis, there would be no oxygen for animals to breathe and no food chain.'
-    },
-    {
-      name: 'Aisha Patel',
-      level: 'advanced',
-      text: 'Photosynthesis converts solar energy to chemical energy that plants use for growth. In the thylakoid membranes of chloroplasts, chlorophyll pigments absorb light energy. Water molecules split (photolysis), releasing oxygen and hydrogen. The hydrogen combines with CO2 in the stroma during the Calvin cycle to produce glucose. Key inputs: sunlight, H2O, CO2. Key outputs: C6H12O6 (glucose), O2 (oxygen). Limiting factors include light intensity, CO2 concentration, and temperature. This process is vital for all life on Earth as it\'s the base of food chains and provides atmospheric oxygen.'
-    },
-    {
-      name: 'Jake Wilson',
-      level: 'proficient',
-      text: 'Photosynthesis is when plants make food from sunlight. The inputs are sunlight, water, and carbon dioxide. The plant uses chlorophyll in its leaves to capture the sun\'s energy. Water comes from the roots, and carbon dioxide comes from the air through tiny holes called stomata. The plant uses this energy to combine water and CO2 to make glucose, which is a type of sugar. The outputs are glucose (food for the plant) and oxygen (which we breathe). The chemical equation is 6CO2 + 6H2O + light → C6H12O6 + 6O2. This happens in the chloroplasts.'
-    },
-    {
-      name: 'Sofia Martinez',
-      level: 'proficient',
-      text: 'Plants make their own food using photosynthesis. They need three things: sunlight for energy, water from the soil, and carbon dioxide from the air. Inside the chloroplasts in the leaves, the chlorophyll uses the sun\'s energy to turn water and carbon dioxide into glucose. Glucose is the food/energy the plant needs to grow. Oxygen is released as waste, which is good for us because we breathe it. The process has two stages - the light reactions that need sun, and the dark reactions that don\'t need sun but use what the light reactions made.'
-    },
-    {
-      name: 'Tyler Anderson',
-      level: 'proficient',
-      text: 'Photosynthesis happens in plant leaves in structures called chloroplasts. The plant takes in CO2, H2O, and sunlight. The chlorophyll pigment absorbs the light energy. Through chemical reactions, the plant converts these inputs into glucose (C6H12O6) and releases oxygen (O2). The glucose provides energy for the plant\'s cells and helps it grow. Humans and animals depend on both the oxygen and the plants for food. Without photosynthesis, life on Earth wouldn\'t exist. The formula is: carbon dioxide + water + light energy = glucose + oxygen.'
-    },
-    {
-      name: 'Maya Johnson',
-      level: 'proficient',
-      text: 'Photosynthesis is how plants create food. Inputs: sunlight (energy source), water (H2O from roots), carbon dioxide (CO2 from air through stomata). The chlorophyll in leaves captures light energy and uses it to split water molecules. The plant combines the hydrogen from water with carbon from CO2 to make glucose sugar. Outputs: glucose (C6H12O6) for plant nutrition and growth, plus oxygen (O2) released into air. This takes place in chloroplasts. It\'s important because plants are the base of food chains and produce the oxygen we need to survive.'
-    },
-    {
-      name: 'Ethan Brown',
-      level: 'proficient',
-      text: 'Plants use photosynthesis to make food from sunlight, water, and carbon dioxide. The chloroplasts contain chlorophyll which absorbs light. Water molecules break apart, releasing oxygen. The plant uses energy from light to build glucose molecules from CO2 and H. The equation shows 6 carbon dioxide plus 6 water plus light equals 1 glucose plus 6 oxygen. Outputs are glucose for energy and oxygen for breathing. The process occurs in two phases: light reactions in thylakoids and Calvin cycle in stroma. Temperature and light affect how fast photosynthesis happens.'
-    },
-    {
-      name: 'Olivia Davis',
-      level: 'developing',
-      text: 'Photosynthesis is when plants make food from sunlight. They use chlorophyll in their leaves to capture sunlight. Plants also need water and carbon dioxide. The sunlight helps turn the water and carbon dioxide into glucose which is food for the plant. Oxygen comes out as a waste product. This is important because plants give us oxygen to breathe and are food for animals. It happens in the chloroplasts inside plant cells.'
-    },
-    {
-      name: 'Noah Garcia',
-      level: 'developing',
-      text: 'Plants make food through photosynthesis. They need sunlight, water from the ground, and carbon dioxide from the air. The green color in leaves called chlorophyll helps catch the sunlight. The plant uses energy from sun to change water and CO2 into sugar called glucose. The plant uses this sugar for energy and growth. Oxygen is released into the air which is good for us. The formula is CO2 + H2O + light = glucose + O2.'
-    },
-    {
-      name: 'Isabella Lee',
-      level: 'developing',
-      text: 'Photosynthesis is how plants eat. Plants need three things: sun, water, and carbon dioxide. The leaves have chlorophyll that makes them green and catches sunlight. The plant combines water and air (CO2) using the sun\'s energy to make food (glucose). It also makes oxygen which comes out of the leaves. This happens in parts of the cell called chloroplasts. We need plants because they make oxygen for us to breathe and food for us to eat.'
-    },
-    {
-      name: 'Liam Taylor',
-      level: 'developing',
-      text: 'Photosynthesis makes plants grow. Sunlight goes into the leaves. The plant also gets water from its roots and carbon dioxide from air. Inside the chloroplasts, chlorophyll uses the sunlight to turn water and CO2 into food. The food is glucose. Oxygen is made too and the plant lets it out. We breathe the oxygen. Plants are important because they are the start of the food chain. The process needs light, so it stops at night.'
-    },
-    {
-      name: 'Ava White',
-      level: 'developing',
-      text: 'Plants use photosynthesis to make food from the sun. They need sunlight, water, and carbon dioxide. The chlorophyll in the leaves catches the sun. Then the plant makes glucose from the water and CO2. Glucose is the food/energy. Oxygen comes out and goes into the air for us to breathe. It happens in chloroplasts. The chemical formula shows what goes in and what comes out: 6CO2 + 6H2O + light → C6H12O6 + 6O2. All living things depend on photosynthesis.'
-    },
-    {
-      name: 'Mia Martinez',
-      level: 'emerging',
-      text: 'Photosynthesis is when plants make food. They need sunlight and water. The leaves are green because of chlorophyll. Plants take in carbon dioxide and make oxygen. The oxygen is what we breathe. Glucose is the food they make. It\'s important for plants to grow.'
-    },
-    {
-      name: 'Lucas Anderson',
-      level: 'emerging',
-      text: 'Plants need sun to make food. They also need water and air. The green in the leaves helps. Plants make sugar and oxygen. We need the oxygen to breathe. Plants use photosynthesis to live and grow. Without plants we wouldn\'t have air.'
-    }
-  ]
-}
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return new Response(null, { headers: corsHeaders })
   }
 
   try {
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-    const supabase = createClient(supabaseUrl, supabaseKey)
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
+    )
 
-    // Schema cache is automatically handled by Supabase
-    console.log('🔄 Starting demo classroom seeding...')
+    const { reset } = await req.json().catch(() => ({ reset: false }))
 
-    const { reset = false } = await req.json()
-
-    // If reset, delete existing demo data
+    // Reset: Delete all demo auth users and data
     if (reset) {
-      console.log('Resetting demo data...')
+      console.log('🧹 Resetting demo environment...')
       
-      // Delete in order to avoid foreign key constraints
-      // Match demo UUIDs (all start with 00000000-0000-0000)
-      await supabase.from('submission_analyses').delete().like('assignment_id', '00000000-0000-0000%')
-      await supabase.from('assignment_submissions').delete().like('assignment_id', '00000000-0000-0000%')
-      await supabase.from('class_assignments_new').delete().like('id', '00000000-0000-0000%')
-      await supabase.from('class_students').delete().like('class_id', '00000000-0000-0000%')
-      await supabase.from('students').delete().like('id', '00000000-0000-0000%')
-      await supabase.from('classes').delete().like('id', '00000000-0000-0000%')
-      await supabase.from('teacher_profiles').delete().like('id', '00000000-0000-0000%')
+      const { data: users } = await supabase.auth.admin.listUsers()
+      const demoUsers = users?.users.filter(u => u.email?.endsWith('@demo.tailoredu.com')) || []
       
-      console.log('Demo data reset complete')
+      for (const user of demoUsers) {
+        await supabase.auth.admin.deleteUser(user.id)
+        console.log(`✅ Deleted: ${user.email}`)
+      }
+      
+      // Database cleanup handled by cascading deletes
+      await supabase.from('teacher_profiles').delete().eq('id', DEMO_TEACHER_ID)
+      await supabase.from('classes').delete().eq('id', DEMO_CLASS_ID)
     }
 
-    console.log('Creating demo teacher...')
+    // Create teacher auth user
+    console.log('👨‍🏫 Creating demo teacher...')
+    const teacherEmail = 'demo.teacher@tailoredu.com'
     
-    // Create demo teacher profile
-    const teacherId = DEMO_TEACHER_ID
-    
-    // First try to delete if exists
-    await supabase
-      .from('teacher_profiles')
-      .delete()
-      .eq('id', teacherId)
-    
-    const { error: teacherError } = await supabase
+    const { data: teacherAuth, error: teacherAuthError } = await supabase.auth.admin.createUser({
+      email: teacherEmail,
+      password: DEMO_PASSWORD,
+      email_confirm: true,
+      user_metadata: {
+        full_name: 'Demo Teacher',
+        role: 'teacher'
+      }
+    })
+
+    if (teacherAuthError) {
+      console.error('❌ Teacher auth error:', teacherAuthError)
+      throw new Error(`Failed to create teacher: ${teacherAuthError.message}`)
+    }
+
+    const teacherUserId = teacherAuth.user.id
+    console.log(`✅ Teacher created: ${teacherEmail}`)
+
+    // Create teacher profile
+    const { error: teacherProfileError } = await supabase
       .from('teacher_profiles')
       .insert({
-        id: teacherId,
-        user_id: teacherId,
-        school_name: 'Lincoln Elementary School',
-        grade_levels: ['5'],
-        subjects: ['Science'],
-        years_experience: 8,
-        onboarding_completed: true
+        id: DEMO_TEACHER_ID,
+        user_id: teacherUserId
       })
 
-    if (teacherError) {
-      console.error('Error creating teacher:', teacherError)
-      throw teacherError
+    if (teacherProfileError) {
+      console.error('❌ Teacher profile error:', teacherProfileError)
+      throw teacherProfileError
     }
 
-    console.log('Creating demo class...')
-    
-    // Create demo class
-    const classId = DEMO_CLASS_ID
+    // Create class
+    console.log('🏫 Creating demo class...')
     const { error: classError } = await supabase
       .from('classes')
-      .upsert({
-        id: classId,
-        name: '5th Grade Science - Room 204',
+      .insert({
+        id: DEMO_CLASS_ID,
+        teacher_id: DEMO_TEACHER_ID,
+        name: '7th Grade Science - Adaptive Assessment Demo',
+        description: 'Demo classroom with AI-powered adaptive assessments',
         subject: 'Science',
-        grade_level: '5',
-        teacher_id: teacherId,
-        published: true,
-        status: 'active'
+        grade_level: '7th',
+        status: 'active',
+        published: true
       })
 
     if (classError) {
-      console.error('Error creating class:', classError)
+      console.error('❌ Class error:', classError)
       throw classError
     }
 
-    console.log('Creating demo students...')
-    
-    // Create 15 demo students
-    const studentData = DEMO_SUBMISSIONS.photosynthesis.map((submission, index) => ({
-      id: DEMO_STUDENT_IDS[index],
-      user_id: DEMO_STUDENT_IDS[index],
-      first_name: submission.name.split(' ')[0],
-      last_name: submission.name.split(' ')[1],
-      grade_level: '5',
-      class_id: null
-    }))
+    // Create students
+    console.log('👥 Creating demo students...')
+    const studentCredentials = []
 
-    const { error: studentsError } = await supabase
-      .from('students')
-      .upsert(studentData)
-
-    if (studentsError) {
-      console.error('Error creating students:', studentsError)
-      throw studentsError
-    }
-
-    console.log('Enrolling students in class...')
-    
-    // Enroll students in class
-    const enrollmentData = studentData.map(student => ({
-      class_id: classId,
-      student_id: student.id,
-      status: 'active'
-    }))
-
-    const { error: enrollmentError } = await supabase
-      .from('class_students')
-      .upsert(enrollmentData)
-
-    if (enrollmentError) {
-      console.error('Error enrolling students:', enrollmentError)
-      throw enrollmentError
-    }
-
-    console.log('Creating demo assignments...')
-    
-    // Create 3 assignments
-    const assignments = [
-      {
-        id: DEMO_ASSIGNMENT_IDS[0],
-        class_id: classId,
-        title: 'Photosynthesis Explanation',
-        description: 'Explain how plants make food from sunlight.',
-        instructions: 'Explain how plants make food from sunlight. Include the inputs (what goes in), the process (what happens), and the outputs (what comes out). Use at least 3 scientific terms.',
-        due_date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        max_points: 100,
-        rubric: JSON.stringify({
-          criteria: [
-            { name: 'Scientific Accuracy', points: 25, description: 'Correct scientific information' },
-            { name: 'Completeness', points: 25, description: 'Includes inputs, process, and outputs' },
-            { name: 'Use of Scientific Terms', points: 25, description: 'Uses at least 3 scientific terms correctly' },
-            { name: 'Clarity', points: 25, description: 'Clear and organized explanation' }
-          ]
-        }),
-        options: {}
-      },
-      {
-        id: DEMO_ASSIGNMENT_IDS[1],
-        class_id: classId,
-        title: 'Water Cycle Diagram & Description',
-        description: 'Explain the water cycle.',
-        instructions: 'Draw or describe the water cycle. Explain evaporation, condensation, precipitation, and collection.',
-        due_date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        max_points: 100,
-        options: {}
-      },
-      {
-        id: DEMO_ASSIGNMENT_IDS[2],
-        class_id: classId,
-        title: 'Animal Adaptations Essay',
-        description: 'Explain animal adaptations.',
-        instructions: 'Choose an animal and explain how its physical features help it survive in its environment. Give at least 3 examples.',
-        due_date: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        max_points: 100,
-        options: {}
-      }
-    ]
-
-    const { error: assignmentsError } = await supabase
-      .from('class_assignments_new')
-      .upsert(assignments)
-
-    if (assignmentsError) {
-      console.error('Error creating assignments:', assignmentsError)
-      throw assignmentsError
-    }
-
-    console.log('Creating demo submissions...')
-    
-    // Create submissions for Assignment 1
-    const submissionData = DEMO_SUBMISSIONS.photosynthesis.map((submission, index) => ({
-      assignment_id: DEMO_ASSIGNMENT_IDS[0],
-      user_id: DEMO_STUDENT_IDS[index],
-      text_response: submission.text,
-      status: 'submitted',
-      submitted_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString()
-    }))
-
-    const { data: submissions, error: submissionsError } = await supabase
-      .from('assignment_submissions')
-      .upsert(submissionData)
-      .select()
-
-    if (submissionsError) {
-      console.error('Error creating submissions:', submissionsError)
-      throw submissionsError
-    }
-
-    console.log(`Created ${submissions?.length || 0} submissions`)
-
-    // Trigger analysis for each submission
-    console.log('Triggering AI analysis for all submissions...')
-    
-    let analyzed = 0
-    let errors = 0
-
-    for (const submission of submissions || []) {
+    for (const student of DEMO_STUDENTS) {
       try {
-        const { error: analyzeError } = await supabase.functions.invoke(
-          'analyze-submission',
-          {
-            body: {
-              submissionId: submission.id,
-              assignmentId: submission.assignment_id
-            }
+        const { data: studentAuth, error: studentAuthError } = await supabase.auth.admin.createUser({
+          email: student.email,
+          password: DEMO_PASSWORD,
+          email_confirm: true,
+          user_metadata: {
+            full_name: `${student.firstName} ${student.lastName}`,
+            role: 'student'
           }
-        )
+        })
 
-        if (analyzeError) {
-          console.error(`Error analyzing submission ${submission.id}:`, analyzeError)
-          errors++
-        } else {
-          analyzed++
-          console.log(`✓ Analyzed submission ${analyzed}/${submissions.length}`)
+        if (studentAuthError) {
+          console.error(`⚠️ Failed: ${student.email}`, studentAuthError)
+          continue
         }
+
+        const studentUserId = studentAuth.user.id
+
+        await supabase.from('students').insert({
+          id: student.id,
+          user_id: studentUserId,
+          first_name: student.firstName,
+          last_name: student.lastName,
+          grade_level: student.gradeLevel,
+          reading_level: student.readingLevel
+        })
+
+        await supabase.from('class_students').insert({
+          class_id: DEMO_CLASS_ID,
+          student_id: student.id,
+          status: 'active'
+        })
+
+        studentCredentials.push({
+          email: student.email,
+          password: DEMO_PASSWORD,
+          name: `${student.firstName} ${student.lastName}`,
+          readingLevel: student.readingLevel
+        })
+
+        console.log(`✅ Created: ${student.email}`)
       } catch (error) {
-        console.error(`Error analyzing submission ${submission.id}:`, error)
-        errors++
+        console.error(`⚠️ Error: ${student.email}`, error)
       }
     }
+
+    console.log('✅ Demo environment ready!')
 
     return new Response(
       JSON.stringify({
         success: true,
-        message: 'Demo classroom created successfully',
+        message: 'Demo environment created successfully',
+        teacher: {
+          email: teacherEmail,
+          password: DEMO_PASSWORD,
+          name: 'Demo Teacher'
+        },
+        students: studentCredentials,
+        class: {
+          id: DEMO_CLASS_ID,
+          name: '7th Grade Science - Adaptive Assessment Demo'
+        },
         stats: {
-          teacher: 1,
-          class: 1,
-          students: studentData.length,
-          assignments: assignments.length,
-          submissions: submissions?.length || 0,
-          analyzed,
-          errors
+          studentsCreated: studentCredentials.length
         }
       }),
       {
@@ -367,9 +200,12 @@ serve(async (req) => {
       }
     )
   } catch (error) {
-    console.error('Error in seed-demo-classroom:', error)
+    console.error('❌ Seed error:', error)
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({
+        success: false,
+        error: error.message || 'Unknown error'
+      }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500
