@@ -65,20 +65,48 @@ export function AdaptiveTestPage() {
         return;
       }
 
-      // Create the submission
-      const { data: submission, error: submissionError } = await supabase
+      // Check if submission already exists for this assignment
+      const { data: existingSubmission } = await supabase
         .from('assignment_submissions')
-        .insert({
-          user_id: user.id,
-          assignment_id: assignmentId,
-          text_response: studentWork,
-          status: 'submitted',
-          submitted_at: new Date().toISOString(),
-        })
-        .select()
-        .single();
+        .select('id')
+        .eq('assignment_id', assignmentId)
+        .eq('user_id', user.id)
+        .maybeSingle();
 
-      if (submissionError) throw submissionError;
+      let submission;
+      
+      if (existingSubmission) {
+        // Update existing submission
+        const { data: updated, error: updateError } = await supabase
+          .from('assignment_submissions')
+          .update({
+            text_response: studentWork,
+            status: 'submitted',
+            submitted_at: new Date().toISOString(),
+          })
+          .eq('id', existingSubmission.id)
+          .select()
+          .single();
+        
+        if (updateError) throw updateError;
+        submission = updated;
+      } else {
+        // Create new submission
+        const { data: created, error: createError } = await supabase
+          .from('assignment_submissions')
+          .insert({
+            user_id: user.id,
+            assignment_id: assignmentId,
+            text_response: studentWork,
+            status: 'submitted',
+            submitted_at: new Date().toISOString(),
+          })
+          .select()
+          .single();
+
+        if (createError) throw createError;
+        submission = created;
+      }
 
       setSubmissionId(submission.id);
       toast({
