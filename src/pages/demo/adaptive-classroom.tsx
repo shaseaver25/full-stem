@@ -36,6 +36,9 @@ export default function AdaptiveClassroomDemo() {
   // Demo seeding hook
   const { mutate: seedDemo, isPending: isSeeding } = useSeedDemoEnvironment()
 
+  // Demo class UUID constant
+  const DEMO_CLASS_ID = '00000000-0000-0000-0002-000000000001'
+
   // Check if demo data exists
   const { data: demoClass, isLoading: isCheckingDemo } = useQuery({
     queryKey: ['demo-class'],
@@ -43,7 +46,7 @@ export default function AdaptiveClassroomDemo() {
       const { data, error } = await supabase
         .from('classes')
         .select('*')
-        .eq('id', 'demo_class_001')
+        .eq('id', DEMO_CLASS_ID)
         .single()
       
       if (error) throw error
@@ -58,7 +61,7 @@ export default function AdaptiveClassroomDemo() {
       const { data, error } = await supabase
         .from('class_assignments_new')
         .select('*')
-        .eq('class_id', 'demo_class_001')
+        .eq('class_id', DEMO_CLASS_ID)
         .order('created_at', { ascending: true })
       
       if (error) throw error
