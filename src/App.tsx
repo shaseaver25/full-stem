@@ -199,6 +199,18 @@ function AppContent() {
         <Route path="/trial" element={<ErrorBoundary><TrialPage /></ErrorBoundary>} />
         <Route path="/pilot-interest" element={<ErrorBoundary><PilotInterest /></ErrorBoundary>} />
         
+        {/* Adaptive Assessment Test Page */}
+        <Route 
+          path="/test/adaptive-assessment" 
+          element={
+            <ErrorBoundary>
+              <RequireRole allowedRoles={['teacher', 'super_admin', 'developer']}>
+                <AdaptiveTestPage />
+              </RequireRole>
+            </ErrorBoundary>
+          } 
+        />
+        
         {/* Conference Demo Routes - Public Access */}
         <Route path="/conference/demo" element={<ErrorBoundary><ConferenceDemo /></ErrorBoundary>} />
         <Route path="/conference/session/:sessionId" element={<ErrorBoundary><ConferenceSession /></ErrorBoundary>} />
