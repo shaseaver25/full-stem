@@ -22,9 +22,9 @@ serve(async (req) => {
       );
     }
 
-    const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
-    if (!OPENAI_API_KEY) {
-      throw new Error('OpenAI API key not configured');
+    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    if (!LOVABLE_API_KEY) {
+      throw new Error('Lovable API key not configured');
     }
 
     const supabaseClient = createClient(
@@ -76,21 +76,21 @@ serve(async (req) => {
     formData.append('response_format', 'verbose_json');
     formData.append('timestamp_granularities[]', 'segment');
 
-    console.log('Sending to OpenAI Whisper API...');
+    console.log('Sending to Lovable AI Whisper API...');
 
-    // Send to OpenAI Whisper API
-    const whisperResponse = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+    // Send to Lovable AI Whisper API
+    const whisperResponse = await fetch('https://ai.gateway.lovable.dev/v1/audio/transcriptions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${OPENAI_API_KEY}`,
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
       },
       body: formData,
     });
 
     if (!whisperResponse.ok) {
       const errorText = await whisperResponse.text();
-      console.error('OpenAI API error:', errorText);
-      throw new Error(`OpenAI API error: ${errorText}`);
+      console.error('Lovable AI API error:', errorText);
+      throw new Error(`Lovable AI API error: ${errorText}`);
     }
 
     const transcriptionData = await whisperResponse.json();
