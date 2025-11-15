@@ -297,7 +297,7 @@ serve(async (req) => {
           teacher_profiles!inner(user_id)
         )
       `)
-      .eq('id', submission.assignments!.id)
+      .eq('id', submission.class_assignments_new!.id)
       .single();
 
     if (assignmentInfo?.classes?.teacher_profiles?.user_id) {
