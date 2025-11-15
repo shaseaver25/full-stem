@@ -47,6 +47,40 @@ export const useElevenLabsTTSPublic = (language?: string) => {
         }
       });
 
+      // Check for quota exceeded error and fallback to browser TTS
+      if (error?.message?.includes('quota_exceeded') || error?.message?.includes('401') || 
+          data?.error?.includes('quota_exceeded') || data?.error?.includes('401')) {
+        console.warn('ElevenLabs quota exceeded, falling back to browser TTS');
+        
+        // Use browser's Web Speech API as fallback
+        if ('speechSynthesis' in window) {
+          const utterance = new SpeechSynthesisUtterance(text);
+          utterance.rate = rate;
+          
+          utterance.onstart = () => {
+            setIsPlaying(true);
+            setIsLoading(false);
+          };
+          
+          utterance.onend = () => {
+            setIsPlaying(false);
+            setIsPaused(false);
+          };
+          
+          utterance.onerror = (event) => {
+            console.error('Browser TTS error:', event);
+            setIsPlaying(false);
+            setError('Speech playback failed');
+            setIsLoading(false);
+          };
+          
+          window.speechSynthesis.speak(utterance);
+          return; // Exit early after starting browser TTS
+        } else {
+          throw new Error('ElevenLabs credits exhausted and browser speech not available');
+        }
+      }
+
       if (error) {
         console.error('Supabase function error:', error);
         throw new Error(`Failed to generate speech: ${error.message || 'Unknown error'}`);

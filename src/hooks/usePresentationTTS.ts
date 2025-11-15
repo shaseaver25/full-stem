@@ -95,6 +95,43 @@ export function usePresentationTTS() {
         },
       });
 
+      // Check for quota exceeded error and fallback to browser TTS
+      if (error || (data?.error && (data.error.includes('quota_exceeded') || data.error.includes('401')))) {
+        console.warn('ElevenLabs quota exceeded, falling back to browser TTS');
+        toast({
+          title: 'Using Browser Voice',
+          description: 'ElevenLabs credits exhausted. Using browser text-to-speech instead.',
+          variant: 'default',
+        });
+        
+        // Fallback to browser's Web Speech API
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = 1.0;
+        utterance.onstart = () => {
+          setIsPlaying(true);
+          setIsPaused(false);
+        };
+        utterance.onend = () => {
+          setIsPlaying(false);
+          setIsPaused(false);
+          setCurrentWordIndex(-1);
+        };
+        utterance.onerror = () => {
+          setIsPlaying(false);
+          setIsPaused(false);
+          setCurrentWordIndex(-1);
+          toast({
+            title: 'Playback Error',
+            description: 'Failed to play audio.',
+            variant: 'destructive',
+          });
+        };
+        
+        window.speechSynthesis.speak(utterance);
+        setIsLoading(false);
+        return;
+      }
+
       if (error) {
         console.error('TTS error:', error);
         toast({
