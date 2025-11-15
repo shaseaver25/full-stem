@@ -14,13 +14,14 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { Volume2, Globe, Contrast, Type, Accessibility, Eye, EyeOff, Moon, Sun, Move } from 'lucide-react';
+import { Volume2, Globe, Contrast, Type, Accessibility, Eye, EyeOff, Moon, Sun, Move, Minimize2, Maximize2 } from 'lucide-react';
 
 export function AccessibilityToolbar() {
   const { settings, updateSettings, isLoading } = useAccessibility();
   const { focusMode, setFocusMode } = useFocusMode();
   const { theme, setTheme } = useTheme();
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isMinimized, setIsMinimized] = useState(false);
   const [position, setPosition] = useState({ x: 20, y: 20 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
@@ -106,6 +107,31 @@ export function AccessibilityToolbar() {
         >
           <Move className="h-4 w-4 text-muted-foreground" />
         </div>
+
+        {/* Minimize/Maximize Toggle */}
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="rounded-full h-8 w-8"
+              aria-label={isMinimized ? "Expand toolbar" : "Minimize toolbar"}
+              onClick={() => setIsMinimized(!isMinimized)}
+            >
+              {isMinimized ? (
+                <Maximize2 className="h-4 w-4" />
+              ) : (
+                <Minimize2 className="h-4 w-4" />
+              )}
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="top">
+            <p>{isMinimized ? 'Expand' : 'Minimize'}</p>
+          </TooltipContent>
+        </Tooltip>
+
+        {!isMinimized && (
+          <>
         
         {/* Text-to-Speech */}
         <Tooltip>
@@ -220,6 +246,8 @@ export function AccessibilityToolbar() {
             <p>Dark Mode {settings.darkMode ? 'Enabled' : 'Disabled'}</p>
           </TooltipContent>
         </Tooltip>
+        </>
+        )}
       </div>
 
       {/* Mobile Toolbar - Shown on mobile as collapsible menu */}
