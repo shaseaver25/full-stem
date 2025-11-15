@@ -37,57 +37,20 @@ serve(async (req) => {
     // First, cleanup any existing demo data
     console.log('🗑️ Cleaning up existing demo data...')
     
-    // Delete existing auth users with demo emails
+    // Step 1: Find and collect all user IDs for demo students
+    const demoUserIds: string[] = []
+    const { data: users } = await supabase.auth.admin.listUsers()
+    
     for (const student of DEMO_STUDENTS) {
-      try {
-        // List all users and find the one with matching email
-        const { data: users } = await supabase.auth.admin.listUsers()
-        const existingUser = users?.users.find(u => u.email === student.email)
-        
-        if (existingUser) {
-          console.log(`Deleting user ${student.email} (${existingUser.id})...`)
-          
-          // Delete student profile first
-          const { error: studentDeleteError } = await supabase
-            .from('students')
-            .delete()
-            .eq('user_id', existingUser.id)
-          
-          if (studentDeleteError) {
-            console.log(`Student delete error for ${student.email}:`, studentDeleteError)
-          }
-          
-          // Then delete auth user (this will cascade delete if configured)
-          const { error: authDeleteError } = await supabase.auth.admin.deleteUser(existingUser.id)
-          
-          if (authDeleteError) {
-            console.log(`Auth delete error for ${student.email}:`, authDeleteError)
-          } else {
-            console.log(`✓ Deleted existing user: ${student.email}`)
-          }
-        }
-      } catch (e) {
-        console.error(`❌ Error deleting ${student.email}:`, e)
+      const existingUser = users?.users.find(u => u.email === student.email)
+      if (existingUser) {
+        demoUserIds.push(existingUser.id)
       }
     }
     
-    // Also delete any orphaned student profiles with these emails
-    for (const student of DEMO_STUDENTS) {
-      try {
-        const { error } = await supabase
-          .from('students')
-          .delete()
-          .or(`first_name.eq.${student.firstName},last_name.eq.${student.lastName}`)
-        
-        if (error) {
-          console.log(`Could not delete orphaned profile for ${student.firstName}:`, error)
-        }
-      } catch (e) {
-        console.log(`Could not check for orphaned profiles:`, e)
-      }
-    }
+    console.log(`Found ${demoUserIds.length} existing demo users`)
     
-    // Delete existing demo class
+    // Step 2: Delete demo class and related data
     try {
       const { data: existingClass } = await supabase
         .from('classes')
@@ -103,7 +66,48 @@ serve(async (req) => {
         console.log('✓ Cleaned up existing demo class')
       }
     } catch (e) {
-      console.log('ℹ️ No existing class to clean up')
+      console.log('ℹ️ No existing class to clean up:', e)
+    }
+    
+    // Step 3: Delete class_students for demo users (any remaining enrollments)
+    if (demoUserIds.length > 0) {
+      const { data: studentIds } = await supabase
+        .from('students')
+        .select('id')
+        .in('user_id', demoUserIds)
+      
+      if (studentIds && studentIds.length > 0) {
+        const studentIdList = studentIds.map(s => s.id)
+        await supabase.from('class_students').delete().in('student_id', studentIdList)
+        console.log(`✓ Deleted class enrollments for ${studentIdList.length} students`)
+      }
+    }
+    
+    // Step 4: Delete student profiles
+    if (demoUserIds.length > 0) {
+      const { error: studentDeleteError } = await supabase
+        .from('students')
+        .delete()
+        .in('user_id', demoUserIds)
+      
+      if (studentDeleteError) {
+        console.log('Student delete error:', studentDeleteError)
+      } else {
+        console.log(`✓ Deleted ${demoUserIds.length} student profiles`)
+      }
+    }
+    
+    // Step 5: Delete auth users
+    for (const student of DEMO_STUDENTS) {
+      try {
+        const existingUser = users?.users.find(u => u.email === student.email)
+        if (existingUser) {
+          await supabase.auth.admin.deleteUser(existingUser.id)
+          console.log(`✓ Deleted auth user: ${student.email}`)
+        }
+      } catch (e) {
+        console.log(`Could not delete auth user ${student.email}:`, e)
+      }
     }
 
     // Step 1: Create auth users and student profiles
