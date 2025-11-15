@@ -680,6 +680,10 @@ export default function LessonBuilderPage() {
                       setClassId={setClassId}
                     />
 
+                    <div className="mt-6">
+                      <AddComponentButton onSelect={handleAddComponent} />
+                    </div>
+
                     <div className="mt-8">
                       <ComponentList
                         components={components}
@@ -688,10 +692,6 @@ export default function LessonBuilderPage() {
                         onReorder={handleReorderComponents}
                         lessonId={lessonId}
                       />
-                    </div>
-
-                    <div className="mt-6">
-                      <AddComponentButton onSelect={handleAddComponent} />
                     </div>
                   </>
                 )}
