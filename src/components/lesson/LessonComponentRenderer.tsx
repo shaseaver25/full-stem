@@ -18,6 +18,7 @@ import { QuizStudentView } from '@/components/quiz/QuizStudentView';
 import { PollStudentView } from '@/components/poll/PollStudentView';
 import CodeIDE from './CodeIDE';
 import { FlashcardLesson } from '@/components/lessons/FlashcardLesson';
+import { LessonVideoPlayer } from '@/components/video/LessonVideoPlayer';
 
 const SUPPORTED_LANGUAGES = [
   { code: 'en', name: 'English' },
@@ -340,6 +341,12 @@ export function LessonComponentRenderer({
 
   // Render video/multimedia component with translation and TTS
   if (component_type === 'video' || component_type === 'multimedia') {
+    // Use new transcription player for uploaded videos
+    const uploadedFile = content.uploadedFiles?.[0];
+    if (uploadedFile) {
+      return <LessonVideoPlayer componentId={id} videoUrl={uploadedFile.url} title={content.title} content={content} />;
+    }
+    
     return <VideoComponentWithControls content={content} read_aloud={read_aloud} language_code={language_code} textContent={textContent} showTypeLabel={showTypeLabel} />;
   }
 
