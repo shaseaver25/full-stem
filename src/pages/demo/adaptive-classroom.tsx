@@ -321,18 +321,24 @@ export default function AdaptiveClassroomDemo() {
                 <CardDescription>{assignment.instructions}</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                  <div className="flex items-center gap-1">
-                    <Clock className="h-4 w-4" />
-                    Due: {new Date(assignment.due_date).toLocaleDateString()}
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground font-mono bg-muted/50 p-2 rounded">
+                    <span className="font-semibold">Assignment ID:</span>
+                    <code>{assignment.id}</code>
                   </div>
-                  <div className="flex items-center gap-1">
-                    <CheckCircle className="h-4 w-4" />
-                    {getSubmissionsForAssignment(assignment.id).filter(s => s.status === 'submitted').length} submitted
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <AlertCircle className="h-4 w-4" />
-                    {getSubmissionsForAssignment(assignment.id).filter(s => s.analysis).length} analyzed
+                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                    <div className="flex items-center gap-1">
+                      <Clock className="h-4 w-4" />
+                      Due: {new Date(assignment.due_date).toLocaleDateString()}
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <CheckCircle className="h-4 w-4" />
+                      {getSubmissionsForAssignment(assignment.id).filter(s => s.status === 'submitted').length} submitted
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <AlertCircle className="h-4 w-4" />
+                      {getSubmissionsForAssignment(assignment.id).filter(s => s.analysis).length} analyzed
+                    </div>
                   </div>
                 </div>
               </CardContent>
