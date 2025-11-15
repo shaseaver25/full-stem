@@ -45,6 +45,9 @@ serve(async (req) => {
         const existingUser = users?.users.find(u => u.email === student.email)
         
         if (existingUser) {
+          // Delete student profile first (before auth user)
+          await supabase.from('students').delete().eq('user_id', existingUser.id)
+          // Then delete auth user
           await supabase.auth.admin.deleteUser(existingUser.id)
           console.log(`✓ Deleted existing user: ${student.email}`)
         }
