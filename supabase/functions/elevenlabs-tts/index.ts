@@ -1,5 +1,5 @@
-// ElevenLabs TTS Edge Function - Version 2024-11-15
-// Updated to force redeployment with new API key
+// ElevenLabs TTS Edge Function - Version 2025-01-15
+// Force redeploy to pick up updated API key with 110k credits
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 
 const corsHeaders = {
