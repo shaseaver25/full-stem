@@ -45,14 +45,45 @@ serve(async (req) => {
         const existingUser = users?.users.find(u => u.email === student.email)
         
         if (existingUser) {
-          // Delete student profile first (before auth user)
-          await supabase.from('students').delete().eq('user_id', existingUser.id)
-          // Then delete auth user
-          await supabase.auth.admin.deleteUser(existingUser.id)
-          console.log(`✓ Deleted existing user: ${student.email}`)
+          console.log(`Deleting user ${student.email} (${existingUser.id})...`)
+          
+          // Delete student profile first
+          const { error: studentDeleteError } = await supabase
+            .from('students')
+            .delete()
+            .eq('user_id', existingUser.id)
+          
+          if (studentDeleteError) {
+            console.log(`Student delete error for ${student.email}:`, studentDeleteError)
+          }
+          
+          // Then delete auth user (this will cascade delete if configured)
+          const { error: authDeleteError } = await supabase.auth.admin.deleteUser(existingUser.id)
+          
+          if (authDeleteError) {
+            console.log(`Auth delete error for ${student.email}:`, authDeleteError)
+          } else {
+            console.log(`✓ Deleted existing user: ${student.email}`)
+          }
         }
       } catch (e) {
-        console.log(`ℹ️ Could not delete ${student.email}:`, e)
+        console.error(`❌ Error deleting ${student.email}:`, e)
+      }
+    }
+    
+    // Also delete any orphaned student profiles with these emails
+    for (const student of DEMO_STUDENTS) {
+      try {
+        const { error } = await supabase
+          .from('students')
+          .delete()
+          .or(`first_name.eq.${student.firstName},last_name.eq.${student.lastName}`)
+        
+        if (error) {
+          console.log(`Could not delete orphaned profile for ${student.firstName}:`, error)
+        }
+      } catch (e) {
+        console.log(`Could not check for orphaned profiles:`, e)
       }
     }
     
