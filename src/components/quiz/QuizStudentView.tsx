@@ -13,6 +13,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useTextToSpeech } from '@/hooks/useTextToSpeech';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useAccessibility } from '@/contexts/AccessibilityContext';
+import { LanguageSelector } from '@/components/LanguageSelector';
 
 // Temporary type definitions until Supabase types are regenerated
 interface QuizComponentData {
@@ -610,6 +611,11 @@ export function QuizStudentView({ componentId, read_aloud = true, quizData: prel
           <p className="text-lg font-semibold">{quizData.title}</p>
         </CardHeader>
         <CardContent className="space-y-4">
+          {/* Language Selector */}
+          <div className="flex items-center justify-between gap-4 p-4 bg-muted/50 rounded-lg border">
+            <LanguageSelector />
+          </div>
+
           <div className="flex justify-center gap-8 text-sm">
             <div>📋 {quizData.questions.length} Questions</div>
             {quizData.time_limit_minutes && <div>⏱️ {quizData.time_limit_minutes} Minutes</div>}
@@ -777,18 +783,16 @@ export function QuizStudentView({ componentId, read_aloud = true, quizData: prel
                   {isSpeaking ? 'Speaking...' : 'Read Aloud'}
                 </Button>
               )}
-              {translationEnabled && settings.preferredLanguage !== 'en' && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleTranslateQuestion}
-                  disabled={isTranslating}
-                  title="Translate question"
-                >
-                  <Languages className="h-4 w-4 mr-1" />
-                  {isTranslating ? 'Translating...' : showTranslation ? 'Show Original' : 'Translate'}
-                </Button>
-              )}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleTranslateQuestion}
+                disabled={isTranslating}
+                title="Translate question"
+              >
+                <Languages className="h-4 w-4 mr-1" />
+                {isTranslating ? 'Translating...' : showTranslation ? 'Show Original' : 'Translate'}
+              </Button>
             </div>
           </div>
 
