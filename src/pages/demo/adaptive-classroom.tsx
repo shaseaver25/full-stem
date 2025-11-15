@@ -36,49 +36,65 @@ export default function AdaptiveClassroomDemo() {
   // Demo seeding hook
   const { mutate: seedDemo, isPending: isSeeding } = useSeedDemoEnvironment()
 
-  // Demo class UUID constant
-  const DEMO_CLASS_ID = '00000000-0000-0000-0002-000000000001'
-
-  // Check if demo data exists
+  // Fetch demo class by name instead of hardcoded ID
   const { data: demoClass, isLoading: isCheckingDemo } = useQuery({
     queryKey: ['demo-class'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('classes')
-        .select('*')
-        .eq('id', DEMO_CLASS_ID)
-        .single()
+        .select('*, teacher_profiles(*)')
+        .eq('name', 'Demo Class - 5th Grade Science')
+        .maybeSingle()
       
       if (error) throw error
       return data
     }
   })
 
-  // Fetch demo assignments
+  // Fetch students enrolled in the demo class
+  const { data: demoStudents } = useQuery({
+    queryKey: ['demo-students', demoClass?.id],
+    enabled: !!demoClass?.id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('class_students')
+        .select('*, students(*)')
+        .eq('class_id', demoClass!.id)
+        .eq('status', 'active')
+      
+      if (error) throw error
+      return data
+    }
+  })
+
+  // Fetch demo assignments using the actual class ID
   const { data: assignments } = useQuery({
-    queryKey: ['demo-assignments'],
+    queryKey: ['demo-assignments', demoClass?.id],
+    enabled: !!demoClass?.id,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('class_assignments_new')
         .select('*')
-        .eq('class_id', DEMO_CLASS_ID)
+        .eq('class_id', demoClass!.id)
         .order('created_at', { ascending: true })
       
       if (error) throw error
-      return data
+      return data || []
     }
   })
 
   // Fetch submissions with analyses
   const { data: submissions, isLoading } = useQuery({
-    queryKey: ['demo-submissions'],
+    queryKey: ['demo-submissions', assignments],
+    enabled: !!assignments && assignments.length > 0,
     queryFn: async () => {
+      const assignmentIds = assignments!.map(a => a.id)
       const { data, error } = await supabase
         .from('assignment_submissions')
         .select(`
           *
         `)
-        .in('assignment_id', ['demo_assignment_001', 'demo_assignment_002', 'demo_assignment_003'])
+        .in('assignment_id', assignmentIds)
         .order('user_id', { ascending: true })
       
       if (error) throw error
@@ -88,7 +104,7 @@ export default function AdaptiveClassroomDemo() {
       const { data: students, error: studentsError } = await supabase
         .from('students')
         .select('id, first_name, last_name, user_id')
-        .in('id', userIds)
+        .in('user_id', userIds)
       
       if (studentsError) throw studentsError
 
@@ -103,7 +119,7 @@ export default function AdaptiveClassroomDemo() {
 
       // Merge everything
       return data.map(submission => {
-        const student = students?.find(s => s.id === submission.user_id)
+        const student = students?.find(s => s.user_id === submission.user_id)
         return {
           ...submission,
           student_name: student ? `${student.first_name} ${student.last_name}` : 'Unknown',
@@ -143,6 +159,7 @@ export default function AdaptiveClassroomDemo() {
         description: `Created ${data.data.students.length} students, 1 class, and 1 assignment`,
       })
       queryClient.invalidateQueries({ queryKey: ['demo-class'] })
+      queryClient.invalidateQueries({ queryKey: ['demo-students'] })
       queryClient.invalidateQueries({ queryKey: ['demo-assignments'] })
       queryClient.invalidateQueries({ queryKey: ['demo-submissions'] })
     },
@@ -234,7 +251,7 @@ export default function AdaptiveClassroomDemo() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {[...new Set(submissions?.map(s => s.user_id))].length || 0}
+              {demoStudents?.length || 0}
             </div>
           </CardContent>
         </Card>
@@ -312,52 +329,63 @@ export default function AdaptiveClassroomDemo() {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
-                {getSubmissionsForAssignment(assignment.id).map((submission) => {
-                  const masteryLevel = getMasteryLevel(submission.analysis)
-                  
-                  return (
-                    <Card
-                      key={submission.id}
-                      className="cursor-pointer hover:shadow-lg transition-shadow"
-                      onClick={() => setSelectedStudent(submission)}
-                    >
-                      <CardContent className="p-4 space-y-3">
-                        <div className="flex items-center gap-2">
-                          <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center">
-                            <User className="h-5 w-5" />
+                {demoStudents?.length === 0 ? (
+                  <div className="col-span-full text-center py-8 text-muted-foreground">
+                    No students enrolled yet. Click "Create Demo Students" to add students.
+                  </div>
+                ) : (
+                  demoStudents?.map((enrollment: any) => {
+                    const student = enrollment.students
+                    const submission = getSubmissionsForAssignment(assignment.id).find(
+                      s => s.user_id === student.user_id
+                    )
+                    const masteryLevel = submission ? getMasteryLevel(submission.analysis) : 'needs-support'
+                    
+                    return (
+                      <Card
+                        key={student.id}
+                        className={submission ? "cursor-pointer hover:shadow-lg transition-shadow" : ""}
+                        onClick={() => submission && setSelectedStudent(submission)}
+                      >
+                        <CardContent className="p-4 space-y-3">
+                          <div className="flex items-center gap-2">
+                            <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center">
+                              <User className="h-5 w-5" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium text-sm truncate">
+                                {student.first_name} {student.last_name}
+                              </p>
+                            </div>
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="font-medium text-sm truncate">
-                              {submission.student_name}
-                            </p>
-                          </div>
-                        </div>
-                        
-                        <div className="space-y-2">
-                          {submission.analysis ? (
-                            <>
-                              <div className={`h-2 w-full rounded-full ${MASTERY_COLORS[masteryLevel]}`} />
-                              <Badge variant="outline" className="w-full justify-center">
-                                {MASTERY_LABELS[masteryLevel]}
-                              </Badge>
-                            </>
-                          ) : (
-                            <Badge variant="secondary" className="w-full justify-center">
-                              Not Analyzed
-                            </Badge>
-                          )}
                           
-                          <Badge
-                            variant={submission.status === 'submitted' ? 'default' : 'secondary'}
-                            className="w-full justify-center"
-                          >
-                            {submission.status === 'submitted' ? 'Submitted' : 'Draft'}
-                          </Badge>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  )
-                })}
+                          <div className="space-y-2">
+                            {submission?.analysis ? (
+                              <>
+                                <div className={`h-2 w-full rounded-full ${MASTERY_COLORS[masteryLevel]}`} />
+                                <Badge variant="outline" className="w-full justify-center">
+                                  {MASTERY_LABELS[masteryLevel]}
+                                </Badge>
+                              </>
+                            ) : (
+                              <Badge variant="secondary" className="w-full justify-center">
+                                Not Analyzed
+                              </Badge>
+                            )}
+                            
+                            <Badge
+                              variant={submission?.status === 'submitted' ? 'default' : 'secondary'}
+                              className="w-full justify-center"
+                            >
+                              {submission?.status === 'submitted' ? 'Submitted' : 
+                               submission?.status === 'draft' ? 'Draft' : 'Not Started'}
+                            </Badge>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )
+                  })
+                )}
               </div>
             )}
           </TabsContent>
