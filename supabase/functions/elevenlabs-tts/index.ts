@@ -1,3 +1,5 @@
+// ElevenLabs TTS Edge Function - Version 2024-11-15
+// Updated to force redeployment with new API key
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 
 const corsHeaders = {
