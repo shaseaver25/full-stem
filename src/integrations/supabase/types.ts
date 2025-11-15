@@ -4248,6 +4248,141 @@ export type Database = {
         }
         Relationships: []
       }
+      video_transcripts: {
+        Row: {
+          content: string
+          created_at: string | null
+          id: string
+          language: string
+          segments: Json | null
+          updated_at: string | null
+          video_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          id?: string
+          language?: string
+          segments?: Json | null
+          updated_at?: string | null
+          video_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          id?: string
+          language?: string
+          segments?: Json | null
+          updated_at?: string | null
+          video_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_transcripts_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "videos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      video_translations: {
+        Row: {
+          content: string
+          created_at: string | null
+          id: string
+          language: string
+          segments: Json | null
+          transcript_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          id?: string
+          language: string
+          segments?: Json | null
+          transcript_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          id?: string
+          language?: string
+          segments?: Json | null
+          transcript_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_translations_transcript_id_fkey"
+            columns: ["transcript_id"]
+            isOneToOne: false
+            referencedRelation: "video_transcripts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      videos: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          duration_seconds: number | null
+          file_size: number | null
+          file_url: string
+          id: string
+          lesson_id: string | null
+          mime_type: string | null
+          thumbnail_url: string | null
+          title: string
+          transcription_error: string | null
+          transcription_status: string | null
+          updated_at: string | null
+          uploaded_by: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          duration_seconds?: number | null
+          file_size?: number | null
+          file_url: string
+          id?: string
+          lesson_id?: string | null
+          mime_type?: string | null
+          thumbnail_url?: string | null
+          title: string
+          transcription_error?: string | null
+          transcription_status?: string | null
+          updated_at?: string | null
+          uploaded_by: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          duration_seconds?: number | null
+          file_size?: number | null
+          file_url?: string
+          id?: string
+          lesson_id?: string | null
+          mime_type?: string | null
+          thumbnail_url?: string | null
+          title?: string
+          transcription_error?: string | null
+          transcription_status?: string | null
+          updated_at?: string | null
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "videos_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       weekly_digests: {
         Row: {
           ai_note_text: string

@@ -163,4 +163,10 @@ verify_jwt = true
 [functions.seed-demo-classroom]
 verify_jwt = false
 
+[functions.transcribe-video]
+verify_jwt = true
+
+[functions.translate-transcript]
+verify_jwt = true
+
 
