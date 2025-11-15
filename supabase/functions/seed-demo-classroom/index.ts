@@ -293,7 +293,7 @@ serve(async (req) => {
         message: 'Demo environment created successfully',
         data: {
           teacher: {
-            email: DEMO_TEACHER_EMAIL,
+            email: 'demo.teacher@tailoredu.com',
             password: DEMO_PASSWORD,
             name: 'Demo Teacher'
           },
