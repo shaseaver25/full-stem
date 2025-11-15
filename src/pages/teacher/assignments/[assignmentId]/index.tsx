@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useParams, Link } from "react-router-dom";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -9,13 +10,38 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { StatusChip } from "@/components/common/StatusChip";
 import { useTeacherSubmissions } from "@/hooks/useTeacherSubmissions";
-import { ArrowLeft, Download, RotateCcw, FileText } from "lucide-react";
+import { StudentAnalysisReviewModal } from "@/components/teacher/StudentAnalysisReviewModal";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { ArrowLeft, Download, RotateCcw, FileText, Sparkles, Loader2 } from "lucide-react";
 
 export default function TeacherAssignmentDetail() {
   const { assignmentId } = useParams<{ assignmentId: string }>();
   const { submissions, isLoading, requestResubmission, isRequestingResubmission, createSignedUrl } = useTeacherSubmissions(assignmentId!);
   const [resubmissionReason, setResubmissionReason] = useState('');
   const [selectedSubmissionId, setSelectedSubmissionId] = useState<string>('');
+  const [isAnalyzing, setIsAnalyzing] = useState<string | null>(null);
+  const [selectedSubmissionForModal, setSelectedSubmissionForModal] = useState<{ id: string; user_id: string; student_name: string } | null>(null);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  // Fetch analyses for all submissions
+  const { data: analyses } = useQuery({
+    queryKey: ['submission-analyses', assignmentId],
+    queryFn: async () => {
+      const submissionIds = submissions.map(s => s.id);
+      if (submissionIds.length === 0) return [];
+      
+      const { data, error } = await supabase
+        .from('submission_analyses')
+        .select('submission_id, id')
+        .in('submission_id', submissionIds);
+      
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!submissions && submissions.length > 0
+  });
 
   const handleRequestResubmission = () => {
     if (selectedSubmissionId && resubmissionReason.trim()) {
@@ -25,6 +51,39 @@ export default function TeacherAssignmentDetail() {
       });
       setResubmissionReason('');
       setSelectedSubmissionId('');
+    }
+  };
+
+  const handleAnalyze = async (submissionId: string) => {
+    setIsAnalyzing(submissionId);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('analyze-submission', {
+        body: {
+          submissionId: submissionId,
+          rubricId: null
+        }
+      });
+      
+      if (error) throw error;
+      
+      toast({
+        title: 'Analysis Complete',
+        description: 'AI analysis has been completed for this submission'
+      });
+      
+      // Refresh the analyses list
+      queryClient.invalidateQueries({ queryKey: ['submission-analyses', assignmentId] });
+      queryClient.invalidateQueries({ queryKey: ['teacher', 'submissions', assignmentId] });
+      
+    } catch (error: any) {
+      toast({
+        title: 'Analysis Failed',
+        description: error.message || 'Failed to analyze submission',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsAnalyzing(null);
     }
   };
 
@@ -172,45 +231,89 @@ export default function TeacherAssignmentDetail() {
                   <TableCell>
                     <div className="flex space-x-2">
                       {(submission.status === 'submitted' || submission.status === 'graded') && (
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => setSelectedSubmissionId(submission.id)}
-                            >
-                              <RotateCcw className="h-4 w-4 mr-1" />
-                              Request Resubmission
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent>
-                            <DialogHeader>
-                              <DialogTitle>Request Resubmission</DialogTitle>
-                              <DialogDescription>
-                                Ask {submission.student_name} to resubmit their work. Provide a reason for the request.
-                              </DialogDescription>
-                            </DialogHeader>
-                            <div className="space-y-4 py-4">
-                              <div>
-                                <Label htmlFor="reason">Reason for resubmission</Label>
-                                <Input
-                                  id="reason"
-                                  value={resubmissionReason}
-                                  onChange={(e) => setResubmissionReason(e.target.value)}
-                                  placeholder="e.g., Please include your calculations..."
-                                />
-                              </div>
-                            </div>
-                            <DialogFooter>
+                        <>
+                          {/* Analyze with AI / View Analysis Button */}
+                          {(() => {
+                            const hasAnalysis = analyses?.some(a => a.submission_id === submission.id);
+                            const analyzing = isAnalyzing === submission.id;
+                            
+                            if (hasAnalysis) {
+                              return (
+                                <Button
+                                  size="sm"
+                                  onClick={() => setSelectedSubmissionForModal({
+                                    id: submission.id,
+                                    user_id: submission.user_id,
+                                    student_name: submission.student_name
+                                  })}
+                                >
+                                  <FileText className="h-4 w-4 mr-1" />
+                                  View Analysis
+                                </Button>
+                              );
+                            }
+                            
+                            return (
                               <Button
-                                onClick={handleRequestResubmission}
-                                disabled={!resubmissionReason.trim() || isRequestingResubmission}
+                                size="sm"
+                                onClick={() => handleAnalyze(submission.id)}
+                                disabled={analyzing}
                               >
-                                {isRequestingResubmission ? 'Sending...' : 'Request Resubmission'}
+                                {analyzing ? (
+                                  <>
+                                    <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                                    Analyzing...
+                                  </>
+                                ) : (
+                                  <>
+                                    <Sparkles className="h-4 w-4 mr-1" />
+                                    Analyze with AI
+                                  </>
+                                )}
                               </Button>
-                            </DialogFooter>
-                          </DialogContent>
-                        </Dialog>
+                            );
+                          })()}
+                          
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => setSelectedSubmissionId(submission.id)}
+                              >
+                                <RotateCcw className="h-4 w-4 mr-1" />
+                                Request Resubmission
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                              <DialogHeader>
+                                <DialogTitle>Request Resubmission</DialogTitle>
+                                <DialogDescription>
+                                  Ask {submission.student_name} to resubmit their work. Provide a reason for the request.
+                                </DialogDescription>
+                              </DialogHeader>
+                              <div className="space-y-4 py-4">
+                                <div>
+                                  <Label htmlFor="reason">Reason for resubmission</Label>
+                                  <Input
+                                    id="reason"
+                                    value={resubmissionReason}
+                                    onChange={(e) => setResubmissionReason(e.target.value)}
+                                    placeholder="e.g., Please include your calculations..."
+                                  />
+                                </div>
+                              </div>
+                              <DialogFooter>
+                                <Button
+                                  onClick={handleRequestResubmission}
+                                  disabled={!resubmissionReason.trim() || isRequestingResubmission}
+                                >
+                                  {isRequestingResubmission ? 'Sending...' : 'Request Resubmission'}
+                                </Button>
+                              </DialogFooter>
+                            </DialogContent>
+                          </Dialog>
+                        </>
                       )}
                     </div>
                   </TableCell>
@@ -227,6 +330,19 @@ export default function TeacherAssignmentDetail() {
           )}
         </CardContent>
       </Card>
+
+      {/* Analysis Review Modal */}
+      {selectedSubmissionForModal && (
+        <StudentAnalysisReviewModal
+          submission={selectedSubmissionForModal}
+          onClose={() => setSelectedSubmissionForModal(null)}
+          onReviewed={() => {
+            queryClient.invalidateQueries({ queryKey: ['submission-analyses', assignmentId] });
+            queryClient.invalidateQueries({ queryKey: ['teacher', 'submissions', assignmentId] });
+            setSelectedSubmissionForModal(null);
+          }}
+        />
+      )}
     </div>
   );
 }
