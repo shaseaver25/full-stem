@@ -121,6 +121,8 @@ serve(async (req) => {
         email_confirm: true,
         user_metadata: {
           full_name: `${student.firstName} ${student.lastName}`,
+          first_name: student.firstName,
+          last_name: student.lastName,
           role: 'student'
         }
       })
