@@ -164,20 +164,20 @@ export function StudentAnalysisReviewModal({
     mutationFn: async () => {
       if (!analysis?.id) throw new Error('No analysis found');
 
-      await supabase.from('teacher_analysis_reviews').insert({
-        analysis_id: analysis.id,
-        teacher_user_id: user?.id,
-        action_type: 'notes_added',
-        teacher_notes: teacherNotes,
-      });
+      const { error } = await supabase
+        .from('submission_analyses')
+        .update({ teacher_notes: teacherNotes })
+        .eq('id', analysis.id);
+
+      if (error) throw error;
     },
     onSuccess: () => {
-      toast({ title: 'Success', description: 'Notes added' });
-      setTeacherNotes('');
+      toast({ title: 'Success', description: 'Notes saved successfully' });
+      queryClient.invalidateQueries({ queryKey: ['submission-analysis-detail', submission.id] });
       onReviewed();
     },
     onError: () => {
-      toast({ title: 'Error', description: 'Failed to add notes', variant: 'destructive' });
+      toast({ title: 'Error', description: 'Failed to save notes', variant: 'destructive' });
     },
   });
 
