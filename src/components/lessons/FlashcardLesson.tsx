@@ -10,10 +10,13 @@ import {
   Volume2, 
   CheckCircle2, 
   XCircle,
-  Sparkles
+  Sparkles,
+  Languages
 } from 'lucide-react';
 import { useAccessibility } from '@/contexts/AccessibilityContext';
 import { useTextToSpeech } from '@/hooks/useTextToSpeech';
+import { useTranslation } from '@/hooks/useTranslation';
+import { LanguageSelector } from '@/components/LanguageSelector';
 import { cn } from '@/lib/utils';
 
 export type Flashcard = {
@@ -48,9 +51,14 @@ export function FlashcardLesson({
   const [reviewCards, setReviewCards] = useState<Set<string>>(new Set());
   const [visitedCards, setVisitedCards] = useState<Set<number>>(new Set());
   const [showResults, setShowResults] = useState(false);
+  const [translatedFrontText, setTranslatedFrontText] = useState<string>('');
+  const [translatedBackText, setTranslatedBackText] = useState<string>('');
+  const [showFrontTranslation, setShowFrontTranslation] = useState(false);
+  const [showBackTranslation, setShowBackTranslation] = useState(false);
 
   const { settings } = useAccessibility();
   const { speak, isPlaying, isLoading } = useTextToSpeech();
+  const { translate, isTranslating } = useTranslation();
 
   const ttsEnabled = propTtsEnabled ?? settings.ttsEnabled;
   const currentCard = cards[currentIndex];
@@ -61,9 +69,13 @@ export function FlashcardLesson({
     setVisitedCards(prev => new Set([...prev, currentIndex]));
   }, [currentIndex]);
 
-  // Reset flip state when changing cards
+  // Reset flip state and translations when changing cards
   useEffect(() => {
     setIsFlipped(false);
+    setShowFrontTranslation(false);
+    setShowBackTranslation(false);
+    setTranslatedFrontText('');
+    setTranslatedBackText('');
   }, [currentIndex]);
 
   // Keyboard navigation
@@ -136,6 +148,30 @@ export function FlashcardLesson({
       speak(text);
     }
   }, [ttsEnabled, isPlaying, speak]);
+
+  const handleTranslateFront = useCallback(async () => {
+    if (!showFrontTranslation) {
+      if (!translatedFrontText) {
+        const translated = await translate(currentCard.frontText);
+        setTranslatedFrontText(translated);
+      }
+      setShowFrontTranslation(true);
+    } else {
+      setShowFrontTranslation(false);
+    }
+  }, [showFrontTranslation, translatedFrontText, currentCard.frontText, translate]);
+
+  const handleTranslateBack = useCallback(async () => {
+    if (!showBackTranslation) {
+      if (!translatedBackText) {
+        const translated = await translate(currentCard.backText);
+        setTranslatedBackText(translated);
+      }
+      setShowBackTranslation(true);
+    } else {
+      setShowBackTranslation(false);
+    }
+  }, [showBackTranslation, translatedBackText, currentCard.backText, translate]);
 
   const handleReset = useCallback(() => {
     setCurrentIndex(0);
@@ -230,6 +266,13 @@ export function FlashcardLesson({
         </CardHeader>
       </Card>
 
+      {/* Language Selector */}
+      <Card>
+        <CardContent className="pt-6">
+          <LanguageSelector />
+        </CardContent>
+      </Card>
+
       {/* Flashcard */}
       <div className="perspective-1000">
         <Card
@@ -259,20 +302,34 @@ export function FlashcardLesson({
             <CardHeader>
               <div className="flex items-center justify-between">
                 <Badge variant="secondary">Front</Badge>
-                {ttsEnabled && (
+                <div className="flex items-center gap-2">
+                  {ttsEnabled && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleSpeak(showFrontTranslation ? translatedFrontText : currentCard.frontText);
+                      }}
+                      disabled={isLoading || isPlaying}
+                      aria-label="Read front of card aloud"
+                    >
+                      <Volume2 className="w-4 h-4" />
+                    </Button>
+                  )}
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={(e) => {
                       e.stopPropagation();
-                      handleSpeak(currentCard.frontText);
+                      handleTranslateFront();
                     }}
-                    disabled={isLoading || isPlaying}
-                    aria-label="Read front of card aloud"
+                    disabled={isTranslating}
+                    aria-label="Translate front of card"
                   >
-                    <Volume2 className="w-4 h-4" />
+                    <Languages className="w-4 h-4" />
                   </Button>
-                )}
+                </div>
               </div>
             </CardHeader>
             <CardContent className="flex flex-col items-center justify-center min-h-[300px] text-center">
@@ -284,7 +341,7 @@ export function FlashcardLesson({
                 />
               )}
               <p className="text-2xl font-semibold leading-relaxed">
-                {currentCard.frontText}
+                {showFrontTranslation ? translatedFrontText : currentCard.frontText}
               </p>
               <div className="mt-6 flex items-center gap-2 text-sm text-muted-foreground">
                 <Sparkles className="w-4 h-4" />
@@ -303,25 +360,39 @@ export function FlashcardLesson({
             <CardHeader>
               <div className="flex items-center justify-between">
                 <Badge variant="secondary">Back</Badge>
-                {ttsEnabled && (
+                <div className="flex items-center gap-2">
+                  {ttsEnabled && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleSpeak(showBackTranslation ? translatedBackText : currentCard.backText);
+                      }}
+                      disabled={isLoading || isPlaying}
+                      aria-label="Read back of card aloud"
+                    >
+                      <Volume2 className="w-4 h-4" />
+                    </Button>
+                  )}
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={(e) => {
                       e.stopPropagation();
-                      handleSpeak(currentCard.backText);
+                      handleTranslateBack();
                     }}
-                    disabled={isLoading || isPlaying}
-                    aria-label="Read back of card aloud"
+                    disabled={isTranslating}
+                    aria-label="Translate back of card"
                   >
-                    <Volume2 className="w-4 h-4" />
+                    <Languages className="w-4 h-4" />
                   </Button>
-                )}
+                </div>
               </div>
             </CardHeader>
             <CardContent className="flex flex-col items-center justify-center min-h-[300px] text-center">
               <p className="text-2xl font-semibold leading-relaxed">
-                {currentCard.backText}
+                {showBackTranslation ? translatedBackText : currentCard.backText}
               </p>
             </CardContent>
           </div>
