@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { CheckCircle, Edit, RotateCw, FileText, Loader2 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import InlineReadAloud from '@/components/InlineReadAloud';
+import { SubmissionAnalysisFeedback } from '@/components/submission/SubmissionAnalysisFeedback';
 
 interface StudentAnalysisReviewModalProps {
   submission: {
@@ -216,8 +217,9 @@ export function StudentAnalysisReviewModal({
         </DialogHeader>
 
         <Tabs defaultValue="analysis" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="analysis">AI Analysis</TabsTrigger>
+            <TabsTrigger value="student-view">Student View</TabsTrigger>
             <TabsTrigger value="work">Student Work</TabsTrigger>
           </TabsList>
 
@@ -370,6 +372,34 @@ export function StudentAnalysisReviewModal({
                 </>
               )}
             </div>
+          </TabsContent>
+
+          <TabsContent value="student-view" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <CheckCircle className="h-5 w-5 text-primary" />
+                  Preview: Student's View of Feedback
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground mb-4">
+                  This is exactly what the student sees on their submission page.
+                </p>
+                <SubmissionAnalysisFeedback
+                  analysis={{
+                    overall_mastery: analysis.overall_mastery as 'novice' | 'developing' | 'proficient' | 'advanced',
+                    confidence_score: analysis.confidence_score,
+                    personalized_feedback: analysis.personalized_feedback,
+                    strengths: analysis.strengths as string[],
+                    areas_for_growth: analysis.areas_for_growth as string[],
+                    misconceptions: analysis.misconceptions ? (analysis.misconceptions as string[]) : undefined,
+                    recommended_actions: analysis.recommended_action ? [analysis.recommended_action as string] : undefined,
+                    rubric_scores: analysis.rubric_scores ? (analysis.rubric_scores as any[]) : undefined,
+                  }}
+                />
+              </CardContent>
+            </Card>
           </TabsContent>
 
           <TabsContent value="work" className="space-y-4">
