@@ -1,11 +1,11 @@
 import { useState } from 'react'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query'
 import { supabase } from '@/integrations/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
-import { Loader2, RefreshCw, User, CheckCircle, Clock, AlertCircle, Sparkles, Trash2 } from 'lucide-react'
+import { Loader2, RefreshCw, User, CheckCircle, Clock, AlertCircle, Sparkles, Trash2, Users } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { StudentAnalysisReviewModal } from '@/components/teacher/StudentAnalysisReviewModal'
 import { useSeedDemoEnvironment } from '@/hooks/useSeedDemoEnvironment'
@@ -114,6 +114,47 @@ export default function AdaptiveClassroomDemo() {
     }
   })
 
+  // Create demo students mutation
+  const createDemoStudents = useMutation({
+    mutationFn: async () => {
+      // Get teacher profile ID
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('Not authenticated')
+      
+      const { data: teacherProfile } = await supabase
+        .from('teacher_profiles')
+        .select('id')
+        .eq('user_id', user.id)
+        .single()
+      
+      if (!teacherProfile) throw new Error('Teacher profile not found')
+      
+      // Call edge function
+      const { data, error } = await supabase.functions.invoke('create-demo-students', {
+        body: { teacherId: teacherProfile.id }
+      })
+      
+      if (error) throw error
+      return data
+    },
+    onSuccess: (data) => {
+      toast({
+        title: 'Success!',
+        description: `Created ${data.data.students.length} students, 1 class, and 1 assignment`,
+      })
+      queryClient.invalidateQueries({ queryKey: ['demo-class'] })
+      queryClient.invalidateQueries({ queryKey: ['demo-assignments'] })
+      queryClient.invalidateQueries({ queryKey: ['demo-submissions'] })
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Error',
+        description: error.message,
+        variant: 'destructive'
+      })
+    }
+  })
+
   const handleSeedDemo = () => {
     seedDemo(false)
   }
@@ -155,6 +196,15 @@ export default function AdaptiveClassroomDemo() {
             onClick={() => setViewAsTeacher(!viewAsTeacher)}
           >
             View as: {viewAsTeacher ? 'Teacher' : 'Student'}
+          </Button>
+          
+          <Button
+            onClick={() => createDemoStudents.mutate()}
+            disabled={createDemoStudents.isPending}
+          >
+            {createDemoStudents.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+            <Users className="h-4 w-4 mr-2" />
+            Create Demo Students
           </Button>
           
           <Button
