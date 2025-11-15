@@ -4314,6 +4314,10 @@ export type Database = {
         Args: { _student_id: string; _user_id: string }
         Returns: boolean
       }
+      can_teacher_modify_analysis: {
+        Args: { _analysis_id: string; _user_id: string }
+        Returns: boolean
+      }
       can_view_student: {
         Args: { _student_id: string; _user_id: string }
         Returns: boolean
