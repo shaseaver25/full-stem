@@ -225,8 +225,7 @@ serve(async (req) => {
         description: 'Explain how plants make food from sunlight',
         instructions: 'Explain how plants make food from sunlight. Include the inputs (what goes in), the process (what happens), and the outputs (what comes out). Use at least 3 scientific terms in your explanation.',
         due_date: threeDaysAgo.toISOString().split('T')[0],
-        max_points: 16,
-        status: 'published'
+        max_points: 16
       })
       .select()
       .single()
