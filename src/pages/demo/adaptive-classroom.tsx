@@ -56,14 +56,30 @@ export default function AdaptiveClassroomDemo() {
     queryKey: ['demo-students', demoClass?.id],
     enabled: !!demoClass?.id,
     queryFn: async () => {
-      const { data, error } = await supabase
+      // First get class_students enrollments
+      const { data: enrollments, error: enrollError } = await supabase
         .from('class_students')
-        .select('*, students(*)')
+        .select('*')
         .eq('class_id', demoClass!.id)
         .eq('status', 'active')
       
-      if (error) throw error
-      return data
+      if (enrollError) throw enrollError
+      if (!enrollments || enrollments.length === 0) return []
+
+      // Then fetch student details
+      const studentIds = enrollments.map(e => e.student_id)
+      const { data: students, error: studentsError } = await supabase
+        .from('students')
+        .select('*')
+        .in('id', studentIds)
+      
+      if (studentsError) throw studentsError
+
+      // Combine the data
+      return enrollments.map(enrollment => ({
+        ...enrollment,
+        students: students?.find(s => s.id === enrollment.student_id)
+      }))
     }
   })
 
