@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { CheckCircle, Edit, RotateCw, FileText, Loader2 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import InlineReadAloud from '@/components/InlineReadAloud';
 
 interface StudentAnalysisReviewModalProps {
   submission: {
@@ -238,7 +239,7 @@ export function StudentAnalysisReviewModal({
               <CardHeader>
                 <CardTitle className="text-lg">Personalized Feedback</CardTitle>
               </CardHeader>
-              <CardContent>
+               <CardContent>
                 {isEditing ? (
                   <Textarea
                     value={editedFeedback}
@@ -247,7 +248,7 @@ export function StudentAnalysisReviewModal({
                     className="mb-2"
                   />
                 ) : (
-                  <p className="text-muted-foreground">{analysis.personalized_feedback}</p>
+                  <InlineReadAloud text={analysis.personalized_feedback || ''} className="text-muted-foreground" />
                 )}
               </CardContent>
             </Card>
@@ -274,7 +275,7 @@ export function StudentAnalysisReviewModal({
                           className="flex-1 border rounded px-2 py-1"
                         />
                       ) : (
-                        <span>{strength}</span>
+                        <InlineReadAloud text={strength} />
                       )}
                     </li>
                   ))}
@@ -304,7 +305,7 @@ export function StudentAnalysisReviewModal({
                           className="flex-1 border rounded px-2 py-1"
                         />
                       ) : (
-                        <span>{area}</span>
+                        <InlineReadAloud text={area} />
                       )}
                     </li>
                   ))}
@@ -404,7 +405,7 @@ export function StudentAnalysisReviewModal({
                   <CardTitle>Text Response</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="whitespace-pre-wrap">{submissionData.text_response}</p>
+                  <InlineReadAloud text={submissionData.text_response} className="whitespace-pre-wrap" />
                 </CardContent>
               </Card>
             )}

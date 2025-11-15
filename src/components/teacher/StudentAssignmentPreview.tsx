@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { StatusChip } from "@/components/common/StatusChip";
+import InlineReadAloud from "@/components/InlineReadAloud";
 import { Calendar, Clock, FileText, AlertCircle, Upload } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -129,18 +130,14 @@ export function StudentAssignmentPreview({ assignmentId, studentId }: StudentAss
           {assignment.description && (
             <div>
               <h3 className="font-medium mb-2">Description</h3>
-              <div className="text-muted-foreground whitespace-pre-wrap bg-muted/50 p-4 rounded-lg">
-                {assignment.description}
-              </div>
+              <InlineReadAloud text={assignment.description} className="text-muted-foreground bg-muted/50 p-4 rounded-lg" />
             </div>
           )}
 
           {assignment.instructions && (
             <div>
               <h3 className="font-medium mb-2">Instructions</h3>
-              <div className="text-muted-foreground whitespace-pre-wrap bg-muted/50 p-4 rounded-lg">
-                {assignment.instructions}
-              </div>
+              <InlineReadAloud text={assignment.instructions} className="text-muted-foreground bg-muted/50 p-4 rounded-lg" />
             </div>
           )}
         </CardContent>
@@ -156,9 +153,7 @@ export function StudentAssignmentPreview({ assignmentId, studentId }: StudentAss
             {submission.text_response && (
               <div>
                 <h3 className="font-medium mb-2">Response</h3>
-                <div className="bg-muted/50 p-4 rounded-lg whitespace-pre-wrap">
-                  {submission.text_response}
-                </div>
+                <InlineReadAloud text={submission.text_response} className="bg-muted/50 p-4 rounded-lg" />
               </div>
             )}
 
