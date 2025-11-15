@@ -65,16 +65,13 @@ Deno.serve(async (req) => {
       submitted_at: twoDaysAgo.toISOString()
     }))
 
-    // First delete existing submissions for this assignment
-    await supabaseClient
-      .from('assignment_submissions')
-      .delete()
-      .eq('assignment_id', assignmentId)
-
-    // Then insert new submissions
+    // Upsert submissions (insert or update if exists)
     const { data, error } = await supabaseClient
       .from('assignment_submissions')
-      .insert(submissions)
+      .upsert(submissions, {
+        onConflict: 'assignment_id,user_id',
+        ignoreDuplicates: false
+      })
       .select('id, user_id')
 
     if (error) throw error
