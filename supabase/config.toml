@@ -169,4 +169,7 @@ verify_jwt = true
 [functions.translate-transcript]
 verify_jwt = true
 
+[functions.transcribe-lesson-video]
+verify_jwt = true
+
 
