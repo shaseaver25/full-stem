@@ -128,7 +128,21 @@ export function DiscussionLesson({ content, lessonComponentId, isStudent = false
 
   // Submit new post
   const handleSubmit = async (parentPostId: string | null = null) => {
-    if (!newPostContent.trim() || !user || !threadData?.id) return;
+    console.log('=== DISCUSSION POST SUBMIT ===');
+    console.log('lessonComponentId:', lessonComponentId);
+    console.log('lessonData:', lessonData);
+    console.log('threadData:', threadData);
+    console.log('user:', user?.id);
+    console.log('newPostContent:', newPostContent);
+    
+    if (!newPostContent.trim() || !user || !threadData?.id) {
+      console.log('Submit blocked:', { 
+        hasContent: !!newPostContent.trim(), 
+        hasUser: !!user, 
+        hasThread: !!threadData?.id 
+      });
+      return;
+    }
 
     if (newPostContent.length > (content?.settings?.maxPostLength || 1000)) {
       toast.error(`Post exceeds maximum length of ${content?.settings?.maxPostLength || 1000} characters`);
@@ -138,6 +152,13 @@ export function DiscussionLesson({ content, lessonComponentId, isStudent = false
     setIsSubmitting(true);
 
     try {
+      console.log('Inserting reply:', {
+        thread_id: threadData.id,
+        user_id: user.id,
+        parent_id: parentPostId,
+        content: newPostContent.trim(),
+      });
+      
       const { error } = await supabase
         .from('discussion_replies')
         .insert({
@@ -147,8 +168,12 @@ export function DiscussionLesson({ content, lessonComponentId, isStudent = false
           content: newPostContent.trim(),
         });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Insert error:', error);
+        throw error;
+      }
 
+      console.log('Post submitted successfully');
       toast.success('Post submitted successfully');
       setNewPostContent('');
       setReplyingTo(null);
