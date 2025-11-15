@@ -13,7 +13,7 @@ import { useTeacherSubmissions } from "@/hooks/useTeacherSubmissions";
 import { StudentAnalysisReviewModal } from "@/components/teacher/StudentAnalysisReviewModal";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Download, RotateCcw, FileText, Sparkles, Loader2 } from "lucide-react";
+import { ArrowLeft, Download, RotateCcw, FileText, Sparkles, Loader2, Eye } from "lucide-react";
 
 export default function TeacherAssignmentDetail() {
   const { assignmentId } = useParams<{ assignmentId: string }>();
@@ -127,11 +127,18 @@ export default function TeacherAssignmentDetail() {
   return (
     <div className="container mx-auto p-6 space-y-6">
       {/* Header */}
-      <div className="flex items-center space-x-4">
+      <div className="flex items-center justify-between">
         <Button variant="ghost" size="sm" asChild>
           <Link to="/teacher/dashboard" className="flex items-center space-x-2">
             <ArrowLeft className="h-4 w-4" />
             <span>Back to Dashboard</span>
+          </Link>
+        </Button>
+        
+        <Button variant="outline" asChild>
+          <Link to={`/student/assignments/${assignmentId}`} target="_blank" className="flex items-center space-x-2">
+            <Eye className="h-4 w-4" />
+            <span>View as Student</span>
           </Link>
         </Button>
       </div>
