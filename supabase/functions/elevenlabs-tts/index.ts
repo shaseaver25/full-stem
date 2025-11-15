@@ -64,6 +64,7 @@ serve(async (req) => {
     // Check API key
     const apiKey = Deno.env.get('ELEVENLABS_API_KEY');
     console.log('API key exists:', !!apiKey);
+    console.log('API key preview (first 10 chars):', apiKey ? apiKey.substring(0, 10) + '...' : 'MISSING');
     
     if (!apiKey) {
       console.error('Missing ELEVENLABS_API_KEY');
