@@ -257,7 +257,7 @@ serve(async (req) => {
     // Store analysis in database
     const { data: analysisRecord, error: insertError } = await supabase
       .from('submission_analyses')
-      .insert({
+      .upsert({
         submission_id: submissionId,
         rubric_id: rubricId || null,
         rubric_scores: analysis.rubric_scores,
@@ -273,6 +273,8 @@ serve(async (req) => {
         raw_model_output: analysis,
         teacher_reviewed: false,
         teacher_modified: false
+      }, {
+        onConflict: 'submission_id'
       })
       .select()
       .single();
