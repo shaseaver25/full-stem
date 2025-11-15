@@ -130,21 +130,37 @@ serve(async (req) => {
         throw new Error(`Failed to create student ${student.firstName}: ${authError.message}`)
       }
 
-      // Create student profile
-      const { data: studentProfile, error: profileError } = await supabase
+      // Check if student profile was auto-created by trigger, or create it manually
+      let studentProfile
+      const { data: existingProfile } = await supabase
         .from('students')
-        .insert({
-          user_id: authUser.user.id,
-          first_name: student.firstName,
-          last_name: student.lastName,
-          grade_level: 5
-        })
         .select()
-        .single()
+        .eq('user_id', authUser.user.id)
+        .maybeSingle()
 
-      if (profileError) {
-        console.error(`Error creating profile for ${student.firstName}:`, profileError)
-        throw new Error(`Failed to create profile for ${student.firstName}: ${profileError.message}`)
+      if (existingProfile) {
+        // Profile was created by trigger, just use it
+        studentProfile = existingProfile
+        console.log(`✓ Student profile auto-created for ${student.firstName}`)
+      } else {
+        // No trigger or profile doesn't exist, create manually
+        const { data: newProfile, error: profileError } = await supabase
+          .from('students')
+          .insert({
+            user_id: authUser.user.id,
+            first_name: student.firstName,
+            last_name: student.lastName,
+            grade_level: 5
+          })
+          .select()
+          .single()
+
+        if (profileError) {
+          console.error(`Error creating profile for ${student.firstName}:`, profileError)
+          throw new Error(`Failed to create profile for ${student.firstName}: ${profileError.message}`)
+        }
+        
+        studentProfile = newProfile
       }
 
       createdStudents.push({
