@@ -10,14 +10,19 @@ interface InlineReadAloudProps {
   text: string;       // HTML string
   className?: string;
   language?: string;  // Language for TTS
+  alwaysShow?: boolean; // Always show buttons regardless of settings
 }
 
-const InlineReadAloud: React.FC<InlineReadAloudProps> = ({ text, className, language }) => {
+const InlineReadAloud: React.FC<InlineReadAloudProps> = ({ text, className, language, alwaysShow = false }) => {
   const { speak, isPlaying, isLoading, isEnabled: ttsEnabled } = useTextToSpeech();
   const { translate, isTranslating, isEnabled: translationEnabled } = useTranslation();
   const { settings } = useAccessibility();
   const [translatedText, setTranslatedText] = useState<string>('');
   const [showTranslation, setShowTranslation] = useState(false);
+  
+  // If alwaysShow is true, override the enabled checks
+  const shouldShowTTS = alwaysShow || ttsEnabled;
+  const shouldShowTranslation = alwaysShow || translationEnabled;
 
   // Strip HTML tags for TTS
   const stripHtml = (html: string) => {
@@ -47,9 +52,9 @@ const InlineReadAloud: React.FC<InlineReadAloudProps> = ({ text, className, lang
 
   return (
     <div className="space-y-4">
-      {(ttsEnabled || translationEnabled) && (
+      {(shouldShowTTS || shouldShowTranslation) && (
         <div className="flex gap-2">
-          {ttsEnabled && (
+          {shouldShowTTS && (
             <Button
               variant="outline"
               size="sm"
@@ -61,7 +66,7 @@ const InlineReadAloud: React.FC<InlineReadAloudProps> = ({ text, className, lang
               {isLoading ? 'Loading...' : isPlaying ? 'Playing...' : 'Read Aloud'}
             </Button>
           )}
-          {translationEnabled && settings.preferredLanguage !== 'en' && (
+          {shouldShowTranslation && settings.preferredLanguage !== 'en' && (
             <Button
               variant="outline"
               size="sm"
