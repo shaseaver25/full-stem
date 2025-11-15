@@ -150,12 +150,9 @@ export function FlashcardLesson({
   }, [ttsEnabled, isPlaying, speak]);
 
   const handleTranslateFront = useCallback(async () => {
-    console.log('handleTranslateFront clicked', { showFrontTranslation, translatedFrontText });
     if (!showFrontTranslation) {
       if (!translatedFrontText) {
-        console.log('Translating front text:', currentCard.frontText);
         const translated = await translate(currentCard.frontText);
-        console.log('Translation result:', translated);
         setTranslatedFrontText(translated);
       }
       setShowFrontTranslation(true);
@@ -165,12 +162,9 @@ export function FlashcardLesson({
   }, [showFrontTranslation, translatedFrontText, currentCard.frontText, translate]);
 
   const handleTranslateBack = useCallback(async () => {
-    console.log('handleTranslateBack clicked', { showBackTranslation, translatedBackText });
     if (!showBackTranslation) {
       if (!translatedBackText) {
-        console.log('Translating back text:', currentCard.backText);
         const translated = await translate(currentCard.backText);
-        console.log('Translation result:', translated);
         setTranslatedBackText(translated);
       }
       setShowBackTranslation(true);
