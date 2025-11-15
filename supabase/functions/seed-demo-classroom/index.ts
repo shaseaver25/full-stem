@@ -54,40 +54,23 @@ serve(async (req) => {
     // Always clean up existing demo data first
     console.log('🧹 Cleaning up existing demo data...')
     
-    // Delete teacher by email
-    const teacherEmail = 'demo.teacher@tailoredu.com'
-    const { data: teacherUser, error: getTeacherError } = await supabase.auth.admin.getUserByEmail(teacherEmail)
-    
-    if (getTeacherError) {
-      console.log(`⚠️ Error fetching teacher: ${getTeacherError.message}`)
-    } else if (teacherUser) {
-      const deleteResult = await supabase.auth.admin.deleteUser(teacherUser.id)
-      if (deleteResult.error) {
-        console.log(`❌ Failed to delete teacher: ${deleteResult.error.message}`)
-      } else {
-        console.log(`✅ Deleted teacher: ${teacherEmail}`)
-      }
-    } else {
-      console.log(`⚠️ Teacher not found: ${teacherEmail}`)
+    // Delete demo teacher by UUID (ignore error if doesn't exist)
+    try {
+      await supabase.auth.admin.deleteUser(DEMO_TEACHER_ID)
+      console.log('✓ Deleted demo teacher')
+    } catch (e) {
+      console.log('ℹ️ Demo teacher not found (ok)')
     }
     
-    // Delete students by email
-    for (const student of DEMO_STUDENTS) {
-      const { data: studentUser, error: getStudentError } = await supabase.auth.admin.getUserByEmail(student.email)
-      
-      if (getStudentError) {
-        console.log(`⚠️ Error fetching student ${student.email}: ${getStudentError.message}`)
-      } else if (studentUser) {
-        const deleteResult = await supabase.auth.admin.deleteUser(studentUser.id)
-        if (deleteResult.error) {
-          console.log(`❌ Failed to delete student ${student.email}: ${deleteResult.error.message}`)
-        } else {
-          console.log(`✅ Deleted student: ${student.email}`)
-        }
-      } else {
-        console.log(`⚠️ Student not found: ${student.email}`)
+    // Delete demo students by UUID (ignore errors if don't exist)
+    for (const studentId of DEMO_STUDENT_IDS) {
+      try {
+        await supabase.auth.admin.deleteUser(studentId)
+      } catch (e) {
+        // Ignore - student doesn't exist
       }
     }
+    console.log('✓ Deleted demo students')
     
     // Database cleanup (cascading deletes will handle related data)
     await supabase.from('teacher_profiles').delete().eq('id', DEMO_TEACHER_ID)
