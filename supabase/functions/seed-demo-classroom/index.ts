@@ -10,6 +10,7 @@ const corsHeaders = {
 const DEMO_TEACHER_ID = '00000000-0000-0000-0001-000000000001'
 const DEMO_CLASS_ID = '00000000-0000-0000-0002-000000000001'
 const DEMO_PASSWORD = 'DemoPassword2024!'
+const DEMO_TEACHER_EMAIL = 'demo.teacher@tailoredu.com'
 
 const DEMO_STUDENT_IDS = [
   '00000000-0000-0000-0004-000000000001',
@@ -105,10 +106,8 @@ serve(async (req) => {
     // ========================================
     console.log('👨‍🏫 Creating demo teacher...')
     
-    const teacherEmail = 'demo.teacher@tailoredu.com'
-    
     const { data: teacherAuth, error: teacherError } = await supabase.auth.admin.createUser({
-      email: teacherEmail,
+      email: DEMO_TEACHER_EMAIL,
       password: DEMO_PASSWORD,
       email_confirm: true,
       user_metadata: {
@@ -122,7 +121,7 @@ serve(async (req) => {
       throw new Error(`Failed to create teacher: ${teacherError.message}`)
     }
 
-    console.log(`✓ Created auth user for teacher: ${teacherEmail}`)
+    console.log(`✓ Created auth user for teacher: ${DEMO_TEACHER_EMAIL}`)
 
     // Create teacher profile
     const { error: teacherProfileError } = await supabase
@@ -294,7 +293,7 @@ serve(async (req) => {
         message: 'Demo environment created successfully',
         data: {
           teacher: {
-            email: teacherEmail,
+            email: DEMO_TEACHER_EMAIL,
             password: DEMO_PASSWORD,
             name: 'Demo Teacher'
           },
