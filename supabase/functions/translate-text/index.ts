@@ -197,10 +197,10 @@ The goal is to make the content feel natural and accessible to everyday speakers
 
     console.log('Lovable AI response status:', response.status);
 
-    const data = await response.json();
+    const aiResponse = await response.json();
     
     if (!response.ok) {
-      console.error('Lovable AI error:', data);
+      console.error('Lovable AI error:', aiResponse);
       
       // Handle rate limit errors
       if (response.status === 429) {
@@ -224,13 +224,13 @@ The goal is to make the content feel natural and accessible to everyday speakers
       
       return new Response(
         JSON.stringify({ 
-          error: data.error?.message || 'Translation service unavailable' 
+          error: aiResponse.error?.message || 'Translation service unavailable' 
         }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    const translatedText = data.choices[0].message.content;
+    const translatedText = aiResponse.choices[0].message.content;
     console.log('Translation completed successfully');
 
     // Save to cache (non-blocking)
@@ -262,7 +262,7 @@ The goal is to make the content feel natural and accessible to everyday speakers
 
     // Log AI usage to ai_usage_logs
     try {
-      const usage = data.usage || {};
+      const usage = aiResponse.usage || {};
       const inputTokens = usage.prompt_tokens || 0;
       const outputTokens = usage.completion_tokens || 0;
       const totalTokens = usage.total_tokens || inputTokens + outputTokens;
