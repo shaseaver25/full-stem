@@ -71,6 +71,7 @@ export function StudentAnalysisReviewModal({
         setEditedFeedback(data.personalized_feedback || '');
         setEditedStrengths((data.strengths as string[]) || []);
         setEditedGrowth((data.areas_for_growth as string[]) || []);
+        setTeacherNotes(data.teacher_notes || '');
       }
       
       return data;
