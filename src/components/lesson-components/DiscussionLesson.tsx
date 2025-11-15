@@ -27,15 +27,34 @@ export function DiscussionLesson({ content, lessonComponentId, isStudent = false
   const { speak, isPlaying } = useTextToSpeech();
   const { translate } = useTranslation();
 
-  // Fetch or create discussion thread for this lesson component
-  const { data: threadData } = useQuery({
-    queryKey: ['discussion-thread', lessonComponentId],
+  // Get the parent lesson ID from the lesson component
+  const { data: lessonData } = useQuery({
+    queryKey: ['lesson-from-component', lessonComponentId],
     queryFn: async () => {
-      // Try to find existing thread
+      const { data, error } = await supabase
+        .from('lesson_components')
+        .select('lesson_id')
+        .eq('id', lessonComponentId)
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!lessonComponentId,
+  });
+
+  // Fetch or create discussion thread for this lesson
+  const { data: threadData } = useQuery({
+    queryKey: ['discussion-thread', lessonData?.lesson_id],
+    queryFn: async () => {
+      if (!lessonData?.lesson_id) return null;
+      
+      // Try to find existing thread for this lesson component
       const { data: existing, error: fetchError } = await supabase
         .from('discussion_threads')
         .select('id')
-        .eq('lesson_id', lessonComponentId)
+        .eq('lesson_id', lessonData.lesson_id)
+        .eq('title', `Discussion: ${lessonComponentId}`)
         .maybeSingle();
 
       if (fetchError && fetchError.code !== 'PGRST116') throw fetchError;
@@ -46,9 +65,9 @@ export function DiscussionLesson({ content, lessonComponentId, isStudent = false
       const { data: newThread, error: createError } = await supabase
         .from('discussion_threads')
         .insert({
-          lesson_id: lessonComponentId,
-          title: 'Lesson Discussion',
-          body: 'Discussion for this lesson',
+          lesson_id: lessonData.lesson_id,
+          title: `Discussion: ${lessonComponentId}`,
+          body: 'Discussion for this lesson component',
           created_by: user?.id || '',
         })
         .select('id')
@@ -57,7 +76,7 @@ export function DiscussionLesson({ content, lessonComponentId, isStudent = false
       if (createError) throw createError;
       return newThread;
     },
-    enabled: !!user,
+    enabled: !!user && !!lessonData?.lesson_id,
   });
 
   // Fetch replies with user information
