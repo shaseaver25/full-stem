@@ -11,6 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { StatusChip } from "@/components/common/StatusChip";
 import { useTeacherSubmissions } from "@/hooks/useTeacherSubmissions";
 import { StudentAnalysisReviewModal } from "@/components/teacher/StudentAnalysisReviewModal";
+import { StudentAssignmentPreview } from "@/components/teacher/StudentAssignmentPreview";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Download, RotateCcw, FileText, Sparkles, Loader2, Eye } from "lucide-react";
@@ -22,6 +23,8 @@ export default function TeacherAssignmentDetail() {
   const [selectedSubmissionId, setSelectedSubmissionId] = useState<string>('');
   const [isAnalyzing, setIsAnalyzing] = useState<string | null>(null);
   const [selectedSubmissionForModal, setSelectedSubmissionForModal] = useState<{ id: string; user_id: string; student_name: string } | null>(null);
+  const [showStudentPreview, setShowStudentPreview] = useState(false);
+  const [previewStudentId, setPreviewStudentId] = useState<string | undefined>(undefined);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -135,11 +138,12 @@ export default function TeacherAssignmentDetail() {
           </Link>
         </Button>
         
-        <Button variant="outline" asChild>
-          <Link to={`/student/assignments/${assignmentId}`} target="_blank" className="flex items-center space-x-2">
-            <Eye className="h-4 w-4" />
-            <span>View as Student</span>
-          </Link>
+        <Button variant="outline" onClick={() => {
+          setPreviewStudentId(undefined);
+          setShowStudentPreview(true);
+        }}>
+          <Eye className="h-4 w-4 mr-2" />
+          View as Student
         </Button>
       </div>
 
@@ -236,7 +240,19 @@ export default function TeacherAssignmentDetail() {
                     )}
                   </TableCell>
                   <TableCell>
-                    <div className="flex space-x-2">
+                    <div className="flex items-center space-x-2 flex-wrap gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setPreviewStudentId(submission.user_id);
+                          setShowStudentPreview(true);
+                        }}
+                      >
+                        <Eye className="h-4 w-4 mr-1" />
+                        Preview
+                      </Button>
+                      
                       {(submission.status === 'submitted' || submission.status === 'graded') && (
                         <>
                           {/* Analyze with AI / View Analysis Button */}
@@ -350,6 +366,26 @@ export default function TeacherAssignmentDetail() {
           }}
         />
       )}
+
+      {/* Student Preview Dialog */}
+      <Dialog open={showStudentPreview} onOpenChange={setShowStudentPreview}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {previewStudentId ? "Student View" : "Student View Preview"}
+            </DialogTitle>
+            <DialogDescription>
+              {previewStudentId 
+                ? "This is exactly how this student sees the assignment."
+                : "This is how students will see the assignment interface."}
+            </DialogDescription>
+          </DialogHeader>
+          <StudentAssignmentPreview 
+            assignmentId={assignmentId!} 
+            studentId={previewStudentId}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
