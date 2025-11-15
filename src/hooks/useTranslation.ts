@@ -3,13 +3,13 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAccessibility } from '@/contexts/AccessibilityContext';
 import { useToast } from '@/hooks/use-toast';
 
-export function useTranslation() {
+export function useTranslation(forceEnabled = false) {
   const [isTranslating, setIsTranslating] = useState(false);
   const { settings } = useAccessibility();
   const { toast } = useToast();
 
   const translate = useCallback(async (text: string): Promise<string> => {
-    if (!settings.translationEnabled || settings.preferredLanguage === 'en') {
+    if (!forceEnabled && (!settings.translationEnabled || settings.preferredLanguage === 'en')) {
       return text;
     }
 
@@ -45,11 +45,11 @@ export function useTranslation() {
     } finally {
       setIsTranslating(false);
     }
-  }, [settings.translationEnabled, settings.preferredLanguage, toast]);
+  }, [settings.translationEnabled, settings.preferredLanguage, toast, forceEnabled]);
 
   return {
     translate,
     isTranslating,
-    isEnabled: settings.translationEnabled,
+    isEnabled: forceEnabled || settings.translationEnabled,
   };
 }

@@ -3,14 +3,14 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAccessibility } from '@/contexts/AccessibilityContext';
 import { useToast } from '@/hooks/use-toast';
 
-export function useTextToSpeech() {
+export function useTextToSpeech(forceEnabled = false) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { settings } = useAccessibility();
   const { toast } = useToast();
 
   const speak = async (text: string) => {
-    if (!settings.ttsEnabled) {
+    if (!forceEnabled && !settings.ttsEnabled) {
       return;
     }
 
@@ -71,6 +71,6 @@ export function useTextToSpeech() {
     speak,
     isPlaying,
     isLoading,
-    isEnabled: settings.ttsEnabled,
+    isEnabled: forceEnabled || settings.ttsEnabled,
   };
 }
