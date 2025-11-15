@@ -145,17 +145,11 @@ export function LessonVideoPlayer({ componentId, videoUrl, title, content }: Les
             {!transcript && (
               <Button 
                 onClick={transcribeVideo} 
-                disabled={isTranscribing}
+                disabled={true}
                 size="sm"
+                variant="outline"
               >
-                {isTranscribing ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Transcribing...
-                  </>
-                ) : (
-                  'Generate Transcript'
-                )}
+                Speech-to-text in multiple languages coming soon
               </Button>
             )}
           </div>
