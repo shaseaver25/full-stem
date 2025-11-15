@@ -12,6 +12,7 @@ import { CheckCircle, Edit, RotateCw, FileText, Loader2 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import InlineReadAloud from '@/components/InlineReadAloud';
 import { SubmissionAnalysisFeedback } from '@/components/submission/SubmissionAnalysisFeedback';
+import { TTSButton } from './TTSButton';
 
 interface StudentAnalysisReviewModalProps {
   submission: {
@@ -239,8 +240,9 @@ export function StudentAnalysisReviewModal({
 
             {/* Feedback Section */}
             <Card>
-              <CardHeader>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0">
                 <CardTitle className="text-lg">Personalized Feedback</CardTitle>
+                <TTSButton text={analysis.personalized_feedback || ''} />
               </CardHeader>
                <CardContent>
                 {isEditing ? (
