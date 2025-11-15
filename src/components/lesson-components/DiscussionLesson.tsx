@@ -27,44 +27,89 @@ export function DiscussionLesson({ content, lessonComponentId, isStudent = false
   const { speak, isPlaying } = useTextToSpeech();
   const { translate } = useTranslation();
 
-  // Fetch posts with user information
-  const { data: postsData, refetch, isLoading } = useQuery({
-    queryKey: ['discussion-posts', lessonComponentId],
+  // Fetch or create discussion thread for this lesson component
+  const { data: threadData } = useQuery({
+    queryKey: ['discussion-thread', lessonComponentId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('discussion_posts' as any)
-        .select(`
-          *,
-          profiles!discussion_posts_user_id_fkey (
-            id,
-            email,
-            full_name
-          )
-        `)
-        .eq('lesson_component_id', lessonComponentId)
+      // Try to find existing thread
+      const { data: existing, error: fetchError } = await supabase
+        .from('discussion_threads')
+        .select('id')
+        .eq('lesson_id', lessonComponentId)
+        .maybeSingle();
+
+      if (fetchError && fetchError.code !== 'PGRST116') throw fetchError;
+      
+      if (existing) return existing;
+
+      // Create thread if it doesn't exist
+      const { data: newThread, error: createError } = await supabase
+        .from('discussion_threads')
+        .insert({
+          lesson_id: lessonComponentId,
+          title: 'Lesson Discussion',
+          body: 'Discussion for this lesson',
+          created_by: user?.id || '',
+        })
+        .select('id')
+        .single();
+
+      if (createError) throw createError;
+      return newThread;
+    },
+    enabled: !!user,
+  });
+
+  // Fetch replies with user information
+  const { data: postsData, refetch, isLoading } = useQuery({
+    queryKey: ['discussion-replies', threadData?.id],
+    queryFn: async () => {
+      if (!threadData?.id) return [];
+      
+      const { data: replies, error } = await supabase
+        .from('discussion_replies')
+        .select('*')
+        .eq('thread_id', threadData.id)
         .eq('is_deleted', false)
         .order('created_at', { ascending: true });
 
       if (error) throw error;
-      return data as any[];
+
+      // Fetch user profiles for replies
+      if (replies && replies.length > 0) {
+        const userIds = [...new Set(replies.map(r => r.user_id))];
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('id, email, full_name')
+          .in('id', userIds);
+
+        // Attach profiles to replies
+        return replies.map(reply => ({
+          ...reply,
+          profiles: profiles?.find(p => p.id === reply.user_id) || null
+        }));
+      }
+
+      return replies || [];
     },
+    enabled: !!threadData?.id,
   });
 
   // Organize posts into threads
   const threads = useMemo(() => {
     if (!postsData) return [];
     
-    const topLevel = postsData.filter(post => !post.parent_post_id);
+    const topLevel = postsData.filter(post => !post.parent_id);
     
     return topLevel.map(parent => ({
       ...parent,
-      replies: postsData.filter(post => post.parent_post_id === parent.id)
+      replies: postsData.filter(post => post.parent_id === parent.id)
     }));
   }, [postsData]);
 
   // Submit new post
   const handleSubmit = async (parentPostId: string | null = null) => {
-    if (!newPostContent.trim() || !user) return;
+    if (!newPostContent.trim() || !user || !threadData?.id) return;
 
     if (newPostContent.length > (content?.settings?.maxPostLength || 1000)) {
       toast.error(`Post exceeds maximum length of ${content?.settings?.maxPostLength || 1000} characters`);
@@ -75,11 +120,11 @@ export function DiscussionLesson({ content, lessonComponentId, isStudent = false
 
     try {
       const { error } = await supabase
-        .from('discussion_posts' as any)
+        .from('discussion_replies')
         .insert({
-          lesson_component_id: lessonComponentId,
+          thread_id: threadData.id,
           user_id: user.id,
-          parent_post_id: parentPostId,
+          parent_id: parentPostId,
           content: newPostContent.trim(),
         });
 
