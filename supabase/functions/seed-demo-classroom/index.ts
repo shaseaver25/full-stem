@@ -51,30 +51,64 @@ serve(async (req) => {
 
     const { reset } = await req.json().catch(() => ({ reset: false }))
 
-    // Always clean up existing demo data first
-    console.log('🧹 Cleaning up existing demo data...')
-    
-    // Delete demo teacher by UUID (ignore error if doesn't exist)
+    if (reset) {
+  console.log('🗑️ Resetting demo environment...')
+  
+  // Try to delete demo teacher auth user (ignore if doesn't exist)
+  try {
+    const { error: deleteTeacherError } = await supabase.auth.admin.deleteUser(DEMO_TEACHER_ID)
+    if (deleteTeacherError && !deleteTeacherError.message.includes('not found')) {
+      console.error('Error deleting teacher:', deleteTeacherError)
+    } else {
+      console.log('✓ Deleted demo teacher auth user')
+    }
+  } catch (e) {
+    console.log('ℹ️ Demo teacher auth user not found (ok)')
+  }
+  
+  // Try to delete demo students auth users
+  for (let i = 0; i < DEMO_STUDENT_IDS.length; i++) {
     try {
-      await supabase.auth.admin.deleteUser(DEMO_TEACHER_ID)
-      console.log('✓ Deleted demo teacher')
+      await supabase.auth.admin.deleteUser(DEMO_STUDENT_IDS[i])
     } catch (e) {
-      console.log('ℹ️ Demo teacher not found (ok)')
+      // Ignore - user doesn't exist yet
     }
+  }
+  console.log('✓ Deleted demo student auth users')
+  
+  // Delete database records
+  console.log('Deleting database records...')
+  
+  await supabase.from('submission_analyses')
+    .delete()
+    .like('submission_id', '00000000-0000-0000%')
+  
+  await supabase.from('assignment_submissions')
+    .delete()
+    .like('id', '00000000-0000-0000%')
+  
+  await supabase.from('class_students')
+    .delete()
+    .like('student_id', '00000000-0000-0000%')
     
-    // Delete demo students by UUID (ignore errors if don't exist)
-    for (const studentId of DEMO_STUDENT_IDS) {
-      try {
-        await supabase.auth.admin.deleteUser(studentId)
-      } catch (e) {
-        // Ignore - student doesn't exist
-      }
-    }
-    console.log('✓ Deleted demo students')
+  await supabase.from('students')
+    .delete()
+    .like('id', '00000000-0000-0000%')
     
-    // Database cleanup (cascading deletes will handle related data)
-    await supabase.from('teacher_profiles').delete().eq('id', DEMO_TEACHER_ID)
-    await supabase.from('classes').delete().eq('id', DEMO_CLASS_ID)
+  await supabase.from('class_assignments_new')
+    .delete()
+    .like('id', '00000000-0000-0000%')
+    
+  await supabase.from('classes')
+    .delete()
+    .eq('id', DEMO_CLASS_ID)
+    
+  await supabase.from('teacher_profiles')
+    .delete()
+    .eq('id', DEMO_TEACHER_ID)
+  
+  console.log('✓ Demo environment reset complete')
+}
 
     // Create teacher auth user
     console.log('👨‍🏫 Creating demo teacher...')
