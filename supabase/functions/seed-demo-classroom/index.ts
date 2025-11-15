@@ -72,22 +72,40 @@ serve(async (req) => {
     if (reset) {
       console.log('🗑️ Resetting demo environment...')
       
-      // Delete auth users (ignore errors if they don't exist)
-      try {
-        await supabase.auth.admin.deleteUser(DEMO_TEACHER_ID)
-        console.log('✓ Deleted demo teacher auth')
-      } catch (e) {
-        console.log('ℹ️ Demo teacher auth not found')
-      }
+      // First, find actual auth user IDs from database
+      const { data: existingTeacher } = await supabase
+        .from('teacher_profiles')
+        .select('user_id')
+        .eq('id', DEMO_TEACHER_ID)
+        .single()
       
-      for (const studentId of DEMO_STUDENT_IDS) {
+      if (existingTeacher?.user_id) {
         try {
-          await supabase.auth.admin.deleteUser(studentId)
+          await supabase.auth.admin.deleteUser(existingTeacher.user_id)
+          console.log('✓ Deleted existing demo teacher auth user')
         } catch (e) {
-          // Ignore
+          console.log('ℹ️ Could not delete demo teacher auth user')
         }
       }
-      console.log('✓ Deleted demo student auth users')
+      
+      // Get all demo student user_ids from database
+      const { data: existingStudents } = await supabase
+        .from('students')
+        .select('user_id')
+        .in('id', DEMO_STUDENT_IDS)
+      
+      if (existingStudents) {
+        for (const student of existingStudents) {
+          if (student.user_id) {
+            try {
+              await supabase.auth.admin.deleteUser(student.user_id)
+            } catch (e) {
+              // Ignore
+            }
+          }
+        }
+        console.log('✓ Deleted demo student auth users')
+      }
       
       // Delete database records
       await supabase.from('submission_analyses').delete().like('submission_id', '00000000-0000-0000%')
