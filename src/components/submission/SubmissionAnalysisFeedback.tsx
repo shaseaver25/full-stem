@@ -1,6 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Sparkles, TrendingUp, Target, Lightbulb, AlertCircle } from 'lucide-react';
+import InlineReadAloud from '@/components/InlineReadAloud';
 
 interface AnalysisData {
   overall_mastery: 'novice' | 'developing' | 'proficient' | 'advanced';
@@ -49,9 +50,10 @@ export function SubmissionAnalysisFeedback({ analysis }: SubmissionAnalysisFeedb
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <p className="text-muted-foreground leading-relaxed">
-            {analysis.personalized_feedback}
-          </p>
+          <InlineReadAloud 
+            text={analysis.personalized_feedback}
+            className="text-muted-foreground leading-relaxed"
+          />
         </CardContent>
       </Card>
 
@@ -70,7 +72,7 @@ export function SubmissionAnalysisFeedback({ analysis }: SubmissionAnalysisFeedb
                 {analysis.strengths.map((strength, i) => (
                   <li key={i} className="flex gap-2">
                     <span className="text-green-600 font-bold">✓</span>
-                    <span className="text-sm">{strength}</span>
+                    <InlineReadAloud text={strength} className="text-sm" />
                   </li>
                 ))}
               </ul>
@@ -92,7 +94,7 @@ export function SubmissionAnalysisFeedback({ analysis }: SubmissionAnalysisFeedb
                 {analysis.areas_for_growth.map((area, i) => (
                   <li key={i} className="flex gap-2">
                     <span className="text-blue-600 font-bold">→</span>
-                    <span className="text-sm">{area}</span>
+                    <InlineReadAloud text={area} className="text-sm" />
                   </li>
                 ))}
               </ul>
@@ -113,8 +115,9 @@ export function SubmissionAnalysisFeedback({ analysis }: SubmissionAnalysisFeedb
           <CardContent>
             <ul className="space-y-2">
               {analysis.misconceptions.map((misconception, i) => (
-                <li key={i} className="text-sm text-muted-foreground">
-                  • {misconception}
+                <li key={i} className="flex gap-1">
+                  <span className="text-muted-foreground">•</span>
+                  <InlineReadAloud text={misconception} className="text-sm text-muted-foreground" />
                 </li>
               ))}
             </ul>
@@ -134,8 +137,9 @@ export function SubmissionAnalysisFeedback({ analysis }: SubmissionAnalysisFeedb
           <CardContent>
             <ul className="space-y-2">
               {analysis.recommended_actions.map((action, i) => (
-                <li key={i} className="text-sm">
-                  {i + 1}. {action}
+                <li key={i} className="flex gap-1">
+                  <span className="text-sm">{i + 1}.</span>
+                  <InlineReadAloud text={action} className="text-sm" />
                 </li>
               ))}
             </ul>
@@ -159,7 +163,7 @@ export function SubmissionAnalysisFeedback({ analysis }: SubmissionAnalysisFeedb
                       {criterion.score}/{criterion.max_score}
                     </span>
                   </div>
-                  <p className="text-sm text-muted-foreground">{criterion.feedback}</p>
+                  <InlineReadAloud text={criterion.feedback} className="text-sm text-muted-foreground" />
                   <div className="h-2 bg-secondary rounded-full overflow-hidden">
                     <div
                       className="h-full bg-primary"
