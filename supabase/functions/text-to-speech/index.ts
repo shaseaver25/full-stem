@@ -7,15 +7,19 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+const elevenlabsApiKey = Deno.env.get('ELEVENLABS_API_KEY');
 
-// Voice mapping for different styles and languages
+// Voice mapping for different styles
+// Using ElevenLabs top voices
 const VOICE_MAP: Record<string, string> = {
-  'female': 'nova',
-  'male': 'onyx',
-  'neutral': 'alloy',
-  'default': 'alloy'
+  'female': 'EXAVITQu4vr4xnSDxMaL', // Sarah
+  'male': 'TX3LPaxmHKxFdv7VOQHJ', // Liam
+  'neutral': '9BWtsMINqrJLrRacOk9x', // Aria
+  'default': '9BWtsMINqrJLrRacOk9x' // Aria
 };
+
+// Model selection - using turbo v2.5 for multilingual support with low latency
+const ELEVENLABS_MODEL = 'eleven_turbo_v2_5';
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -56,8 +60,8 @@ serve(async (req) => {
       );
     }
 
-    if (!openAIApiKey) {
-      console.error('OpenAI API key not found in environment variables');
+    if (!elevenlabsApiKey) {
+      console.error('ElevenLabs API key not found in environment variables');
       return new Response(
         JSON.stringify({ error: 'TTS service is not properly configured' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -108,34 +112,36 @@ serve(async (req) => {
 
     console.log('Cache miss or anonymous user, generating TTS...');
 
-    // Generate TTS using OpenAI
-    const voice = VOICE_MAP[voice_style] || VOICE_MAP['default'];
+    // Generate TTS using ElevenLabs
+    const voiceId = VOICE_MAP[voice_style] || VOICE_MAP['default'];
     
-    console.log('Calling OpenAI TTS API...');
-    const response = await fetch('https://api.openai.com/v1/audio/speech', {
+    console.log('Calling ElevenLabs TTS API...', { voiceId, model: ELEVENLABS_MODEL });
+    const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
+        'xi-api-key': elevenlabsApiKey,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'tts-1',
-        voice: voice,
-        input: text,
-        response_format: 'mp3',
+        text: text,
+        model_id: ELEVENLABS_MODEL,
+        voice_settings: {
+          stability: 0.5,
+          similarity_boost: 0.75,
+        }
       }),
     });
 
-    console.log('OpenAI TTS API response status:', response.status);
+    console.log('ElevenLabs TTS API response status:', response.status);
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('OpenAI TTS API error:', errorText);
+      console.error('ElevenLabs TTS API error:', errorText);
       return new Response(
         JSON.stringify({ 
           error: 'TTS generation failed' 
         }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: response.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
@@ -155,8 +161,8 @@ serve(async (req) => {
     // Log AI usage to ai_usage_logs
     try {
       const characterCount = text.length;
-      // ElevenLabs/OpenAI TTS pricing: ~$0.015 per 1K characters (OpenAI tts-1)
-      const estimatedCost = (characterCount / 1000) * 0.015;
+      // ElevenLabs TTS pricing: varies by model, estimated ~$0.018 per 1K characters
+      const estimatedCost = (characterCount / 1000) * 0.018;
 
       const supabaseClient = createClient(
         Deno.env.get('SUPABASE_URL') ?? '',
@@ -166,14 +172,14 @@ serve(async (req) => {
       await supabaseClient.from('ai_usage_logs').insert({
         user_id: user?.id || null,
         action_type: 'tts',
-        model: 'openai/tts-1',
+        model: `elevenlabs/${ELEVENLABS_MODEL}`,
         tokens_used: characterCount, // Store character count as "tokens" for TTS
         estimated_cost: estimatedCost,
         metadata: {
           character_count: characterCount,
           voice_style: voice_style,
           language: language_code,
-          voice: VOICE_MAP[voice_style] || VOICE_MAP['default'],
+          voice_id: VOICE_MAP[voice_style] || VOICE_MAP['default'],
           audio_format: 'mp3'
         }
       });
