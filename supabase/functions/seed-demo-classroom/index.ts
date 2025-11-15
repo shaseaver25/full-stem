@@ -6,114 +6,108 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+// Demo data constants
 const DEMO_TEACHER_ID = '00000000-0000-0000-0001-000000000001'
 const DEMO_CLASS_ID = '00000000-0000-0000-0002-000000000001'
 const DEMO_PASSWORD = 'DemoPassword2024!'
 
+const DEMO_STUDENT_IDS = [
+  '00000000-0000-0000-0004-000000000001',
+  '00000000-0000-0000-0004-000000000002',
+  '00000000-0000-0000-0004-000000000003',
+  '00000000-0000-0000-0004-000000000004',
+  '00000000-0000-0000-0004-000000000005',
+  '00000000-0000-0000-0004-000000000006',
+  '00000000-0000-0000-0004-000000000007',
+  '00000000-0000-0000-0004-000000000008',
+  '00000000-0000-0000-0004-000000000009',
+  '00000000-0000-0000-0004-000000000010',
+  '00000000-0000-0000-0004-000000000011',
+  '00000000-0000-0000-0004-000000000012',
+  '00000000-0000-0000-0004-000000000013',
+  '00000000-0000-0000-0004-000000000014',
+  '00000000-0000-0000-0004-000000000015',
+]
+
+const DEMO_ASSIGNMENT_IDS = [
+  '00000000-0000-0000-0003-000000000001',
+  '00000000-0000-0000-0003-000000000002',
+  '00000000-0000-0000-0003-000000000003',
+]
+
 const DEMO_STUDENTS = [
-  { firstName: 'Emma', lastName: 'Rodriguez', gradeLevel: '7th', readingLevel: 'Advanced' },
-  { firstName: 'Marcus', lastName: 'Chen', gradeLevel: '7th', readingLevel: 'Advanced' },
-  { firstName: 'Aisha', lastName: 'Patel', gradeLevel: '7th', readingLevel: 'Advanced' },
-  { firstName: 'Jake', lastName: 'Wilson', gradeLevel: '7th', readingLevel: 'Proficient' },
-  { firstName: 'Sofia', lastName: 'Martinez', gradeLevel: '7th', readingLevel: 'Proficient' },
-  { firstName: 'Tyler', lastName: 'Anderson', gradeLevel: '7th', readingLevel: 'Proficient' },
-  { firstName: 'Maya', lastName: 'Johnson', gradeLevel: '7th', readingLevel: 'Proficient' },
-  { firstName: 'Jamal', lastName: 'Williams', gradeLevel: '7th', readingLevel: 'Developing' },
-  { firstName: 'Olivia', lastName: 'Brown', gradeLevel: '7th', readingLevel: 'Developing' },
-  { firstName: 'Carlos', lastName: 'Garcia', gradeLevel: '7th', readingLevel: 'Developing' },
-  { firstName: 'Nina', lastName: 'Lee', gradeLevel: '7th', readingLevel: 'Developing' },
-  { firstName: 'David', lastName: 'Kim', gradeLevel: '7th', readingLevel: 'Emerging' },
-  { firstName: 'Jessica', lastName: 'Thompson', gradeLevel: '7th', readingLevel: 'Emerging' },
-  { firstName: 'Ryan', lastName: 'Davis', gradeLevel: '7th', readingLevel: 'Emerging' },
-  { firstName: 'Zoe', lastName: 'Miller', gradeLevel: '7th', readingLevel: 'Emerging' }
-].map((s, i) => ({
-  ...s,
-  id: `00000000-0000-0000-0004-${String(i + 1).padStart(12, '0')}`,
-  email: `${s.firstName.toLowerCase()}.${s.lastName.toLowerCase()}@demo.tailoredu.com`
-}))
+  { name: 'Emma Rodriguez', level: 'advanced' },
+  { name: 'Marcus Chen', level: 'advanced' },
+  { name: 'Aisha Patel', level: 'advanced' },
+  { name: 'Jake Wilson', level: 'proficient' },
+  { name: 'Sofia Martinez', level: 'proficient' },
+  { name: 'Tyler Anderson', level: 'proficient' },
+  { name: 'Maya Johnson', level: 'proficient' },
+  { name: 'Ethan Brown', level: 'proficient' },
+  { name: 'Olivia Davis', level: 'developing' },
+  { name: 'Noah Garcia', level: 'developing' },
+  { name: 'Isabella Lee', level: 'developing' },
+  { name: 'Liam Taylor', level: 'developing' },
+  { name: 'Ava White', level: 'developing' },
+  { name: 'Mia Martinez', level: 'emerging' },
+  { name: 'Lucas Anderson', level: 'emerging' },
+]
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
+    return new Response('ok', { headers: corsHeaders })
   }
 
   try {
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    const supabase = createClient(supabaseUrl, supabaseKey)
+
+    const { reset = false } = await req.json()
+
+    // ========================================
+    // CLEANUP (if reset requested)
+    // ========================================
+    if (reset) {
+      console.log('🗑️ Resetting demo environment...')
+      
+      // Delete auth users (ignore errors if they don't exist)
+      try {
+        await supabase.auth.admin.deleteUser(DEMO_TEACHER_ID)
+        console.log('✓ Deleted demo teacher auth')
+      } catch (e) {
+        console.log('ℹ️ Demo teacher auth not found')
+      }
+      
+      for (const studentId of DEMO_STUDENT_IDS) {
+        try {
+          await supabase.auth.admin.deleteUser(studentId)
+        } catch (e) {
+          // Ignore
         }
       }
-    )
-
-    const { reset } = await req.json().catch(() => ({ reset: false }))
-
-    if (reset) {
-  console.log('🗑️ Resetting demo environment...')
-  
-  // Try to delete demo teacher auth user (ignore if doesn't exist)
-  try {
-    const { error: deleteTeacherError } = await supabase.auth.admin.deleteUser(DEMO_TEACHER_ID)
-    if (deleteTeacherError && !deleteTeacherError.message.includes('not found')) {
-      console.error('Error deleting teacher:', deleteTeacherError)
-    } else {
-      console.log('✓ Deleted demo teacher auth user')
+      console.log('✓ Deleted demo student auth users')
+      
+      // Delete database records
+      await supabase.from('submission_analyses').delete().like('submission_id', '00000000-0000-0000%')
+      await supabase.from('assignment_submissions').delete().like('id', '00000000-0000-0000%')
+      await supabase.from('class_students').delete().like('student_id', '00000000-0000-0000%')
+      await supabase.from('students').delete().like('id', '00000000-0000-0000%')
+      await supabase.from('class_assignments_new').delete().like('id', '00000000-0000-0000%')
+      await supabase.from('classes').delete().eq('id', DEMO_CLASS_ID)
+      await supabase.from('teacher_profiles').delete().eq('id', DEMO_TEACHER_ID)
+      
+      console.log('✓ Demo environment reset complete')
     }
-  } catch (e) {
-    console.log('ℹ️ Demo teacher auth user not found (ok)')
-  }
-  
-  // Try to delete demo students auth users
-  for (let i = 0; i < DEMO_STUDENT_IDS.length; i++) {
-    try {
-      await supabase.auth.admin.deleteUser(DEMO_STUDENT_IDS[i])
-    } catch (e) {
-      // Ignore - user doesn't exist yet
-    }
-  }
-  console.log('✓ Deleted demo student auth users')
-  
-  // Delete database records
-  console.log('Deleting database records...')
-  
-  await supabase.from('submission_analyses')
-    .delete()
-    .like('submission_id', '00000000-0000-0000%')
-  
-  await supabase.from('assignment_submissions')
-    .delete()
-    .like('id', '00000000-0000-0000%')
-  
-  await supabase.from('class_students')
-    .delete()
-    .like('student_id', '00000000-0000-0000%')
-    
-  await supabase.from('students')
-    .delete()
-    .like('id', '00000000-0000-0000%')
-    
-  await supabase.from('class_assignments_new')
-    .delete()
-    .like('id', '00000000-0000-0000%')
-    
-  await supabase.from('classes')
-    .delete()
-    .eq('id', DEMO_CLASS_ID)
-    
-  await supabase.from('teacher_profiles')
-    .delete()
-    .eq('id', DEMO_TEACHER_ID)
-  
-  console.log('✓ Demo environment reset complete')
-}
 
-    // Create teacher auth user
+    // ========================================
+    // CREATE DEMO TEACHER
+    // ========================================
     console.log('👨‍🏫 Creating demo teacher...')
     
-    const { data: teacherAuth, error: teacherAuthError } = await supabase.auth.admin.createUser({
+    const teacherEmail = 'demo.teacher@tailoredu.com'
+    
+    const { data: teacherAuth, error: teacherError } = await supabase.auth.admin.createUser({
       email: teacherEmail,
       password: DEMO_PASSWORD,
       email_confirm: true,
@@ -123,133 +117,208 @@ serve(async (req) => {
       }
     })
 
-    if (teacherAuthError) {
-      console.error('❌ Teacher auth error:', teacherAuthError)
-      throw new Error(`Failed to create teacher: ${teacherAuthError.message}`)
+    if (teacherError) {
+      console.error('Teacher creation error:', teacherError)
+      throw new Error(`Failed to create teacher: ${teacherError.message}`)
     }
 
-    const teacherUserId = teacherAuth.user.id
-    console.log(`✅ Teacher created: ${teacherEmail}`)
+    console.log(`✓ Created auth user for teacher: ${teacherEmail}`)
 
     // Create teacher profile
     const { error: teacherProfileError } = await supabase
       .from('teacher_profiles')
       .insert({
         id: DEMO_TEACHER_ID,
-        user_id: teacherUserId
+        user_id: teacherAuth.user.id,
+        school_name: 'Lincoln Elementary School',
+        grade_levels: ['5'],
+        subjects: ['Science'],
+        years_experience: 8,
+        onboarding_completed: true
       })
 
     if (teacherProfileError) {
-      console.error('❌ Teacher profile error:', teacherProfileError)
-      throw teacherProfileError
+      console.error('Teacher profile error:', teacherProfileError)
+      throw new Error(`Failed to create teacher profile: ${teacherProfileError.message}`)
     }
 
-    // Create class
+    console.log('✓ Created teacher profile')
+
+    // ========================================
+    // CREATE DEMO CLASS
+    // ========================================
     console.log('🏫 Creating demo class...')
+    
     const { error: classError } = await supabase
       .from('classes')
       .insert({
         id: DEMO_CLASS_ID,
-        teacher_id: DEMO_TEACHER_ID,
-        name: '7th Grade Science - Adaptive Assessment Demo',
-        description: 'Demo classroom with AI-powered adaptive assessments',
+        name: '5th Grade Science - Room 204',
         subject: 'Science',
-        grade_level: '7th',
-        status: 'active',
-        published: true
+        grade_level: 5,
+        teacher_id: DEMO_TEACHER_ID,
+        published: true,
+        status: 'active'
       })
 
     if (classError) {
-      console.error('❌ Class error:', classError)
-      throw classError
+      console.error('Class creation error:', classError)
+      throw new Error(`Failed to create class: ${classError.message}`)
     }
 
-    // Create students
+    console.log('✓ Created demo class')
+
+    // ========================================
+    // CREATE DEMO STUDENTS
+    // ========================================
     console.log('👥 Creating demo students...')
-    const studentCredentials = []
-
-    for (const student of DEMO_STUDENTS) {
-      try {
-        const { data: studentAuth, error: studentAuthError } = await supabase.auth.admin.createUser({
-          email: student.email,
-          password: DEMO_PASSWORD,
-          email_confirm: true,
-          user_metadata: {
-            full_name: `${student.firstName} ${student.lastName}`,
-            role: 'student'
-          }
-        })
-
-        if (studentAuthError) {
-          console.error(`⚠️ Failed: ${student.email}`, studentAuthError)
-          continue
+    
+    const studentData = []
+    
+    for (let i = 0; i < DEMO_STUDENTS.length; i++) {
+      const student = DEMO_STUDENTS[i]
+      const [firstName, lastName] = student.name.split(' ')
+      const email = `${firstName.toLowerCase()}.${lastName.toLowerCase()}@demo.student.com`
+      
+      // Create auth user
+      const { data: studentAuth, error: studentAuthError } = await supabase.auth.admin.createUser({
+        email,
+        password: DEMO_PASSWORD,
+        email_confirm: true,
+        user_metadata: {
+          full_name: student.name,
+          role: 'student'
         }
+      })
 
-        const studentUserId = studentAuth.user.id
-
-        await supabase.from('students').insert({
-          id: student.id,
-          user_id: studentUserId,
-          first_name: student.firstName,
-          last_name: student.lastName,
-          grade_level: student.gradeLevel,
-          reading_level: student.readingLevel
-        })
-
-        await supabase.from('class_students').insert({
-          class_id: DEMO_CLASS_ID,
-          student_id: student.id,
-          status: 'active'
-        })
-
-        studentCredentials.push({
-          email: student.email,
-          password: DEMO_PASSWORD,
-          name: `${student.firstName} ${student.lastName}`,
-          readingLevel: student.readingLevel
-        })
-
-        console.log(`✅ Created: ${student.email}`)
-      } catch (error) {
-        console.error(`⚠️ Error: ${student.email}`, error)
+      if (studentAuthError) {
+        console.error(`Error creating student ${student.name}:`, studentAuthError)
+        continue
       }
+
+      studentData.push({
+        id: DEMO_STUDENT_IDS[i],
+        user_id: studentAuth.user.id,
+        first_name: firstName,
+        last_name: lastName,
+        grade_level: 5
+      })
+
+      console.log(`✓ Created ${student.name}`)
     }
 
-    console.log('✅ Demo environment ready!')
+    // Insert all students
+    const { error: studentsError } = await supabase
+      .from('students')
+      .insert(studentData)
 
+    if (studentsError) {
+      console.error('Students insert error:', studentsError)
+      throw new Error(`Failed to insert students: ${studentsError.message}`)
+    }
+
+    // Enroll students in class
+    const enrollmentData = studentData.map(s => ({
+      class_id: DEMO_CLASS_ID,
+      student_id: s.id,
+      status: 'active',
+      enrolled_at: new Date().toISOString()
+    }))
+
+    const { error: enrollError } = await supabase
+      .from('class_students')
+      .insert(enrollmentData)
+
+    if (enrollError) {
+      console.error('Enrollment error:', enrollError)
+      throw new Error(`Failed to enroll students: ${enrollError.message}`)
+    }
+
+    console.log(`✓ Created and enrolled ${studentData.length} students`)
+
+    // ========================================
+    // CREATE DEMO ASSIGNMENTS
+    // ========================================
+    console.log('📝 Creating demo assignments...')
+    
+    const assignments = [
+      {
+        id: DEMO_ASSIGNMENT_IDS[0],
+        class_id: DEMO_CLASS_ID,
+        title: 'Photosynthesis Explanation',
+        description: 'Explain how plants make food from sunlight',
+        instructions: 'Explain how plants make food from sunlight. Include the inputs (what goes in), the process (what happens), and the outputs (what comes out). Use at least 3 scientific terms.',
+        due_date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+        max_points: 16,
+        status: 'published'
+      },
+      {
+        id: DEMO_ASSIGNMENT_IDS[1],
+        class_id: DEMO_CLASS_ID,
+        title: 'Water Cycle Diagram',
+        description: 'Draw or describe the water cycle',
+        instructions: 'Draw or describe the water cycle. Explain evaporation, condensation, precipitation, and collection.',
+        due_date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+        max_points: 12,
+        status: 'published'
+      },
+      {
+        id: DEMO_ASSIGNMENT_IDS[2],
+        class_id: DEMO_CLASS_ID,
+        title: 'Animal Adaptations Essay',
+        description: 'Explain how animal features help survival',
+        instructions: 'Choose an animal and explain how its physical features help it survive in its environment. Give at least 3 examples.',
+        due_date: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
+        max_points: 15,
+        status: 'published'
+      }
+    ]
+
+    const { error: assignmentsError } = await supabase
+      .from('class_assignments_new')
+      .insert(assignments)
+
+    if (assignmentsError) {
+      console.error('Assignments error:', assignmentsError)
+      throw new Error(`Failed to create assignments: ${assignmentsError.message}`)
+    }
+
+    console.log('✓ Created 3 demo assignments')
+
+    // ========================================
+    // RETURN SUCCESS
+    // ========================================
     return new Response(
       JSON.stringify({
         success: true,
         message: 'Demo environment created successfully',
-        teacher: {
-          email: teacherEmail,
-          password: DEMO_PASSWORD,
-          name: 'Demo Teacher'
-        },
-        students: studentCredentials,
-        class: {
-          id: DEMO_CLASS_ID,
-          name: '7th Grade Science - Adaptive Assessment Demo'
-        },
-        stats: {
-          studentsCreated: studentCredentials.length
+        data: {
+          teacher: {
+            email: teacherEmail,
+            password: DEMO_PASSWORD,
+            name: 'Demo Teacher'
+          },
+          students: DEMO_STUDENTS.length,
+          assignments: assignments.length,
+          class_id: DEMO_CLASS_ID
         }
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200
+        status: 200,
       }
     )
+
   } catch (error) {
-    console.error('❌ Seed error:', error)
+    console.error('Error in seed-demo-classroom:', error)
     return new Response(
-      JSON.stringify({
+      JSON.stringify({ 
         success: false,
-        error: error.message || 'Unknown error'
+        error: error.message 
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 500
+        status: 500,
       }
     )
   }
