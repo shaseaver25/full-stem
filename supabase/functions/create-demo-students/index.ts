@@ -33,6 +33,44 @@ serve(async (req) => {
     }
 
     console.log('🎓 Creating demo students...')
+    
+    // First, cleanup any existing demo data
+    console.log('🗑️ Cleaning up existing demo data...')
+    
+    // Delete existing auth users with demo emails
+    for (const student of DEMO_STUDENTS) {
+      try {
+        // List all users and find the one with matching email
+        const { data: users } = await supabase.auth.admin.listUsers()
+        const existingUser = users?.users.find(u => u.email === student.email)
+        
+        if (existingUser) {
+          await supabase.auth.admin.deleteUser(existingUser.id)
+          console.log(`✓ Deleted existing user: ${student.email}`)
+        }
+      } catch (e) {
+        console.log(`ℹ️ Could not delete ${student.email}:`, e)
+      }
+    }
+    
+    // Delete existing demo class
+    try {
+      const { data: existingClass } = await supabase
+        .from('classes')
+        .select('id')
+        .eq('name', className)
+        .eq('teacher_id', teacherId)
+        .maybeSingle()
+      
+      if (existingClass) {
+        await supabase.from('class_students').delete().eq('class_id', existingClass.id)
+        await supabase.from('class_assignments_new').delete().eq('class_id', existingClass.id)
+        await supabase.from('classes').delete().eq('id', existingClass.id)
+        console.log('✓ Cleaned up existing demo class')
+      }
+    } catch (e) {
+      console.log('ℹ️ No existing class to clean up')
+    }
 
     // Step 1: Create auth users and student profiles
     const createdStudents = []
