@@ -9,6 +9,7 @@ import { Loader2, RefreshCw, User, CheckCircle, Clock, AlertCircle, Sparkles, Tr
 import { useToast } from '@/hooks/use-toast'
 import { StudentAnalysisReviewModal } from '@/components/teacher/StudentAnalysisReviewModal'
 import { useSeedDemoEnvironment } from '@/hooks/useSeedDemoEnvironment'
+import { useInsertDemoSubmissions } from '@/hooks/useInsertDemoSubmissions'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 
 const MASTERY_COLORS = {
@@ -35,6 +36,7 @@ export default function AdaptiveClassroomDemo() {
   
   // Demo seeding hook
   const { mutate: seedDemo, isPending: isSeeding } = useSeedDemoEnvironment()
+  const { mutate: insertSubmissions, isPending: isInsertingSubmissions } = useInsertDemoSubmissions()
 
   // Fetch demo class by name instead of hardcoded ID
   const { data: demoClass, isLoading: isCheckingDemo } = useQuery({
@@ -246,6 +248,15 @@ export default function AdaptiveClassroomDemo() {
           >
             {isSeeding && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
             Seed Demo Data
+          </Button>
+          
+          <Button
+            variant="outline"
+            onClick={() => insertSubmissions('3dd06368-5a45-47f0-a2d1-e3885994f8b9')}
+            disabled={isInsertingSubmissions}
+          >
+            {isInsertingSubmissions && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+            Insert Submissions
           </Button>
           
           <Button
