@@ -36,7 +36,7 @@ export default function Header({
           <span className="font-semibold tracking-tight text-gray-900">TailorEDU</span>
         </Link>
         <div className="hidden md:flex items-center gap-6 text-sm text-gray-600">
-          <a href="#problem" className="hover:text-teal-600 transition-colors">Why TailoredU</a>
+          <a href="#problem" className="hover:text-teal-600 transition-colors">Why TailorEDU</a>
           <a href="#platform" className="hover:text-teal-600 transition-colors">Platform</a>
           <a href="#serve" className="hover:text-teal-600 transition-colors">Who We Serve</a>
           <a href="#contact" className="hover:text-teal-600 transition-colors">Contact</a>
