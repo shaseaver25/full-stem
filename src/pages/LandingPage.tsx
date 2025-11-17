@@ -120,7 +120,7 @@ export default function LandingPage() {
         </div>
         <div className="mx-auto max-w-7xl px-4 py-20 md:py-28">
           <motion.div {...fadeUp} className="max-w-3xl">
-            <h1 className="text-4xl md:text-6xl font-semibold tracking-tight text-gray-900">Empowering Educators and Students to Learn and Work Intelligently with AI.</h1>
+            <h1 className="text-4xl font-semibold tracking-tight text-gray-900 md:text-4xl">Empowering Educators and Students to Learn and Work Intelligently with AI.</h1>
             <p className="mt-5 text-lg text-gray-600">
               TailoredU delivers adaptive AI-powered learning and workforce upskilling for educators, organizations, and teams.
             </p>
