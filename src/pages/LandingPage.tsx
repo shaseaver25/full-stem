@@ -228,7 +228,7 @@ export default function LandingPage() {
       <section id="contact" className="border-t bg-white">
         <div className="mx-auto max-w-7xl px-4 py-16 md:py-20">
           <motion.div {...fadeUp} className="rounded-3xl bg-gradient-to-tr from-teal-400 via-sky-400 to-purple-500 p-8 md:p-12 text-white">
-            <h3 className="text-2xl md:text-3xl font-semibold tracking-tight">See TailoredU in Action.</h3>
+            <h3 className="text-2xl md:text-3xl font-semibold tracking-tight">See TailorEDU in Action.</h3>
             <p className="mt-2 text-white/90 max-w-2xl">Discover how personalized AI learning can transform your classroom or organization.</p>
             <div className="mt-6 flex flex-wrap gap-3">
               <Button onClick={() => setDemoOpen(true)} className="bg-white text-teal-600 hover:bg-gray-50">Schedule a Demo</Button>
