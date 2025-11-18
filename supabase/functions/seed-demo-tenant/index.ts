@@ -1,7 +1,7 @@
 // supabase/functions/seed-demo-tenant/index.ts
 // Demo seeding + wiping + public status (CORS-safe, returns counts)
 
-import { createClient, type User } from 'https://esm.sh/@supabase/supabase-js@2'
+import { createClient, type User } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/+esm"
 
 // ── ENV ──────────────────────────────────────────────────────────────────────
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!

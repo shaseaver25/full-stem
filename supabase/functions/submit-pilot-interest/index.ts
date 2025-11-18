@@ -1,7 +1,7 @@
 // Deno edge function: submit-pilot-interest
 // Saves submission to DB, emails your team, and thanks the submitter.
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/+esm";
 import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
 
 type Payload = {
