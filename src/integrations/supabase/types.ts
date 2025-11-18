@@ -2297,6 +2297,41 @@ export type Database = {
           },
         ]
       }
+      lesson_media: {
+        Row: {
+          created_at: string | null
+          id: string
+          lesson_id: string | null
+          media_type: string | null
+          media_url: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          lesson_id?: string | null
+          media_type?: string | null
+          media_url: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          lesson_id?: string | null
+          media_type?: string | null
+          media_url?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lesson_media_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lesson_media_notes: {
         Row: {
           created_at: string | null
@@ -2340,7 +2375,15 @@ export type Database = {
           updated_at?: string | null
           vocab_list?: Json | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "lesson_media_notes_media_id_fkey"
+            columns: ["media_id"]
+            isOneToOne: false
+            referencedRelation: "lesson_media"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       lesson_refinements: {
         Row: {
