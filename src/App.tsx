@@ -62,6 +62,7 @@ const AICourseBuilderPage = React.lazy(() => import("./pages/AICourseBuilderPage
 const DemoGate = React.lazy(() => import("./pages/DemoGate"));
 const DemoStart = React.lazy(() => import("./pages/DemoStart"));
 const DemoShowcase = React.lazy(() => import("./pages/DemoShowcase"));
+const MediaNotesDemo = React.lazy(() => import("./pages/MediaNotesDemo"));
 const StudentDashboard = React.lazy(() => import("./pages/student/StudentDashboard"));
 const TeacherFeedbackDashboard = React.lazy(() => import("./pages/teacher/TeacherFeedbackDashboard"));
 const StudentDetailPage = React.lazy(() => import("./pages/teacher/StudentDetailPage"));
@@ -259,6 +260,9 @@ function AppContent() {
         
         {/* Demo Showcase */}
         <Route path="/demo-showcase" element={<ErrorBoundary><DemoShowcase /></ErrorBoundary>} />
+        
+        {/* Media Notes Demo */}
+        <Route path="/demo/media-notes" element={<ErrorBoundary><MediaNotesDemo /></ErrorBoundary>} />
         
         {/* Documentation */}
         <Route path="/docs/ux-testing" element={<ErrorBoundary><DocsViewer /></ErrorBoundary>} />
