@@ -2297,6 +2297,51 @@ export type Database = {
           },
         ]
       }
+      lesson_media_notes: {
+        Row: {
+          created_at: string | null
+          id: string
+          media_id: string | null
+          questions: Json | null
+          recommended_next: Json | null
+          summary_student: string | null
+          summary_teacher: string | null
+          themes: Json | null
+          transcript: string | null
+          translations: Json | null
+          updated_at: string | null
+          vocab_list: Json | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          media_id?: string | null
+          questions?: Json | null
+          recommended_next?: Json | null
+          summary_student?: string | null
+          summary_teacher?: string | null
+          themes?: Json | null
+          transcript?: string | null
+          translations?: Json | null
+          updated_at?: string | null
+          vocab_list?: Json | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          media_id?: string | null
+          questions?: Json | null
+          recommended_next?: Json | null
+          summary_student?: string | null
+          summary_teacher?: string | null
+          themes?: Json | null
+          transcript?: string | null
+          translations?: Json | null
+          updated_at?: string | null
+          vocab_list?: Json | null
+        }
+        Relationships: []
+      }
       lesson_refinements: {
         Row: {
           class_id: string | null
