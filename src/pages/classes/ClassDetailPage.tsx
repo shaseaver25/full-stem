@@ -256,7 +256,7 @@ export default function ClassDetailPage() {
                       </div>
                       <Button
                         size="sm"
-                        onClick={() => navigate(`/student/assignment/${assignment.id}`)}
+                        onClick={() => navigate(`/student/assignments/${assignment.id}`)}
                       >
                         View
                       </Button>
