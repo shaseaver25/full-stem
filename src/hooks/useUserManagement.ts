@@ -41,6 +41,42 @@ export interface User {
   createdAt: string;
 }
 
+export interface UpdateUserData {
+  userId: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  role: 'teacher' | 'student' | 'admin' | 'developer';
+  phone?: string;
+  avatarUrl?: string;
+  bio?: string;
+  status?: string;
+  
+  // Student-specific
+  gradeLevel?: string;
+  studentId?: string;
+  classIds?: string[];
+  
+  // Teacher-specific
+  district?: string;
+  gradeLevelsTaught?: string[];
+  subjectAreas?: string[];
+  licenseNumber?: string;
+  
+  // Admin-specific
+  adminType?: 'district' | 'school' | 'super';
+  organization?: string;
+}
+
+export interface PasswordResetData {
+  userId: string;
+  email: string;
+  method: 'email' | 'temporary' | 'custom';
+  customPassword?: string;
+  forceChange?: boolean;
+  notifyUser?: boolean;
+}
+
 export const useUserManagement = () => {
   const queryClient = useQueryClient();
 
@@ -172,11 +208,75 @@ export const useUserManagement = () => {
     }
   });
 
+  // Update user mutation
+  const updateUserMutation = useMutation({
+    mutationFn: async (userData: UpdateUserData) => {
+      const { data, error } = await supabase.functions.invoke('update-user', {
+        body: userData
+      });
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['allUsers'] });
+      toast({
+        title: '✅ User Updated',
+        description: 'User information has been updated successfully',
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Failed to Update User',
+        description: error.message || 'Please try again',
+        variant: 'destructive',
+      });
+    }
+  });
+
   return {
     users,
     usersLoading,
     availableClasses: availableClasses || [],
     createUser: createUserMutation.mutate,
-    isCreating: createUserMutation.isPending
+    isCreating: createUserMutation.isPending,
+    updateUser: updateUserMutation.mutate,
+    isUpdating: updateUserMutation.isPending
+  };
+};
+
+// Separate hook for password reset
+export const usePasswordReset = () => {
+  const queryClient = useQueryClient();
+
+  const resetPasswordMutation = useMutation({
+    mutationFn: async (resetData: PasswordResetData) => {
+      const { data, error } = await supabase.functions.invoke('reset-password', {
+        body: resetData
+      });
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data, variables) => {
+      if (variables.method === 'email') {
+        toast({
+          title: '✅ Password Reset Email Sent',
+          description: `${variables.email} will receive reset instructions`,
+        });
+      }
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Password Reset Failed',
+        description: error.message || 'Please try again',
+        variant: 'destructive',
+      });
+    }
+  });
+
+  return {
+    resetPassword: resetPasswordMutation.mutate,
+    isResetting: resetPasswordMutation.isPending
   };
 };
