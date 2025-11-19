@@ -12,6 +12,7 @@ import { Copy, Check } from 'lucide-react';
 import { ClassCodeDisplay } from './ClassCodeDisplay';
 import { ClassQRCode } from './ClassQRCode';
 import { toast } from '@/hooks/use-toast';
+import { getJoinClassUrl } from '@/utils/appUrl';
 
 interface ShareClassModalProps {
   open: boolean;
@@ -34,10 +35,11 @@ export const ShareClassModal = ({
 
   const shareInstructions = `Join ${className} on TailorEDU:
 
-1. Go to ${window.location.origin}/classes/join
+1. Go to ${getJoinClassUrl()}
 2. Enter code: ${classCode}
 
 Or scan the QR code attached.`;
+
 
   const handleCopyInstructions = async () => {
     await navigator.clipboard.writeText(shareInstructions);
