@@ -739,6 +739,15 @@ export function DraggableComponentCard({
               />
             </div>
             <div>
+              <Label>Instructions</Label>
+              <Textarea
+                value={component.content.instructions || ''}
+                onChange={(e) => handleContentChange('instructions', e.target.value)}
+                placeholder="Provide detailed instructions for the assignment"
+                rows={4}
+              />
+            </div>
+            <div>
               <Label>Points</Label>
               <Input
                 type="number"
