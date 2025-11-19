@@ -20,7 +20,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { CreateUserData, useUserManagement } from '@/hooks/useUserManagement';
-import { Loader2, UserPlus } from 'lucide-react';
+import { Loader2, UserPlus, RefreshCw } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
 interface AddUserFormProps {
@@ -42,6 +42,16 @@ const SUBJECTS = [
   'Other'
 ];
 
+const generatePassword = () => {
+  const length = 12;
+  const charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*';
+  let password = '';
+  for (let i = 0; i < length; i++) {
+    password += charset.charAt(Math.floor(Math.random() * charset.length));
+  }
+  return password;
+};
+
 export const AddUserForm: React.FC<AddUserFormProps> = ({ open, onOpenChange }) => {
   const { createUser, isCreating, availableClasses } = useUserManagement();
   
@@ -62,7 +72,8 @@ export const AddUserForm: React.FC<AddUserFormProps> = ({ open, onOpenChange }) 
     subjectAreas: [],
     licenseNumber: '',
     adminType: 'school',
-    organization: ''
+    organization: '',
+    password: generatePassword()
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -120,7 +131,8 @@ export const AddUserForm: React.FC<AddUserFormProps> = ({ open, onOpenChange }) 
           subjectAreas: [],
           licenseNumber: '',
           adminType: 'school',
-          organization: ''
+          organization: '',
+          password: generatePassword()
         });
         setErrors({});
         onOpenChange(false);
@@ -265,6 +277,34 @@ export const AddUserForm: React.FC<AddUserFormProps> = ({ open, onOpenChange }) 
                   <SelectItem value="developer">Developer</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="password">
+                Temporary Password <span className="text-destructive">*</span>
+              </Label>
+              <div className="flex gap-2">
+                <Input
+                  id="password"
+                  type="text"
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  placeholder="Auto-generated password"
+                  className="font-mono text-sm"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setFormData({ ...formData, password: generatePassword() })}
+                  title="Generate new password"
+                >
+                  <RefreshCw className="h-4 w-4" />
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                User will receive this password via email and can change it after first login.
+              </p>
             </div>
           </div>
 
