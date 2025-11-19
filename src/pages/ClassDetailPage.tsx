@@ -4,11 +4,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, BookOpen, Users, ClipboardList, MessageSquare, Calendar, Clock, PlusCircle, GraduationCap, Trash2 } from 'lucide-react';
+import { ArrowLeft, BookOpen, Users, ClipboardList, MessageSquare, Calendar, Clock, PlusCircle, GraduationCap, Trash2, Share2 } from 'lucide-react';
 import { useClass, useClassAssignments } from '@/hooks/useClassManagement';
 import { useClassLessons } from '@/hooks/useClassLessons';
 import { RosterManagement } from '@/components/teacher/RosterManagement';
 import { AssignmentWizard } from '@/components/teacher/AssignmentWizard';
+import { ShareClassModal } from '@/components/teacher/ShareClassModal';
 import { format, startOfToday } from 'date-fns';
 import Header from '@/components/Header';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -32,6 +33,7 @@ export default function ClassDetailPage() {
   const queryClient = useQueryClient();
   const [assignmentWizardOpen, setAssignmentWizardOpen] = useState(false);
   const [lessonToDelete, setLessonToDelete] = useState<string | null>(null);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
   // Support both :classId and :id params for flexibility
   const resolvedClassId = classId || id;
@@ -184,6 +186,14 @@ export default function ClassDetailPage() {
             </span>
           </div>
         </div>
+        <Button 
+          variant="outline" 
+          onClick={() => setIsShareModalOpen(true)}
+          className="flex items-center gap-2"
+        >
+          <Share2 className="h-4 w-4" />
+          Share Class
+        </Button>
       </div>
 
       {/* Class Overview Card */}
@@ -529,6 +539,14 @@ export default function ClassDetailPage() {
         classId={resolvedClassId}
         open={assignmentWizardOpen}
         onOpenChange={setAssignmentWizardOpen}
+      />
+
+      <ShareClassModal
+        open={isShareModalOpen}
+        onOpenChange={setIsShareModalOpen}
+        classId={resolvedClassId}
+        className={classData.name}
+        classCode={classData.class_code}
       />
 
       <AlertDialog open={!!lessonToDelete} onOpenChange={() => setLessonToDelete(null)}>
