@@ -24,6 +24,7 @@ import { getMode } from '@/utils/env';
 import { CreateTestStudentsButton } from '@/components/admin/CreateTestStudentsButton';
 import { AICostsPanel } from '@/components/developer/AICostsPanel';
 import { MarkdownViewer } from '@/components/MarkdownViewer';
+import { UserManagementPanel } from '@/components/developer/UserManagementPanel';
 
 const DeveloperDashboard = () => {
   const { user } = useAuth();
@@ -238,34 +239,7 @@ const DeveloperDashboard = () => {
           </TabsContent>
 
           <TabsContent value="users" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>User Management</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-600">
-                  Read-only access to user dashboards. Use impersonation mode to view from user perspectives.
-                </p>
-                <div className="mt-4 grid md:grid-cols-4 gap-4">
-                  <div className="text-center p-4 border rounded">
-                    <h3 className="font-medium">Teachers</h3>
-                    <p className="text-2xl font-bold text-blue-600">0</p>
-                  </div>
-                  <div className="text-center p-4 border rounded">
-                    <h3 className="font-medium">Students</h3>
-                    <p className="text-2xl font-bold text-green-600">0</p>
-                  </div>
-                  <div className="text-center p-4 border rounded">
-                    <h3 className="font-medium">Parents</h3>
-                    <p className="text-2xl font-bold text-purple-600">0</p>
-                  </div>
-                  <div className="text-center p-4 border rounded">
-                    <h3 className="font-medium">Schools</h3>
-                    <p className="text-2xl font-bold text-orange-600">0</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <UserManagementPanel />
           </TabsContent>
 
 
