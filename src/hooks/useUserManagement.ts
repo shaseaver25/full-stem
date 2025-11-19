@@ -7,6 +7,7 @@ export interface CreateUserData {
   firstName: string;
   lastName: string;
   role: 'teacher' | 'student' | 'admin' | 'developer';
+  password: string;
   phone?: string;
   avatarUrl?: string;
   bio?: string;

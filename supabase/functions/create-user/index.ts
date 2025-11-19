@@ -11,6 +11,7 @@ interface CreateUserRequest {
   firstName: string;
   lastName: string;
   role: 'teacher' | 'student' | 'admin' | 'developer';
+  password: string;
   phone?: string;
   avatarUrl?: string;
   bio?: string;
@@ -51,13 +52,13 @@ serve(async (req) => {
 
     const userData: CreateUserRequest = await req.json();
 
-    // Generate a temporary password
-    const tempPassword = generatePassword();
+    // Use provided password
+    const password = userData.password;
     
     // Create auth user
     const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email: userData.email,
-      password: tempPassword,
+      password: password,
       email_confirm: true,
       user_metadata: {
         full_name: `${userData.firstName} ${userData.lastName}`,
@@ -197,7 +198,7 @@ serve(async (req) => {
     // TODO: Send welcome email if requested
     // This would integrate with Resend or another email service
     if (userData.sendWelcomeEmail) {
-      console.log(`Would send welcome email to ${userData.email} with password: ${tempPassword}`);
+      console.log(`Would send welcome email to ${userData.email} with password: ${password}`);
       // For now, we'll just log it
       // In production, integrate with Resend API
     }
@@ -208,7 +209,7 @@ serve(async (req) => {
         message: 'User created successfully',
         email: userData.email,
         userId: userId,
-        tempPassword: tempPassword, // Remove this in production
+        password: password, // Can be removed in production for security
         sendWelcomeEmail: userData.sendWelcomeEmail
       }),
       {
@@ -230,18 +231,3 @@ serve(async (req) => {
     );
   }
 });
-
-function generatePassword(): string {
-  const length = 12;
-  const charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*';
-  let password = '';
-  const crypto = globalThis.crypto;
-  const array = new Uint8Array(length);
-  crypto.getRandomValues(array);
-  
-  for (let i = 0; i < length; i++) {
-    password += charset[array[i] % charset.length];
-  }
-  
-  return password;
-}
