@@ -23,15 +23,48 @@ export const useClassEnrollment = () => {
         throw new Error('Not authenticated');
       }
 
-      // Step 1: Get student ID from students table
-      const { data: studentData, error: studentError } = await supabase
+      // Step 1: Get or create student ID from students table
+      let { data: studentData, error: studentError } = await supabase
         .from('students')
         .select('id')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
-      if (studentError || !studentData) {
-        throw new Error('Student profile not found. Please complete your profile setup.');
+      // If no student profile exists, create one
+      if (!studentData) {
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('full_name, email')
+          .eq('id', user.id)
+          .single();
+
+        const fullName = profileData?.full_name || profileData?.email || 'Student';
+        const nameParts = fullName.split(' ');
+        
+        const { data: newStudent, error: createError } = await supabase
+          .from('students')
+          .insert({
+            user_id: user.id,
+            first_name: nameParts[0] || 'Student',
+            last_name: nameParts.slice(1).join(' ') || '',
+          })
+          .select('id')
+          .single();
+
+        if (createError || !newStudent) {
+          throw new Error('Failed to create student profile. Please try again.');
+        }
+
+        studentData = newStudent;
+        
+        // Also add student role (ignore if already exists)
+        await supabase
+          .from('user_roles')
+          .insert({
+            user_id: user.id,
+            role: 'student'
+          })
+          .select();
       }
 
       // Step 2: Find class by code
