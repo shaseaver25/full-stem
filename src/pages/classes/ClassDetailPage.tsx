@@ -1,9 +1,10 @@
-import { useParams, Link, Navigate } from 'react-router-dom';
+import { useParams, Link, Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, BookOpen, Calendar, GraduationCap, Mail, User, FileText, Folder } from 'lucide-react';
 import { useClassDetails } from '@/hooks/useClassDetails';
+import { useClassLessons } from '@/hooks/useClassLessons';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const formatDate = (dateString: string) => 
@@ -15,8 +16,10 @@ const formatDate = (dateString: string) =>
 
 export default function ClassDetailPage() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const { data: classData, isLoading, error } = useClassDetails(id || '');
+  const { data: lessons = [], isLoading: lessonsLoading } = useClassLessons(id || '');
 
   if (authLoading) {
     return (
@@ -162,6 +165,47 @@ export default function ClassDetailPage() {
                 </div>
               </div>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Lessons Section */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <BookOpen className="w-5 h-5" />
+              <CardTitle>Lessons</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {lessonsLoading ? (
+              <p className="text-muted-foreground">Loading lessons...</p>
+            ) : lessons.length === 0 ? (
+              <p className="text-muted-foreground">No lessons are available for this class yet.</p>
+            ) : (
+              <div className="space-y-3">
+                {lessons.map((lesson) => (
+                  <div
+                    key={lesson.id}
+                    className="flex items-center justify-between p-3 border rounded-md"
+                  >
+                    <div>
+                      <p className="font-medium">{lesson.title}</p>
+                      {lesson.description && (
+                        <p className="text-sm text-muted-foreground line-clamp-2">
+                          {lesson.description}
+                        </p>
+                      )}
+                    </div>
+                    <Button
+                      size="sm"
+                      onClick={() => navigate(`/student/lesson/${lesson.id}`)}
+                    >
+                      Open
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
 
