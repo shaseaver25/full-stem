@@ -134,12 +134,21 @@ export const useUserManagement = () => {
           : `User ${data.email} has been created`,
       });
     },
-    onError: (error: Error) => {
+    onError: (error: any) => {
+      const errorMessage = error.message || 'Please try again';
+      const isEmailExists = errorMessage.includes('already registered') || 
+                           errorMessage.includes('EMAIL_EXISTS');
+      
       toast({
-        title: 'Failed to Create User',
-        description: error.message || 'Please try again',
+        title: isEmailExists ? 'Email Already Exists' : 'Failed to Create User',
+        description: isEmailExists 
+          ? `${errorMessage}. Check the user list below to find this user.`
+          : errorMessage,
         variant: 'destructive',
       });
+
+      // Refresh the user list to ensure it's up to date
+      queryClient.invalidateQueries({ queryKey: ['allUsers'] });
     }
   });
 
