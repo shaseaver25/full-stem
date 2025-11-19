@@ -68,7 +68,26 @@ serve(async (req) => {
 
     if (authError) {
       console.error('Auth error:', authError);
-      throw new Error(`Failed to create auth user: ${authError.message}`);
+
+      const message = (authError as any).message || '';
+      const isDuplicateEmail = message.includes('already been registered') ||
+        message.toLowerCase().includes('user already registered');
+
+      const friendlyMessage = isDuplicateEmail
+        ? 'This email is already registered. Please use a different email address.'
+        : `Failed to create auth user: ${message}`;
+
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: friendlyMessage,
+          code: isDuplicateEmail ? 'EMAIL_EXISTS' : 'AUTH_ERROR'
+        }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
     }
 
     const userId = authData.user.id;
