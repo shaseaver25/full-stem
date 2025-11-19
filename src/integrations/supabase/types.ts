@@ -836,6 +836,50 @@ export type Database = {
           },
         ]
       }
+      class_join_log: {
+        Row: {
+          class_id: string | null
+          device_info: string | null
+          id: string
+          ip_address: string | null
+          join_code: string | null
+          join_method: string | null
+          joined_at: string | null
+          student_id: string | null
+          success: boolean | null
+        }
+        Insert: {
+          class_id?: string | null
+          device_info?: string | null
+          id?: string
+          ip_address?: string | null
+          join_code?: string | null
+          join_method?: string | null
+          joined_at?: string | null
+          student_id?: string | null
+          success?: boolean | null
+        }
+        Update: {
+          class_id?: string | null
+          device_info?: string | null
+          id?: string
+          ip_address?: string | null
+          join_code?: string | null
+          join_method?: string | null
+          joined_at?: string | null
+          student_id?: string | null
+          success?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "class_join_log_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       class_lessons: {
         Row: {
           class_id: string
@@ -1112,7 +1156,13 @@ export type Database = {
       }
       classes: {
         Row: {
-          class_code: string | null
+          allow_code_join: boolean | null
+          allow_qr_join: boolean | null
+          class_code: string
+          code_expires_at: string | null
+          code_last_regenerated_at: string | null
+          code_usage_count: number | null
+          code_usage_limit: number | null
           content_metadata: Json | null
           created_at: string | null
           description: string | null
@@ -1134,7 +1184,13 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
-          class_code?: string | null
+          allow_code_join?: boolean | null
+          allow_qr_join?: boolean | null
+          class_code: string
+          code_expires_at?: string | null
+          code_last_regenerated_at?: string | null
+          code_usage_count?: number | null
+          code_usage_limit?: number | null
           content_metadata?: Json | null
           created_at?: string | null
           description?: string | null
@@ -1156,7 +1212,13 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
-          class_code?: string | null
+          allow_code_join?: boolean | null
+          allow_qr_join?: boolean | null
+          class_code?: string
+          code_expires_at?: string | null
+          code_last_regenerated_at?: string | null
+          code_usage_count?: number | null
+          code_usage_limit?: number | null
           content_metadata?: Json | null
           created_at?: string | null
           description?: string | null
