@@ -21,7 +21,7 @@ export function useClassLessons(classId: string | undefined) {
       if (!classId) throw new Error('Class ID is required');
 
       const { data, error } = await supabase
-        .from('lessons')
+        .from('class_lessons')
         .select('*')
         .eq('class_id', classId)
         .order('order_index', { ascending: true });
