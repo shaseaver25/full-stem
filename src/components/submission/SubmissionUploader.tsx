@@ -7,10 +7,11 @@ import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
+import { DriveFilePicker } from "@/components/drive/DriveFilePicker";
 
 interface SubmissionUploaderProps {
   assignmentId: string;
-  onFileUploaded: (fileInfo: { path: string; name: string; size: number; uploaded_at: string }) => void;
+  onFileUploaded: (fileInfo: { path: string; name: string; size: number; uploaded_at: string; source?: 'local' | 'drive'; drive_file_id?: string; drive_link?: string }) => void;
   maxFiles?: number;
   allowedTypes?: string[];
 }
@@ -132,6 +133,26 @@ export const SubmissionUploader = ({
     disabled: uploading
   });
 
+  const handleDriveFileSelected = useCallback((file: { id: string; name: string; mimeType: string; url: string }) => {
+    console.log('📎 Drive file selected:', file);
+    
+    // Add Drive file to submission
+    onFileUploaded({
+      path: file.url,
+      name: file.name,
+      size: 0, // Drive files don't have size info from picker
+      uploaded_at: new Date().toISOString(),
+      source: 'drive',
+      drive_file_id: file.id,
+      drive_link: file.url
+    });
+
+    toast({
+      title: "Google Drive file attached",
+      description: `${file.name} has been attached from Google Drive.`,
+    });
+  }, [onFileUploaded]);
+
   const hasActiveUploads = Object.keys(uploadProgress).length > 0;
 
   return (
@@ -162,6 +183,16 @@ export const SubmissionUploader = ({
             </p>
           </div>
         )}
+      </div>
+
+      <div className="flex items-center gap-2">
+        <div className="flex-1 border-t border-border" />
+        <span className="text-sm text-muted-foreground">OR</span>
+        <div className="flex-1 border-t border-border" />
+      </div>
+
+      <div className="flex justify-center">
+        <DriveFilePicker onFileSelected={handleDriveFileSelected} />
       </div>
 
       {error && (

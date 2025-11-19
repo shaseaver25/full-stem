@@ -12,6 +12,7 @@ export interface SubmissionWithDetails {
   file_urls: string[] | null;
   file_names: string[] | null;
   file_types: string[] | null;
+  files: any;
   submitted_at: string;
   status: string;
   assignment_title: string;
@@ -72,6 +73,7 @@ export const useAssignmentSubmissions = (showUngradedOnly: boolean = false) => {
           file_urls,
           file_names,
           file_types,
+          files,
           submitted_at,
           status
         `)

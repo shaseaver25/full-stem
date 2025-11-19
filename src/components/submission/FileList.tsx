@@ -1,11 +1,15 @@
-import { X, FileText, Image, Video, File as FileIcon } from 'lucide-react';
+import { X, FileText, Image, Video, File as FileIcon, ExternalLink } from 'lucide-react';
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
 interface FileItem {
   path: string;
   name: string;
   size: number;
   uploaded_at: string;
+  source?: 'local' | 'drive';
+  drive_file_id?: string;
+  drive_link?: string;
 }
 
 interface FileListProps {
@@ -69,23 +73,44 @@ export const FileList = ({ files, onRemove, canEdit = false }: FileListProps) =>
               {getFileIcon(file.name)}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate">{file.name}</p>
+              <div className="flex items-center gap-2">
+                <p className="text-sm font-medium truncate">{file.name}</p>
+                {file.source === 'drive' && (
+                  <Badge variant="outline" className="text-xs shrink-0">
+                    Google Drive
+                  </Badge>
+                )}
+              </div>
               <p className="text-xs text-muted-foreground">
-                {formatFileSize(file.size)} • {formatDate(file.uploaded_at)}
+                {file.size > 0 ? `${formatFileSize(file.size)} • ` : ''}{formatDate(file.uploaded_at)}
               </p>
             </div>
           </div>
-          {canEdit && onRemove && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onRemove(index)}
-              className="ml-2 h-8 w-8 p-0 hover:bg-destructive hover:text-destructive-foreground"
-            >
-              <X className="h-4 w-4" />
-              <span className="sr-only">Remove file</span>
-            </Button>
-          )}
+          <div className="flex items-center gap-2">
+            {file.source === 'drive' && file.drive_link && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => window.open(file.drive_link, '_blank')}
+                className="h-8 w-8 p-0"
+                title="Open in Google Drive"
+              >
+                <ExternalLink className="h-4 w-4" />
+                <span className="sr-only">Open in Google Drive</span>
+              </Button>
+            )}
+            {canEdit && onRemove && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onRemove(index)}
+                className="h-8 w-8 p-0 hover:bg-destructive hover:text-destructive-foreground"
+              >
+                <X className="h-4 w-4" />
+                <span className="sr-only">Remove file</span>
+              </Button>
+            )}
+          </div>
         </div>
       ))}
     </div>

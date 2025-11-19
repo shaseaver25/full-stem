@@ -13,7 +13,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useAssignmentGrading } from '@/hooks/useAssignmentGrading';
 import { SubmissionWithDetails } from '@/hooks/useAssignmentSubmissions';
-import { Download, FileText, Image, Video } from 'lucide-react';
+import { Download, FileText, Image, Video, ExternalLink } from 'lucide-react';
 
 interface GradingModalProps {
   open: boolean;
@@ -87,7 +87,60 @@ const GradingModal = ({ open, onOpenChange, submission, onGradeSubmitted }: Grad
           </Card>
 
           {/* Submitted Files */}
-          {submission.file_urls && submission.file_urls.length > 0 && (
+          {submission.files && submission.files.length > 0 && (
+            <Card>
+              <CardContent className="pt-6">
+                <h3 className="font-medium mb-4">Submitted Files</h3>
+                <div className="space-y-2">
+                  {submission.files.map((file: any, index: number) => {
+                    const isDriveFile = file.source === 'drive';
+                    return (
+                      <div
+                        key={index}
+                        className="flex items-center justify-between p-3 border rounded-lg"
+                      >
+                        <div className="flex items-center space-x-3 flex-1 min-w-0">
+                          {getFileIcon(isDriveFile ? 'application/pdf' : (file.type || ''))}
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium truncate">{file.name}</p>
+                            {isDriveFile && (
+                              <Badge variant="outline" className="text-xs mt-1">
+                                Google Drive
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                        {isDriveFile ? (
+                          <a
+                            href={file.drive_link || file.path}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1 text-primary hover:underline whitespace-nowrap ml-2"
+                          >
+                            <ExternalLink className="h-4 w-4" />
+                            Open in Drive
+                          </a>
+                        ) : (
+                          <a
+                            href={file.path}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1 text-primary hover:underline whitespace-nowrap ml-2"
+                          >
+                            <Download className="h-4 w-4" />
+                            Download
+                          </a>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Legacy file_urls support (fallback) */}
+          {(!submission.files || submission.files.length === 0) && submission.file_urls && submission.file_urls.length > 0 && (
             <Card>
               <CardContent className="pt-6">
                 <h3 className="font-medium mb-4">Submitted Files</h3>
