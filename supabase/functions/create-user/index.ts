@@ -73,18 +73,20 @@ serve(async (req) => {
 
     const userId = authData.user.id;
 
-    // Create profile
-    const { error: profileError } = await supabaseAdmin
+    // Profile is automatically created by the handle_new_user() trigger
+    // Just wait a moment for the trigger to complete
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
+    // Verify profile was created by trigger
+    const { data: profile, error: profileCheckError } = await supabaseAdmin
       .from('profiles')
-      .insert({
-        id: userId,
-        email: userData.email,
-        full_name: `${userData.firstName} ${userData.lastName}`
-      });
-
-    if (profileError) {
-      console.error('Profile error:', profileError);
-      throw new Error(`Failed to create profile: ${profileError.message}`);
+      .select('id')
+      .eq('id', userId)
+      .single();
+    
+    if (profileCheckError || !profile) {
+      console.error('Profile check error:', profileCheckError);
+      throw new Error('Profile was not created automatically by trigger');
     }
 
     // Assign role
