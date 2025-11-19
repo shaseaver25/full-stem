@@ -4652,6 +4652,10 @@ export type Database = {
         Returns: undefined
       }
       is_developer: { Args: { _user_id?: string }; Returns: boolean }
+      is_student_enrolled_in_class: {
+        Args: { _class_id: string; _user_id: string }
+        Returns: boolean
+      }
       is_super_admin: { Args: { _user_id?: string }; Returns: boolean }
       is_system_admin: { Args: { _user_id?: string }; Returns: boolean }
       is_teacher_of_class: {
