@@ -5,8 +5,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Users, Edit } from 'lucide-react';
+import { Users, Edit, Share2 } from 'lucide-react';
 import { EditClassModal } from './EditClassModal';
+import { ShareClassModal } from './ShareClassModal';
 
 interface ClassOverviewHeaderProps {
   classId: string;
@@ -14,6 +15,7 @@ interface ClassOverviewHeaderProps {
 
 export const ClassOverviewHeader = ({ classId }: ClassOverviewHeaderProps) => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
   const { data: classData, isLoading } = useQuery({
     queryKey: ['class', classId],
@@ -85,14 +87,24 @@ export const ClassOverviewHeader = ({ classId }: ClassOverviewHeaderProps) => {
                 )}
               </div>
             </div>
-            <Button 
-              variant="outline" 
-              onClick={() => setIsEditModalOpen(true)}
-              className="flex items-center gap-2"
-            >
-              <Edit className="h-4 w-4" />
-              Edit Class Info
-            </Button>
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                onClick={() => setIsShareModalOpen(true)}
+                className="flex items-center gap-2"
+              >
+                <Share2 className="h-4 w-4" />
+                Share Class
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => setIsEditModalOpen(true)}
+                className="flex items-center gap-2"
+              >
+                <Edit className="h-4 w-4" />
+                Edit Class Info
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
@@ -102,6 +114,14 @@ export const ClassOverviewHeader = ({ classId }: ClassOverviewHeaderProps) => {
           </div>
         </CardContent>
       </Card>
+
+      <ShareClassModal
+        open={isShareModalOpen}
+        onOpenChange={setIsShareModalOpen}
+        classId={classId}
+        className={classData.name}
+        classCode={classData.class_code}
+      />
 
       <EditClassModal
         isOpen={isEditModalOpen}
