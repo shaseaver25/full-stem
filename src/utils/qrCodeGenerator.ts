@@ -16,7 +16,7 @@ export async function generateClassQR(
   classCode: string,
   options?: QRCodeOptions
 ): Promise<string> {
-  const joinUrl = `${window.location.origin}/join?code=${classCode}`;
+  const joinUrl = `${window.location.origin}/classes/join?code=${classCode}`;
   
   const qrDataUrl = await QRCode.toDataURL(joinUrl, {
     width: options?.width || 400,
@@ -52,7 +52,7 @@ export async function generateQRCanvas(
   classCode: string,
   canvasElement: HTMLCanvasElement
 ): Promise<void> {
-  const joinUrl = `${window.location.origin}/join?code=${classCode}`;
+  const joinUrl = `${window.location.origin}/classes/join?code=${classCode}`;
   
   await QRCode.toCanvas(canvasElement, joinUrl, {
     width: 400,
