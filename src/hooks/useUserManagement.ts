@@ -149,18 +149,7 @@ export const useUserManagement = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('classes')
-        .select(`
-          id,
-          name,
-          teacher_id,
-          teacher_profiles (
-            user_id,
-            profiles (
-              first_name,
-              last_name
-            )
-          )
-        `)
+        .select('id, name')
         .eq('status', 'active')
         .order('name');
 
@@ -169,9 +158,7 @@ export const useUserManagement = () => {
       return (data || []).map((cls: any) => ({
         id: cls.id,
         name: cls.name,
-        teacherName: cls.teacher_profiles?.profiles 
-          ? `${cls.teacher_profiles.profiles.first_name} ${cls.teacher_profiles.profiles.last_name}`
-          : 'Unknown Teacher'
+        teacherName: 'Unknown Teacher'
       }));
     }
   });
