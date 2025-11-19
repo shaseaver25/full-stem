@@ -158,6 +158,14 @@ export function LessonPreview({ title, objectives, components, lessonId, onUpdat
               />
             </div>
             <div>
+              <Label>Instructions</Label>
+              <Textarea
+                value={editContent.instructions || ''}
+                onChange={(e) => setEditContent({ ...editContent, instructions: e.target.value })}
+                rows={4}
+              />
+            </div>
+            <div>
               <Label>Points</Label>
               <Input
                 type="number"
@@ -265,9 +273,17 @@ export function LessonPreview({ title, objectives, components, lessonId, onUpdat
                   </div>
                 )}
                 {component.component_type === 'assignment' && (
-                  <div className="space-y-2">
-                    <p><strong>Points:</strong> {component.content.points || 'N/A'}</p>
-                    <p><strong>Due:</strong> {component.content.dueDate || 'N/A'}</p>
+                  <div className="space-y-3">
+                    {component.content.instructions && (
+                      <div>
+                        <p className="font-semibold mb-2">Instructions:</p>
+                        <p className="text-muted-foreground">{component.content.instructions}</p>
+                      </div>
+                    )}
+                    <div className="flex gap-6 text-sm">
+                      <p><strong>Points:</strong> {component.content.points || 'N/A'}</p>
+                      <p><strong>Due:</strong> {component.content.dueDate || 'N/A'}</p>
+                    </div>
                   </div>
                 )}
               </>
