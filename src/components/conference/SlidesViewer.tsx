@@ -384,10 +384,10 @@ const SlidesViewer: React.FC<SlidesViewerProps> = ({
         </Button>
 
         {/* Slide Content */}
-        <div className="w-full max-w-5xl p-8 space-y-4">
+        <div className="w-full max-w-5xl p-4 sm:p-8 space-y-4">
           {embedUrl ? (
             <>
-              <div className="aspect-video w-full rounded-lg overflow-hidden shadow-lg">
+              <div className="aspect-video w-full rounded-lg overflow-hidden shadow-lg min-h-[300px] sm:min-h-[400px]">
                 <iframe
                   src={embedUrl}
                   className="w-full h-full"
@@ -395,6 +395,7 @@ const SlidesViewer: React.FC<SlidesViewerProps> = ({
                   allowFullScreen
                   allow="autoplay; fullscreen"
                   aria-label={`Slide ${currentSlide + 1} of ${totalSlides}`}
+                  sandbox="allow-scripts allow-same-origin allow-presentation"
                 />
               </div>
 
