@@ -5,7 +5,9 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, BookOpen, Calendar, GraduationCap, Mail, User, FileText, Folder } from 'lucide-react';
 import { useClassDetails } from '@/hooks/useClassDetails';
 import { useClassLessons } from '@/hooks/useClassLessons';
+import { useClassAssignments } from '@/hooks/useClassManagement';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Badge } from '@/components/ui/badge';
 
 const formatDate = (dateString: string) => 
   new Date(dateString).toLocaleDateString(undefined, {
@@ -20,6 +22,7 @@ export default function ClassDetailPage() {
   const { user, loading: authLoading } = useAuth();
   const { data: classData, isLoading, error } = useClassDetails(id || '');
   const { data: lessons = [], isLoading: lessonsLoading } = useClassLessons(id || '');
+  const { data: assignments = [], isLoading: assignmentsLoading } = useClassAssignments(id || '');
 
   if (authLoading) {
     return (
@@ -218,7 +221,50 @@ export default function ClassDetailPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <p className="text-muted-foreground">No assignments available yet.</p>
+            {assignmentsLoading ? (
+              <p className="text-muted-foreground">Loading assignments...</p>
+            ) : assignments.length === 0 ? (
+              <p className="text-muted-foreground">No assignments available yet.</p>
+            ) : (
+              <div className="space-y-3">
+                {assignments.map((assignment) => {
+                  const dueDate = assignment.due_at;
+                  const isOverdue = dueDate && new Date(dueDate) < new Date();
+                  
+                  return (
+                    <div
+                      key={assignment.id}
+                      className="flex items-center justify-between p-3 border rounded-md"
+                    >
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <p className="font-medium">{assignment.title}</p>
+                          {isOverdue && (
+                            <Badge variant="destructive" className="text-xs">Overdue</Badge>
+                          )}
+                        </div>
+                        {assignment.description && (
+                          <p className="text-sm text-muted-foreground line-clamp-2">
+                            {assignment.description}
+                          </p>
+                        )}
+                        {dueDate && (
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Due: {formatDate(dueDate)}
+                          </p>
+                        )}
+                      </div>
+                      <Button
+                        size="sm"
+                        onClick={() => navigate(`/student/assignment/${assignment.id}`)}
+                      >
+                        View
+                      </Button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </CardContent>
         </Card>
 
