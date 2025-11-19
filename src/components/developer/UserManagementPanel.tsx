@@ -11,15 +11,23 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { UserPlus, Search, Users, Loader2 } from 'lucide-react';
+import { UserPlus, Search, Users, Loader2, Pencil } from 'lucide-react';
 import { AddUserForm } from './AddUserForm';
-import { useUserManagement } from '@/hooks/useUserManagement';
+import { EditUserForm } from './EditUserForm';
+import { useUserManagement, User } from '@/hooks/useUserManagement';
 import { format } from 'date-fns';
 
 export const UserManagementPanel: React.FC = () => {
   const [isAddUserOpen, setIsAddUserOpen] = useState(false);
+  const [isEditUserOpen, setIsEditUserOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const { users, usersLoading } = useUserManagement();
+
+  const handleEditUser = (user: User) => {
+    setSelectedUser(user);
+    setIsEditUserOpen(true);
+  };
 
   const filteredUsers = users?.filter(user => {
     const query = searchQuery.toLowerCase();
@@ -97,6 +105,7 @@ export const UserManagementPanel: React.FC = () => {
                       <TableHead>Classes</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Created</TableHead>
+                      <TableHead>Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -133,6 +142,15 @@ export const UserManagementPanel: React.FC = () => {
                         <TableCell className="text-sm text-muted-foreground">
                           {format(new Date(user.createdAt), 'MMM d, yyyy')}
                         </TableCell>
+                        <TableCell>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEditUser(user)}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -154,6 +172,13 @@ export const UserManagementPanel: React.FC = () => {
       </Card>
 
       <AddUserForm open={isAddUserOpen} onOpenChange={setIsAddUserOpen} />
+      {selectedUser && (
+        <EditUserForm
+          open={isEditUserOpen}
+          onOpenChange={setIsEditUserOpen}
+          user={selectedUser}
+        />
+      )}
     </div>
   );
 };
