@@ -748,6 +748,18 @@ export function DraggableComponentCard({
               />
             </div>
             <div>
+              <Label>Submission Link (Optional)</Label>
+              <Input
+                type="url"
+                value={component.content.submissionLink || ''}
+                onChange={(e) => handleContentChange('submissionLink', e.target.value)}
+                placeholder="https://forms.google.com/... or other submission URL"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Add a link where students can submit their work (e.g., Google Form, external platform)
+              </p>
+            </div>
+            <div>
               <Label>Points</Label>
               <Input
                 type="number"

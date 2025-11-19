@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
-import { Pencil, Check, X } from 'lucide-react';
+import { Pencil, Check, X, ExternalLink } from 'lucide-react';
 import { DiscussionComponent } from '@/components/lesson/DiscussionComponent';
 import { LessonComponentRenderer } from '@/components/lesson/LessonComponentRenderer';
 
@@ -166,6 +166,15 @@ export function LessonPreview({ title, objectives, components, lessonId, onUpdat
               />
             </div>
             <div>
+              <Label>Submission Link (Optional)</Label>
+              <Input
+                type="url"
+                value={editContent.submissionLink || ''}
+                onChange={(e) => setEditContent({ ...editContent, submissionLink: e.target.value })}
+                placeholder="https://forms.google.com/..."
+              />
+            </div>
+            <div>
               <Label>Points</Label>
               <Input
                 type="number"
@@ -278,6 +287,19 @@ export function LessonPreview({ title, objectives, components, lessonId, onUpdat
                       <div>
                         <p className="font-semibold mb-2">Instructions:</p>
                         <p className="text-muted-foreground">{component.content.instructions}</p>
+                      </div>
+                    )}
+                    {component.content.submissionLink && (
+                      <div>
+                        <p className="font-semibold mb-2">Submit your work:</p>
+                        <Button 
+                          variant="outline" 
+                          className="gap-2"
+                          onClick={() => window.open(component.content.submissionLink, '_blank')}
+                        >
+                          <ExternalLink className="h-4 w-4" />
+                          Open Submission Form
+                        </Button>
                       </div>
                     )}
                     <div className="flex gap-6 text-sm">
