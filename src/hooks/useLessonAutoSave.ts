@@ -11,6 +11,12 @@ export function useLessonAutoSave(
 
   useEffect(() => {
     if (!lessonId) return; // Only auto-save for existing lessons
+    
+    // Don't save empty drafts (prevents overwriting real data with empty state on initial load)
+    if (!title && (!components || components.length === 0) && (!objectives || objectives.length === 0 || (objectives.length === 1 && !objectives[0]))) {
+      console.log('⏭️ Skipping auto-save: no meaningful data yet');
+      return;
+    }
 
     const draft = {
       lessonId,
