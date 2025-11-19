@@ -90,6 +90,35 @@ export default function ClassDetailPage() {
     },
   });
 
+  // Mutation to toggle publish status
+  const togglePublish = useMutation({
+    mutationFn: async (published: boolean) => {
+      const { error } = await supabase
+        .from('classes')
+        .update({ published })
+        .eq('id', resolvedClassId);
+      
+      if (error) throw error;
+    },
+    onSuccess: (_, published) => {
+      queryClient.invalidateQueries({ queryKey: ['class', resolvedClassId] });
+      toast({
+        title: published ? 'Class Published' : 'Class Unpublished',
+        description: published 
+          ? 'Class is now visible to students' 
+          : 'Class is now hidden from students',
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: 'Error',
+        description: 'Failed to update class status. Please try again.',
+        variant: 'destructive',
+      });
+      console.error('Error updating class status:', error);
+    },
+  });
+
   // Fetch student count
   const { data: studentCount = 0 } = useQuery({
     queryKey: ['class-student-count', resolvedClassId],
@@ -181,19 +210,31 @@ export default function ClassDetailPage() {
             {classData.grade_level && (
               <Badge variant="outline">{classData.grade_level}</Badge>
             )}
+            <Badge variant={classData.published ? "default" : "secondary"}>
+              {classData.published ? "Published" : "Draft"}
+            </Badge>
             <span className="text-sm text-muted-foreground">
               Created {format(new Date(classData.created_at), 'PPP')}
             </span>
           </div>
         </div>
-        <Button 
-          variant="outline" 
-          onClick={() => setIsShareModalOpen(true)}
-          className="flex items-center gap-2"
-        >
-          <Share2 className="h-4 w-4" />
-          Share Class
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button 
+            variant={classData.published ? "outline" : "default"}
+            onClick={() => togglePublish.mutate(!classData.published)}
+            disabled={togglePublish.isPending}
+          >
+            {classData.published ? "Hide from Students" : "Make Visible to Students"}
+          </Button>
+          <Button 
+            variant="outline" 
+            onClick={() => setIsShareModalOpen(true)}
+            className="flex items-center gap-2"
+          >
+            <Share2 className="h-4 w-4" />
+            Share Class
+          </Button>
+        </div>
       </div>
 
       {/* Class Overview Card */}

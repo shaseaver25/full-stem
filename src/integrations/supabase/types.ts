@@ -4666,6 +4666,14 @@ export type Database = {
         Args: { _student_id: string; _teacher_user_id: string }
         Returns: boolean
       }
+      join_class_by_code: {
+        Args: { _class_code: string; _user_id: string }
+        Returns: {
+          class_name: string
+          error: string
+          success: boolean
+        }[]
+      }
       refresh_system_metrics: { Args: never; Returns: undefined }
       reset_dev_sandbox: { Args: never; Returns: undefined }
       rpc_assign_lesson_to_class:
