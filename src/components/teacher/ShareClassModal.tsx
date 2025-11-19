@@ -34,7 +34,7 @@ export const ShareClassModal = ({
 
   const shareInstructions = `Join ${className} on TailorEDU:
 
-1. Go to ${window.location.origin}/join
+1. Go to ${window.location.origin}/classes/join
 2. Enter code: ${classCode}
 
 Or scan the QR code attached.`;
