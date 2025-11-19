@@ -3,6 +3,7 @@ import { Download, Printer, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { generateClassQR, downloadQRCode } from '@/utils/qrCodeGenerator';
+import { getJoinClassUrl } from '@/utils/appUrl';
 import { toast } from '@/hooks/use-toast';
 
 interface ClassQRCodeProps {
@@ -62,6 +63,8 @@ export const ClassQRCode = ({ classCode, className }: ClassQRCodeProps) => {
       return;
     }
 
+    const joinUrl = getJoinClassUrl();
+
     printWindow.document.write(`
       <!DOCTYPE html>
       <html>
@@ -91,7 +94,7 @@ export const ClassQRCode = ({ classCode, className }: ClassQRCodeProps) => {
           <img src="${qrDataUrl}" alt="QR Code" />
           <div class="code">OR enter code: ${classCode}</div>
           <div class="instructions">
-            <p>Go to <strong>tailoredu.com/join</strong></p>
+            <p>Go to <strong>${joinUrl}</strong></p>
           </div>
         </body>
       </html>
