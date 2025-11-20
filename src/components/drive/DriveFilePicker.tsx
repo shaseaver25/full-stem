@@ -175,7 +175,7 @@ export function DriveFilePicker({
       }
 
       console.log("✅ Token acquired, opening picker...");
-      console.log("🔑 API Key present:", !!GOOGLE_API_KEY);
+      console.log("🔑 API Key present:", !!developerKey);
 
       // Create picker
       const picker = new window.google.picker.PickerBuilder()
