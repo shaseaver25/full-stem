@@ -2,9 +2,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
-import { Loader2, Lightbulb, MessageSquare, X } from 'lucide-react';
+import { Loader2, MessageSquare, X } from 'lucide-react';
 import { usePivotConversation } from '@/hooks/usePivotConversation';
 import { useAuth } from '@/contexts/AuthContext';
+import { PivotHintButton } from './PivotHintButton';
+import { PivotHintCard } from './PivotHintCard';
 
 interface Message {
   id: string;
@@ -38,9 +40,10 @@ export const PivotChat: React.FC<PivotChatProps> = ({
   const [inputText, setInputText] = useState('');
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [hintsUsed, setHintsUsed] = useState(0);
+  const [isGeneratingHint, setIsGeneratingHint] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
-  const { startConversation, sendMessage, endConversation, isLoading } = usePivotConversation();
+  const { startConversation, sendMessage, endConversation, requestHint, isLoading } = usePivotConversation();
 
   // Auto-scroll to bottom
   const scrollToBottom = () => {
@@ -127,6 +130,38 @@ export const PivotChat: React.FC<PivotChatProps> = ({
     }
   };
 
+  const handleRequestHint = async () => {
+    if (!conversationId || hintsUsed >= 3) return;
+    
+    setIsGeneratingHint(true);
+    
+    const hint = await requestHint({
+      conversationId,
+      questionText: questionText || '',
+      correctAnswer,
+      questionType: componentType,
+      previousHints: messages
+        .filter(m => m.type === 'hint')
+        .map(m => m.text.replace(/💡 Hint \d\/3: /, '')),
+      conversationHistory: messages,
+      hintNumber: hintsUsed + 1
+    });
+    
+    if (hint) {
+      const hintMsg: Message = {
+        id: hint.id,
+        sender: 'pivot',
+        text: hint.text,
+        timestamp: new Date(),
+        type: 'hint'
+      };
+      setMessages(prev => [...prev, hintMsg]);
+      setHintsUsed(prev => prev + 1);
+    }
+    
+    setIsGeneratingHint(false);
+  };
+
   const handleClose = () => {
     if (conversationId) {
       endConversation(conversationId, false);
@@ -170,22 +205,36 @@ export const PivotChat: React.FC<PivotChatProps> = ({
             className={`flex ${msg.sender === 'student' ? 'justify-end' : 'justify-start'}`}
           >
             <div
-              className={`max-w-[80%] rounded-lg p-3 shadow-sm ${
-                msg.sender === 'student'
-                  ? 'bg-blue-500 text-white'
-                  : 'bg-teal-100 text-teal-900 border border-teal-200'
+              className={`${msg.type === 'hint' ? 'w-full' : 'max-w-[80%]'} ${
+                msg.type === 'hint' 
+                  ? '' 
+                  : msg.sender === 'student'
+                  ? 'bg-blue-500 text-white rounded-lg p-3 shadow-sm'
+                  : 'bg-teal-100 text-teal-900 border border-teal-200 rounded-lg p-3 shadow-sm'
               }`}
             >
-              <p className="text-sm whitespace-pre-wrap">{msg.text}</p>
+              {msg.type === 'hint' ? (
+                <PivotHintCard
+                  hintNumber={hintsUsed >= messages.filter(m => m.type === 'hint').findIndex(m => m.id === msg.id) + 1 
+                    ? messages.filter(m => m.type === 'hint').findIndex(m => m.id === msg.id) + 1 
+                    : 1}
+                  hintText={msg.text.replace(/💡 Hint \d\/3: /, '')}
+                  timestamp={msg.timestamp}
+                />
+              ) : (
+                <p className="text-sm whitespace-pre-wrap">{msg.text}</p>
+              )}
             </div>
           </div>
         ))}
         
-        {isLoading && (
+        {(isLoading || isGeneratingHint) && (
           <div className="flex justify-start">
             <div className="bg-teal-100 text-teal-900 rounded-lg p-3 flex items-center gap-2 border border-teal-200">
               <Loader2 className="w-4 h-4 animate-spin" />
-              <span className="text-sm">Pivot is thinking...</span>
+              <span className="text-sm">
+                {isGeneratingHint ? 'Generating hint...' : 'Pivot is thinking...'}
+              </span>
             </div>
           </div>
         )}
@@ -200,28 +249,23 @@ export const PivotChat: React.FC<PivotChatProps> = ({
           onChange={(e) => setInputText(e.target.value)}
           onKeyPress={handleKeyPress}
           placeholder="Type your response..."
-          disabled={isLoading}
+          disabled={isLoading || isGeneratingHint}
           className="resize-none bg-white"
           rows={3}
         />
         
         <div className="flex items-center justify-between">
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={hintsUsed >= 3 || isLoading}
-              onClick={() => setHintsUsed(prev => prev + 1)}
-              className="text-amber-600 border-amber-300 hover:bg-amber-50"
-            >
-              <Lightbulb className="w-4 h-4 mr-1" />
-              Hint ({3 - hintsUsed} left)
-            </Button>
-          </div>
+          <PivotHintButton
+            hintsUsed={hintsUsed}
+            maxHints={3}
+            onRequestHint={handleRequestHint}
+            isLoading={isGeneratingHint}
+            disabled={isLoading}
+          />
           
           <Button 
             onClick={handleSendMessage} 
-            disabled={!inputText.trim() || isLoading}
+            disabled={!inputText.trim() || isLoading || isGeneratingHint}
             className="bg-gradient-to-r from-teal-500 to-blue-500 hover:from-teal-600 hover:to-blue-600"
           >
             <MessageSquare className="w-4 h-4 mr-1" />

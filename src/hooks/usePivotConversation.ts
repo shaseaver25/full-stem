@@ -133,10 +133,53 @@ export const usePivotConversation = () => {
     }
   };
 
+  const requestHint = async (params: {
+    conversationId: string;
+    questionText: string;
+    correctAnswer?: string;
+    questionType?: string;
+    previousHints: string[];
+    conversationHistory: any[];
+    hintNumber: number;
+  }) => {
+    setIsLoading(true);
+    try {
+      console.log('💡 Requesting hint:', params.hintNumber);
+      
+      const { data, error } = await supabase.functions.invoke('pivot-generate-hint', {
+        body: {
+          conversationId: params.conversationId,
+          questionText: params.questionText,
+          correctAnswer: params.correctAnswer,
+          questionType: params.questionType || 'general',
+          previousHints: params.previousHints,
+          conversationHistory: params.conversationHistory,
+          hintNumber: params.hintNumber
+        }
+      });
+
+      if (error) throw error;
+      
+      console.log('✅ Hint generated:', data.hint);
+      return data.hint;
+    } catch (error) {
+      console.error('❌ Error requesting hint:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to generate hint',
+        variant: 'destructive'
+      });
+      return null;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return {
     startConversation,
     sendMessage,
     endConversation,
+    requestHint,
     isLoading
   };
 };

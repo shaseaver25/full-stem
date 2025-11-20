@@ -3158,11 +3158,13 @@ export type Database = {
           component_type: string | null
           created_at: string | null
           ended_at: string | null
+          hints_requested: number | null
           hints_used: number | null
           id: string
           lesson_id: string | null
           question_id: string | null
           question_text: string | null
+          solved_after_hint: boolean | null
           started_at: string | null
           student_id: string | null
           total_exchanges: number | null
@@ -3174,11 +3176,13 @@ export type Database = {
           component_type?: string | null
           created_at?: string | null
           ended_at?: string | null
+          hints_requested?: number | null
           hints_used?: number | null
           id?: string
           lesson_id?: string | null
           question_id?: string | null
           question_text?: string | null
+          solved_after_hint?: boolean | null
           started_at?: string | null
           student_id?: string | null
           total_exchanges?: number | null
@@ -3190,11 +3194,13 @@ export type Database = {
           component_type?: string | null
           created_at?: string | null
           ended_at?: string | null
+          hints_requested?: number | null
           hints_used?: number | null
           id?: string
           lesson_id?: string | null
           question_id?: string | null
           question_text?: string | null
+          solved_after_hint?: boolean | null
           started_at?: string | null
           student_id?: string | null
           total_exchanges?: number | null
