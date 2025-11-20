@@ -5,7 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-
+import { DriveFilePicker } from "./attachments/DriveFilePicker";
+import { DriveAttachmentsList } from "./attachments/DriveAttachmentsList";
 // Cloud storage imports
 import { OneDriveFilePicker, OneDriveAttachmentsList } from "@/components/onedrive";
 
@@ -107,10 +108,7 @@ export default function LessonComponentCard({ component, onSave, onDelete }: Les
               <Tooltip>
                 <TooltipTrigger asChild>
                   <div className={!component?.id ? "cursor-not-allowed" : ""}>
-                    <OneDriveFilePicker 
-                      onFileSelected={handleOneDriveFileSelected}
-                      disabled={!component?.id}
-                    />
+                    <OneDriveFilePicker onFileSelected={handleOneDriveFileSelected} disabled={!component?.id} />
                   </div>
                 </TooltipTrigger>
                 {!component?.id && (
