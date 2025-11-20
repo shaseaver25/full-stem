@@ -17,6 +17,12 @@ import { QuizBuilderComponent } from '@/components/quiz/QuizBuilderComponent';
 import { PollBuilderComponent } from '@/components/poll/PollBuilderComponent';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DiscussionEditor } from '@/components/lesson-components/DiscussionEditor';
+import { DriveFilePicker } from '@/components/drive/DriveFilePicker';
+import { DriveAttachmentsList } from '@/components/drive/DriveAttachmentsList';
+import { OneDriveFilePicker, OneDriveAttachmentsList } from '@/components/onedrive';
+import { useDriveAttachment } from '@/hooks/useDriveAttachment';
+import { useOneDriveAttachment } from '@/hooks/useOneDriveAttachment';
+import { FEATURE_FLAGS } from '@/config/features';
 
 interface LessonComponent {
   id?: string;
@@ -70,6 +76,9 @@ export function DraggableComponentCard({
   const [isExpanded, setIsExpanded] = useState(true);
   const [isQuizBuilderOpen, setIsQuizBuilderOpen] = useState(false);
   const [isPollBuilderOpen, setIsPollBuilderOpen] = useState(false);
+  const { attachFile: attachDriveFile, isAttaching: isAttachingDrive } = useDriveAttachment();
+  const { attachFile: attachOneDriveFile, isAttaching: isAttachingOneDrive } = useOneDriveAttachment();
+  const canUseCloudAttachments = FEATURE_FLAGS.ENABLE_CLOUD_ATTACHMENTS;
 
   const handleContentChange = (field: string, value: any) => {
     onUpdate(index, {
@@ -87,6 +96,22 @@ export function DraggableComponentCard({
         uploadedFiles: [...existingFiles, file],
       },
     });
+  };
+
+  const handleDriveFileSelected = (file: any) => {
+    if (!component.id) {
+      console.warn('No component id available for Drive attachment');
+      return;
+    }
+    attachDriveFile({ componentId: component.id, file });
+  };
+
+  const handleOneDriveFileSelected = (file: any) => {
+    if (!component.id) {
+      console.warn('No component id available for OneDrive attachment');
+      return;
+    }
+    attachOneDriveFile({ componentId: component.id, file });
   };
 
   const renderFields = () => {
@@ -906,22 +931,59 @@ export function DraggableComponentCard({
                 </div>
               )}
 
+              {canUseCloudAttachments && (
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">Cloud Storage</Label>
+                  <div className="flex flex-wrap gap-2">
+                    <DriveFilePicker
+                      onFileSelected={handleDriveFileSelected}
+                      disabled={!component.id || isAttachingDrive}
+                      variant="outline"
+                      size="sm"
+                    />
+                    <OneDriveFilePicker
+                      onFileSelected={handleOneDriveFileSelected}
+                      disabled={!component.id || isAttachingOneDrive}
+                    />
+                  </div>
+                  {!component.id && (
+                    <p className="text-xs text-muted-foreground">
+                      Save this component to enable cloud attachments.
+                    </p>
+                  )}
+                  {component.id && (
+                    <div className="space-y-2">
+                      <DriveAttachmentsList
+                        componentId={component.id}
+                        showEmbeds={false}
+                        canDelete={true}
+                      />
+                      <OneDriveAttachmentsList
+                        componentId={component.id}
+                        showEmbeds={false}
+                        canDelete={true}
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
+
               <LocalFileUpload onFileUploaded={handleLocalFileUploaded} variant="outline" size="sm" />
 
-            {component.content.uploadedFiles && component.content.uploadedFiles.length > 0 && (
-              <div className="space-y-2">
-                <Label className="text-xs text-muted-foreground">Uploaded Files:</Label>
-                <ul className="text-sm space-y-1">
-                  {component.content.uploadedFiles.map((file: any, idx: number) => (
-                    <li key={idx} className="flex items-center gap-2">
-                      <span className="text-primary">📎</span>
-                      <span>{file.name}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
+              {component.content.uploadedFiles && component.content.uploadedFiles.length > 0 && (
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">Uploaded Files:</Label>
+                  <ul className="text-sm space-y-1">
+                    {component.content.uploadedFiles.map((file: any, idx: number) => (
+                      <li key={idx} className="flex items-center gap-2">
+                        <span className="text-primary">📎</span>
+                        <span>{file.name}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
           )}
         </CardContent>
       )}
