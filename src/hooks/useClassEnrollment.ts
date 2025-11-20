@@ -13,6 +13,13 @@ interface EnrollmentResult {
   error?: string;
 }
 
+/**
+ * DEPRECATED: Direct class enrollment without approval
+ * This hook is kept for backward compatibility but should be replaced
+ * with the approval-based system using useRequestToJoinClass
+ * 
+ * @deprecated Use useRequestToJoinClass instead for the new approval workflow
+ */
 export const useClassEnrollment = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();

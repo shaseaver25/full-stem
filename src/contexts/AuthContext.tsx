@@ -112,7 +112,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         emailRedirectTo: redirectUrl,
         data: {
           full_name: fullName,
-          role: 'teacher'
+          role: 'student' // DEFAULT TO STUDENT ROLE
         }
       }
     });

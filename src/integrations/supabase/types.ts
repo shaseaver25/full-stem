@@ -1068,6 +1068,8 @@ export type Database = {
       }
       class_students: {
         Row: {
+          approved_at: string | null
+          approved_by: string | null
           class_id: string
           enrolled_at: string
           id: string
@@ -1075,6 +1077,8 @@ export type Database = {
           student_id: string
         }
         Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
           class_id: string
           enrolled_at?: string
           id?: string
@@ -1082,6 +1086,8 @@ export type Database = {
           student_id: string
         }
         Update: {
+          approved_at?: string | null
+          approved_by?: string | null
           class_id?: string
           enrolled_at?: string
           id?: string
@@ -1089,6 +1095,13 @@ export type Database = {
           student_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "class_students_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "class_students_class_id_fkey"
             columns: ["class_id"]
@@ -1289,6 +1302,70 @@ export type Database = {
             columns: ["class_id"]
             isOneToOne: false
             referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      classroom_join_requests: {
+        Row: {
+          class_id: string
+          created_at: string
+          id: string
+          message: string | null
+          rejection_reason: string | null
+          requested_at: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          class_id: string
+          created_at?: string
+          id?: string
+          message?: string | null
+          rejection_reason?: string | null
+          requested_at?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          class_id?: string
+          created_at?: string
+          id?: string
+          message?: string | null
+          rejection_reason?: string | null
+          requested_at?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "classroom_join_requests_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "classroom_join_requests_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "classroom_join_requests_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
             referencedColumns: ["id"]
           },
         ]
@@ -4594,6 +4671,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      approve_join_request: {
+        Args: { _request_id: string; _teacher_user_id: string }
+        Returns: {
+          error: string
+          success: boolean
+        }[]
+      }
       calculate_letter_grade: { Args: { percentage: number }; Returns: string }
       can_manage_student: {
         Args: { _student_id: string; _user_id: string }
@@ -4675,6 +4759,30 @@ export type Database = {
         }[]
       }
       refresh_system_metrics: { Args: never; Returns: undefined }
+      reject_join_request: {
+        Args: {
+          _rejection_reason?: string
+          _request_id: string
+          _teacher_user_id: string
+        }
+        Returns: {
+          error: string
+          success: boolean
+        }[]
+      }
+      request_to_join_class: {
+        Args: {
+          _class_code: string
+          _message?: string
+          _student_user_id: string
+        }
+        Returns: {
+          class_name: string
+          error: string
+          request_id: string
+          success: boolean
+        }[]
+      }
       reset_dev_sandbox: { Args: never; Returns: undefined }
       rpc_assign_lesson_to_class:
         | {
