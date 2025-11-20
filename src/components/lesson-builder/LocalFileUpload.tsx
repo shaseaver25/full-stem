@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Upload, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { FEATURE_FLAGS } from '@/config/features';
 
 interface LocalFileUploadProps {
   onFileUploaded: (file: { name: string; path: string; url: string }) => void;
@@ -115,9 +116,11 @@ export function LocalFileUpload({
           </>
         )}
       </Button>
-      <p className="text-xs text-muted-foreground">
-        Cloud integrations temporarily disabled — upload files directly instead.
-      </p>
+      {!FEATURE_FLAGS.ENABLE_CLOUD_ATTACHMENTS && (
+        <p className="text-xs text-muted-foreground">
+          Cloud integrations temporarily disabled — upload files directly instead.
+        </p>
+      )}
     </div>
   );
 }
