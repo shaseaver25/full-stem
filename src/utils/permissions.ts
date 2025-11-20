@@ -45,6 +45,7 @@ export const allNavigationItems: NavigationItem[] = [
   { path: '/dashboard/admin/analytics', label: 'Admin Analytics', icon: BarChart3, description: 'System analytics' },
   { path: '/admin/build-class', label: 'Build Class', icon: Plus, description: 'Create classes' },
   { path: '/admin/advanced', label: 'Advanced', icon: Settings, description: 'Advanced settings' },
+  { path: '/admin/ai-tutor-analytics', label: 'AI Tutor Analytics', icon: BarChart3, description: 'Cost monitoring and usage analytics' },
   
   // Super Admin routes
   { path: '/super-admin', label: 'Super Admin', icon: Settings, description: 'Super admin dashboard' },
@@ -120,6 +121,7 @@ export const getAllowedRoutes = (role: UserRole | null): string[] => {
       '/admin/quizzes',
       '/admin/polls',
       '/admin/advanced',
+      '/admin/ai-tutor-analytics',
       '/dashboard/admin/analytics',
       '/content',
       '/preferences',
@@ -215,6 +217,7 @@ export const getPrimaryNavigationForRole = (role: UserRole | null): NavigationIt
       { path: '/admin/polls', label: 'All Polls', icon: BarChart3 },
       { path: '/content', label: 'Content', icon: FolderOpen },
       { path: '/dashboard/admin/analytics', label: 'Analytics', icon: BarChart3 },
+      { path: '/admin/ai-tutor-analytics', label: 'AI Tutor Analytics', icon: MessageSquare },
     ],
     super_admin: [
       { path: '/super-admin', label: 'Super Admin', icon: Settings },

@@ -67,6 +67,7 @@ const StudentDashboard = React.lazy(() => import("./pages/student/StudentDashboa
 const TeacherFeedbackDashboard = React.lazy(() => import("./pages/teacher/TeacherFeedbackDashboard"));
 const StudentDetailPage = React.lazy(() => import("./pages/teacher/StudentDetailPage"));
 const AITutorMonitoring = React.lazy(() => import("./pages/teacher/AITutorMonitoring"));
+const AITutorAnalytics = React.lazy(() => import("./pages/admin/AITutorAnalytics"));
 const LearningGeniusSurveyPage = React.lazy(() => import("./pages/LearningGeniusSurveyPage"));
 const JoinClassPage = React.lazy(() => import("./pages/JoinClassPage"));
 const MyClassesPage = React.lazy(() => import("./pages/classes/MyClassesPage"));
@@ -392,6 +393,16 @@ function AppContent() {
               <ProtectedAdminRoute>
                 <AdminAnalyticsDashboard />
               </ProtectedAdminRoute>
+            </ErrorBoundary>
+          } 
+        />
+        <Route 
+          path="/admin/ai-tutor-analytics" 
+          element={
+            <ErrorBoundary>
+              <RequireRole allowedRoles={['admin', 'system_admin', 'super_admin', 'developer']}>
+                <AITutorAnalytics />
+              </RequireRole>
             </ErrorBoundary>
           } 
         />
