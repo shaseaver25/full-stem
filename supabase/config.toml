@@ -172,4 +172,6 @@ verify_jwt = true
 [functions.transcribe-lesson-video]
 verify_jwt = true
 
+[functions.pivot-chat]
+verify_jwt = true
 

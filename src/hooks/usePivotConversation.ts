@@ -1,0 +1,142 @@
+import { useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+
+interface StartConversationParams {
+  studentId: string;
+  lessonId: string;
+  componentId: string;
+  componentType: string;
+  questionId?: string;
+  questionText?: string;
+}
+
+interface SendMessageParams {
+  conversationId: string;
+  studentMessage: string;
+  context: {
+    questionText?: string;
+    correctAnswer?: string;
+    previousMessages: any[];
+    hintsUsed: number;
+    gradeLevel?: string;
+  };
+}
+
+export const usePivotConversation = () => {
+  const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(false);
+
+  const startConversation = async (params: StartConversationParams) => {
+    setIsLoading(true);
+    try {
+      console.log('🔄 Starting Pivot conversation:', params);
+      
+      const { data, error } = await supabase
+        .from('pivot_conversations')
+        .insert({
+          student_id: params.studentId,
+          lesson_id: params.lessonId,
+          component_id: params.componentId,
+          component_type: params.componentType,
+          question_id: params.questionId,
+          question_text: params.questionText
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('❌ Error starting conversation:', error);
+        throw error;
+      }
+      
+      console.log('✅ Conversation started:', data.id);
+      return data.id;
+    } catch (error) {
+      console.error('💥 Failed to start conversation:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to start conversation with Pivot',
+        variant: 'destructive'
+      });
+      return null;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const sendMessage = async (params: SendMessageParams) => {
+    setIsLoading(true);
+    try {
+      console.log('💬 Sending message to Pivot:', params.studentMessage);
+      
+      // Record student message
+      const { error: studentMsgError } = await supabase
+        .rpc('record_pivot_message', {
+          p_conversation_id: params.conversationId,
+          p_sender: 'student',
+          p_message_text: params.studentMessage,
+          p_message_type: 'response'
+        });
+
+      if (studentMsgError) {
+        console.error('❌ Error recording student message:', studentMsgError);
+        throw studentMsgError;
+      }
+
+      // Get AI response
+      const { data, error } = await supabase.functions.invoke('pivot-chat', {
+        body: {
+          conversationId: params.conversationId,
+          studentMessage: params.studentMessage,
+          context: params.context
+        }
+      });
+
+      if (error) {
+        console.error('❌ Error getting AI response:', error);
+        throw error;
+      }
+      
+      console.log('✅ Got Pivot response');
+      return data;
+    } catch (error) {
+      console.error('💥 Failed to send message:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to send message to Pivot',
+        variant: 'destructive'
+      });
+      return null;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const endConversation = async (conversationId: string, wasSuccessful: boolean) => {
+    try {
+      console.log('🏁 Ending conversation:', conversationId, 'successful:', wasSuccessful);
+      
+      const { error } = await supabase
+        .from('pivot_conversations')
+        .update({
+          ended_at: new Date().toISOString(),
+          was_successful: wasSuccessful
+        })
+        .eq('id', conversationId);
+
+      if (error) throw error;
+      
+      console.log('✅ Conversation ended');
+    } catch (error) {
+      console.error('❌ Error ending conversation:', error);
+    }
+  };
+
+  return {
+    startConversation,
+    sendMessage,
+    endConversation,
+    isLoading
+  };
+};

@@ -3152,6 +3152,142 @@ export type Database = {
         }
         Relationships: []
       }
+      pivot_conversations: {
+        Row: {
+          component_id: string | null
+          component_type: string | null
+          created_at: string | null
+          ended_at: string | null
+          hints_used: number | null
+          id: string
+          lesson_id: string | null
+          question_id: string | null
+          question_text: string | null
+          started_at: string | null
+          student_id: string | null
+          total_exchanges: number | null
+          updated_at: string | null
+          was_successful: boolean | null
+        }
+        Insert: {
+          component_id?: string | null
+          component_type?: string | null
+          created_at?: string | null
+          ended_at?: string | null
+          hints_used?: number | null
+          id?: string
+          lesson_id?: string | null
+          question_id?: string | null
+          question_text?: string | null
+          started_at?: string | null
+          student_id?: string | null
+          total_exchanges?: number | null
+          updated_at?: string | null
+          was_successful?: boolean | null
+        }
+        Update: {
+          component_id?: string | null
+          component_type?: string | null
+          created_at?: string | null
+          ended_at?: string | null
+          hints_used?: number | null
+          id?: string
+          lesson_id?: string | null
+          question_id?: string | null
+          question_text?: string | null
+          started_at?: string | null
+          student_id?: string | null
+          total_exchanges?: number | null
+          updated_at?: string | null
+          was_successful?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pivot_conversations_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pivot_conversations_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pivot_hints: {
+        Row: {
+          conversation_id: string | null
+          created_at: string | null
+          hint_text: string
+          id: string
+          was_used: boolean | null
+        }
+        Insert: {
+          conversation_id?: string | null
+          created_at?: string | null
+          hint_text: string
+          id?: string
+          was_used?: boolean | null
+        }
+        Update: {
+          conversation_id?: string | null
+          created_at?: string | null
+          hint_text?: string
+          id?: string
+          was_used?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pivot_hints_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "pivot_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pivot_messages: {
+        Row: {
+          conversation_id: string | null
+          created_at: string | null
+          id: string
+          message_text: string
+          message_type: string | null
+          sender: string
+          sequence_number: number
+        }
+        Insert: {
+          conversation_id?: string | null
+          created_at?: string | null
+          id?: string
+          message_text: string
+          message_type?: string | null
+          sender: string
+          sequence_number: number
+        }
+        Update: {
+          conversation_id?: string | null
+          created_at?: string | null
+          id?: string
+          message_text?: string
+          message_type?: string | null
+          sender?: string
+          sequence_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pivot_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "pivot_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       poll_components: {
         Row: {
           allow_anonymous: boolean | null
@@ -4757,6 +4893,15 @@ export type Database = {
           error: string
           success: boolean
         }[]
+      }
+      record_pivot_message: {
+        Args: {
+          p_conversation_id: string
+          p_message_text: string
+          p_message_type?: string
+          p_sender: string
+        }
+        Returns: string
       }
       refresh_system_metrics: { Args: never; Returns: undefined }
       reject_join_request: {

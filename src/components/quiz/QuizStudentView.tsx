@@ -14,6 +14,7 @@ import { useTextToSpeech } from '@/hooks/useTextToSpeech';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useAccessibility } from '@/contexts/AccessibilityContext';
 import { LanguageSelector } from '@/components/LanguageSelector';
+import { PivotChat } from '@/components/pivot/PivotChat';
 
 // Temporary type definitions until Supabase types are regenerated
 interface QuizComponentData {
@@ -89,6 +90,7 @@ export function QuizStudentView({ componentId, read_aloud = true, quizData: prel
   const [translatedQuestions, setTranslatedQuestions] = useState<Record<string, string>>({});
   const [translatedOptions, setTranslatedOptions] = useState<Record<string, Record<string, string>>>({});
   const [showTranslation, setShowTranslation] = useState(false);
+  const [showPivot, setShowPivot] = useState(false);
   
   const { speak, isPlaying, isLoading: isSpeaking } = useTextToSpeech();
   const { translate, isTranslating, isEnabled: translationEnabled } = useTranslation();
@@ -717,16 +719,17 @@ export function QuizStudentView({ componentId, read_aloud = true, quizData: prel
   const isAnswered = currentQuestion.id in answers;
 
   return (
-    <Card className="bg-cyan-50 border-cyan-900">
-      <CardHeader>
-        <div className="flex items-center justify-between text-sm">
-          {timeRemaining !== null && (
-            <div className={`flex items-center gap-2 ${timeRemaining <= 60 ? 'text-red-600 font-bold' : timeRemaining <= 300 ? 'text-orange-600 font-semibold' : 'text-cyan-900'}`}>
-              <Clock className="h-4 w-4" />
-              <span>Time Remaining: {formatTime(timeRemaining)}</span>
-            </div>
-          )}
-          <div>Question {currentQuestionIndex + 1} of {quizData.questions.length}</div>
+    <>
+      <Card className="bg-cyan-50 border-cyan-900">
+        <CardHeader>
+          <div className="flex items-center justify-between text-sm">
+            {timeRemaining !== null && (
+              <div className={`flex items-center gap-2 ${timeRemaining <= 60 ? 'text-red-600 font-bold' : timeRemaining <= 300 ? 'text-orange-600 font-semibold' : 'text-cyan-900'}`}>
+                <Clock className="h-4 w-4" />
+                <span>Time Remaining: {formatTime(timeRemaining)}</span>
+              </div>
+            )}
+            <div>Question {currentQuestionIndex + 1} of {quizData.questions.length}</div>
           <div className="flex items-center gap-2">
             {!isOnline && (
               <div title="Offline - answers saved locally">
@@ -946,5 +949,39 @@ export function QuizStudentView({ componentId, read_aloud = true, quizData: prel
         </div>
       </CardContent>
     </Card>
+
+    {/* Floating "Ask Pivot" Button */}
+    <div className="fixed bottom-8 right-8 z-40">
+      <Button
+        onClick={() => setShowPivot(true)}
+        size="lg"
+        className="shadow-2xl bg-gradient-to-r from-teal-500 to-blue-500 hover:from-teal-600 hover:to-blue-600 rounded-full w-16 h-16 flex items-center justify-center"
+        title="Get help from Pivot - Your AI Learning Partner"
+      >
+        <span className="text-3xl">🔄</span>
+      </Button>
+    </div>
+
+    {/* Pivot Chat Modal */}
+    {showPivot && quizData && (
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <PivotChat
+          lessonId={quizData.id}
+          componentId={componentId}
+          componentType="quiz"
+          questionId={currentQuestion.id}
+          questionText={currentQuestion.question_text}
+          correctAnswer={
+            currentQuestion.question_type === 'multiple_choice' || currentQuestion.question_type === 'true_false'
+              ? currentQuestion.options.find(opt => opt.is_correct)?.option_text
+              : currentQuestion.question_type === 'short_answer'
+              ? currentQuestion.options[0]?.option_text
+              : 'Multiple correct answers possible'
+          }
+          onClose={() => setShowPivot(false)}
+        />
+      </div>
+    )}
+    </>
   );
 }
