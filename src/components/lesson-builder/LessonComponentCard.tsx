@@ -5,8 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { DriveFilePicker } from "./attachments/DriveFilePicker";
-import { DriveAttachmentsList } from "./attachments/DriveAttachmentsList";
+import { DriveFilePicker } from "@/components/drive/DriveFilePicker";
+import { DriveAttachmentsList } from "@/components/drive/DriveAttachmentsList";
 // Cloud storage imports
 import { OneDriveFilePicker, OneDriveAttachmentsList } from "@/components/onedrive";
 
@@ -52,6 +52,11 @@ export default function LessonComponentCard({ component, onSave, onDelete }: Les
   };
 
   // Cloud file attachment handlers
+  const handleDriveFileSelected = (file: any) => {
+    console.log("✅ Google Drive file selected:", file);
+    // TODO: attach file to component via Supabase mutation
+  };
+
   const handleOneDriveFileSelected = (file: any) => {
     console.log("✅ OneDrive file selected:", file);
     // TODO: attach file to component via Supabase mutation
@@ -100,27 +105,53 @@ export default function LessonComponentCard({ component, onSave, onDelete }: Les
         {/* -------------------------------------------------- */}
         {/* CLOUD FILE ATTACHMENTS */}
         {/* -------------------------------------------------- */}
-        <div className="pt-4 border-t border-border">
-          <h3 className="text-sm font-semibold mb-2">OneDrive Attachments</h3>
+        <div className="pt-4 border-t border-border space-y-4">
+          {/* Google Drive Attachments */}
+          <div>
+            <h3 className="text-sm font-semibold mb-2">Google Drive Attachments</h3>
+            <div className="border border-border rounded-lg p-3">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className={!component?.id ? "cursor-not-allowed" : ""}>
+                      <DriveFilePicker onFileSelected={handleDriveFileSelected} disabled={!component?.id} />
+                    </div>
+                  </TooltipTrigger>
+                  {!component?.id && (
+                    <TooltipContent>
+                      <p>Save this component to enable Google Drive attachments</p>
+                    </TooltipContent>
+                  )}
+                </Tooltip>
+              </TooltipProvider>
+              {component?.id && (
+                <DriveAttachmentsList componentId={String(component.id)} showEmbeds={false} canDelete={true} />
+              )}
+            </div>
+          </div>
 
-          <div className="border border-border rounded-lg p-3">
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div className={!component?.id ? "cursor-not-allowed" : ""}>
-                    <OneDriveFilePicker onFileSelected={handleOneDriveFileSelected} disabled={!component?.id} />
-                  </div>
-                </TooltipTrigger>
-                {!component?.id && (
-                  <TooltipContent>
-                    <p>Save this component to enable OneDrive attachments</p>
-                  </TooltipContent>
-                )}
-              </Tooltip>
-            </TooltipProvider>
-            {component?.id && (
-              <OneDriveAttachmentsList componentId={String(component.id)} showEmbeds={false} canDelete={true} />
-            )}
+          {/* OneDrive Attachments */}
+          <div>
+            <h3 className="text-sm font-semibold mb-2">OneDrive Attachments</h3>
+            <div className="border border-border rounded-lg p-3">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className={!component?.id ? "cursor-not-allowed" : ""}>
+                      <OneDriveFilePicker onFileSelected={handleOneDriveFileSelected} disabled={!component?.id} />
+                    </div>
+                  </TooltipTrigger>
+                  {!component?.id && (
+                    <TooltipContent>
+                      <p>Save this component to enable OneDrive attachments</p>
+                    </TooltipContent>
+                  )}
+                </Tooltip>
+              </TooltipProvider>
+              {component?.id && (
+                <OneDriveAttachmentsList componentId={String(component.id)} showEmbeds={false} canDelete={true} />
+              )}
+            </div>
           </div>
         </div>
       </CardContent>
