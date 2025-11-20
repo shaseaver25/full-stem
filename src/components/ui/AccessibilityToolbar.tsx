@@ -1,31 +1,20 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useTheme } from 'next-themes';
 import { useAccessibility } from '@/contexts/AccessibilityContext';
 import { useFocusMode } from '@/contexts/FocusModeContext';
 import { Button } from '@/components/ui/button';
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
-import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { Volume2, Globe, Contrast, Type, Accessibility, Eye, EyeOff, Moon, Sun, Move, Minimize2, Maximize2 } from 'lucide-react';
+import { Volume2, Globe, Contrast, Type, Accessibility, Eye, EyeOff, Moon, Sun } from 'lucide-react';
 
 export function AccessibilityToolbar() {
   const { settings, updateSettings, isLoading } = useAccessibility();
   const { focusMode, setFocusMode } = useFocusMode();
   const { theme, setTheme } = useTheme();
   const [isExpanded, setIsExpanded] = useState(false);
-  const [isMinimized, setIsMinimized] = useState(false);
-  const [position, setPosition] = useState({ x: 20, y: 20 });
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
-  const toolbarRef = useRef<HTMLDivElement>(null);
 
   // Sync theme with accessibility settings
   useEffect(() => {
@@ -46,226 +35,28 @@ export function AccessibilityToolbar() {
     setTheme(newDarkMode ? 'dark' : 'light');
   };
 
-  const handleMouseDown = (e: React.MouseEvent) => {
-    e.preventDefault();
-    if (toolbarRef.current) {
-      const rect = toolbarRef.current.getBoundingClientRect();
-      setDragOffset({
-        x: e.clientX - rect.left,
-        y: e.clientY - rect.top,
-      });
-      setIsDragging(true);
-    }
-  };
-
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      if (isDragging) {
-        setPosition({
-          x: e.clientX - dragOffset.x,
-          y: e.clientY - dragOffset.y,
-        });
-      }
-    };
-
-    const handleMouseUp = () => {
-      setIsDragging(false);
-    };
-
-    if (isDragging) {
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
-    }
-
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-    };
-  }, [isDragging, dragOffset]);
-
   if (isLoading) {
     return null;
   }
 
   return (
-    <TooltipProvider delayDuration={200}>
-      {/* Desktop Toolbar - Hidden on mobile */}
-      <div
-        ref={toolbarRef}
-        className="hidden md:flex fixed bg-card shadow-lg border rounded-full items-center gap-2 px-3 py-2 z-50 transition-all duration-200 hover:shadow-xl"
-        style={{
-          left: `${position.x}px`,
-          top: `${position.y}px`,
-        }}
-        role="toolbar"
-        aria-label="Accessibility Toolbar"
-      >
-        {/* Drag Handle */}
-        <div 
-          className={`px-1 ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
-          onMouseDown={handleMouseDown}
-        >
-          <Move className="h-4 w-4 text-muted-foreground" />
-        </div>
-
-        {/* Minimize/Maximize Toggle */}
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="rounded-full h-8 w-8"
-              aria-label={isMinimized ? "Expand toolbar" : "Minimize toolbar"}
-              onClick={() => setIsMinimized(!isMinimized)}
-            >
-              {isMinimized ? (
-                <Maximize2 className="h-4 w-4" />
-              ) : (
-                <Minimize2 className="h-4 w-4" />
-              )}
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent side="top">
-            <p>{isMinimized ? 'Expand' : 'Minimize'}</p>
-          </TooltipContent>
-        </Tooltip>
-
-        {!isMinimized && (
-          <>
-        
-        {/* Text-to-Speech */}
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant={settings.ttsEnabled ? 'default' : 'outline'}
-              size="icon"
-              className="rounded-full h-10 w-10"
-              aria-label="Toggle Text-to-Speech"
-              aria-pressed={settings.ttsEnabled}
-              onClick={() => toggleSetting('ttsEnabled', !settings.ttsEnabled)}
-            >
-              <Volume2 className="h-5 w-5" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent side="top">
-            <p>Text-to-Speech {settings.ttsEnabled ? 'Enabled' : 'Disabled'}</p>
-          </TooltipContent>
-        </Tooltip>
-
-        {/* Translation */}
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant={settings.translationEnabled ? 'default' : 'outline'}
-              size="icon"
-              className="rounded-full h-10 w-10"
-              aria-label="Toggle Translation"
-              aria-pressed={settings.translationEnabled}
-              onClick={() => toggleSetting('translationEnabled', !settings.translationEnabled)}
-            >
-              <Globe className="h-5 w-5" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent side="top">
-            <p>Translation {settings.translationEnabled ? 'Enabled' : 'Disabled'}</p>
-          </TooltipContent>
-        </Tooltip>
-
-        {/* High Contrast */}
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant={settings.highContrast ? 'default' : 'outline'}
-              size="icon"
-              className="rounded-full h-10 w-10"
-              aria-label="Toggle High Contrast Mode"
-              aria-pressed={settings.highContrast}
-              onClick={() => toggleSetting('highContrast', !settings.highContrast)}
-            >
-              <Contrast className="h-5 w-5" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent side="top">
-            <p>High Contrast {settings.highContrast ? 'Enabled' : 'Disabled'}</p>
-          </TooltipContent>
-        </Tooltip>
-
-        {/* Dyslexia Font */}
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant={settings.dyslexiaFont ? 'default' : 'outline'}
-              size="icon"
-              className="rounded-full h-10 w-10"
-              aria-label="Toggle Dyslexia-Friendly Font"
-              aria-pressed={settings.dyslexiaFont}
-              onClick={() => toggleSetting('dyslexiaFont', !settings.dyslexiaFont)}
-            >
-              <Type className="h-5 w-5" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent side="top">
-            <p>Dyslexia Font {settings.dyslexiaFont ? 'Enabled' : 'Disabled'}</p>
-          </TooltipContent>
-        </Tooltip>
-
-        {/* Focus Mode */}
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant={focusMode ? 'default' : 'outline'}
-              size="icon"
-              className="rounded-full h-10 w-10"
-              aria-label="Toggle Focus Mode"
-              aria-pressed={focusMode}
-              onClick={() => setFocusMode(!focusMode)}
-            >
-              {focusMode ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent side="top">
-            <p>Focus Mode {focusMode ? 'Enabled' : 'Disabled'}</p>
-          </TooltipContent>
-        </Tooltip>
-
-        {/* Dark Mode */}
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant={settings.darkMode ? 'default' : 'outline'}
-              size="icon"
-              className="rounded-full h-10 w-10"
-              aria-label="Toggle Dark Mode"
-              aria-pressed={settings.darkMode}
-              onClick={toggleTheme}
-            >
-              {settings.darkMode ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent side="top">
-            <p>Dark Mode {settings.darkMode ? 'Enabled' : 'Disabled'}</p>
-          </TooltipContent>
-        </Tooltip>
-        </>
-        )}
-      </div>
-
-      {/* Mobile Toolbar - Shown on mobile as collapsible menu */}
-      <div className="md:hidden fixed bottom-5 right-5 z-50">
+    <>
+      {/* Desktop Toolbar - Floating icon button on middle-right */}
+      <div className="hidden md:block fixed right-6 top-1/2 -translate-y-1/2 z-50">
         <Popover open={isExpanded} onOpenChange={setIsExpanded}>
           <PopoverTrigger asChild>
             <Button
               size="icon"
-              className="rounded-full h-14 w-14 shadow-lg hover:shadow-xl transition-all"
+              className="rounded-full h-14 w-14 shadow-lg hover:shadow-xl transition-all bg-primary text-primary-foreground"
               aria-label="Open Accessibility Menu"
             >
               <Accessibility className="h-6 w-6" />
             </Button>
           </PopoverTrigger>
           <PopoverContent
-            side="top"
-            align="end"
-            className="w-72 p-4"
+            side="left"
+            align="center"
+            className="w-72 p-4 bg-card z-50"
             role="menu"
             aria-label="Accessibility Options"
           >
@@ -396,7 +187,11 @@ export function AccessibilityToolbar() {
                 aria-checked={focusMode}
               >
                 <div className="flex items-center gap-3">
-                  {focusMode ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  {focusMode ? (
+                    <EyeOff className="h-5 w-5" />
+                  ) : (
+                    <Eye className="h-5 w-5" />
+                  )}
                   <span className="font-medium">Focus Mode</span>
                 </div>
                 <div
@@ -424,7 +219,11 @@ export function AccessibilityToolbar() {
                 aria-checked={settings.darkMode}
               >
                 <div className="flex items-center gap-3">
-                  {settings.darkMode ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
+                  {settings.darkMode ? (
+                    <Moon className="h-5 w-5" />
+                  ) : (
+                    <Sun className="h-5 w-5" />
+                  )}
                   <span className="font-medium">Dark Mode</span>
                 </div>
                 <div
@@ -443,6 +242,208 @@ export function AccessibilityToolbar() {
           </PopoverContent>
         </Popover>
       </div>
-    </TooltipProvider>
+
+      {/* Mobile Toolbar - Bottom-right as before */}
+      <div className="md:hidden fixed bottom-5 right-5 z-50">
+        <Popover open={isExpanded} onOpenChange={setIsExpanded}>
+          <PopoverTrigger asChild>
+            <Button
+              size="icon"
+              className="rounded-full h-14 w-14 shadow-lg hover:shadow-xl transition-all bg-primary text-primary-foreground"
+              aria-label="Open Accessibility Menu"
+            >
+              <Accessibility className="h-6 w-6" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent
+            side="top"
+            align="end"
+            className="w-72 p-4 bg-card z-50"
+            role="menu"
+            aria-label="Accessibility Options"
+          >
+            <div className="space-y-3">
+              <h3 className="font-semibold text-sm mb-3">Accessibility Options</h3>
+
+              {/* Text-to-Speech Toggle */}
+              <button
+                className={`w-full flex items-center justify-between p-3 rounded-lg transition-colors ${
+                  settings.ttsEnabled
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-muted hover:bg-muted/80'
+                }`}
+                onClick={() => toggleSetting('ttsEnabled', !settings.ttsEnabled)}
+                role="menuitemcheckbox"
+                aria-checked={settings.ttsEnabled}
+              >
+                <div className="flex items-center gap-3">
+                  <Volume2 className="h-5 w-5" />
+                  <span className="font-medium">Text-to-Speech</span>
+                </div>
+                <div
+                  className={`w-10 h-6 rounded-full transition-colors ${
+                    settings.ttsEnabled ? 'bg-primary-foreground/20' : 'bg-muted-foreground/20'
+                  }`}
+                >
+                  <div
+                    className={`w-5 h-5 rounded-full bg-background transition-transform ${
+                      settings.ttsEnabled ? 'translate-x-5' : 'translate-x-0.5'
+                    } mt-0.5`}
+                  />
+                </div>
+              </button>
+
+              {/* Translation Toggle */}
+              <button
+                className={`w-full flex items-center justify-between p-3 rounded-lg transition-colors ${
+                  settings.translationEnabled
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-muted hover:bg-muted/80'
+                }`}
+                onClick={() => toggleSetting('translationEnabled', !settings.translationEnabled)}
+                role="menuitemcheckbox"
+                aria-checked={settings.translationEnabled}
+              >
+                <div className="flex items-center gap-3">
+                  <Globe className="h-5 w-5" />
+                  <span className="font-medium">Translation</span>
+                </div>
+                <div
+                  className={`w-10 h-6 rounded-full transition-colors ${
+                    settings.translationEnabled ? 'bg-primary-foreground/20' : 'bg-muted-foreground/20'
+                  }`}
+                >
+                  <div
+                    className={`w-5 h-5 rounded-full bg-background transition-transform ${
+                      settings.translationEnabled ? 'translate-x-5' : 'translate-x-0.5'
+                    } mt-0.5`}
+                  />
+                </div>
+              </button>
+
+              {/* High Contrast Toggle */}
+              <button
+                className={`w-full flex items-center justify-between p-3 rounded-lg transition-colors ${
+                  settings.highContrast
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-muted hover:bg-muted/80'
+                }`}
+                onClick={() => toggleSetting('highContrast', !settings.highContrast)}
+                role="menuitemcheckbox"
+                aria-checked={settings.highContrast}
+              >
+                <div className="flex items-center gap-3">
+                  <Contrast className="h-5 w-5" />
+                  <span className="font-medium">High Contrast</span>
+                </div>
+                <div
+                  className={`w-10 h-6 rounded-full transition-colors ${
+                    settings.highContrast ? 'bg-primary-foreground/20' : 'bg-muted-foreground/20'
+                  }`}
+                >
+                  <div
+                    className={`w-5 h-5 rounded-full bg-background transition-transform ${
+                      settings.highContrast ? 'translate-x-5' : 'translate-x-0.5'
+                    } mt-0.5`}
+                  />
+                </div>
+              </button>
+
+              {/* Dyslexia Font Toggle */}
+              <button
+                className={`w-full flex items-center justify-between p-3 rounded-lg transition-colors ${
+                  settings.dyslexiaFont
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-muted hover:bg-muted/80'
+                }`}
+                onClick={() => toggleSetting('dyslexiaFont', !settings.dyslexiaFont)}
+                role="menuitemcheckbox"
+                aria-checked={settings.dyslexiaFont}
+              >
+                <div className="flex items-center gap-3">
+                  <Type className="h-5 w-5" />
+                  <span className="font-medium">Dyslexia Font</span>
+                </div>
+                <div
+                  className={`w-10 h-6 rounded-full transition-colors ${
+                    settings.dyslexiaFont ? 'bg-primary-foreground/20' : 'bg-muted-foreground/20'
+                  }`}
+                >
+                  <div
+                    className={`w-5 h-5 rounded-full bg-background transition-transform ${
+                      settings.dyslexiaFont ? 'translate-x-5' : 'translate-x-0.5'
+                    } mt-0.5`}
+                  />
+                </div>
+              </button>
+
+              {/* Focus Mode Toggle */}
+              <button
+                className={`w-full flex items-center justify-between p-3 rounded-lg transition-colors ${
+                  focusMode
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-muted hover:bg-muted/80'
+                }`}
+                onClick={() => setFocusMode(!focusMode)}
+                role="menuitemcheckbox"
+                aria-checked={focusMode}
+              >
+                <div className="flex items-center gap-3">
+                  {focusMode ? (
+                    <EyeOff className="h-5 w-5" />
+                  ) : (
+                    <Eye className="h-5 w-5" />
+                  )}
+                  <span className="font-medium">Focus Mode</span>
+                </div>
+                <div
+                  className={`w-10 h-6 rounded-full transition-colors ${
+                    focusMode ? 'bg-primary-foreground/20' : 'bg-muted-foreground/20'
+                  }`}
+                >
+                  <div
+                    className={`w-5 h-5 rounded-full bg-background transition-transform ${
+                      focusMode ? 'translate-x-5' : 'translate-x-0.5'
+                    } mt-0.5`}
+                  />
+                </div>
+              </button>
+
+              {/* Dark Mode Toggle */}
+              <button
+                className={`w-full flex items-center justify-between p-3 rounded-lg transition-colors ${
+                  settings.darkMode
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-muted hover:bg-muted/80'
+                }`}
+                onClick={toggleTheme}
+                role="menuitemcheckbox"
+                aria-checked={settings.darkMode}
+              >
+                <div className="flex items-center gap-3">
+                  {settings.darkMode ? (
+                    <Moon className="h-5 w-5" />
+                  ) : (
+                    <Sun className="h-5 w-5" />
+                  )}
+                  <span className="font-medium">Dark Mode</span>
+                </div>
+                <div
+                  className={`w-10 h-6 rounded-full transition-colors ${
+                    settings.darkMode ? 'bg-primary-foreground/20' : 'bg-muted-foreground/20'
+                  }`}
+                >
+                  <div
+                    className={`w-5 h-5 rounded-full bg-background transition-transform ${
+                      settings.darkMode ? 'translate-x-5' : 'translate-x-0.5'
+                    } mt-0.5`}
+                  />
+                </div>
+              </button>
+            </div>
+          </PopoverContent>
+        </Popover>
+      </div>
+    </>
   );
 }
