@@ -187,7 +187,14 @@ export const EditUserForm: React.FC<EditUserFormProps> = ({ open, onOpenChange, 
   };
 
   const handleSubmit = () => {
-    if (!validateForm()) return;
+    if (!validateForm()) {
+      toast({
+        title: 'Validation Error',
+        description: 'Please fix the errors in the form before saving.',
+        variant: 'destructive',
+      });
+      return;
+    }
 
     updateUser(
       { 
@@ -638,7 +645,6 @@ export const EditUserForm: React.FC<EditUserFormProps> = ({ open, onOpenChange, 
         </DialogContent>
       </Dialog>
 
-      {/* Role Change Confirmation Dialog */}
       <AlertDialog open={showRoleChangeDialog} onOpenChange={setShowRoleChangeDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -646,20 +652,23 @@ export const EditUserForm: React.FC<EditUserFormProps> = ({ open, onOpenChange, 
               <AlertTriangle className="h-5 w-5 text-warning" />
               Confirm Role Change
             </AlertDialogTitle>
-            <AlertDialogDescription>
-              You are changing {user.firstName} {user.lastName}'s role from{' '}
-              <strong>{originalData.role}</strong> to <strong>{pendingRoleChange}</strong>.
-              <br />
-              <br />
-              This will:
-              <ul className="list-disc list-inside mt-2 space-y-1">
-                {originalData.role === 'student' && <li>Remove student from all enrolled classes</li>}
-                {pendingRoleChange === 'teacher' && <li>Grant access to teacher features</li>}
-                {pendingRoleChange === 'admin' && <li>Grant administrative permissions</li>}
-                <li>Change dashboard and permissions</li>
-              </ul>
-              <br />
-              This action can be reversed, but may require manual restoration of some data.
+            <AlertDialogDescription asChild>
+              <div>
+                <p>
+                  You are changing {user.firstName} {user.lastName}'s role from{' '}
+                  <strong>{originalData.role}</strong> to <strong>{pendingRoleChange}</strong>.
+                </p>
+                <p className="mt-4">This will:</p>
+                <ul className="list-disc list-inside mt-2 space-y-1">
+                  {originalData.role === 'student' && <li>Remove student from all enrolled classes</li>}
+                  {pendingRoleChange === 'teacher' && <li>Grant access to teacher features</li>}
+                  {pendingRoleChange === 'admin' && <li>Grant administrative permissions</li>}
+                  <li>Change dashboard and permissions</li>
+                </ul>
+                <p className="mt-4">
+                  This action can be reversed, but may require manual restoration of some data.
+                </p>
+              </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -679,22 +688,19 @@ export const EditUserForm: React.FC<EditUserFormProps> = ({ open, onOpenChange, 
               <AlertTriangle className="h-5 w-5 text-warning" />
               Email Address Change
             </AlertDialogTitle>
-            <AlertDialogDescription>
-              Changing email from:
-              <br />
-              <strong>{originalData.email}</strong>
-              <br />
-              To:
-              <br />
-              <strong>{pendingEmailChange}</strong>
-              <br />
-              <br />
-              <ul className="list-disc list-inside space-y-1">
-                <li>Verification email will be sent to new address</li>
-                <li>User must verify before new email is active</li>
-                <li>Old email will work until verification</li>
-                <li>User will be notified of this change</li>
-              </ul>
+            <AlertDialogDescription asChild>
+              <div>
+                <p>Changing email from:</p>
+                <p className="font-semibold">{originalData.email}</p>
+                <p className="mt-2">To:</p>
+                <p className="font-semibold">{pendingEmailChange}</p>
+                <ul className="list-disc list-inside space-y-1 mt-4">
+                  <li>Verification email will be sent to new address</li>
+                  <li>User must verify before new email is active</li>
+                  <li>Old email will work until verification</li>
+                  <li>User will be notified of this change</li>
+                </ul>
+              </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
