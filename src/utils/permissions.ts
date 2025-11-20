@@ -1,5 +1,5 @@
 import type { UserRole } from '@/utils/roleUtils';
-import { LucideIcon, LayoutDashboard, Sparkles, FileEdit, BookOpen, FolderOpen, BarChart3, Settings, Plus, GraduationCap, Users, Home, ClipboardList, FileQuestion } from 'lucide-react';
+import { LucideIcon, LayoutDashboard, Sparkles, FileEdit, BookOpen, FolderOpen, BarChart3, Settings, Plus, GraduationCap, Users, Home, ClipboardList, FileQuestion, MessageSquare } from 'lucide-react';
 
 export interface NavigationItem {
   path: string;
@@ -32,6 +32,7 @@ export const allNavigationItems: NavigationItem[] = [
   { path: '/teacher/analytics', label: 'Analytics', icon: BarChart3, description: 'View analytics' },
   { path: '/dashboard/teacher/analytics', label: 'Teacher Analytics', icon: BarChart3, description: 'Detailed analytics' },
   { path: '/teacher/feedback', label: 'Feedback', icon: Users, description: 'View feedback' },
+  { path: '/teacher/ai-tutor-monitoring', label: 'AI Tutor Monitor', icon: MessageSquare, description: 'Monitor AI tutor conversations' },
   
   // Parent routes
   { path: '/dashboard/parent', label: 'Parent Dashboard', icon: Home, description: 'Parent home' },
@@ -98,6 +99,7 @@ export const getAllowedRoutes = (role: UserRole | null): string[] => {
       '/teacher/analytics',
       '/teacher/feedback',
       '/teacher/submissions',
+      '/teacher/ai-tutor-monitoring',
       '/dashboard/teacher/analytics',
       '/content',
       '/preferences',
@@ -198,6 +200,7 @@ export const getPrimaryNavigationForRole = (role: UserRole | null): NavigationIt
       { path: '/teacher/gradebook', label: 'Gradebook', icon: ClipboardList },
       { path: '/content', label: 'Content', icon: FolderOpen },
       { path: '/teacher/analytics', label: 'Analytics', icon: BarChart3 },
+      { path: '/teacher/ai-tutor-monitoring', label: 'AI Tutor Monitor', icon: MessageSquare },
     ],
     parent: [
       { path: '/dashboard/parent', label: 'Dashboard', icon: Home },
