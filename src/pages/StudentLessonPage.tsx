@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -13,13 +13,41 @@ import HorizontalLessonViewer from '@/components/lesson/HorizontalLessonViewer';
 import { FloatingDesmosCalculator } from '@/components/interactive/FloatingDesmosCalculator';
 import { useDesmosEnabled } from '@/hooks/useDesmosEnabled';
 import { DraggableFloatingButton } from '@/components/ui/DraggableFloatingButton';
+import { useAuth } from '@/contexts/AuthContext';
 
 const StudentLessonPage = () => {
   const { lessonId } = useParams<{ lessonId: string }>();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [showFloatingCalculator, setShowFloatingCalculator] = useState(false);
+  const [isTeacher, setIsTeacher] = useState(false);
   
   const { data: desmosSettings } = useDesmosEnabled(lessonId);
+
+  // Check if current user is a teacher
+  useEffect(() => {
+    const checkUserRole = async () => {
+      if (!user) {
+        setIsTeacher(false);
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', user.id)
+          .eq('role', 'teacher')
+          .single();
+
+        setIsTeacher(!!data && !error);
+      } catch (error) {
+        setIsTeacher(false);
+      }
+    };
+
+    checkUserRole();
+  }, [user]);
 
   // Fetch lesson with only student-visible content
   const { data: lesson, isLoading, error } = useQuery({
@@ -96,23 +124,25 @@ const StudentLessonPage = () => {
     <div className="min-h-screen bg-background">
       <Header />
       
-      {/* Teacher Preview Notice Banner */}
-      <div className="bg-primary text-primary-foreground py-2 px-4">
-        <div className="max-w-4xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Badge variant="secondary" className="bg-background text-foreground">Teacher Preview</Badge>
-            <span className="text-sm">This is how students see this lesson</span>
+      {/* Teacher Preview Notice Banner - Only visible to teachers */}
+      {isTeacher && (
+        <div className="bg-primary text-primary-foreground py-2 px-4">
+          <div className="max-w-4xl mx-auto flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Badge variant="secondary" className="bg-background text-foreground">Teacher Preview</Badge>
+              <span className="text-sm">This is how students see this lesson</span>
+            </div>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => navigate(`/classes/${lesson.class_id}`)}
+              className="text-primary-foreground hover:bg-primary/90"
+            >
+              Exit Preview
+            </Button>
           </div>
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={() => navigate(`/classes/${lesson.class_id}`)}
-            className="text-primary-foreground hover:bg-primary/90"
-          >
-            Exit Preview
-          </Button>
         </div>
-      </div>
+      )}
 
       <div className="max-w-4xl mx-auto px-4 py-8">
         {/* Lesson Header */}
