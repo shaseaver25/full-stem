@@ -57,24 +57,25 @@ const PivotChatInterface: React.FC<PivotChatInterfaceProps> = ({
     setIsLoading(true);
 
     try {
-      const { data, error } = await supabase.functions.invoke('socratic-tutor', {
+      const { data, error } = await supabase.functions.invoke('ai-tutor-chat', {
         body: {
-          message: userMessage.text,
-          lessonId,
-          conversationHistory: messages.map(m => ({
+          messages: messages.map(m => ({
             role: m.sender === 'user' ? 'user' : 'assistant',
             content: m.text
-          }))
+          })),
+          systemPrompt: `You are Pivot, a friendly and helpful AI learning assistant for students. Help students understand concepts, answer questions, and guide their learning${lessonId ? ' in this lesson' : ''}. Keep responses clear, encouraging, and educational.`
         }
       });
 
       if (error) throw error;
       if (data.error) throw new Error(data.error);
 
+      const aiResponse = data.choices?.[0]?.message?.content || 'Sorry, I had trouble generating a response.';
+
       const pivotMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
         sender: 'pivot',
-        text: data.response,
+        text: aiResponse,
         timestamp: new Date()
       };
 
