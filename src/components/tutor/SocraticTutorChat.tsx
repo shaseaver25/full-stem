@@ -3,11 +3,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { MessageSquare, X, Send, Loader2, Sparkles, Mic, MicOff } from 'lucide-react';
+import { MessageSquare, X, Send, Loader2, Mic, MicOff } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { DraggableFloatingButton } from '@/components/ui/DraggableFloatingButton';
 import { useVoiceRecording } from '@/hooks/useVoiceRecording';
+import pivotLogo from '@/assets/pivot-logo.svg';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -164,7 +165,13 @@ export const SocraticTutorChat: React.FC<SocraticTutorChatProps> = ({
   if (!isOpen) {
     return (
       <DraggableFloatingButton
-        icon={<Sparkles className="h-6 w-6" />}
+        icon={
+          <img
+            src={pivotLogo}
+            alt="Open Pivot Socratic tutor"
+            className="h-6 w-6 pivot-icon"
+          />
+        }
         label="Ask Tutor"
         onClick={() => setIsOpen(true)}
         initialPosition={{ x: window.innerWidth - 100, y: window.innerHeight - 180 }}
@@ -177,10 +184,12 @@ export const SocraticTutorChat: React.FC<SocraticTutorChatProps> = ({
     <Card className="fixed bottom-4 right-4 w-96 h-[600px] shadow-2xl border-2 border-primary/20 z-50 flex flex-col">
       <CardHeader className="bg-gradient-to-r from-purple-500 to-pink-500 text-white pb-4">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Sparkles className="h-5 w-5" />
-            <CardTitle className="text-lg">Socratic Tutor</CardTitle>
-          </div>
+          <img
+            src={pivotLogo}
+            alt="Pivot Socratic tutor"
+            className="h-6 w-6 pivot-icon"
+          />
+          <CardTitle className="text-lg">Socratic Tutor</CardTitle>
           <Button
             variant="ghost"
             size="icon"
