@@ -15,6 +15,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { useAccessibility } from '@/contexts/AccessibilityContext';
 import { LanguageSelector } from '@/components/LanguageSelector';
 import { PivotChat } from '@/components/pivot/PivotChat';
+import { QuizReviewMode } from './QuizReviewMode';
 
 // Temporary type definitions until Supabase types are regenerated
 interface QuizComponentData {
@@ -91,6 +92,7 @@ export function QuizStudentView({ componentId, read_aloud = true, quizData: prel
   const [translatedOptions, setTranslatedOptions] = useState<Record<string, Record<string, string>>>({});
   const [showTranslation, setShowTranslation] = useState(false);
   const [showPivot, setShowPivot] = useState(false);
+  const [showReview, setShowReview] = useState(false);
   
   const { speak, isPlaying, isLoading: isSpeaking } = useTextToSpeech();
   const { translate, isTranslating, isEnabled: translationEnabled } = useTranslation();
@@ -540,6 +542,8 @@ export function QuizStudentView({ componentId, read_aloud = true, quizData: prel
       // Save final attempt to database
       const { data: userData } = await supabase.auth.getUser();
       if (userData.user) {
+        let savedAttemptId = currentAttemptId;
+        
         if (currentAttemptId) {
           // Update existing attempt
           await (supabase as any).from('quiz_attempts').update({
@@ -553,7 +557,7 @@ export function QuizStudentView({ componentId, read_aloud = true, quizData: prel
           }).eq('id', currentAttemptId);
         } else {
           // Create new attempt
-          await (supabase as any).from('quiz_attempts').insert({
+          const { data: attemptData } = await (supabase as any).from('quiz_attempts').insert({
             quiz_component_id: quizData.id,
             student_id: userData.user.id,
             attempt_number: attemptNumber,
@@ -564,8 +568,17 @@ export function QuizStudentView({ componentId, read_aloud = true, quizData: prel
               ? (quizData.time_limit_minutes * 60) - (timeRemaining || 0)
               : 0,
             answers: answers
-          });
+          }).select().single();
+          
+          if (attemptData) {
+            savedAttemptId = attemptData.id;
+            setCurrentAttemptId(savedAttemptId);
+          }
         }
+        
+        // Update user_progress to mark quiz as complete
+        // Note: user_progress table uses old Lessons table (numeric IDs)
+        // Quiz completion is tracked in quiz_attempts table instead
       }
 
       toast({
@@ -594,6 +607,11 @@ export function QuizStudentView({ componentId, read_aloud = true, quizData: prel
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
+
+  // Show Review Mode
+  if (showReview && currentAttemptId) {
+    return <QuizReviewMode attemptId={currentAttemptId} onClose={() => setShowReview(false)} />;
+  }
 
   if (loading) {
     return <div className="p-4">Loading quiz...</div>;
@@ -700,7 +718,12 @@ export function QuizStudentView({ componentId, read_aloud = true, quizData: prel
           )}
 
           <div className="flex gap-2">
-            <Button onClick={() => window.location.reload()} variant="outline" className="flex-1">
+            <Button 
+              onClick={() => setShowReview(true)} 
+              variant="outline" 
+              className="flex-1"
+              disabled={!currentAttemptId}
+            >
               Review Answers
             </Button>
             {remainingAttempts !== null && remainingAttempts > 0 && (

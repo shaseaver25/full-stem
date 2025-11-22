@@ -13,6 +13,9 @@ export interface GradedSubmission {
   assignment_title: string;
   class_name: string;
   due_at?: string;
+  type: 'assignment' | 'quiz';
+  max_points?: number;
+  percentage?: number;
 }
 
 export const useStudentGrades = () => {
@@ -96,9 +99,83 @@ export const useStudentGrades = () => {
             assignment_title: assignment.title,
             class_name: classMap.get(assignment.class_id) || 'Unknown Class',
             due_at: assignment.due_at || undefined,
+            type: 'assignment' as const,
           };
         })
         .filter((item): item is NonNullable<typeof item> => item !== null);
+
+      // Get quiz attempts
+      const { data: quizAttempts, error: quizError } = await (supabase as any)
+        .from('quiz_attempts')
+        .select(`
+          id,
+          quiz_component_id,
+          score,
+          max_score,
+          percentage,
+          completed_at
+        `)
+        .eq('student_id', user.id)
+        .not('completed_at', 'is', null)
+        .order('completed_at', { ascending: false });
+
+      if (quizError) throw quizError;
+
+      // Get quiz component details
+      if (quizAttempts && quizAttempts.length > 0) {
+        const quizComponentIds = quizAttempts.map((q: any) => q.quiz_component_id);
+        
+        const { data: quizComponents, error: quizComponentsError } = await (supabase as any)
+          .from('quiz_components')
+          .select(`
+            id,
+            title,
+            lesson_component_id
+          `)
+          .in('id', quizComponentIds);
+
+        if (quizComponentsError) throw quizComponentsError;
+
+        // Get lesson components to find lesson IDs
+        const lessonComponentIds = quizComponents?.map((qc: any) => qc.lesson_component_id).filter(Boolean) || [];
+        
+        const { data: lessonComponents } = await supabase
+          .from('lesson_components')
+          .select(`
+            id,
+            lesson_id,
+            lessons!inner(title)
+          `)
+          .in('id', lessonComponentIds);
+
+        const quizComponentMap = new Map(quizComponents?.map((qc: any) => [qc.id, qc]));
+        const lessonComponentMap = new Map(lessonComponents?.map((lc: any) => [lc.id, { lessonTitle: lc.lessons?.title }]));
+
+        // Add quiz attempts to graded submissions
+        quizAttempts.forEach((attempt: any) => {
+          const component: any = quizComponentMap.get(attempt.quiz_component_id);
+          if (!component) return;
+
+          const lessonInfo: any = lessonComponentMap.get(component.lesson_component_id || '');
+
+          gradedSubmissions.push({
+            id: attempt.id,
+            grade: attempt.score,
+            max_points: attempt.max_score,
+            percentage: attempt.percentage,
+            submitted_at: attempt.completed_at || '',
+            assignment_id: attempt.quiz_component_id,
+            assignment_title: component.title,
+            class_name: lessonInfo?.lessonTitle || 'Quiz',
+            type: 'quiz' as const,
+          });
+        });
+
+        // Sort all submissions by date
+        gradedSubmissions.sort((a, b) => 
+          new Date(b.submitted_at).getTime() - new Date(a.submitted_at).getTime()
+        );
+      }
 
       return gradedSubmissions;
     },
