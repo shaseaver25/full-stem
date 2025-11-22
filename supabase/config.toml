@@ -178,3 +178,5 @@ verify_jwt = true
 [functions.pivot-generate-hint]
 verify_jwt = true
 
+[functions.socratic-tutor]
+verify_jwt = true
