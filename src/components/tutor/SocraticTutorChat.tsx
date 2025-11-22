@@ -3,10 +3,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { MessageSquare, X, Send, Loader2, Sparkles } from 'lucide-react';
+import { MessageSquare, X, Send, Loader2, Sparkles, Mic, MicOff } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { DraggableFloatingButton } from '@/components/ui/DraggableFloatingButton';
+import { useVoiceRecording } from '@/hooks/useVoiceRecording';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -36,6 +37,15 @@ export const SocraticTutorChat: React.FC<SocraticTutorChatProps> = ({
   const [conversationId, setConversationId] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+  
+  const { 
+    isRecording, 
+    isProcessing, 
+    setIsProcessing,
+    startRecording, 
+    stopRecording, 
+    convertBlobToBase64 
+  } = useVoiceRecording();
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -97,6 +107,57 @@ export const SocraticTutorChat: React.FC<SocraticTutorChatProps> = ({
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       sendMessage();
+    }
+  };
+
+  const handleVoiceInput = async () => {
+    if (isRecording) {
+      // Stop recording and transcribe
+      try {
+        setIsProcessing(true);
+        const audioBlob = await stopRecording();
+        const base64Audio = await convertBlobToBase64(audioBlob);
+
+        // Send to transcription endpoint
+        const { data, error } = await supabase.functions.invoke('transcribe-voice', {
+          body: { audio: base64Audio }
+        });
+
+        if (error) {
+          throw error;
+        }
+
+        if (data.error) {
+          throw new Error(data.error);
+        }
+
+        if (data.text) {
+          setInput(data.text);
+          toast({
+            title: 'Transcription Complete',
+            description: 'Your speech has been converted to text.',
+          });
+        }
+      } catch (error) {
+        console.error('Error transcribing audio:', error);
+        toast({
+          title: 'Transcription Failed',
+          description: error instanceof Error ? error.message : 'Could not transcribe audio',
+          variant: 'destructive'
+        });
+      } finally {
+        setIsProcessing(false);
+      }
+    } else {
+      // Start recording
+      const started = await startRecording();
+      if (!started) {
+        toast({
+          title: 'Microphone Access Required',
+          description: 'Please allow microphone access to use voice input.',
+          variant: 'destructive'
+        });
+      }
     }
   };
 
@@ -166,24 +227,43 @@ export const SocraticTutorChat: React.FC<SocraticTutorChatProps> = ({
 
         <div className="p-4 border-t">
           <div className="flex gap-2">
+            <Button
+              onClick={handleVoiceInput}
+              disabled={isLoading || isProcessing}
+              size="icon"
+              variant={isRecording ? "destructive" : "outline"}
+              className={isRecording ? "animate-pulse" : ""}
+            >
+              {isProcessing ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : isRecording ? (
+                <MicOff className="h-4 w-4" />
+              ) : (
+                <Mic className="h-4 w-4" />
+              )}
+            </Button>
             <Input
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyPress={handleKeyPress}
-              placeholder="Ask a question..."
-              disabled={isLoading}
+              placeholder={isRecording ? "Recording..." : "Ask a question or click the mic..."}
+              disabled={isLoading || isRecording || isProcessing}
               className="flex-1"
             />
             <Button
               onClick={sendMessage}
-              disabled={!input.trim() || isLoading}
+              disabled={!input.trim() || isLoading || isRecording || isProcessing}
               size="icon"
             >
               <Send className="h-4 w-4" />
             </Button>
           </div>
           <p className="text-xs text-muted-foreground mt-2">
-            Press Enter to send, Shift+Enter for new line
+            {isRecording ? (
+              <span className="text-destructive font-medium">● Recording - Click mic to stop</span>
+            ) : (
+              <>Press Enter to send • Click mic to speak • Shift+Enter for new line</>
+            )}
           </p>
         </div>
       </CardContent>
