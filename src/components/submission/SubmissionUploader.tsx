@@ -1,17 +1,21 @@
-import { useState, useCallback } from 'react';
-import { useDropzone } from 'react-dropzone';
-import { Upload, AlertCircle } from 'lucide-react';
+import { useState } from 'react';
+import { Upload } from 'lucide-react';
 import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Progress } from "@/components/ui/progress";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
-import { toast } from "@/hooks/use-toast";
-import { DriveFilePicker } from "@/components/drive/DriveFilePicker";
+import { useFileUploadModal } from "@/hooks/useFileUploadModal";
 
 interface SubmissionUploaderProps {
   assignmentId: string;
-  onFileUploaded: (fileInfo: { path: string; name: string; size: number; uploaded_at: string; source?: 'local' | 'drive'; drive_file_id?: string; drive_link?: string }) => void;
+  onFileUploaded: (fileInfo: { 
+    path: string; 
+    name: string; 
+    size: number;
+    type: string;
+    uploaded_at: string;
+    url: string;
+    source?: 'local' | 'drive' | 'onedrive';
+    drive_file_id?: string;
+    drive_link?: string;
+  }) => void;
   maxFiles?: number;
   allowedTypes?: string[];
 }
@@ -35,186 +39,35 @@ export const SubmissionUploader = ({
   maxFiles = 5,
   allowedTypes = DEFAULT_ALLOWED_TYPES
 }: SubmissionUploaderProps) => {
-  const { user } = useAuth();
-  const [uploading, setUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState<{ [key: string]: number }>({});
-  const [error, setError] = useState<string>('');
-
-  const uploadFile = async (file: File) => {
-    if (!user) throw new Error('User not authenticated');
-
-    const timestamp = Date.now();
-    const fileName = `${timestamp}_${file.name}`;
-    const filePath = `student/${user.id}/assignment/${assignmentId}/${fileName}`;
-
-    try {
-      setUploadProgress(prev => ({ ...prev, [file.name]: 0 }));
-
-      const { data, error } = await supabase.storage
-        .from('assignment-submissions')
-        .upload(filePath, file, {
-          cacheControl: '3600',
-          upsert: false
-        });
-
-      if (error) throw error;
-
-      setUploadProgress(prev => ({ ...prev, [file.name]: 100 }));
-
-      return {
-        path: data.path,
-        name: file.name,
-        size: file.size,
-        uploaded_at: new Date().toISOString()
-      };
-    } catch (error) {
-      console.error('Upload error:', error);
-      throw error;
-    } finally {
-      // Remove progress tracking for this file after a delay
-      setTimeout(() => {
-        setUploadProgress(prev => {
-          const { [file.name]: _, ...rest } = prev;
-          return rest;
-        });
-      }, 2000);
-    }
-  };
-
-  const onDrop = useCallback(async (acceptedFiles: File[], rejectedFiles: any[]) => {
-    setError('');
-
-    if (rejectedFiles.length > 0) {
-      const error = rejectedFiles[0].errors[0];
-      if (error.code === 'file-too-large') {
-        setError('File size must be less than 100MB');
-      } else if (error.code === 'file-invalid-type') {
-        setError('File type not allowed');
-      } else {
-        setError('File upload failed');
-      }
-      return;
-    }
-
-    if (acceptedFiles.length === 0) return;
-
-    setUploading(true);
-
-    try {
-      for (const file of acceptedFiles) {
-        const fileInfo = await uploadFile(file);
-        onFileUploaded(fileInfo);
-        
-        toast({
-          title: "File uploaded successfully",
-          description: `${file.name} has been uploaded.`,
-        });
-      }
-    } catch (error) {
-      console.error('Upload failed:', error);
-      toast({
-        title: "Upload failed",
-        description: "There was an error uploading your file. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setUploading(false);
-    }
-  }, [assignmentId, onFileUploaded, user]);
-
-  const { getRootProps, getInputProps, isDragActive, isDragReject } = useDropzone({
-    onDrop,
+  const { open, FileUploadModal } = useFileUploadModal({
+    bucket: 'assignment-submissions',
+    storagePath: assignmentId ? `assignment/${assignmentId}` : undefined,
+    maxFileSize: 100,
+    allowedTypes,
     maxFiles,
-    maxSize: 100 * 1024 * 1024, // 100MB
-    accept: allowedTypes.reduce((acc, type) => {
-      acc[type] = [];
-      return acc;
-    }, {} as Record<string, string[]>),
-    disabled: uploading
+    title: 'Upload Assignment File',
+    description: 'Choose how you would like to upload your file',
+    onFileUploaded
   });
 
-  const handleDriveFileSelected = useCallback((file: { id: string; name: string; mimeType: string; url: string }) => {
-    console.log('📎 Drive file selected:', file);
-    
-    // Add Drive file to submission
-    onFileUploaded({
-      path: file.url,
-      name: file.name,
-      size: 0, // Drive files don't have size info from picker
-      uploaded_at: new Date().toISOString(),
-      source: 'drive',
-      drive_file_id: file.id,
-      drive_link: file.url
-    });
-
-    toast({
-      title: "Google Drive file attached",
-      description: `${file.name} has been attached from Google Drive.`,
-    });
-  }, [onFileUploaded]);
-
-  const hasActiveUploads = Object.keys(uploadProgress).length > 0;
-
   return (
-    <div className="space-y-4">
-      <div
-        {...getRootProps()}
-        className={`
-          border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors
-          ${isDragActive && !isDragReject ? 'border-primary bg-primary/5' : ''}
-          ${isDragReject ? 'border-destructive bg-destructive/5' : ''}
-          ${uploading ? 'opacity-50 cursor-not-allowed' : 'hover:border-primary hover:bg-primary/5'}
-          ${!isDragActive && !isDragReject ? 'border-border' : ''}
-        `}
+    <>
+      <Button
+        onClick={open}
+        className="w-full h-20 border-2 border-dashed border-border hover:border-primary hover:bg-primary/5 bg-background transition-colors"
+        variant="outline"
       >
-        <input {...getInputProps()} />
-        <Upload className="h-10 w-10 mx-auto mb-4 text-muted-foreground" />
-        {uploading ? (
-          <p className="text-muted-foreground">Uploading files...</p>
-        ) : isDragActive ? (
-          <p className="text-primary">Drop files here...</p>
-        ) : (
-          <div>
-            <p className="text-foreground mb-2">
-              Drag & drop files here, or <span className="text-primary">click to browse</span>
-            </p>
-            <p className="text-sm text-muted-foreground">
-              Max {maxFiles} files, 100MB each. Supports PDF, DOC, PPT, images, and videos.
+        <div className="flex flex-col items-center gap-2">
+          <Upload className="h-8 w-8 text-muted-foreground" />
+          <div className="text-center">
+            <p className="text-sm font-medium">Upload Files</p>
+            <p className="text-xs text-muted-foreground">
+              Click to choose from device, Google Drive, or OneDrive
             </p>
           </div>
-        )}
-      </div>
-
-      <div className="flex items-center gap-2">
-        <div className="flex-1 border-t border-border" />
-        <span className="text-sm text-muted-foreground">OR</span>
-        <div className="flex-1 border-t border-border" />
-      </div>
-
-      <div className="flex justify-center">
-        <DriveFilePicker onFileSelected={handleDriveFileSelected} />
-      </div>
-
-      {error && (
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
-
-      {hasActiveUploads && (
-        <div className="space-y-2">
-          {Object.entries(uploadProgress).map(([fileName, progress]) => (
-            <div key={fileName} className="space-y-1">
-              <div className="flex justify-between text-sm">
-                <span className="truncate flex-1">{fileName}</span>
-                <span>{progress}%</span>
-              </div>
-              <Progress value={progress} className="h-2" />
-            </div>
-          ))}
         </div>
-      )}
-    </div>
+      </Button>
+      <FileUploadModal />
+    </>
   );
 };

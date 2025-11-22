@@ -1,9 +1,9 @@
-
 import React, { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { Upload, X, File, Image, Video, FileText } from 'lucide-react';
+import { Upload, X, File, Image, Video, FileText, Cloud } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
+import { useFileUploadModal } from '@/hooks/useFileUploadModal';
 
 interface FileUploadProps {
   files: File[];
@@ -53,6 +53,34 @@ const FileUpload: React.FC<FileUploadProps> = ({
     multiple: true,
   });
 
+  const { open, FileUploadModal: UploadModal } = useFileUploadModal({
+    maxFiles: maxFiles - files.length,
+    allowedTypes,
+    maxFileSize: 100,
+    title: 'Upload Files',
+    description: 'Choose from device, Google Drive, or OneDrive',
+    onFileUploaded: async (fileInfo) => {
+      // For cloud files, we store metadata only since the file is already in the cloud
+      // We create a minimal File object as a placeholder
+      const metadata = `Cloud file: ${fileInfo.name}\nSource: ${fileInfo.source}\nURL: ${fileInfo.url}`;
+      const blob = new Blob([metadata], { type: 'text/plain' });
+      const placeholderFile = new window.File([blob], fileInfo.name, { 
+        type: fileInfo.type
+      });
+      
+      // Store cloud file metadata on the File object for later use
+      (placeholderFile as any).cloudMetadata = {
+        source: fileInfo.source,
+        url: fileInfo.url,
+        path: fileInfo.path,
+        drive_file_id: fileInfo.drive_file_id,
+        drive_link: fileInfo.drive_link
+      };
+      
+      onFilesChange([...files, placeholderFile]);
+    }
+  });
+
   const removeFile = (index: number) => {
     const newFiles = files.filter((_, i) => i !== index);
     onFilesChange(newFiles);
@@ -100,6 +128,24 @@ const FileUpload: React.FC<FileUploadProps> = ({
         )}
       </div>
 
+      <div className="flex items-center gap-2">
+        <div className="flex-1 border-t border-border" />
+        <span className="text-sm text-muted-foreground">OR</span>
+        <div className="flex-1 border-t border-border" />
+      </div>
+
+      <Button
+        onClick={open}
+        variant="outline"
+        className="w-full gap-2"
+        type="button"
+      >
+        <Cloud className="h-4 w-4" />
+        Upload from Cloud
+      </Button>
+      
+      <UploadModal />
+
       {files.length > 0 && (
         <div className="space-y-2">
           <h4 className="text-sm font-medium text-gray-700">Uploaded Files:</h4>
@@ -122,6 +168,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
                   size="sm"
                   onClick={() => removeFile(index)}
                   className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                  type="button"
                 >
                   <X className="h-4 w-4" />
                 </Button>
