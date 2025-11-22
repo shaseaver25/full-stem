@@ -17,6 +17,7 @@ import { LanguageSelector } from '@/components/LanguageSelector';
 import { PivotChat } from '@/components/pivot/PivotChat';
 import { QuizReviewMode } from './QuizReviewMode';
 import { PivotHelpButton } from '@/components/assessment/PivotHelpButton';
+import pivotLogo from '@/assets/pivot-logo.svg';
 
 // Temporary type definitions until Supabase types are regenerated
 interface QuizComponentData {
@@ -1193,7 +1194,12 @@ export function QuizStudentView({ componentId, read_aloud = true, quizData: prel
         className="shadow-2xl bg-gradient-to-r from-teal-500 to-blue-500 hover:from-teal-600 hover:to-blue-600 rounded-full w-16 h-16 flex items-center justify-center"
         title="Get help from Pivot - Your AI Learning Partner"
       >
-        <span className="text-3xl">🔄</span>
+        <img
+          src={pivotLogo}
+          alt="Ask Pivot, your AI learning partner"
+          className="w-8 h-8 pivot-icon"
+        />
+        <span className="sr-only">Open Pivot tutor</span>
       </Button>
     </div>
 
