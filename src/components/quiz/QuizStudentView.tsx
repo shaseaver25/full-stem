@@ -93,6 +93,9 @@ export function QuizStudentView({ componentId, read_aloud = true, quizData: prel
   const [showTranslation, setShowTranslation] = useState(false);
   const [showPivot, setShowPivot] = useState(false);
   const [showReview, setShowReview] = useState(false);
+  const [previousAttempts, setPreviousAttempts] = useState<any[]>([]);
+  const [hasSubmitted, setHasSubmitted] = useState(false);
+  const [canRetake, setCanRetake] = useState(true);
   
   const { speak, isPlaying, isLoading: isSpeaking } = useTextToSpeech();
   const { translate, isTranslating, isEnabled: translationEnabled } = useTranslation();
@@ -271,7 +274,7 @@ export function QuizStudentView({ componentId, read_aloud = true, quizData: prel
         }));
       }
 
-      setQuizData({
+      const loadedQuizData = {
         id: componentId,
         title: quizDataFromContent.title,
         instructions: quizDataFromContent.instructions || '',
@@ -283,7 +286,46 @@ export function QuizStudentView({ componentId, read_aloud = true, quizData: prel
         pass_threshold_percentage: quizDataFromContent.passThreshold,
         points_total: quizDataFromContent.pointsTotal,
         questions: formattedQuestions
-      });
+      };
+
+      setQuizData(loadedQuizData);
+
+      // Check for previous attempts
+      const { data: userData } = await supabase.auth.getUser();
+      if (userData.user) {
+        const { data: attempts, error: attemptsError } = await (supabase as any)
+          .from('quiz_attempts')
+          .select('*')
+          .eq('quiz_component_id', componentId)
+          .eq('student_id', userData.user.id)
+          .not('completed_at', 'is', null)
+          .order('attempt_number', { ascending: false });
+
+        if (!attemptsError && attempts && attempts.length > 0) {
+          setPreviousAttempts(attempts);
+          setHasSubmitted(true);
+          
+          // Check if student can retake
+          const attemptsAllowed = loadedQuizData.attempts_allowed;
+          const attemptsTaken = attempts.length;
+          
+          if (attemptsAllowed === -1) {
+            // Unlimited attempts
+            setCanRetake(true);
+          } else if (attemptsTaken >= attemptsAllowed) {
+            // No more attempts allowed
+            setCanRetake(false);
+          } else {
+            // Still has attempts remaining
+            setCanRetake(true);
+          }
+          
+          // Set the latest attempt info
+          const latestAttempt = attempts[0];
+          setScore(latestAttempt.score);
+          setCurrentAttemptId(latestAttempt.id);
+        }
+      }
     } catch (error) {
       console.error('Error loading quiz:', error);
       const errorMessage = error instanceof Error ? error.message : 'Failed to load quiz. Please make sure the quiz is configured.';
@@ -308,6 +350,7 @@ export function QuizStudentView({ componentId, read_aloud = true, quizData: prel
         .select('attempt_number')
         .eq('quiz_component_id', quizData.id)
         .eq('student_id', userData.user.id)
+        .not('completed_at', 'is', null)
         .order('attempt_number', { ascending: false })
         .limit(1);
 
@@ -333,6 +376,15 @@ export function QuizStudentView({ componentId, read_aloud = true, quizData: prel
       }
     }
 
+    // Reset states for new attempt
+    setAnswers({});
+    setCompleted(false);
+    setScore(null);
+    setFeedback({});
+    setCurrentQuestionIndex(0);
+    setShowHint({});
+    setFlagged({});
+    
     setStarted(true);
     if (quizData?.time_limit_minutes) {
       setTimeRemaining(quizData.time_limit_minutes * 60);
@@ -538,6 +590,7 @@ export function QuizStudentView({ componentId, read_aloud = true, quizData: prel
       setScore(totalScore);
       setFeedback(newFeedback);
       setCompleted(true);
+      setHasSubmitted(true);
 
       // Save final attempt to database
       const { data: userData } = await supabase.auth.getUser();
@@ -576,9 +629,8 @@ export function QuizStudentView({ componentId, read_aloud = true, quizData: prel
           }
         }
         
-        // Update user_progress to mark quiz as complete
-        // Note: user_progress table uses old Lessons table (numeric IDs)
-        // Quiz completion is tracked in quiz_attempts table instead
+        // Reload quiz to update attempt status
+        await loadQuiz();
       }
 
       toast({
@@ -621,16 +673,98 @@ export function QuizStudentView({ componentId, read_aloud = true, quizData: prel
     return <div className="p-4">Quiz not found</div>;
   }
 
+  // Submitted Screen (when student has submitted and can't retake)
+  if (hasSubmitted && !canRetake && !started && !completed) {
+    const latestAttempt = previousAttempts[0];
+    const percentage = latestAttempt ? Math.round((latestAttempt.score / latestAttempt.max_score) * 100) : 0;
+    const passed = percentage >= quizData.pass_threshold_percentage;
+
+    return (
+      <Card className={passed ? "bg-green-50 border-green-900" : "bg-orange-50 border-orange-900"}>
+        <CardHeader className="text-center">
+          {passed ? (
+            <CheckCircle2 className="h-12 w-12 mx-auto mb-4 text-green-900" />
+          ) : (
+            <AlertCircle className="h-12 w-12 mx-auto mb-4 text-orange-900" />
+          )}
+          <CardTitle className={`text-2xl ${passed ? "text-green-900" : "text-orange-900"}`}>
+            Quiz Submitted
+          </CardTitle>
+          <p className="text-lg font-semibold">{quizData.title}</p>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="bg-background p-6 rounded-lg text-center space-y-2">
+            <p className="text-sm text-muted-foreground">Your Score</p>
+            <p className="text-4xl font-bold">{latestAttempt?.score}/{latestAttempt?.max_score}</p>
+            <p className="text-xl font-semibold">{percentage}%</p>
+            {passed ? (
+              <p className="text-green-700 font-medium">✓ Passed</p>
+            ) : (
+              <p className="text-orange-700 font-medium">Pass threshold: {quizData.pass_threshold_percentage}%</p>
+            )}
+          </div>
+
+          <Alert>
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              You have used all {quizData.attempts_allowed} attempt{quizData.attempts_allowed > 1 ? 's' : ''} for this quiz.
+              {!canRetake && ' Contact your teacher if you need additional attempts.'}
+            </AlertDescription>
+          </Alert>
+
+          {previousAttempts.length > 0 && (
+            <div className="bg-background p-4 rounded-lg">
+              <p className="font-semibold mb-2">Attempt History:</p>
+              <div className="space-y-2">
+                {previousAttempts.map((attempt, index) => (
+                  <div key={attempt.id} className="flex justify-between text-sm border-b pb-2">
+                    <span>Attempt {attempt.attempt_number}</span>
+                    <span className="font-medium">
+                      {attempt.score}/{attempt.max_score} ({Math.round((attempt.score / attempt.max_score) * 100)}%)
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="text-center pt-4 space-y-2">
+            <Button 
+              onClick={() => setShowReview(true)}
+              variant="outline"
+              className="w-full"
+            >
+              Review Answers
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   // Start Screen
   if (!started && !completed) {
     return (
       <Card className="bg-cyan-50 border-cyan-900">
         <CardHeader className="text-center">
           <CheckCircle2 className="h-12 w-12 mx-auto mb-4 text-cyan-900" />
-          <CardTitle className="text-2xl text-cyan-900">Quiz Ready</CardTitle>
+          <CardTitle className="text-2xl text-cyan-900">
+            {hasSubmitted && canRetake ? 'Retake Quiz' : 'Quiz Ready'}
+          </CardTitle>
           <p className="text-lg font-semibold">{quizData.title}</p>
         </CardHeader>
         <CardContent className="space-y-4">
+          {hasSubmitted && canRetake && previousAttempts.length > 0 && (
+            <Alert>
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                Previous attempt: {previousAttempts[0].score}/{previousAttempts[0].max_score} ({Math.round((previousAttempts[0].score / previousAttempts[0].max_score) * 100)}%)
+                <br />
+                Attempts used: {previousAttempts.length} of {quizData.attempts_allowed === -1 ? '∞' : quizData.attempts_allowed}
+              </AlertDescription>
+            </Alert>
+          )}
+
           {/* Language Selector */}
           <div className="flex items-center justify-between gap-4 p-4 bg-muted/50 rounded-lg border">
             <LanguageSelector />
