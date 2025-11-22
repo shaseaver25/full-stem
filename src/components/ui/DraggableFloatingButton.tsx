@@ -8,6 +8,7 @@ interface DraggableFloatingButtonProps {
   onClick: () => void;
   initialPosition?: { x: number; y: number };
   className?: string;
+  variant?: 'default' | 'iconOnly';
 }
 
 export const DraggableFloatingButton: React.FC<DraggableFloatingButtonProps> = ({
@@ -16,6 +17,7 @@ export const DraggableFloatingButton: React.FC<DraggableFloatingButtonProps> = (
   onClick,
   initialPosition = { x: 20, y: 20 },
   className = '',
+  variant = 'default',
 }) => {
   const [position, setPosition] = useState(initialPosition);
   const [isDragging, setIsDragging] = useState(false);
@@ -76,9 +78,9 @@ export const DraggableFloatingButton: React.FC<DraggableFloatingButtonProps> = (
       onClick={handleClick}
       onMouseEnter={() => setShowMoveIcon(true)}
       onMouseLeave={() => !isDragging && setShowMoveIcon(false)}
-      className={`fixed rounded-full w-14 h-14 shadow-lg transition-all ${
-        isDragging ? 'cursor-grabbing scale-110' : 'cursor-grab'
-      } ${className}`}
+      className={`fixed rounded-full transition-all ${
+        variant === 'iconOnly' ? 'shadow-none bg-transparent p-0' : 'w-14 h-14 shadow-lg'
+      } ${isDragging ? 'cursor-grabbing scale-110' : 'cursor-grab'} ${className}`}
       style={{
         left: `${position.x}px`,
         top: `${position.y}px`,
