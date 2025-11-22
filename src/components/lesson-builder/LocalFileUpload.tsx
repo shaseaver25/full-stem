@@ -1,9 +1,6 @@
-import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { useToast } from '@/hooks/use-toast';
-import { Upload, Loader2 } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { FEATURE_FLAGS } from '@/config/features';
+import { Upload } from 'lucide-react';
+import { useFileUploadModal } from '@/hooks/useFileUploadModal';
 
 interface LocalFileUploadProps {
   onFileUploaded: (file: { name: string; path: string; url: string }) => void;
@@ -18,109 +15,34 @@ export function LocalFileUpload({
   variant = 'outline',
   size = 'default'
 }: LocalFileUploadProps) {
-  const [isUploading, setIsUploading] = useState(false);
-  const { toast } = useToast();
-
-  const handleFileUpload = async () => {
-    try {
-      const input = document.createElement('input');
-      input.type = 'file';
-      input.accept = '*/*';
-      
-      input.onchange = async (e) => {
-        const file = (e.target as HTMLInputElement)?.files?.[0];
-        if (!file) return;
-
-        setIsUploading(true);
-
-        try {
-          const { data: { user } } = await supabase.auth.getUser();
-          if (!user) {
-            throw new Error('User not authenticated');
-          }
-
-          // Create path with timestamp to prevent overwriting
-          const timestamp = Date.now();
-          const sanitizedFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-          const path = `teacher-${user.id}/${timestamp}-${sanitizedFileName}`;
-
-          console.log('📤 Uploading file to:', path);
-
-          const { error: uploadError } = await supabase.storage
-            .from('lesson-files')
-            .upload(path, file);
-
-          if (uploadError) {
-            console.error('❌ Upload error:', uploadError);
-            throw uploadError;
-          }
-
-          // Get public URL
-          const { data: { publicUrl } } = supabase.storage
-            .from('lesson-files')
-            .getPublicUrl(path);
-
-          console.log('✅ File uploaded successfully:', path);
-
-          toast({
-            title: 'File Uploaded',
-            description: `"${file.name}" has been uploaded successfully.`,
-          });
-
-          onFileUploaded({
-            name: file.name,
-            path: path,
-            url: publicUrl
-          });
-        } catch (err: any) {
-          console.error('❌ Upload failed:', err);
-          toast({
-            title: 'Upload Failed',
-            description: err.message || 'Failed to upload file. Please try again.',
-            variant: 'destructive'
-          });
-        } finally {
-          setIsUploading(false);
-        }
-      };
-      
-      input.click();
-    } catch (err: any) {
-      console.error('❌ Error initializing upload:', err);
-      toast({
-        title: 'Error',
-        description: 'Failed to initialize file upload.',
-        variant: 'destructive'
+  const { open, FileUploadModal } = useFileUploadModal({
+    bucket: 'lesson-files',
+    maxFileSize: 100,
+    maxFiles: 1,
+    title: 'Upload File',
+    description: 'Choose how you would like to upload your file',
+    onFileUploaded: (fileInfo) => {
+      onFileUploaded({
+        name: fileInfo.name,
+        path: fileInfo.path,
+        url: fileInfo.url
       });
     }
-  };
+  });
 
   return (
-    <div className="space-y-2">
+    <>
       <Button
         type="button"
         variant={variant}
         size={size}
-        onClick={handleFileUpload}
-        disabled={disabled || isUploading}
+        onClick={open}
+        disabled={disabled}
       >
-        {isUploading ? (
-          <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Uploading...
-          </>
-        ) : (
-          <>
-            <Upload className="mr-2 h-4 w-4" />
-            Upload File
-          </>
-        )}
+        <Upload className="mr-2 h-4 w-4" />
+        Upload File
       </Button>
-      {!FEATURE_FLAGS.ENABLE_CLOUD_ATTACHMENTS && (
-        <p className="text-xs text-muted-foreground">
-          Cloud integrations temporarily disabled — upload files directly instead.
-        </p>
-      )}
-    </div>
+      <FileUploadModal />
+    </>
   );
 }
