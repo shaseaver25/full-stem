@@ -10,8 +10,9 @@
  */
 
 import { useState, useEffect, useRef } from 'react';
-import { HelpCircle, Sparkles } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import pivotLogo from '@/assets/pivot-logo.svg';
 import { pivotHelpButtonConfig } from '@/config/pivotHelpButton.config';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -187,7 +188,7 @@ export const PivotHelpButton: React.FC<PivotHelpButtonProps> = ({
         aria-live="polite"
         aria-atomic="true"
       >
-        <HelpCircle className="pivot-icon waving" size={20} />
+        <img src={pivotLogo} alt="Pivot" className="pivot-icon waving w-5 h-5" />
         <span>{pivotHelpButtonConfig.text.buttonLabel}</span>
         <Sparkles size={16} style={{ opacity: 0.8 }} />
       </Button>
