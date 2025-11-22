@@ -188,7 +188,7 @@ export const PivotHelpButton: React.FC<PivotHelpButtonProps> = ({
         aria-live="polite"
         aria-atomic="true"
       >
-        <img src={pivotLogo} alt="Pivot" className="pivot-icon waving w-5 h-5" />
+        <img src={pivotLogo} alt="Pivot" className="pivot-icon waving w-7 h-7" />
         <span>{pivotHelpButtonConfig.text.buttonLabel}</span>
         <Sparkles size={16} style={{ opacity: 0.8 }} />
       </Button>

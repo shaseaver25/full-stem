@@ -1197,7 +1197,7 @@ export function QuizStudentView({ componentId, read_aloud = true, quizData: prel
         <img
           src={pivotLogo}
           alt="Ask Pivot, your AI learning partner"
-          className="w-8 h-8 pivot-icon"
+          className="w-12 h-12 pivot-icon"
         />
         <span className="sr-only">Open Pivot tutor</span>
       </Button>
