@@ -12,6 +12,7 @@ import { useAccessibility } from '@/contexts/AccessibilityContext';
 interface QuizReviewModeProps {
   attemptId: string;
   onClose: () => void;
+  showCorrectAnswers: 'immediately' | 'after_submission' | 'never';
 }
 
 interface ReviewQuestion {
@@ -30,7 +31,7 @@ interface ReviewQuestion {
   isCorrect: boolean;
 }
 
-export function QuizReviewMode({ attemptId, onClose }: QuizReviewModeProps) {
+export function QuizReviewMode({ attemptId, onClose, showCorrectAnswers }: QuizReviewModeProps) {
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [attempt, setAttempt] = useState<any>(null);
@@ -184,6 +185,7 @@ export function QuizReviewMode({ attemptId, onClose }: QuizReviewModeProps) {
   const currentQuestion = questions[currentIndex];
   const correctCount = questions.filter(q => q.isCorrect).length;
   const percentage = Math.round((attempt.score / attempt.max_score) * 100);
+  const canSeeCorrectAnswers = showCorrectAnswers !== 'never';
 
   return (
     <Card className="bg-cyan-50 border-cyan-900">
@@ -274,17 +276,19 @@ export function QuizReviewMode({ attemptId, onClose }: QuizReviewModeProps) {
                 <div
                   key={option.id}
                   className={`p-3 rounded-lg border-2 ${
-                    isCorrectAnswer
+                    canSeeCorrectAnswers && isCorrectAnswer
                       ? 'bg-green-50 border-green-500'
                       : isUserAnswer
-                      ? 'bg-red-50 border-red-500'
+                      ? canSeeCorrectAnswers && !isCorrectAnswer
+                        ? 'bg-red-50 border-red-500'
+                        : 'bg-blue-50 border-blue-500'
                       : 'bg-background border-gray-200'
                   }`}
                 >
                   <div className="flex items-center justify-between">
                     <span>{option.option_text}</span>
-                    {isCorrectAnswer && <span className="text-green-700 font-semibold">✓ Correct</span>}
-                    {isUserAnswer && !isCorrectAnswer && <span className="text-red-700 font-semibold">Your Answer</span>}
+                    {canSeeCorrectAnswers && isCorrectAnswer && <span className="text-green-700 font-semibold">✓ Correct</span>}
+                    {isUserAnswer && <span className={`font-semibold ${canSeeCorrectAnswers && !isCorrectAnswer ? 'text-red-700' : 'text-blue-700'}`}>Your Answer</span>}
                   </div>
                 </div>
               );
@@ -305,19 +309,23 @@ export function QuizReviewMode({ attemptId, onClose }: QuizReviewModeProps) {
                 <div
                   key={option.id}
                   className={`p-3 rounded-lg border-2 ${
-                    isCorrectAnswer && isUserAnswer
-                      ? 'bg-green-50 border-green-500'
-                      : isCorrectAnswer && !isUserAnswer
-                      ? 'bg-yellow-50 border-yellow-500'
-                      : isUserAnswer && !isCorrectAnswer
-                      ? 'bg-red-50 border-red-500'
+                    canSeeCorrectAnswers
+                      ? isCorrectAnswer && isUserAnswer
+                        ? 'bg-green-50 border-green-500'
+                        : isCorrectAnswer && !isUserAnswer
+                        ? 'bg-yellow-50 border-yellow-500'
+                        : isUserAnswer && !isCorrectAnswer
+                        ? 'bg-red-50 border-red-500'
+                        : 'bg-background border-gray-200'
+                      : isUserAnswer
+                      ? 'bg-blue-50 border-blue-500'
                       : 'bg-background border-gray-200'
                   }`}
                 >
                   <div className="flex items-center justify-between">
                     <span>{option.option_text}</span>
                     <div className="flex items-center gap-2">
-                      {isCorrectAnswer && <span className="text-green-700 font-semibold">✓ Should Select</span>}
+                      {canSeeCorrectAnswers && isCorrectAnswer && <span className="text-green-700 font-semibold">✓ Should Select</span>}
                       {isUserAnswer && <span className="text-blue-700 font-semibold">You Selected</span>}
                     </div>
                   </div>
@@ -333,19 +341,23 @@ export function QuizReviewMode({ attemptId, onClose }: QuizReviewModeProps) {
             <div className={`p-4 rounded-lg ${
               currentQuestion.isCorrect 
                 ? 'bg-green-50 border-2 border-green-500' 
-                : 'bg-red-50 border-2 border-red-500'
+                : canSeeCorrectAnswers
+                ? 'bg-red-50 border-2 border-red-500'
+                : 'bg-blue-50 border-2 border-blue-500'
             }`}>
               <p className="text-sm font-semibold mb-1">Your Answer:</p>
               <p>{currentQuestion.userAnswer || '(No answer provided)'}</p>
             </div>
-            <div className="p-4 bg-green-50 border-2 border-green-500 rounded-lg">
-              <p className="text-sm font-semibold mb-1">Acceptable Answers:</p>
-              <ul className="list-disc list-inside">
-                {currentQuestion.options.map((opt) => (
-                  <li key={opt.id}>{opt.option_text}</li>
-                ))}
-              </ul>
-            </div>
+            {canSeeCorrectAnswers && (
+              <div className="p-4 bg-green-50 border-2 border-green-500 rounded-lg">
+                <p className="text-sm font-semibold mb-1">Acceptable Answers:</p>
+                <ul className="list-disc list-inside">
+                  {currentQuestion.options.map((opt) => (
+                    <li key={opt.id}>{opt.option_text}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
         )}
 
@@ -359,19 +371,23 @@ export function QuizReviewMode({ attemptId, onClose }: QuizReviewModeProps) {
               return (
                 <div key={option.id}>
                   <p className="text-sm font-semibold mb-2">Blank {idx + 1}:</p>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className={canSeeCorrectAnswers ? "grid grid-cols-2 gap-3" : ""}>
                     <div className={`p-3 rounded-lg ${
                       isCorrect 
                         ? 'bg-green-50 border-2 border-green-500' 
-                        : 'bg-red-50 border-2 border-red-500'
+                        : canSeeCorrectAnswers
+                        ? 'bg-red-50 border-2 border-red-500'
+                        : 'bg-blue-50 border-2 border-blue-500'
                     }`}>
                       <p className="text-xs text-muted-foreground">Your Answer:</p>
                       <p className="font-medium">{userAnswer || '(No answer)'}</p>
                     </div>
-                    <div className="p-3 rounded-lg bg-green-50 border-2 border-green-500">
-                      <p className="text-xs text-muted-foreground">Correct Answer:</p>
-                      <p className="font-medium">{option.option_text}</p>
-                    </div>
+                    {canSeeCorrectAnswers && (
+                      <div className="p-3 rounded-lg bg-green-50 border-2 border-green-500">
+                        <p className="text-xs text-muted-foreground">Correct Answer:</p>
+                        <p className="font-medium">{option.option_text}</p>
+                      </div>
+                    )}
                   </div>
                 </div>
               );
@@ -380,11 +396,21 @@ export function QuizReviewMode({ attemptId, onClose }: QuizReviewModeProps) {
         )}
 
         {/* Explanation */}
-        {currentQuestion.explanation && (
+        {canSeeCorrectAnswers && currentQuestion.explanation && (
           <Alert>
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
               <strong>Explanation:</strong> {currentQuestion.explanation}
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {/* Message when answers are hidden */}
+        {!canSeeCorrectAnswers && (
+          <Alert>
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              Your teacher has chosen not to release correct answers for this quiz. You can see your responses and overall score, but correct answers are not displayed.
             </AlertDescription>
           </Alert>
         )}

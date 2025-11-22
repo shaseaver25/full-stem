@@ -661,8 +661,8 @@ export function QuizStudentView({ componentId, read_aloud = true, quizData: prel
   };
 
   // Show Review Mode
-  if (showReview && currentAttemptId) {
-    return <QuizReviewMode attemptId={currentAttemptId} onClose={() => setShowReview(false)} />;
+  if (showReview && currentAttemptId && quizData) {
+    return <QuizReviewMode attemptId={currentAttemptId} onClose={() => setShowReview(false)} showCorrectAnswers={quizData.show_correct_answers} />;
   }
 
   if (loading) {
@@ -678,6 +678,7 @@ export function QuizStudentView({ componentId, read_aloud = true, quizData: prel
     const latestAttempt = previousAttempts[0];
     const percentage = latestAttempt ? Math.round((latestAttempt.score / latestAttempt.max_score) * 100) : 0;
     const passed = percentage >= quizData.pass_threshold_percentage;
+    const canViewAnswers = quizData.show_correct_answers !== 'never';
 
     return (
       <Card className={passed ? "bg-green-50 border-green-900" : "bg-orange-50 border-orange-900"}>
@@ -733,9 +734,15 @@ export function QuizStudentView({ componentId, read_aloud = true, quizData: prel
               onClick={() => setShowReview(true)}
               variant="outline"
               className="w-full"
+              disabled={!canViewAnswers}
             >
               Review Answers
             </Button>
+            {!canViewAnswers && (
+              <p className="text-sm text-muted-foreground">
+                Your teacher has not released answer reviews for this quiz.
+              </p>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -806,6 +813,7 @@ export function QuizStudentView({ componentId, read_aloud = true, quizData: prel
   if (completed && score !== null) {
     const percentage = Math.round((score / quizData.points_total) * 100);
     const passed = percentage >= quizData.pass_threshold_percentage;
+    const canViewAnswers = quizData.show_correct_answers !== 'never' && currentAttemptId;
 
     return (
       <Card className="bg-cyan-50 border-cyan-900">
@@ -856,7 +864,7 @@ export function QuizStudentView({ componentId, read_aloud = true, quizData: prel
               onClick={() => setShowReview(true)} 
               variant="outline" 
               className="flex-1"
-              disabled={!currentAttemptId}
+              disabled={!canViewAnswers}
             >
               Review Answers
             </Button>
@@ -866,6 +874,13 @@ export function QuizStudentView({ componentId, read_aloud = true, quizData: prel
               </Button>
             )}
           </div>
+          {!canViewAnswers && (
+            <p className="text-sm text-muted-foreground text-center">
+              {quizData.show_correct_answers === 'never' 
+                ? 'Your teacher has not released answer reviews for this quiz.'
+                : 'Complete the quiz submission to review answers.'}
+            </p>
+          )}
         </CardContent>
       </Card>
     );
