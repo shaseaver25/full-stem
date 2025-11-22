@@ -223,7 +223,7 @@ export default function MyGradesPage() {
         <div>
           <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
             <BookOpen className="h-5 w-5" />
-            Graded Assignments
+            Graded Assignments & Quizzes
           </h2>
           
           {!grades || grades.length === 0 ? (
@@ -248,32 +248,54 @@ export default function MyGradesPage() {
                 >
                   <AccordionTrigger className="hover:no-underline">
                     <div className="flex items-center justify-between w-full pr-4">
-                      <div className="text-left">
-                        <p className="font-medium">{submission.assignment_title}</p>
+                      <div className="text-left flex-1">
+                        <div className="flex items-center gap-2">
+                          <p className="font-medium">{submission.assignment_title}</p>
+                          {submission.type === 'quiz' && (
+                            <Badge variant="secondary" className="text-xs">Quiz</Badge>
+                          )}
+                        </div>
                         <p className="text-sm text-muted-foreground">{submission.class_name}</p>
                       </div>
-                      <Badge 
-                        variant="outline" 
-                        className={`${getGradeColor(submission.grade || 0)} border-current`}
-                      >
-                        {submission.grade}% ({getGradeLetter(submission.grade || 0)})
-                      </Badge>
+                      <div className="flex items-center gap-3">
+                        {submission.type === 'quiz' && submission.max_points && (
+                          <span className="text-sm text-muted-foreground">
+                            {submission.grade}/{submission.max_points}
+                          </span>
+                        )}
+                        <Badge 
+                          variant="outline" 
+                          className={`${getGradeColor(submission.percentage || submission.grade || 0)} border-current`}
+                        >
+                          {submission.percentage || submission.grade}% ({getGradeLetter(submission.percentage || submission.grade || 0)})
+                        </Badge>
+                      </div>
                     </div>
                   </AccordionTrigger>
                   <AccordionContent>
                     <div className="space-y-4 pt-4">
                       <div className="grid grid-cols-2 gap-4 text-sm">
                         <div>
-                          <p className="text-muted-foreground">Submitted</p>
+                          <p className="text-muted-foreground">
+                            {submission.type === 'quiz' ? 'Completed' : 'Submitted'}
+                          </p>
                           <p className="font-medium">{formatDate(submission.submitted_at)}</p>
                         </div>
-                        <div>
-                          <p className="text-muted-foreground">Due Date</p>
-                          <p className="font-medium">{formatDate(submission.due_at)}</p>
-                        </div>
+                        {submission.type === 'assignment' && (
+                          <div>
+                            <p className="text-muted-foreground">Due Date</p>
+                            <p className="font-medium">{formatDate(submission.due_at)}</p>
+                          </div>
+                        )}
+                        {submission.type === 'quiz' && submission.max_points && (
+                          <div>
+                            <p className="text-muted-foreground">Score</p>
+                            <p className="font-medium">{submission.grade}/{submission.max_points} points</p>
+                          </div>
+                        )}
                       </div>
 
-                      {submission.feedback && (
+                      {submission.type === 'assignment' && submission.feedback && (
                         <div className="border-t pt-4">
                           <p className="text-sm font-medium mb-2">Teacher Feedback</p>
                           <div className="p-3 bg-muted rounded-md">
@@ -282,67 +304,69 @@ export default function MyGradesPage() {
                         </div>
                       )}
 
-                      <div className="border-t pt-4">
-                        <div className="flex items-center justify-between mb-3">
-                          <p className="text-sm font-medium flex items-center gap-2">
-                            <Sparkles className="h-4 w-4 text-primary" />
-                            AI Learning Tips
-                          </p>
-                          {!submission.ai_feedback && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleGenerateFeedback(
-                                submission.id,
-                                submission.text_response,
-                                submission.grade,
-                                submission.feedback
-                              )}
-                              disabled={loadingFeedback[submission.id]}
-                            >
-                              {loadingFeedback[submission.id] ? (
-                                <>
-                                  <Sparkles className="h-3 w-3 mr-2 animate-pulse" />
-                                  Generating...
-                                </>
-                              ) : (
-                                <>
-                                  <Sparkles className="h-3 w-3 mr-2" />
-                                  Generate Tips
-                                </>
-                              )}
-                            </Button>
+                      {submission.type === 'assignment' && (
+                        <div className="border-t pt-4">
+                          <div className="flex items-center justify-between mb-3">
+                            <p className="text-sm font-medium flex items-center gap-2">
+                              <Sparkles className="h-4 w-4 text-primary" />
+                              AI Learning Tips
+                            </p>
+                            {!submission.ai_feedback && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleGenerateFeedback(
+                                  submission.id,
+                                  submission.text_response,
+                                  submission.grade,
+                                  submission.feedback
+                                )}
+                                disabled={loadingFeedback[submission.id]}
+                              >
+                                {loadingFeedback[submission.id] ? (
+                                  <>
+                                    <Sparkles className="h-3 w-3 mr-2 animate-pulse" />
+                                    Generating...
+                                  </>
+                                ) : (
+                                  <>
+                                    <Sparkles className="h-3 w-3 mr-2" />
+                                    Generate Tips
+                                  </>
+                                )}
+                              </Button>
+                            )}
+                          </div>
+                          {submission.ai_feedback ? (
+                            <div className="p-3 bg-primary/5 border border-primary/20 rounded-md space-y-2">
+                              <p className="text-sm whitespace-pre-wrap leading-relaxed">
+                                {submission.ai_feedback}
+                              </p>
+                              <p className="text-xs text-muted-foreground italic">
+                                Generated by TailorEDU AI Assistant
+                              </p>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="mt-2"
+                                onClick={() => handleGenerateFeedback(
+                                  submission.id,
+                                  submission.text_response,
+                                  submission.grade,
+                                  submission.feedback
+                                )}
+                                disabled={loadingFeedback[submission.id]}
+                              >
+                                Regenerate
+                              </Button>
+                            </div>
+                          ) : (
+                            <p className="text-sm text-muted-foreground">
+                              Click "Generate Tips" to get personalized AI feedback on your work
+                            </p>
                           )}
                         </div>
-                        {submission.ai_feedback ? (
-                          <div className="p-3 bg-primary/5 border border-primary/20 rounded-md space-y-2">
-                            <p className="text-sm whitespace-pre-wrap leading-relaxed">
-                              {submission.ai_feedback}
-                            </p>
-                            <p className="text-xs text-muted-foreground italic">
-                              Generated by TailorEDU AI Assistant
-                            </p>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="mt-2"
-                              onClick={() => handleGenerateFeedback(
-                                submission.id,
-                                submission.text_response,
-                                submission.grade,
-                                submission.feedback
-                              )}
-                              disabled={loadingFeedback[submission.id]}
-                            >
-                              Regenerate
-                            </Button>
-                          </div>
-                        ) : (
-                          <p className="text-sm text-muted-foreground">
-                            Click "Generate Tips" to get personalized AI feedback on your work
-                          </p>
-                        )}
-                      </div>
+                      )}
                     </div>
                   </AccordionContent>
                 </AccordionItem>
