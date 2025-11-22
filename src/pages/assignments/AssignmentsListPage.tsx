@@ -1,10 +1,12 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useStudentAssignmentsList } from '@/hooks/useStudentAssignmentsList';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AlertCircle, CheckCircle2, Clock, ArrowLeft } from 'lucide-react';
+import { redirectUserByRole } from '@/utils/roleRedirect';
+import { useAuth } from '@/contexts/AuthContext';
 
 const formatDate = (dateString?: string) => {
   if (!dateString) return 'No due date';
@@ -31,6 +33,14 @@ const isPastDue = (dueDate?: string) => {
 
 export default function AssignmentsListPage() {
   const { data: assignments, isLoading, error } = useStudentAssignmentsList();
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
+  const handleBackToDashboard = async () => {
+    if (user) {
+      await redirectUserByRole(user.id, navigate);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -72,11 +82,9 @@ export default function AssignmentsListPage() {
   return (
     <div className="min-h-screen bg-background p-6">
       <div className="max-w-4xl mx-auto">
-        <Button variant="ghost" size="sm" asChild className="mb-4">
-          <Link to="/student" className="flex items-center space-x-2">
-            <ArrowLeft className="h-4 w-4" />
-            <span>Back to Dashboard</span>
-          </Link>
+        <Button variant="ghost" size="sm" onClick={handleBackToDashboard} className="mb-4">
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          <span>Back to Dashboard</span>
         </Button>
         
         <div className="mb-6">
