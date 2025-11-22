@@ -14,6 +14,7 @@ import { FloatingDesmosCalculator } from '@/components/interactive/FloatingDesmo
 import { useDesmosEnabled } from '@/hooks/useDesmosEnabled';
 import { DraggableFloatingButton } from '@/components/ui/DraggableFloatingButton';
 import { useAuth } from '@/contexts/AuthContext';
+import { SocraticTutorChat } from '@/components/tutor/SocraticTutorChat';
 
 const StudentLessonPage = () => {
   const { lessonId } = useParams<{ lessonId: string }>();
@@ -220,6 +221,15 @@ const StudentLessonPage = () => {
         <FloatingDesmosCalculator
           lessonId={lessonId}
           onClose={() => setShowFloatingCalculator(false)}
+        />
+      )}
+
+      {/* Socratic Tutor */}
+      {lessonId && (
+        <SocraticTutorChat
+          lessonId={lessonId}
+          lessonTitle={lesson.title}
+          lessonContent={lesson.description || ''}
         />
       )}
     </div>
