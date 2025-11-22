@@ -91,13 +91,79 @@ export function PresentationViewer({
   const [translatedTexts, setTranslatedTexts] = useState<Map<number, string>>(new Map());
   const [showNotesPanel, setShowNotesPanel] = useState(false);
   const [showKeyboardHelp, setShowKeyboardHelp] = useState(false);
+  const [pdfSlides, setPdfSlides] = useState<Slide[]>([]);
+  const [loadingPdf, setLoadingPdf] = useState(false);
   
   const { speak, pause, resume, stop, isPlaying, isPaused, isLoading: isSpeaking, currentWordIndex, wordTimings } = usePresentationTTS();
   const { translateText, isTranslating } = useLiveTranslation();
 
-  const totalSlides = slides.length || 1;
+  // Check if embedUrl is a PDF file
+  const isPdfFile = embedUrl && (embedUrl.endsWith('.pdf') || embedUrl.includes('.pdf?'));
+
+  // Load PDF and convert to images if needed
+  useEffect(() => {
+    const loadPdfSlides = async () => {
+      if (!isPdfFile || !embedUrl) return;
+
+      setLoadingPdf(true);
+      try {
+        // Dynamically import PDF.js
+        const pdfjsLib = await import('pdfjs-dist');
+        pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
+
+        // Fetch the PDF
+        const response = await fetch(embedUrl);
+        const arrayBuffer = await response.arrayBuffer();
+
+        const pdf = await pdfjsLib.getDocument({
+          data: arrayBuffer,
+          isEvalSupported: false,
+          useWorkerFetch: false,
+          verbosity: 0
+        }).promise;
+
+        const loadedSlides: Slide[] = [];
+
+        // Convert each page to an image
+        for (let i = 1; i <= pdf.numPages; i++) {
+          const page = await pdf.getPage(i);
+          const viewport = page.getViewport({ scale: 2 });
+          const canvas = document.createElement('canvas');
+          const context = canvas.getContext('2d')!;
+          canvas.height = viewport.height;
+          canvas.width = viewport.width;
+
+          await page.render({
+            canvasContext: context,
+            viewport: viewport,
+            canvas: canvas
+          }).promise;
+
+          const imageUrl = canvas.toDataURL('image/png');
+          loadedSlides.push({
+            url: imageUrl,
+            text: `Slide ${i}`,
+            thumbnail: imageUrl
+          });
+        }
+
+        setPdfSlides(loadedSlides);
+      } catch (error) {
+        console.error('Error loading PDF:', error);
+      } finally {
+        setLoadingPdf(false);
+      }
+    };
+
+    loadPdfSlides();
+  }, [embedUrl, isPdfFile]);
+
+  // Use PDF slides if available, otherwise use provided slides
+  const effectiveSlides = isPdfFile && pdfSlides.length > 0 ? pdfSlides : slides;
+  const totalSlides = effectiveSlides.length || 1;
   const progressPercentage = ((currentSlide + 1) / totalSlides) * 100;
   const isCompleted = viewedSlides.size === totalSlides;
+  const currentSlideData = effectiveSlides[currentSlide];
 
   // Mark slide as viewed
   useEffect(() => {
@@ -198,7 +264,6 @@ export function PresentationViewer({
 
   // Read aloud current slide
   const handleReadAloud = async () => {
-    const currentSlideData = slides[currentSlide];
     if (!currentSlideData) return;
 
     let textToRead = currentSlideData.text;
@@ -229,8 +294,8 @@ export function PresentationViewer({
     const languageName = SUPPORTED_LANGUAGES.find(l => l.code === langCode)?.name || langCode;
     const newTranslations = new Map<number, string>();
     
-    for (let i = 0; i < slides.length; i++) {
-      const slideData = slides[i];
+    for (let i = 0; i < effectiveSlides.length; i++) {
+      const slideData = effectiveSlides[i];
       if (slideData?.text) {
         try {
           const translated = await translateText({
@@ -246,7 +311,7 @@ export function PresentationViewer({
         }
         
         // Add 300ms delay between translations to avoid rate limits
-        if (i < slides.length - 1) {
+        if (i < effectiveSlides.length - 1) {
           await new Promise(resolve => setTimeout(resolve, 300));
         }
       }
@@ -293,7 +358,6 @@ export function PresentationViewer({
     };
   }, [goToNext, goToPrevious]);
 
-  const currentSlideData = slides[currentSlide];
   const displayText = selectedLanguage !== 'en' && translatedTexts.has(currentSlide)
     ? translatedTexts.get(currentSlide)
     : currentSlideData?.text;
@@ -404,6 +468,16 @@ export function PresentationViewer({
 
       {/* Main Slide View */}
       <main className="relative flex items-center justify-center min-h-[400px] bg-muted/30" role="main" aria-label="Slide content">
+        {/* Loading PDF indicator */}
+        {loadingPdf && (
+          <div className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm z-20">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+              <p className="text-sm text-muted-foreground">Loading PDF slides...</p>
+            </div>
+          </div>
+        )}
+
         {/* Previous Button */}
         <Button
           variant="ghost"
@@ -423,9 +497,20 @@ export function PresentationViewer({
 
         {/* Slide Content */}
         <div className="w-full max-w-5xl p-8 space-y-4">
-          {embedUrl ? (
+          {isPdfFile && pdfSlides.length > 0 ? (
+            // Render PDF slides as images
+            <>
+              <div className="aspect-video w-full rounded-lg overflow-hidden shadow-lg bg-white" role="img" aria-label={`PDF Slide ${currentSlide + 1} of ${totalSlides}`}>
+                <img 
+                  src={pdfSlides[currentSlide]?.url} 
+                  alt={`Slide ${currentSlide + 1}`}
+                  className="w-full h-full object-contain"
+                />
+              </div>
+            </>
+          ) : embedUrl ? (
             // Check if this is a file URL (old format) vs embed URL (new format)
-            embedUrl.includes('/storage/v1/object/') || embedUrl.endsWith('.pptx') || embedUrl.endsWith('.ppt') || embedUrl.endsWith('.pdf') ? (
+            embedUrl.includes('/storage/v1/object/') || embedUrl.endsWith('.pptx') || embedUrl.endsWith('.ppt') ? (
               <Card className="p-8 bg-yellow-50 dark:bg-yellow-950/30 border-yellow-200 dark:border-yellow-800">
                 <div className="space-y-4">
                   <div className="flex items-start gap-3">
@@ -585,7 +670,7 @@ export function PresentationViewer({
                         </div>
                         {selectedLanguage !== 'en' && translatedTexts.size > 0 && (
                           <span className="text-xs px-2 py-1 bg-primary/10 text-primary rounded">
-                            {SUPPORTED_LANGUAGES.find(l => l.code === selectedLanguage)?.name} ({translatedTexts.size}/{slides.length})
+                            {SUPPORTED_LANGUAGES.find(l => l.code === selectedLanguage)?.name} ({translatedTexts.size}/{effectiveSlides.length})
                           </span>
                         )}
                       </div>
@@ -677,10 +762,10 @@ export function PresentationViewer({
       </div>
 
       {/* Thumbnail Strip */}
-      {showThumbnails && slides.length > 1 && !isFullscreen && (
+      {showThumbnails && effectiveSlides.length > 1 && !isFullscreen && (
         <div className="border-t bg-card p-3">
           <div className="flex gap-2 overflow-x-auto pb-2">
-            {slides.map((slide, index) => (
+            {effectiveSlides.map((slide, index) => (
               <button
                 key={index}
                 onClick={() => goToSlide(index)}
