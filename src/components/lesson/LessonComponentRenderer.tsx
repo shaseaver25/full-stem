@@ -309,8 +309,8 @@ export function LessonComponentRenderer({
 
   // Render presentation viewer with enhanced features (shareable links only)
   if (component_type === 'slides') {
-    // Extract URL from iframe tag if necessary
-    let embedUrl = content.url;
+    // Check for uploaded file first, then fall back to content.url
+    let embedUrl = content.uploadedFiles?.[0]?.url || content.url;
     if (embedUrl && embedUrl.includes('<iframe')) {
       const srcMatch = embedUrl.match(/src=["']([^"']+)["']/);
       if (srcMatch && srcMatch[1]) {
