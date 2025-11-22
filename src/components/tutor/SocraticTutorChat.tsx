@@ -169,7 +169,7 @@ export const SocraticTutorChat: React.FC<SocraticTutorChatProps> = ({
           <img
             src={pivotLogo}
             alt="Open Pivot Socratic tutor"
-            className="h-32 w-32 pivot-icon"
+            className="h-64 w-64 pivot-icon"
           />
         }
         label="Ask Tutor"
