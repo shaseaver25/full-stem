@@ -169,13 +169,13 @@ export const SocraticTutorChat: React.FC<SocraticTutorChatProps> = ({
           <img
             src={pivotLogo}
             alt="Open Pivot Socratic tutor"
-            className="h-10 w-10 pivot-icon"
+            className="h-16 w-16 pivot-icon"
           />
         }
         label="Ask Tutor"
         onClick={() => setIsOpen(true)}
         initialPosition={{ x: window.innerWidth - 100, y: window.innerHeight - 180 }}
-        className="bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600 shadow-lg"
+        className="bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600 shadow-lg p-2"
       />
     );
   }
@@ -187,7 +187,7 @@ export const SocraticTutorChat: React.FC<SocraticTutorChatProps> = ({
           <img
             src={pivotLogo}
             alt="Pivot Socratic tutor"
-            className="h-8 w-8 pivot-icon"
+            className="h-10 w-10 pivot-icon"
           />
           <CardTitle className="text-lg">Socratic Tutor</CardTitle>
           <Button
