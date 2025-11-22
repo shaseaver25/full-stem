@@ -2,6 +2,249 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Pivot Assistant Animations */
+@keyframes pivot-breathe {
+  0%, 100% {
+    transform: translateY(0px) scale(1);
+  }
+  50% {
+    transform: translateY(-3px) scale(1.02);
+  }
+}
+
+@keyframes pivot-pulse {
+  0%, 100% {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15), 0 0 0 0 rgba(16, 185, 129, 0.7);
+  }
+  50% {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15), 0 0 0 15px rgba(16, 185, 129, 0);
+  }
+}
+
+@keyframes pivot-bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes typing-bounce {
+  0%, 80%, 100% {
+    transform: translateY(0);
+    opacity: 0.5;
+  }
+  40% {
+    transform: translateY(-8px);
+    opacity: 1;
+  }
+}
+
+.pivot-assistant {
+  animation: pivot-breathe 3s ease-in-out infinite;
+  transition: transform 0.3s ease;
+}
+
+.pivot-assistant:hover {
+  transform: translateY(-5px) scale(1.05);
+}
+
+.pivot-pulse-animation {
+  animation: pivot-pulse 2s ease-out, pivot-breathe 3s ease-in-out infinite;
+}
+
+.pivot-clicked {
+  animation: pivot-bounce 0.5s ease;
+}
+
+/* Pivot Chat Interface */
+.pivot-chat-interface {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 400px;
+  height: 600px;
+  background: hsl(var(--background));
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  z-index: 9999;
+  overflow: hidden;
+  border: 1px solid hsl(var(--border));
+}
+
+.pivot-chat-header {
+  background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+  color: white;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.pivot-header-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.pivot-header-icon {
+  width: 40px;
+  height: 40px;
+  background: white;
+  border-radius: 50%;
+  padding: 4px;
+}
+
+.close-chat-btn {
+  color: white !important;
+  background: transparent !important;
+}
+
+.close-chat-btn:hover {
+  background: rgba(255, 255, 255, 0.2) !important;
+}
+
+.pivot-chat-messages {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.chat-message {
+  display: flex;
+  gap: 8px;
+  max-width: 80%;
+}
+
+.chat-message-pivot {
+  align-self: flex-start;
+}
+
+.chat-message-user {
+  align-self: flex-end;
+  flex-direction: row-reverse;
+  margin-left: auto;
+}
+
+.message-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: white;
+  padding: 2px;
+}
+
+.message-content {
+  background: hsl(var(--muted));
+  border-radius: 12px;
+  padding: 12px;
+  position: relative;
+}
+
+.message-content-user {
+  background: #10B981;
+  color: white;
+}
+
+.message-time {
+  font-size: 11px;
+  color: hsl(var(--muted-foreground));
+  display: block;
+  margin-top: 4px;
+}
+
+.message-content-user .message-time {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.typing-indicator {
+  display: flex;
+  gap: 4px;
+  padding: 8px 0;
+}
+
+.typing-indicator span {
+  width: 8px;
+  height: 8px;
+  background: #10B981;
+  border-radius: 50%;
+  animation: typing-bounce 1.4s infinite;
+}
+
+.typing-indicator span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.typing-indicator span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+.pivot-chat-input {
+  display: flex;
+  gap: 8px;
+  padding: 16px;
+  border-top: 1px solid hsl(var(--border));
+  background: hsl(var(--background));
+}
+
+.send-message-btn {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #10B981;
+  flex-shrink: 0;
+}
+
+.send-message-btn:hover:not(:disabled) {
+  background: #059669;
+}
+
+.send-message-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+  .pivot-assistant {
+    width: 70px;
+    height: 70px;
+    bottom: 16px;
+    right: 16px;
+  }
+
+  .pivot-chat-interface {
+    width: 100vw;
+    height: 100vh;
+    bottom: 0;
+    right: 0;
+    border-radius: 0;
+  }
+
+  .speech-bubble {
+    max-width: 240px;
+    font-size: 13px;
+    bottom: 100px;
+    right: 16px;
+  }
+}
+
+/* Screen reader only */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
 /* Definition of the design system. All colors, gradients, fonts, etc should be defined here. */
 
 @layer base {
