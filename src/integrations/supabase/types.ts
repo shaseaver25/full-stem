@@ -3224,6 +3224,53 @@ export type Database = {
           },
         ]
       }
+      pivot_help_requests: {
+        Row: {
+          assessment_id: string
+          conversation_id: string | null
+          created_at: string | null
+          help_useful: boolean | null
+          id: string
+          question_id: string
+          requested_at: string | null
+          student_id: string
+          time_on_question: number | null
+          wrong_attempts: number | null
+        }
+        Insert: {
+          assessment_id: string
+          conversation_id?: string | null
+          created_at?: string | null
+          help_useful?: boolean | null
+          id?: string
+          question_id: string
+          requested_at?: string | null
+          student_id: string
+          time_on_question?: number | null
+          wrong_attempts?: number | null
+        }
+        Update: {
+          assessment_id?: string
+          conversation_id?: string | null
+          created_at?: string | null
+          help_useful?: boolean | null
+          id?: string
+          question_id?: string
+          requested_at?: string | null
+          student_id?: string
+          time_on_question?: number | null
+          wrong_attempts?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pivot_help_requests_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "pivot_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pivot_hints: {
         Row: {
           conversation_id: string | null

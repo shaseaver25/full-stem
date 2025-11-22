@@ -16,6 +16,7 @@ import { useAccessibility } from '@/contexts/AccessibilityContext';
 import { LanguageSelector } from '@/components/LanguageSelector';
 import { PivotChat } from '@/components/pivot/PivotChat';
 import { QuizReviewMode } from './QuizReviewMode';
+import { PivotHelpButton } from '@/components/assessment/PivotHelpButton';
 
 // Temporary type definitions until Supabase types are regenerated
 interface QuizComponentData {
@@ -97,6 +98,11 @@ export function QuizStudentView({ componentId, read_aloud = true, quizData: prel
   const [hasSubmitted, setHasSubmitted] = useState(false);
   const [canRetake, setCanRetake] = useState(true);
   
+  // Track wrong attempts and time per question for Pivot button
+  const [wrongAttempts, setWrongAttempts] = useState<Record<string, number>>({});
+  const [questionStartTime, setQuestionStartTime] = useState<Date>(new Date());
+  const [timeOnQuestion, setTimeOnQuestion] = useState<number>(0);
+  
   const { speak, isPlaying, isLoading: isSpeaking } = useTextToSpeech();
   const { translate, isTranslating, isEnabled: translationEnabled } = useTranslation();
   const { settings } = useAccessibility();
@@ -104,6 +110,18 @@ export function QuizStudentView({ componentId, read_aloud = true, quizData: prel
   useEffect(() => {
     loadQuiz();
   }, [componentId]);
+
+  // Track time on current question
+  useEffect(() => {
+    setQuestionStartTime(new Date());
+    setTimeOnQuestion(0);
+    
+    const interval = setInterval(() => {
+      setTimeOnQuestion(Math.floor((Date.now() - questionStartTime.getTime()) / 1000));
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [currentQuestionIndex]);
 
   // Network status monitoring
   useEffect(() => {
@@ -439,6 +457,38 @@ export function QuizStudentView({ componentId, read_aloud = true, quizData: prel
 
   const handleAnswer = (questionId: string, answer: any) => {
     setAnswers(prev => ({ ...prev, [questionId]: answer }));
+  };
+
+  // Handle submitting answer to track wrong attempts
+  const handleAnswerSubmit = (questionId: string) => {
+    if (!quizData) return;
+    
+    const question = quizData.questions.find(q => q.id === questionId);
+    if (!question) return;
+    
+    const userAnswer = answers[questionId];
+    let isCorrect = false;
+
+    if (question.question_type === 'multiple_choice' || question.question_type === 'true_false') {
+      const correctOption = question.options.find(opt => opt.is_correct);
+      isCorrect = userAnswer === correctOption?.id;
+    } else if (question.question_type === 'multiple_select') {
+      const correctOptionIds = question.options.filter(opt => opt.is_correct).map(opt => opt.id);
+      const userAnswerArray = userAnswer || [];
+      isCorrect = correctOptionIds.length === userAnswerArray.length && 
+                  correctOptionIds.every(id => userAnswerArray.includes(id));
+    }
+
+    if (!isCorrect && userAnswer) {
+      setWrongAttempts(prev => ({
+        ...prev,
+        [questionId]: (prev[questionId] || 0) + 1
+      }));
+    }
+  };
+
+  const handlePivotHelpClick = () => {
+    setShowPivot(true);
   };
 
   // Keyboard navigation
@@ -981,7 +1031,10 @@ export function QuizStudentView({ componentId, read_aloud = true, quizData: prel
           {(currentQuestion.question_type === 'multiple_choice' || currentQuestion.question_type === 'true_false') && (
             <RadioGroup
               value={answers[currentQuestion.id]}
-              onValueChange={(value) => handleAnswer(currentQuestion.id, value)}
+              onValueChange={(value) => {
+                handleAnswer(currentQuestion.id, value);
+                handleAnswerSubmit(currentQuestion.id);
+              }}
             >
               {currentQuestion.options.map((option) => (
                 <div key={option.id} className="flex items-center space-x-2 p-3 rounded-lg bg-background hover:bg-accent">
@@ -1007,12 +1060,11 @@ export function QuizStudentView({ componentId, read_aloud = true, quizData: prel
                     checked={(answers[currentQuestion.id] || []).includes(option.id)}
                     onCheckedChange={(checked) => {
                       const current = answers[currentQuestion.id] || [];
-                      handleAnswer(
-                        currentQuestion.id,
-                        checked
-                          ? [...current, option.id]
-                          : current.filter((id: string) => id !== option.id)
-                      );
+                      const newAnswer = checked
+                        ? [...current, option.id]
+                        : current.filter((id: string) => id !== option.id);
+                      handleAnswer(currentQuestion.id, newAnswer);
+                      handleAnswerSubmit(currentQuestion.id);
                     }}
                   />
                   <Label htmlFor={option.id} className="flex-1 cursor-pointer">
@@ -1063,6 +1115,17 @@ export function QuizStudentView({ componentId, read_aloud = true, quizData: prel
               ))}
             </div>
           )}
+          
+          {/* Pivot Help Button */}
+          <PivotHelpButton
+            questionId={currentQuestion.id}
+            questionText={currentQuestion.question_text}
+            assessmentId={componentId}
+            wrongAttempts={wrongAttempts[currentQuestion.id] || 0}
+            timeOnQuestion={timeOnQuestion}
+            disabled={showPivot}
+            onHelpClick={handlePivotHelpClick}
+          />
         </div>
 
         {/* Question Navigation */}
