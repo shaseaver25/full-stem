@@ -48,6 +48,7 @@ startServer(async (req: Request): Promise<Response> => {
     const lessonId = body.lessonId;
     
     console.log("✅ Received text length:", text.length);
+    console.log("📄 First 500 chars:", text.substring(0, 500));
     
     if (!text.trim()) {
       return new Response(JSON.stringify({ error: "No content provided" }), {
@@ -56,34 +57,55 @@ startServer(async (req: Request): Promise<Response> => {
       });
     }
 
-    // Parse metadata section
-    const metadataMatch = text.match(/# Lesson Metadata\s*([\s\S]*?)---/);
-    const metadataText = metadataMatch ? metadataMatch[1] : '';
+    // Parse metadata section - more flexible patterns
+    const metadataMatch = text.match(/(?:#\s*)?Lesson Metadata[\s\S]*?(?:---|$)/i);
+    const metadataText = metadataMatch ? metadataMatch[0] : text.substring(0, 1000);
     
     const metadata = {
-      title: metadataText.match(/Title:\s*(.+)/)?.[1]?.trim() || "Untitled Lesson",
-      subject: metadataText.match(/Subject:\s*(.+)/)?.[1]?.trim() || null,
-      grade_level: metadataText.match(/Grade Level:\s*(.+)/)?.[1]?.trim() || null,
-      duration: parseInt(metadataText.match(/Duration \(minutes\):\s*(\d+)/)?.[1] || "60"),
-      reading_level: parseInt(metadataText.match(/Reading Level:\s*(\d+)/)?.[1] || "5"),
-      language: metadataText.match(/Language:\s*(.+)/)?.[1]?.trim() || "en-US",
-      description: metadataText.match(/Description:\s*(.+)/)?.[1]?.trim() || null,
+      title: metadataText.match(/Title:\s*(.+)/i)?.[1]?.trim() || "Untitled Lesson",
+      subject: metadataText.match(/Subject:\s*(.+)/i)?.[1]?.trim() || null,
+      grade_level: metadataText.match(/Grade Level:\s*(.+)/i)?.[1]?.trim() || null,
+      duration: parseInt(metadataText.match(/Duration[^\d]*(\d+)/i)?.[1] || "60"),
+      reading_level: parseInt(metadataText.match(/Reading Level:\s*(\d+)/i)?.[1] || "5"),
+      language: metadataText.match(/Language:\s*(.+)/i)?.[1]?.trim() || "en-US",
+      description: metadataText.match(/Description:\s*(.+)/i)?.[1]?.trim() || null,
     };
 
     console.log("📝 Parsed metadata:", metadata);
 
-    // Parse component sections
-    const componentSections = text.split(/---+/).slice(1); // Skip metadata section
+    // Parse component sections - split on both --- and ## Component:
+    let componentSections: string[] = [];
+    
+    // Try splitting by --- first
+    if (text.includes('---')) {
+      componentSections = text.split(/---+/).slice(1);
+    } else {
+      // If no ---, try splitting by ## Component:
+      const componentMatches = text.matchAll(/##\s*Component:\s*(.+?)(?=##\s*Component:|$)/gis);
+      componentSections = Array.from(componentMatches).map(m => '## Component: ' + m[0]);
+    }
+    
+    console.log(`📦 Found ${componentSections.length} potential component sections`);
+    
     const parsedComponents: any[] = [];
 
     for (const section of componentSections) {
-      const componentMatch = section.match(/## Component:\s*(.+?)[\r\n]+([\s\S]*)/);
-      if (!componentMatch) continue;
+      // More flexible matching - handle both "## Component:" and just "Component:"
+      const componentMatch = section.match(/(?:##\s*)?Component:\s*(.+?)[\r\n]+([\s\S]*)/i);
+      if (!componentMatch) {
+        console.log("⚠️ Skipping section (no match):", section.substring(0, 100));
+        continue;
+      }
 
       const rawType = componentMatch[1].trim().toLowerCase();
       const content = componentMatch[2].trim();
       
-      if (!content) continue;
+      console.log(`📋 Processing component: ${rawType} (${content.length} chars)`);
+      
+      if (!content) {
+        console.log("⚠️ Skipping empty content for:", rawType);
+        continue;
+      }
 
       const componentType = componentTypeMap[rawType];
       if (!componentType) {
