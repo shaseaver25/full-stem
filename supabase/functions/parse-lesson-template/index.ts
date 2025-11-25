@@ -161,6 +161,32 @@ startServer(async (req: Request): Promise<Response> => {
         parsedContent = {
           prompt: content,
         };
+      } else if (componentType === 'codingEditor') {
+        // Map template section into CodeIDE-friendly structure
+        const lines = content.split(/\r?\n/);
+        const firstNonEmpty = lines.find(l => l.trim().length > 0) || '';
+        const headingMatch = firstNonEmpty.match(/^#\s*(.+)/);
+        if (headingMatch) {
+          title = headingMatch[1].trim();
+        }
+        // Everything after the first heading (if any) becomes starter code
+        const startIndex = headingMatch ? lines.indexOf(firstNonEmpty) + 1 : 0;
+        const starterCode = lines.slice(startIndex).join('\n').trim() || content.trim();
+
+        // Naive language detection with a safe default
+        let language = 'javascript';
+        const lower = content.toLowerCase();
+        if (lower.includes('python') || /def\s+\w+\s*\(/.test(content) || /for\s+\w+\s+in\s+\w+\s*:/.test(content)) {
+          language = 'python';
+        }
+
+        parsedContent = {
+          title,
+          description: '',
+          instructions: '',
+          starterCode,
+          language,
+        };
       } else if (componentType === 'activity' || componentType === 'assignment') {
         // Parse numbered steps if present
         const steps = content.match(/^\d+\.\s*(.+)/gm);
