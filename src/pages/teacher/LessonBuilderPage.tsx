@@ -505,10 +505,43 @@ export default function LessonBuilderPage() {
   const handleComponentGenerated = (generatedComponent: any) => {
     console.log('🎯 Component generated:', generatedComponent);
     hasUserEditedRef.current = true;
+
+    let normalizedContent = generatedComponent.content || {};
+
+    // Normalize AI-generated page components into the format used by the builder/preview
+    if (generatedComponent.component_type === 'page') {
+      const sections = Array.isArray((normalizedContent as any).sections)
+        ? (normalizedContent as any).sections
+        : [];
+
+      if (sections.length > 0) {
+        const body = sections
+          .map((section: any) => {
+            const heading = section.heading ? `<h2>${section.heading}</h2>` : '';
+            const text: string = section.content || '';
+            const hasHtml = /<\/?[a-z][\s\S]*>/i.test(text);
+            const contentHtml = hasHtml ? text : (text ? `<p>${text}</p>` : '');
+            return `${heading}\n${contentHtml}`.trim();
+          })
+          .filter(Boolean)
+          .join('\n\n');
+
+        normalizedContent = {
+          title: generatedComponent.title || (normalizedContent as any).title || '',
+          body,
+        };
+      } else {
+        normalizedContent = {
+          title: generatedComponent.title || (normalizedContent as any).title || '',
+          body: (normalizedContent as any).body || '',
+        };
+      }
+    }
+
     const newComponent: LessonComponent = {
       component_type: generatedComponent.component_type,
       title: generatedComponent.title,
-      content: generatedComponent.content,
+      content: normalizedContent,
       order: components.length,
       enabled: true,
       is_assignable: generatedComponent.component_type === 'assignment',
@@ -525,7 +558,6 @@ export default function LessonBuilderPage() {
       description: 'Remember to save your lesson to persist changes.'
     });
   };
-
   return (
     <div className="min-h-screen bg-background">
       {/* Draft Recovery Dialog */}
