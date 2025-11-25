@@ -61,6 +61,8 @@ export const useSystemHealth = () => {
       return response.json();
     },
     refetchInterval: 60000, // Refresh every 60 seconds
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 
   // System metrics query
@@ -82,6 +84,8 @@ export const useSystemHealth = () => {
       }));
     },
     refetchInterval: 30000, // Refresh every 30 seconds
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 
   // Activity data query (last 24 hours)
@@ -134,6 +138,8 @@ export const useSystemHealth = () => {
       return result;
     },
     refetchInterval: 60000,
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 
   // Error feed query
@@ -164,6 +170,8 @@ export const useSystemHealth = () => {
       });
     },
     refetchInterval: 30000,
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 
   const getMetricByName = (name: string): SystemMetric | undefined => {
