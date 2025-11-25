@@ -28,6 +28,7 @@ import { parseSupabaseError } from '@/utils/supabaseErrorHandler';
 import { logError } from '@/utils/errorLogging';
 import { useLessonAutoSave } from '@/hooks/useLessonAutoSave';
 import { formatDistanceToNow } from 'date-fns';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface LessonComponent {
   id?: string;
@@ -54,6 +55,7 @@ export default function LessonBuilderPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const queryClient = useQueryClient();
 
   // Get lessonId from either route params or query params
   const lessonId = routeLessonId || searchParams.get('lessonId');
@@ -769,6 +771,10 @@ export default function LessonBuilderPage() {
                     onImportComplete={(importedLessonId, componentsCount) => {
                       console.log('✅ Import complete:', importedLessonId, componentsCount);
                       loadLesson();
+                      // Invalidate class lessons cache so the class detail page shows updated title
+                      if (classId) {
+                        queryClient.invalidateQueries({ queryKey: ['class-lessons', classId] });
+                      }
                       toast.success('Lesson Imported', {
                         description: `${componentsCount} components created. Switch to Manual Build to edit.`,
                       });
