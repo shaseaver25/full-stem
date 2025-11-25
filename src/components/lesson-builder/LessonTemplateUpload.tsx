@@ -72,17 +72,17 @@ export function LessonTemplateUpload({ lessonId, onImportComplete }: LessonTempl
   const handleFileUpload = async () => {
     const input = document.createElement("input");
     input.type = "file";
-    input.accept = ".txt,.docx";
+    input.accept = ".txt,.docx,.md";
 
     input.onchange = async (e) => {
       const file = (e.target as HTMLInputElement)?.files?.[0];
       if (!file) return;
 
       const ext = file.name.split(".").pop()?.toLowerCase();
-      if (!["txt", "docx"].includes(ext || "")) {
+      if (!["txt", "docx", "md"].includes(ext || "")) {
         toast({
           title: "Invalid File Type",
-          description: "Please upload a .txt or .docx file.",
+          description: "Please upload a .txt, .docx, or .md file.",
           variant: "destructive",
         });
         return;
@@ -104,7 +104,7 @@ export function LessonTemplateUpload({ lessonId, onImportComplete }: LessonTempl
           parsedText = result.value;
           console.log("✅ Extracted text length:", parsedText.length);
         } else {
-          console.log("📄 Reading TXT file...");
+          console.log("📄 Reading TXT/MD file...");
           parsedText = await file.text();
         }
 
