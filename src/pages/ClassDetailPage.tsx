@@ -153,6 +153,42 @@ export default function ClassDetailPage() {
     enabled: !!resolvedClassId,
   });
 
+  // Fetch submission counts for all assignments
+  const { data: submissionCounts = {} } = useQuery({
+    queryKey: ['assignment-submission-counts', resolvedClassId],
+    queryFn: async () => {
+      // Get all assignments for this class
+      const { data: assignmentIds, error: assignmentError } = await supabase
+        .from('class_assignments_new')
+        .select('id')
+        .eq('class_id', resolvedClassId);
+      
+      if (assignmentError) throw assignmentError;
+      
+      // Get submission counts for each assignment
+      const counts: Record<string, { submitted: number; total: number }> = {};
+      
+      for (const assignment of assignmentIds || []) {
+        const { count: submittedCount, error: submissionError } = await supabase
+          .from('assignment_submissions')
+          .select('*', { count: 'exact', head: true })
+          .eq('assignment_id', assignment.id)
+          .eq('status', 'submitted');
+        
+        if (submissionError) throw submissionError;
+        
+        counts[assignment.id] = {
+          submitted: submittedCount || 0,
+          total: studentCount
+        };
+      }
+      
+      return counts;
+    },
+    enabled: !!resolvedClassId && studentCount !== undefined,
+    refetchInterval: 10000, // Refresh every 10 seconds
+  });
+
   if (classLoading) {
     return <div>Loading...</div>;
   }
@@ -544,7 +580,9 @@ export default function ClassDetailPage() {
                           <span>•</span>
                           <span>{assignment.options.points || 100} points</span>
                           <span>•</span>
-                          <span>0/0 submitted</span>
+                          <span>
+                            {submissionCounts[assignment.id]?.submitted || 0}/{submissionCounts[assignment.id]?.total || studentCount} submitted
+                          </span>
                         </div>
                         <Button 
                           variant="outline" 
