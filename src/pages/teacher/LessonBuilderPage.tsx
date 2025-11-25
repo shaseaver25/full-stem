@@ -503,6 +503,7 @@ export default function LessonBuilderPage() {
   };
 
   const handleComponentGenerated = (generatedComponent: any) => {
+    console.log('🎯 Component generated:', generatedComponent);
     hasUserEditedRef.current = true;
     const newComponent: LessonComponent = {
       component_type: generatedComponent.component_type,
@@ -514,7 +515,10 @@ export default function LessonBuilderPage() {
       language_code: 'en',
       read_aloud: true,
     };
+    console.log('➕ Adding new component to list:', newComponent);
+    console.log('📋 Current components count:', components.length);
     setComponents([...components, newComponent]);
+    console.log('✅ Component added to state');
     
     // Auto-save after adding
     toast.info('Component added!', {
