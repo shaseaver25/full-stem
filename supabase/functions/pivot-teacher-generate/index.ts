@@ -32,7 +32,7 @@ serve(async (req) => {
     
     const { data: components, error: componentsError } = await supabase
       .from('lesson_components')
-      .select('component_type, title, content')
+      .select('component_type, content')
       .eq('lesson_id', lessonId)
       .order('order');
     
@@ -47,7 +47,17 @@ ${lesson.objectives?.map((obj: string, i: number) => `${i + 1}. ${obj}`).join('\
 
 EXISTING COMPONENTS:
 ${components?.map((comp: any, i: number) => {
-  return `${i + 1}. ${comp.component_type.toUpperCase()}: ${comp.title || '(untitled)'}`;
+  const rawType = String(comp.component_type || '').toUpperCase();
+  const content = comp.content || {};
+  const candidateTitle =
+    content.title ||
+    content.prompt ||
+    content.question_text ||
+    content.quizData?.title;
+  const displayTitle = candidateTitle
+    ? String(candidateTitle).slice(0, 80)
+    : '(no title)';
+  return `${i + 1}. ${rawType}: ${displayTitle}`;
 }).join('\n') || 'No components yet'}
 
 AVAILABLE COMPONENT TYPES:
