@@ -23,6 +23,7 @@ import { AddComponentButton } from '@/components/lesson-builder/AddComponentButt
 import { LessonPreview } from '@/components/lesson-builder/LessonPreview';
 import { LessonTemplateUpload } from '@/components/lesson-builder/LessonTemplateUpload';
 import AIGenerationWizard from '@/components/lesson/AIGenerationWizard';
+import { TeacherPivotAssistant } from '@/components/lesson-builder/TeacherPivotAssistant';
 import { parseSupabaseError } from '@/utils/supabaseErrorHandler';
 import { logError } from '@/utils/errorLogging';
 import { useLessonAutoSave } from '@/hooks/useLessonAutoSave';
@@ -501,6 +502,26 @@ export default function LessonBuilderPage() {
     setComponents(newOrder.map((comp, index) => ({ ...comp, order: index })));
   };
 
+  const handleComponentGenerated = (generatedComponent: any) => {
+    hasUserEditedRef.current = true;
+    const newComponent: LessonComponent = {
+      component_type: generatedComponent.component_type,
+      title: generatedComponent.title,
+      content: generatedComponent.content,
+      order: components.length,
+      enabled: true,
+      is_assignable: generatedComponent.component_type === 'assignment',
+      language_code: 'en',
+      read_aloud: true,
+    };
+    setComponents([...components, newComponent]);
+    
+    // Auto-save after adding
+    toast.info('Component added!', {
+      description: 'Remember to save your lesson to persist changes.'
+    });
+  };
+
   return (
     <div className="min-h-screen bg-background">
       {/* Draft Recovery Dialog */}
@@ -756,6 +777,14 @@ export default function LessonBuilderPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Teacher AI Assistant - Only show when editing and lesson is saved */}
+      {lessonId && !isPreview && (
+        <TeacherPivotAssistant
+          lessonId={lessonId}
+          onComponentGenerated={handleComponentGenerated}
+        />
+      )}
     </div>
   );
 }

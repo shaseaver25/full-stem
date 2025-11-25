@@ -181,5 +181,8 @@ verify_jwt = true
 [functions.socratic-tutor]
 verify_jwt = true
 
+[functions.pivot-teacher-generate]
+verify_jwt = true
+
 [functions.transcribe-voice]
 verify_jwt = true
