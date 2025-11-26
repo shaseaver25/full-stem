@@ -44,16 +44,25 @@ const TeacherAuth = () => {
     setLoading(true);
     setError('');
 
-    const { error } = await signIn(email, password);
-    
-    if (error) {
-      setError(error.message);
-      setLoading(false);
-    } else {
-      if (!hasNavigated.current) {
-        hasNavigated.current = true;
-        navigate('/teacher/dashboard', { replace: true });
+    try {
+      console.log('🔐 Attempting teacher sign in...');
+      const { error } = await signIn(email, password);
+      
+      if (error) {
+        console.error('❌ Sign in error:', error);
+        setError(error.message || 'Failed to sign in. Please check your credentials.');
+        setLoading(false);
+      } else {
+        console.log('✅ Sign in successful');
+        if (!hasNavigated.current) {
+          hasNavigated.current = true;
+          navigate('/teacher/dashboard', { replace: true });
+        }
       }
+    } catch (err) {
+      console.error('❌ Unexpected error during sign in:', err);
+      setError('Network error. Please check your internet connection and try again.');
+      setLoading(false);
     }
   };
 
