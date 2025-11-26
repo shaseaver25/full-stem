@@ -91,6 +91,7 @@ const ConferenceSession = React.lazy(() => import("./pages/conference/Conference
 const EmbedContentPage = React.lazy(() => import("./pages/admin/embed-content"));
 const AdaptiveClassroomDemo = React.lazy(() => import("./pages/demo/adaptive-classroom"));
 const CreateTestTeachers = React.lazy(() => import("./pages/CreateTestTeachers"));
+const CreateTestStudents = React.lazy(() => import("./pages/CreateTestStudents"));
 
 // Eagerly load these smaller components that are used for route protection
 import ProtectedTeacherRoute from "./components/teacher/ProtectedTeacherRoute";
@@ -272,6 +273,7 @@ function AppContent() {
         
         {/* Admin Utilities */}
         <Route path="/admin/create-test-teachers" element={<ErrorBoundary><CreateTestTeachers /></ErrorBoundary>} />
+        <Route path="/admin/create-test-students" element={<ErrorBoundary><CreateTestStudents /></ErrorBoundary>} />
         
         {/* Parent Portal */}
         <Route 
