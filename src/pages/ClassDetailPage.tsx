@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, BookOpen, Users, ClipboardList, MessageSquare, Calendar, Clock, PlusCircle, GraduationCap, Trash2, Share2, UserPlus } from 'lucide-react';
+import { ArrowLeft, BookOpen, Users, ClipboardList, MessageSquare, Calendar, Clock, PlusCircle, GraduationCap, Trash2, Share2, UserPlus, GripVertical } from 'lucide-react';
 import { useClass, useClassAssignments } from '@/hooks/useClassManagement';
 import { useClassLessons } from '@/hooks/useClassLessons';
 import { RosterManagement } from '@/components/teacher/RosterManagement';
@@ -18,6 +18,9 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { removeDuplicateLessons } from '@/utils/removeDuplicateLessons';
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { SortableLessonCard } from '@/components/teacher/SortableLessonCard';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -82,6 +85,56 @@ export default function ClassDetailPage() {
       console.error('Failed to remove duplicates:', error);
     }
   });
+
+  // Drag and drop sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  // Handle lesson reorder
+  const { mutate: reorderLessons } = useMutation({
+    mutationFn: async (reorderedLessons: typeof lessons) => {
+      // Update order_index for all lessons
+      const updates = reorderedLessons.map((lesson, index) => 
+        supabase
+          .from('lessons')
+          .update({ order_index: index })
+          .eq('id', lesson.id)
+      );
+      
+      await Promise.all(updates);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['class-lessons', resolvedClassId] });
+      toast({
+        title: 'Lessons Reordered',
+        description: 'Lesson order has been saved',
+      });
+    },
+    onError: (error) => {
+      console.error('Failed to reorder lessons:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to reorder lessons. Please try again.',
+        variant: 'destructive',
+      });
+    }
+  });
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      const oldIndex = lessons.findIndex((lesson) => lesson.id === active.id);
+      const newIndex = lessons.findIndex((lesson) => lesson.id === over.id);
+
+      const reorderedLessons = arrayMove(lessons, oldIndex, newIndex);
+      reorderLessons(reorderedLessons);
+    }
+  };
 
   // Fetch teacher info for the class
   const { data: teacherInfo } = useQuery({
@@ -518,86 +571,28 @@ export default function ClassDetailPage() {
               </CardContent>
             </Card>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {lessons.map((lesson, index) => (
-                <Card key={lesson.id} className="h-full transition-all hover:shadow-lg">
-                  <CardHeader>
-                    <div className="flex items-start justify-between">
-                      <Badge variant="outline" className="mb-2">
-                        Lesson {index + 1}
-                      </Badge>
-                      {lesson.duration && (
-                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                          <Clock className="h-3 w-3" />
-                          {lesson.duration} min
-                        </div>
-                      )}
-                    </div>
-                    <CardTitle className="line-clamp-2">
-                      {lesson.title}
-                    </CardTitle>
-                    {lesson.description && (
-                      <CardDescription className="line-clamp-2">
-                        {lesson.description}
-                      </CardDescription>
-                    )}
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2 text-sm text-muted-foreground mb-4">
-                      {lesson.objectives && lesson.objectives.length > 0 && (
-                        <div className="flex items-start gap-2">
-                          <BookOpen className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                          <span className="line-clamp-1">
-                            {lesson.objectives.length} objective{lesson.objectives.length !== 1 ? 's' : ''}
-                          </span>
-                        </div>
-                      )}
-                      {lesson.materials && lesson.materials.length > 0 && (
-                        <div className="flex items-start gap-2">
-                          <ClipboardList className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                          <span className="line-clamp-1">
-                            {lesson.materials.length} material{lesson.materials.length !== 1 ? 's' : ''}
-                          </span>
-                        </div>
-                      )}
-                      <div className="flex items-center gap-2 pt-2 border-t">
-                        <Calendar className="h-3 w-3" />
-                        <span className="text-xs">
-                          Updated {format(new Date(lesson.updated_at), 'MMM d, yyyy')}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="flex flex-col gap-2">
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => setLessonToDelete(lesson.id)}
-                        className="w-full flex items-center gap-2"
-                        title="Delete this lesson"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                        Delete
-                      </Button>
-                      <Link to={`/class-lesson/${lesson.id}`}>
-                        <Button variant="outline" size="sm" className="w-full">
-                          Teacher Preview
-                        </Button>
-                      </Link>
-                      <Link to={`/student/lesson/${lesson.id}`}>
-                        <Button variant="outline" size="sm" className="w-full">
-                          View as Student
-                        </Button>
-                      </Link>
-                      <Link to={`/teacher/lesson-builder?classId=${resolvedClassId}&lessonId=${lesson.id}`}>
-                        <Button variant="ghost" size="sm" className="w-full">
-                          Edit
-                        </Button>
-                      </Link>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext
+                items={lessons.map(l => l.id)}
+                strategy={verticalListSortingStrategy}
+              >
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {lessons.map((lesson, index) => (
+                    <SortableLessonCard
+                      key={lesson.id}
+                      lesson={lesson}
+                      index={index}
+                      classId={resolvedClassId}
+                      onDelete={(lessonId) => setLessonToDelete(lessonId)}
+                    />
+                  ))}
+                </div>
+              </SortableContext>
+            </DndContext>
           )}
         </TabsContent>
 
