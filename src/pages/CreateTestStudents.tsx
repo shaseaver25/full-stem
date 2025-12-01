@@ -52,6 +52,27 @@ export default function CreateTestStudents() {
     }
   };
 
+  const deleteStudents = async () => {
+    setLoading(true);
+    setError('');
+    setResult(null);
+
+    try {
+      const { data, error: invokeError } = await supabase.functions.invoke('delete-test-students', {
+        body: {}
+      });
+
+      if (invokeError) throw invokeError;
+
+      setResult(data);
+    } catch (err: any) {
+      console.error('Error deleting students:', err);
+      setError(err.message || 'Failed to delete students');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="container max-w-2xl mx-auto py-8">
       <Card>
@@ -69,11 +90,10 @@ export default function CreateTestStudents() {
             <p>• ManjeetStudent@test.com - Test1234!</p>
           </div>
 
-          <div className="flex gap-2">
+          <div className="grid grid-cols-2 gap-2">
             <Button 
               onClick={createStudents} 
               disabled={loading}
-              className="flex-1"
             >
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Create Auth Accounts
@@ -82,11 +102,20 @@ export default function CreateTestStudents() {
             <Button 
               onClick={enrollStudents} 
               disabled={loading}
-              className="flex-1"
               variant="secondary"
             >
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Enroll in Richfield Excel
+            </Button>
+
+            <Button 
+              onClick={deleteStudents} 
+              disabled={loading}
+              variant="destructive"
+              className="col-span-2"
+            >
+              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Delete All Test Students
             </Button>
           </div>
 
