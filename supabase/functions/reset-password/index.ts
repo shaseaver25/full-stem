@@ -1,6 +1,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 import { corsHeaders } from '../_shared/cors.ts';
+import { Resend } from 'npm:resend@2.0.0';
 
 interface PasswordResetRequest {
   userId: string;
@@ -87,6 +88,39 @@ serve(async (req) => {
       }
 
       resetLink = data.properties?.action_link;
+      
+      // Actually send the email using Resend
+      const resend = new Resend(Deno.env.get('RESEND_API_KEY'));
+      
+      try {
+        const emailResponse = await resend.emails.send({
+          from: 'Full STEM <onboarding@resend.dev>',
+          to: [resetData.email],
+          subject: 'Reset Your Password',
+          html: `
+            <h1>Password Reset Request</h1>
+            <p>Hello,</p>
+            <p>We received a request to reset your password. Click the button below to create a new password:</p>
+            <p style="margin: 30px 0;">
+              <a href="${resetLink}" 
+                 style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">
+                Reset Password
+              </a>
+            </p>
+            <p>Or copy and paste this link into your browser:</p>
+            <p style="color: #666; word-break: break-all;">${resetLink}</p>
+            <p>This link will expire in 60 minutes.</p>
+            <p>If you didn't request this password reset, please ignore this email.</p>
+            <p>Best regards,<br>The Full STEM Team</p>
+          `,
+        });
+        
+        console.log('Password reset email sent successfully:', emailResponse);
+      } catch (emailError) {
+        console.error('Failed to send password reset email:', emailError);
+        throw new Error(`Failed to send email: ${emailError.message}`);
+      }
+      
       console.log('Password reset email sent to:', resetData.email);
 
     } else if (resetData.method === 'temporary') {
@@ -160,10 +194,31 @@ serve(async (req) => {
         }
       });
 
-    // Optionally send notification email
-    if (resetData.notifyUser && resetData.method !== 'email') {
-      // TODO: Send notification email
-      console.log('Notification email would be sent to:', resetData.email);
+    // Optionally send notification email for temporary/custom passwords
+    if (resetData.notifyUser && resetData.method !== 'email' && temporaryPassword) {
+      const resend = new Resend(Deno.env.get('RESEND_API_KEY'));
+      
+      try {
+        await resend.emails.send({
+          from: 'Full STEM <onboarding@resend.dev>',
+          to: [resetData.email],
+          subject: 'Your Temporary Password',
+          html: `
+            <h1>Password Reset</h1>
+            <p>Hello,</p>
+            <p>Your password has been reset by an administrator. Here is your temporary password:</p>
+            <div style="background-color: #f3f4f6; padding: 16px; border-radius: 6px; margin: 20px 0;">
+              <code style="font-size: 16px; font-weight: bold;">${temporaryPassword}</code>
+            </div>
+            <p>Please log in using this temporary password and change it immediately for security.</p>
+            <p>Best regards,<br>The Full STEM Team</p>
+          `,
+        });
+        console.log('Temporary password notification sent to:', resetData.email);
+      } catch (emailError) {
+        console.error('Failed to send notification email:', emailError);
+        // Don't throw here - password was already reset successfully
+      }
     }
 
     return new Response(
