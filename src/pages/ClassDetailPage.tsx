@@ -638,7 +638,7 @@ export default function ClassDetailPage() {
                             <Calendar className="h-3 w-3" />
                             Created {format(new Date(assignment.created_at), 'MMM d')}
                           </div>
-                          {assignment.due_at && (
+                          {assignment.due_at && !isNaN(new Date(assignment.due_at).getTime()) && (
                             <div className="flex items-center gap-1 mt-1">
                               <Clock className="h-3 w-3" />
                               Due {format(new Date(assignment.due_at), 'MMM d, h:mm a')}
