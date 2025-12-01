@@ -27,6 +27,9 @@ serve(async (req) => {
   }
 
   try {
+    // We'll derive the user ID directly from the JWT in the Authorization header
+    let userId: string;
+
     // Get authorization token from header
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
@@ -36,7 +39,30 @@ serve(async (req) => {
 
     console.log('Auth header present:', authHeader.substring(0, 20) + '...');
 
-    // Create Supabase client with user's auth token
+    // Extract user id (sub) from JWT payload
+    const jwt = authHeader.replace('Bearer ', '').trim();
+    if (!jwt) {
+      console.error('Empty JWT after parsing Authorization header');
+      throw new Error('Unauthorized: Invalid authorization header');
+    }
+
+    try {
+      const payloadJson = atob(jwt.split('.')[1] || '');
+      const payload = JSON.parse(payloadJson);
+      userId = payload.sub;
+    } catch (err) {
+      console.error('Failed to decode JWT payload', err);
+      throw new Error('Unauthorized: Invalid token');
+    }
+
+    if (!userId) {
+      console.error('No sub claim found in JWT payload');
+      throw new Error('Unauthorized: Auth session missing!');
+    }
+
+    console.log('Authenticated user from JWT:', userId);
+
+    // Create Supabase client with user's auth token for RLS-aware queries
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
@@ -49,24 +75,8 @@ serve(async (req) => {
       }
     );
 
-    // Verify user authentication using the JWT from the Authorization header
-    const jwt = authHeader.replace('Bearer ', '').trim();
-    const { data: { user }, error: userError } = await supabaseClient.auth.getUser(jwt);
-    
-    if (userError) {
-      console.error('Auth verification error:', userError.message);
-      throw new Error(`Unauthorized: ${userError.message}`);
-    }
-    
-    if (!user) {
-      console.error('No user found after auth verification');
-      throw new Error('Unauthorized: Auth session missing!');
-    }
-    
-    console.log('Successfully authenticated user:', user.id);
-
     const body: GenerateAssessmentRequest = await req.json();
-    console.log('Generate assessment request:', body);
+    console.log('Generate assessment request:', body, 'for user', userId);
 
     // Fetch lesson content
     const { data: lessons, error: lessonsError } = await supabaseClient
@@ -255,7 +265,7 @@ Return ONLY a JSON array of questions. No markdown, no explanation, just the raw
       .insert({
         class_id: body.classId,
         title: body.assessmentTitle,
-        created_by: user.id,
+        created_by: userId,
         total_points: questions.reduce((sum: number, q: any) => sum + (q.points || 1), 0),
       })
       .select()
