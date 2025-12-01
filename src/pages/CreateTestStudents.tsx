@@ -31,6 +31,27 @@ export default function CreateTestStudents() {
     }
   };
 
+  const enrollStudents = async () => {
+    setLoading(true);
+    setError('');
+    setResult(null);
+
+    try {
+      const { data, error: invokeError } = await supabase.functions.invoke('enroll-test-students', {
+        body: {}
+      });
+
+      if (invokeError) throw invokeError;
+
+      setResult(data);
+    } catch (err: any) {
+      console.error('Error enrolling students:', err);
+      setError(err.message || 'Failed to enroll students');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="container max-w-2xl mx-auto py-8">
       <Card>
@@ -48,14 +69,26 @@ export default function CreateTestStudents() {
             <p>• ManjeetStudent@test.com - Test1234!</p>
           </div>
 
-          <Button 
-            onClick={createStudents} 
-            disabled={loading}
-            className="w-full"
-          >
-            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Create Student Accounts
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              onClick={createStudents} 
+              disabled={loading}
+              className="flex-1"
+            >
+              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Create Auth Accounts
+            </Button>
+            
+            <Button 
+              onClick={enrollStudents} 
+              disabled={loading}
+              className="flex-1"
+              variant="secondary"
+            >
+              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Enroll in Richfield Excel
+            </Button>
+          </div>
 
           {error && (
             <Alert variant="destructive">
