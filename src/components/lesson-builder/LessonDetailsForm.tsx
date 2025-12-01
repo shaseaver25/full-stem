@@ -106,15 +106,21 @@ export function LessonDetailsForm({
 
       if (!teacherProfile) return [];
 
-      // Only show classes where the user is the teacher
+      // Get classes where user is either primary teacher OR co-teacher
       const { data, error } = await supabase
-        .from('classes')
-        .select('id, name')
-        .eq('teacher_id', teacherProfile.id)
-        .order('name');
+        .from('class_teachers')
+        .select('class_id, classes(id, name)')
+        .eq('teacher_id', teacherProfile.id);
       
       if (error) throw error;
-      return data;
+      
+      // Transform the data to extract classes
+      const teacherClasses = data?.map(ct => ct.classes).filter(Boolean) || [];
+      
+      // Sort by name
+      return teacherClasses.sort((a: any, b: any) => 
+        (a.name || '').localeCompare(b.name || '')
+      );
     },
   });
 
