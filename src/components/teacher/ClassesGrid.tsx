@@ -4,12 +4,24 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Search, BookOpen, Users, Calendar, Plus, Eye, Edit, BarChart3 } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { Search, BookOpen, Users, Calendar, Plus, Eye, Edit, BarChart3, Trash2, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ClassStudentImport } from './ClassStudentImport';
 import { useQueryClient } from '@tanstack/react-query';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { StudentRosterPanel } from './StudentRosterPanel';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface ClassData {
   id: string;
@@ -42,9 +54,32 @@ export const ClassesGrid = ({
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedClassId, setSelectedClassId] = useState<string | null>(null);
+  const [deletingClassId, setDeletingClassId] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const handleImportComplete = () => {
     queryClient.invalidateQueries({ queryKey: ['classes'] });
+  };
+
+  const handleDeleteClass = async (classId: string, className: string) => {
+    setIsDeleting(true);
+    try {
+      const { error } = await supabase
+        .from('classes')
+        .delete()
+        .eq('id', classId);
+
+      if (error) throw error;
+
+      toast.success(`Deleted "${className}" successfully`);
+      queryClient.invalidateQueries({ queryKey: ['classes'] });
+    } catch (error) {
+      console.error('Error deleting class:', error);
+      toast.error('Failed to delete class');
+    } finally {
+      setIsDeleting(false);
+      setDeletingClassId(null);
+    }
   };
 
   const filteredClasses = classes.filter(cls =>
@@ -183,6 +218,14 @@ export const ClassesGrid = ({
                     >
                       <BarChart3 className="h-4 w-4" />
                     </Button>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => setDeletingClassId(cls.id)}
+                      disabled={isDeleting}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </div>
 
                   {/* Add Single Student Button */}
@@ -273,6 +316,55 @@ export const ClassesGrid = ({
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!deletingClassId} onOpenChange={(open) => !open && setDeletingClassId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this class?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {(() => {
+                const classToDelete = classes.find(c => c.id === deletingClassId);
+                const studentCount = classToDelete?.enrollment_count || 0;
+                return (
+                  <>
+                    Are you sure you want to delete "{classToDelete?.name}"?
+                    {studentCount > 0 && (
+                      <span className="block mt-2 font-semibold text-destructive">
+                        Warning: This class has {studentCount} student{studentCount !== 1 ? 's' : ''} enrolled. 
+                        All assignments and student data will be permanently deleted.
+                      </span>
+                    )}
+                    <span className="block mt-2">This action cannot be undone.</span>
+                  </>
+                );
+              })()}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                const classToDelete = classes.find(c => c.id === deletingClassId);
+                if (classToDelete) {
+                  handleDeleteClass(classToDelete.id, classToDelete.name);
+                }
+              }}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                'Delete Class'
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
