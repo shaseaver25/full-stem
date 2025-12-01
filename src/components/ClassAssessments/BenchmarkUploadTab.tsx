@@ -5,9 +5,11 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card } from '@/components/ui/card';
-import { Upload, FileText, Loader2, AlertCircle } from 'lucide-react';
+import { Upload, FileText, Loader2, AlertCircle, X } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface BenchmarkUploadTabProps {
   classId: string;
@@ -15,8 +17,10 @@ interface BenchmarkUploadTabProps {
 }
 
 export const BenchmarkUploadTab = ({ classId, onSuccess }: BenchmarkUploadTabProps) => {
+  const { user } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [title, setTitle] = useState('');
   const [docDescription, setDocDescription] = useState('');
   const [extractQuestions, setExtractQuestions] = useState(true);
@@ -51,7 +55,20 @@ export const BenchmarkUploadTab = ({ classId, onSuccess }: BenchmarkUploadTabPro
     }
   };
 
+  const clearFile = () => {
+    setSelectedFile(null);
+  };
+
   const handleUpload = async () => {
+    if (!user) {
+      toast({
+        title: 'Error',
+        description: 'You must be logged in',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     if (!title.trim()) {
       toast({
         title: 'Error',
@@ -71,26 +88,58 @@ export const BenchmarkUploadTab = ({ classId, onSuccess }: BenchmarkUploadTabPro
     }
 
     setLoading(true);
+    setUploading(true);
+
     try {
-      // TODO: Implement file upload and processing
-      toast({
-        title: 'Coming Soon',
-        description: 'Benchmark upload functionality will be available soon',
-      });
+      // Upload file to storage
+      const fileExt = selectedFile.name.split('.').pop();
+      const fileName = `${classId}/${Date.now()}.${fileExt}`;
       
-      // Placeholder for actual implementation
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      console.log('Uploading file to storage:', fileName);
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('benchmark-documents')
+        .upload(fileName, selectedFile, {
+          cacheControl: '3600',
+          upsert: false
+        });
+
+      if (uploadError) throw uploadError;
+
+      setUploading(false);
+
+      console.log('File uploaded, processing with AI...');
+
+      // Process document with AI
+      const { data, error } = await supabase.functions.invoke('process-benchmark-document', {
+        body: {
+          classId,
+          documentUrl: fileName,
+          documentName: selectedFile.name,
+          assessmentTitle: title,
+          numberOfQuestions: parseInt(numberOfQuestions) || 25,
+          extractExisting: extractQuestions,
+          matchToLessons,
+        },
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: 'Success',
+        description: `Assessment created with ${data.questionsGenerated} questions from benchmark document`,
+      });
 
       onSuccess();
     } catch (error: any) {
       console.error('Error uploading benchmark:', error);
       toast({
         title: 'Error',
-        description: error.message || 'Failed to upload benchmark',
+        description: error.message || 'Failed to process benchmark document',
         variant: 'destructive',
       });
     } finally {
       setLoading(false);
+      setUploading(false);
     }
   };
 
@@ -121,13 +170,38 @@ export const BenchmarkUploadTab = ({ classId, onSuccess }: BenchmarkUploadTabPro
         <Card className="mt-2 p-8 border-2 border-dashed hover:border-primary/50 transition-colors cursor-pointer">
           <label htmlFor="file-upload" className="cursor-pointer">
             <div className="flex flex-col items-center justify-center text-center">
-              <Upload className="h-12 w-12 text-muted-foreground mb-3" />
-              <p className="text-sm font-medium mb-1">
-                {selectedFile ? selectedFile.name : 'Drag and drop or click to upload'}
-              </p>
-              <p className="text-xs text-muted-foreground">
-                Supported: PDF, DOCX, TXT • Max size: 10MB
-              </p>
+              {selectedFile ? (
+                <>
+                  <FileText className="h-12 w-12 text-primary mb-3" />
+                  <div className="flex items-center gap-2 mb-2">
+                    <p className="text-sm font-medium">{selectedFile.name}</p>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        clearFile();
+                      }}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
+                  </p>
+                </>
+              ) : (
+                <>
+                  <Upload className="h-12 w-12 text-muted-foreground mb-3" />
+                  <p className="text-sm font-medium mb-1">
+                    Drag and drop or click to upload
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Supported: PDF, DOCX, TXT • Max size: 10MB
+                  </p>
+                </>
+              )}
             </div>
             <input
               id="file-upload"
@@ -219,12 +293,12 @@ export const BenchmarkUploadTab = ({ classId, onSuccess }: BenchmarkUploadTabPro
       <div className="flex justify-end gap-2 pt-4 border-t">
         <Button
           onClick={handleUpload}
-          disabled={loading || !selectedFile}
+          disabled={loading || !selectedFile || !title.trim()}
         >
           {loading ? (
             <>
               <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              Processing...
+              {uploading ? 'Uploading...' : 'Processing...'}
             </>
           ) : (
             <>
