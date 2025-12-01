@@ -92,6 +92,7 @@ const EmbedContentPage = React.lazy(() => import("./pages/admin/embed-content"))
 const AdaptiveClassroomDemo = React.lazy(() => import("./pages/demo/adaptive-classroom"));
 const CreateTestTeachers = React.lazy(() => import("./pages/CreateTestTeachers"));
 const CreateTestStudents = React.lazy(() => import("./pages/CreateTestStudents"));
+const ResetPassword = React.lazy(() => import("./pages/ResetPassword"));
 
 // Eagerly load these smaller components that are used for route protection
 import ProtectedTeacherRoute from "./components/teacher/ProtectedTeacherRoute";
@@ -119,6 +120,7 @@ function AppContent() {
         <Route path="/bootstrap" element={<ErrorBoundary><BootstrapDemo /></ErrorBoundary>} />
         <Route path="/auth" element={<ErrorBoundary><Auth /></ErrorBoundary>} />
         <Route path="/auth/callback" element={<ErrorBoundary><AuthCallback /></ErrorBoundary>} />
+        <Route path="/reset-password" element={<ErrorBoundary><ResetPassword /></ErrorBoundary>} />
         <Route path="/onedrive/callback" element={<ErrorBoundary><OneDriveCallback /></ErrorBoundary>} />
         <Route path="/auth/setup-mfa" element={<ErrorBoundary><MFASetup /></ErrorBoundary>} />
         <Route path="/auth/verify-mfa" element={<ErrorBoundary><MFAVerify /></ErrorBoundary>} />
