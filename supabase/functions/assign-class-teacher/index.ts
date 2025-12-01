@@ -45,28 +45,71 @@ Deno.serve(async (req) => {
       );
     }
 
-    console.log('Assigning teacher:', { classId, teacherProfileId });
+    console.log('Adding teacher to class:', { classId, teacherProfileId });
 
-    // Update the class teacher
-    const { data, error } = await supabaseAdmin
-      .from('classes')
-      .update({ 
+    // Get current user for added_by field
+    const { data: { user } } = await supabaseAdmin.auth.getUser();
+
+    // Add teacher to the class_teachers junction table (allows multiple teachers)
+    const { data: classTeacherData, error: classTeacherError } = await supabaseAdmin
+      .from('class_teachers')
+      .insert({
+        class_id: classId,
         teacher_id: teacherProfileId,
-        updated_at: new Date().toISOString()
+        role: 'co-teacher',
+        added_by: user?.id,
       })
-      .eq('id', classId)
       .select()
       .single();
 
+    if (classTeacherError) {
+      // If already exists, just return success
+      if (classTeacherError.code === '23505') {
+        console.log('Teacher already assigned to this class');
+        
+        // Fetch the class data to return
+        const { data: classData, error: fetchError } = await supabaseAdmin
+          .from('classes')
+          .select('*')
+          .eq('id', classId)
+          .single();
+
+        if (fetchError) {
+          return new Response(
+            JSON.stringify({ error: fetchError.message }),
+            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+
+        return new Response(
+          JSON.stringify({ success: true, data: classData, message: 'Teacher already assigned' }),
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      console.error('Error adding teacher to class:', classTeacherError);
+      return new Response(
+        JSON.stringify({ error: classTeacherError.message }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Fetch the class data to return
+    const { data, error } = await supabaseAdmin
+      .from('classes')
+      .select('*')
+      .eq('id', classId)
+      .single();
+
     if (error) {
-      console.error('Error updating class teacher:', error);
+      console.error('Error fetching class data:', error);
       return new Response(
         JSON.stringify({ error: error.message }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log('Successfully assigned teacher:', data);
+    console.log('Successfully added teacher to class:', data);
 
     return new Response(
       JSON.stringify({ success: true, data }),
