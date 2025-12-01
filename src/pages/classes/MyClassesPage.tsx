@@ -5,19 +5,37 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { 
   GraduationCap, 
   Calendar, 
   User, 
   BookOpen, 
   Loader2,
-  AlertCircle 
+  AlertCircle,
+  Trash2
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
+import { useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 
 export default function MyClassesPage() {
   const { user, loading: authLoading } = useAuth();
   const { data: classes, isLoading, error } = useStudentClasses();
+  const [deletingClassId, setDeletingClassId] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const queryClient = useQueryClient();
 
   const formatEnrollmentDate = (dateString: string) => {
     try {
@@ -25,6 +43,27 @@ export default function MyClassesPage() {
       return formatDistanceToNow(date, { addSuffix: true });
     } catch {
       return 'Recently';
+    }
+  };
+
+  const handleLeaveClass = async (enrollmentId: string, className: string) => {
+    setIsDeleting(true);
+    try {
+      const { error } = await supabase
+        .from('class_students')
+        .update({ status: 'inactive' })
+        .eq('id', enrollmentId);
+
+      if (error) throw error;
+
+      toast.success(`Left ${className} successfully`);
+      queryClient.invalidateQueries({ queryKey: ['student-classes'] });
+    } catch (error) {
+      console.error('Error leaving class:', error);
+      toast.error('Failed to leave class');
+    } finally {
+      setIsDeleting(false);
+      setDeletingClassId(null);
     }
   };
 
@@ -177,6 +216,14 @@ export default function MyClassesPage() {
                         View Class
                       </Link>
                     </Button>
+                    <Button
+                      variant="destructive"
+                      size="icon"
+                      onClick={() => setDeletingClassId(enrollment.id)}
+                      disabled={isDeleting}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
                   </CardFooter>
                 </Card>
               );
@@ -195,6 +242,41 @@ export default function MyClassesPage() {
           </div>
         )}
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!deletingClassId} onOpenChange={(open) => !open && setDeletingClassId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Leave this class?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to leave {classes?.find(c => c.id === deletingClassId)?.classes.name}? 
+              You'll lose access to all assignments and materials.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                const enrollment = classes?.find(c => c.id === deletingClassId);
+                if (enrollment) {
+                  handleLeaveClass(enrollment.id, enrollment.classes.name);
+                }
+              }}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Leaving...
+                </>
+              ) : (
+                'Leave Class'
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
