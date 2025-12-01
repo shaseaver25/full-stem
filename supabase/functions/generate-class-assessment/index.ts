@@ -27,17 +27,31 @@ serve(async (req) => {
   }
 
   try {
+    // Get authorization token
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      console.error('No Authorization header found');
+      throw new Error('Unauthorized: No authorization header');
+    }
+
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      { global: { headers: { Authorization: req.headers.get('Authorization')! } } }
+      { global: { headers: { Authorization: authHeader } } }
     );
 
     // Get user
     const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
-    if (userError || !user) {
-      throw new Error('Unauthorized');
+    if (userError) {
+      console.error('Auth error:', userError);
+      throw new Error(`Unauthorized: ${userError.message}`);
     }
+    if (!user) {
+      console.error('No user found in session');
+      throw new Error('Unauthorized: No user found');
+    }
+    
+    console.log('Authenticated user:', user.id);
 
     const body: GenerateAssessmentRequest = await req.json();
     console.log('Generate assessment request:', body);
