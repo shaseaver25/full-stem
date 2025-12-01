@@ -6,6 +6,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { QuestionBankManager } from './QuestionBankManager';
 import { type QuestionBankQuestion } from '@/hooks/useQuestionBank';
 
@@ -27,14 +28,16 @@ export const QuestionBankModal = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle>Browse Question Bank</DialogTitle>
           <DialogDescription>
             Select questions from your question bank to add to this quiz
           </DialogDescription>
         </DialogHeader>
-        <QuestionBankManager onAddToQuiz={handleAddToQuiz} />
+        <ScrollArea className="flex-1 -mx-6 px-6">
+          <QuestionBankManager onAddToQuiz={handleAddToQuiz} />
+        </ScrollArea>
       </DialogContent>
     </Dialog>
   );
