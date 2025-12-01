@@ -410,7 +410,7 @@ export default function ClassDetailPage() {
                     onClick={() => setIsAssignTeacherOpen(true)}
                   >
                     <UserPlus className="h-3 w-3 mr-1" />
-                    Assign Teacher
+                    Add Co-Teacher
                   </Button>
                 </div>
               </CardContent>

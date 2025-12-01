@@ -67,8 +67,8 @@ export function AssignTeacherDialog({ open, onOpenChange, classId, currentTeache
       queryClient.invalidateQueries({ queryKey: ['class', classId] });
       queryClient.invalidateQueries({ queryKey: ['classes'] });
       toast({
-        title: '✅ Teacher Assigned',
-        description: 'The teacher has been successfully assigned to this class.',
+        title: '✅ Co-Teacher Added',
+        description: 'The teacher has been successfully added as a co-teacher to this class.',
       });
       onOpenChange(false);
     },
@@ -98,9 +98,9 @@ export function AssignTeacherDialog({ open, onOpenChange, classId, currentTeache
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Assign Teacher to Class</DialogTitle>
+          <DialogTitle>Add Co-Teacher to Class</DialogTitle>
           <DialogDescription>
-            Select a teacher to assign to this class. This will replace the current teacher.
+            Select a teacher to add as a co-teacher. They will have full access to manage this class alongside existing teachers.
           </DialogDescription>
         </DialogHeader>
 
@@ -141,7 +141,7 @@ export function AssignTeacherDialog({ open, onOpenChange, classId, currentTeache
             {assignTeacherMutation.isPending && (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             )}
-            Assign Teacher
+            Add Co-Teacher
           </Button>
         </DialogFooter>
       </DialogContent>
