@@ -50,8 +50,8 @@ const TeacherDashboard = () => {
     try {
       setLoading(true);
 
-      // Fetch classes
-      const { data: classes, error: classesError } = await supabase
+      // Fetch classes where this teacher is primary
+      const { data: primaryClasses, error: primaryError } = await supabase
         .from('classes')
         .select(`
           id,
@@ -62,7 +62,38 @@ const TeacherDashboard = () => {
         `)
         .eq('teacher_id', profile.id);
 
-      if (classesError) throw classesError;
+      // Fetch classes where this teacher is a co-teacher via class_teachers junction table
+      const { data: coTeachingRows, error: coTeachingError } = await supabase
+        .from('class_teachers')
+        .select(`
+          class_id,
+          classes (
+            id,
+            name,
+            subject,
+            grade_level,
+            class_students(count)
+          )
+        `)
+        .eq('teacher_id', profile.id);
+
+      if (primaryError) throw primaryError;
+      if (coTeachingError) throw coTeachingError;
+
+      // Merge primary and co-taught classes, de-duplicated by class id
+      const classesMap = new Map<string, any>();
+
+      (primaryClasses || []).forEach((c: any) => {
+        classesMap.set(c.id, c);
+      });
+
+      (coTeachingRows || []).forEach((row: any) => {
+        if (row.classes) {
+          classesMap.set(row.classes.id, row.classes);
+        }
+      });
+
+      const classes = Array.from(classesMap.values()) as any[];
 
       // Calculate metrics
       const classesWithCounts = classes?.map(c => ({
