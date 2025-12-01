@@ -4,12 +4,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, BookOpen, Users, ClipboardList, MessageSquare, Calendar, Clock, PlusCircle, GraduationCap, Trash2, Share2 } from 'lucide-react';
+import { ArrowLeft, BookOpen, Users, ClipboardList, MessageSquare, Calendar, Clock, PlusCircle, GraduationCap, Trash2, Share2, UserPlus } from 'lucide-react';
 import { useClass, useClassAssignments } from '@/hooks/useClassManagement';
 import { useClassLessons } from '@/hooks/useClassLessons';
 import { RosterManagement } from '@/components/teacher/RosterManagement';
 import { AssignmentWizard } from '@/components/teacher/AssignmentWizard';
 import { ShareClassModal } from '@/components/teacher/ShareClassModal';
+import { AssignTeacherDialog } from '@/components/teacher/AssignTeacherDialog';
 import { format, startOfToday } from 'date-fns';
 import Header from '@/components/Header';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -34,6 +35,7 @@ export default function ClassDetailPage() {
   const [assignmentWizardOpen, setAssignmentWizardOpen] = useState(false);
   const [lessonToDelete, setLessonToDelete] = useState<string | null>(null);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [isAssignTeacherOpen, setIsAssignTeacherOpen] = useState(false);
 
   // Support both :classId and :id params for flexibility
   const resolvedClassId = classId || id;
@@ -61,6 +63,44 @@ export default function ClassDetailPage() {
   const { data: classData, isLoading: classLoading } = useClass(resolvedClassId);
   const { data: assignments = [], isLoading: assignmentsLoading } = useClassAssignments(resolvedClassId);
   const { data: lessons = [], isLoading: lessonsLoading } = useClassLessons(resolvedClassId);
+
+  // Fetch teacher info for the class
+  const { data: teacherInfo } = useQuery({
+    queryKey: ['class-teacher', resolvedClassId],
+    queryFn: async () => {
+      if (!classData?.teacher_id) return null;
+      
+      const { data, error } = await supabase
+        .from('teacher_profiles')
+        .select(`
+          id,
+          user_id
+        `)
+        .eq('id', classData.teacher_id)
+        .single();
+      
+      if (error) throw error;
+      
+      // Get profile info
+      if (data?.user_id) {
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('id, email, full_name')
+          .eq('id', data.user_id)
+          .single();
+        
+        if (!profileError && profileData) {
+          return {
+            ...data,
+            profile: profileData
+          };
+        }
+      }
+      
+      return data;
+    },
+    enabled: !!classData?.teacher_id
+  });
 
   // Mutation to delete a lesson
   const deleteLesson = useMutation({
@@ -312,7 +352,7 @@ export default function ClassDetailPage() {
 
         {/* Overview Tab */}
         <TabsContent value="overview" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Total Students</CardTitle>
@@ -349,6 +389,29 @@ export default function ClassDetailPage() {
               <CardContent>
                 <div className="text-2xl font-bold">{recentSubmissions}</div>
                 <p className="text-xs text-muted-foreground">submissions today</p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Class Teacher</CardTitle>
+                <UserPlus className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  <p className="text-sm font-medium truncate">
+                    {(teacherInfo as any)?.profile?.full_name || (teacherInfo as any)?.profile?.email || 'Not assigned'}
+                  </p>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="w-full"
+                    onClick={() => setIsAssignTeacherOpen(true)}
+                  >
+                    <UserPlus className="h-3 w-3 mr-1" />
+                    Assign Teacher
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </div>
@@ -626,6 +689,13 @@ export default function ClassDetailPage() {
         classId={resolvedClassId}
         className={classData.name}
         classCode={classData.class_code}
+      />
+
+      <AssignTeacherDialog
+        open={isAssignTeacherOpen}
+        onOpenChange={setIsAssignTeacherOpen}
+        classId={resolvedClassId}
+        currentTeacherId={classData.teacher_id}
       />
 
       <AlertDialog open={!!lessonToDelete} onOpenChange={() => setLessonToDelete(null)}>
