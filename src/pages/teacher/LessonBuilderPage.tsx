@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { useQuery } from '@tanstack/react-query';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -75,6 +76,23 @@ export default function LessonBuilderPage() {
   const justSavedRef = useRef(false);
   const hasUserEditedRef = useRef(false);
   const initialLoadCompleteRef = useRef(false);
+
+  // Fetch class name
+  const { data: classData } = useQuery({
+    queryKey: ['class', classId],
+    queryFn: async () => {
+      if (!classId) return null;
+      const { data, error } = await supabase
+        .from('classes')
+        .select('name')
+        .eq('id', classId)
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!classId,
+  });
 
   // Auto-save functionality (only after user makes edits)
   const { loadDraft, clearDraft } = useLessonAutoSave(
@@ -662,7 +680,12 @@ export default function LessonBuilderPage() {
                   <ArrowLeft className="h-4 w-4 mr-2" />
                   Back
                 </Button>
-                <h1 className="text-2xl font-bold">Lesson Builder</h1>
+                <div>
+                  <h1 className="text-2xl font-bold">Lesson Builder</h1>
+                  {classData?.name && (
+                    <p className="text-sm text-muted-foreground">{classData.name}</p>
+                  )}
+                </div>
               </div>
               <div className="flex items-center gap-4">
                 {lessonId && (
