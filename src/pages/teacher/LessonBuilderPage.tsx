@@ -78,21 +78,37 @@ export default function LessonBuilderPage() {
   const initialLoadCompleteRef = useRef(false);
 
   // Fetch class name
-  const { data: classData } = useQuery({
+  const { data: classData, isLoading: isLoadingClass } = useQuery({
     queryKey: ['class', classId],
     queryFn: async () => {
       if (!classId) return null;
+      console.log('🔍 Fetching class data for classId:', classId);
       const { data, error } = await supabase
         .from('classes')
         .select('name')
         .eq('id', classId)
         .single();
       
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Error fetching class data:', error);
+        throw error;
+      }
+      console.log('✅ Class data fetched:', data);
       return data;
     },
     enabled: !!classId,
   });
+
+  // Debug logging for class name display
+  useEffect(() => {
+    console.log('📋 Class display state:', {
+      classId,
+      hasClassData: !!classData,
+      className: classData?.name,
+      isLoadingClass,
+      isMenuCollapsed
+    });
+  }, [classId, classData, isLoadingClass, isMenuCollapsed]);
 
   // Auto-save functionality (only after user makes edits)
   const { loadDraft, clearDraft } = useLessonAutoSave(
@@ -682,9 +698,13 @@ export default function LessonBuilderPage() {
                 </Button>
                 <div>
                   <h1 className="text-2xl font-bold">Lesson Builder</h1>
-                  {classData?.name && (
+                  {isLoadingClass ? (
+                    <p className="text-sm text-muted-foreground">Loading class...</p>
+                  ) : classData?.name ? (
                     <p className="text-sm text-muted-foreground">{classData.name}</p>
-                  )}
+                  ) : classId ? (
+                    <p className="text-sm text-muted-foreground">Class ID: {classId}</p>
+                  ) : null}
                 </div>
               </div>
               <div className="flex items-center gap-4">
