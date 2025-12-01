@@ -17,6 +17,7 @@ import Header from '@/components/Header';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { removeDuplicateLessons } from '@/utils/removeDuplicateLessons';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -64,6 +65,23 @@ export default function ClassDetailPage() {
   const { data: classData, isLoading: classLoading } = useClass(resolvedClassId);
   const { data: assignments = [], isLoading: assignmentsLoading } = useClassAssignments(resolvedClassId);
   const { data: lessons = [], isLoading: lessonsLoading } = useClassLessons(resolvedClassId);
+
+  // Remove duplicate lessons mutation
+  const { mutate: removeDuplicates } = useMutation({
+    mutationFn: () => removeDuplicateLessons(resolvedClassId),
+    onSuccess: (result) => {
+      if (result.deleted > 0) {
+        queryClient.invalidateQueries({ queryKey: ['class-lessons', resolvedClassId] });
+        toast({
+          title: 'Duplicates Removed',
+          description: `Removed ${result.deleted} duplicate lesson${result.deleted > 1 ? 's' : ''}`,
+        });
+      }
+    },
+    onError: (error) => {
+      console.error('Failed to remove duplicates:', error);
+    }
+  });
 
   // Fetch teacher info for the class
   const { data: teacherInfo } = useQuery({
@@ -468,6 +486,13 @@ export default function ClassDetailPage() {
                 classId={resolvedClassId}
                 onSuccess={() => queryClient.invalidateQueries({ queryKey: ['class-assessments', resolvedClassId] })}
               />
+              <Button 
+                variant="outline" 
+                onClick={() => removeDuplicates()}
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Remove Duplicates
+              </Button>
             </div>
           </div>
 
