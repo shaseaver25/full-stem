@@ -73,7 +73,7 @@ serve(async (req) => {
         type: 'recovery',
         email: resetData.email,
         options: {
-          redirectTo: `${Deno.env.get('SUPABASE_URL')?.replace('.supabase.co', '.supabase.co')}/auth/v1/verify`
+          redirectTo: 'https://6ba0ffd1-9a8e-49f9-9f63-94f86000b68b.lovableproject.com/reset-password'
         }
       });
 
