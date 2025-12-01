@@ -49,8 +49,9 @@ serve(async (req) => {
       }
     );
 
-    // Verify user authentication
-    const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
+    // Verify user authentication using the JWT from the Authorization header
+    const jwt = authHeader.replace('Bearer ', '').trim();
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser(jwt);
     
     if (userError) {
       console.error('Auth verification error:', userError.message);
