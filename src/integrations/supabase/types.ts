@@ -1111,6 +1111,48 @@ export type Database = {
           },
         ]
       }
+      class_teachers: {
+        Row: {
+          added_at: string | null
+          added_by: string | null
+          class_id: string
+          id: string
+          role: string | null
+          teacher_id: string
+        }
+        Insert: {
+          added_at?: string | null
+          added_by?: string | null
+          class_id: string
+          id?: string
+          role?: string | null
+          teacher_id: string
+        }
+        Update: {
+          added_at?: string | null
+          added_by?: string | null
+          class_id?: string
+          id?: string
+          role?: string | null
+          teacher_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "class_teachers_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "class_teachers_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       class_weekly_digests: {
         Row: {
           approved_at: string | null
@@ -4932,6 +4974,10 @@ export type Database = {
       is_super_admin: { Args: { _user_id?: string }; Returns: boolean }
       is_system_admin: { Args: { _user_id?: string }; Returns: boolean }
       is_teacher_of_class: {
+        Args: { _class_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_teacher_of_class_multi: {
         Args: { _class_id: string; _user_id: string }
         Returns: boolean
       }
