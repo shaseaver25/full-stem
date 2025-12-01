@@ -190,5 +190,8 @@ verify_jwt = true
 [functions.generate-class-assessment]
 verify_jwt = true
 
+[functions.process-benchmark-document]
+verify_jwt = true
+
 [functions.assign-class-teacher]
 verify_jwt = true
