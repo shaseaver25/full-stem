@@ -69,11 +69,15 @@ serve(async (req) => {
 
     if (resetData.method === 'email') {
       // Method 1: Send password reset email
+      // Get the origin from the request or use production URL
+      const origin = req.headers.get('origin') || 'https://full-stem.lovable.app';
+      const redirectUrl = `${origin}/reset-password`;
+      
       const { data, error } = await supabaseAdmin.auth.admin.generateLink({
         type: 'recovery',
         email: resetData.email,
         options: {
-          redirectTo: 'https://6ba0ffd1-9a8e-49f9-9f63-94f86000b68b.lovableproject.com/reset-password'
+          redirectTo: redirectUrl
         }
       });
 
