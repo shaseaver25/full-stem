@@ -186,3 +186,9 @@ verify_jwt = true
 
 [functions.transcribe-voice]
 verify_jwt = true
+
+[functions.generate-class-assessment]
+verify_jwt = true
+
+[functions.assign-class-teacher]
+verify_jwt = true

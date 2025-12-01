@@ -11,6 +11,7 @@ import { RosterManagement } from '@/components/teacher/RosterManagement';
 import { AssignmentWizard } from '@/components/teacher/AssignmentWizard';
 import { ShareClassModal } from '@/components/teacher/ShareClassModal';
 import { AssignTeacherDialog } from '@/components/teacher/AssignTeacherDialog';
+import { CreateAssessmentButton } from '@/components/ClassAssessments/CreateAssessmentButton';
 import { format, startOfToday } from 'date-fns';
 import Header from '@/components/Header';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -433,6 +434,10 @@ export default function ClassDetailPage() {
                 <BookOpen className="h-4 w-4 mr-2" />
                 Assign Lesson
               </Button>
+              <CreateAssessmentButton 
+                classId={resolvedClassId}
+                onSuccess={() => queryClient.invalidateQueries({ queryKey: ['class-assessments', resolvedClassId] })}
+              />
               <Button variant="outline">
                 <MessageSquare className="h-4 w-4 mr-2" />
                 Send Message
@@ -449,15 +454,21 @@ export default function ClassDetailPage() {
         <TabsContent value="lessons" className="space-y-6">
           <div className="flex justify-between items-center">
             <div>
-              <h2 className="text-2xl font-bold">Lessons</h2>
+              <h2 className="text-2xl font-bold">Lessons & Assessments</h2>
               <p className="text-muted-foreground">
-                View and manage lessons for this class
+                View and manage lessons and class-wide assessments
               </p>
             </div>
-            <Button onClick={() => navigate(`/teacher/lesson-builder?classId=${resolvedClassId}`)}>
-              <PlusCircle className="h-4 w-4 mr-2" />
-              Create Lesson
-            </Button>
+            <div className="flex gap-2">
+              <Button onClick={() => navigate(`/teacher/lesson-builder?classId=${resolvedClassId}`)}>
+                <PlusCircle className="h-4 w-4 mr-2" />
+                Create Lesson
+              </Button>
+              <CreateAssessmentButton 
+                classId={resolvedClassId}
+                onSuccess={() => queryClient.invalidateQueries({ queryKey: ['class-assessments', resolvedClassId] })}
+              />
+            </div>
           </div>
 
           {lessonsLoading ? (
