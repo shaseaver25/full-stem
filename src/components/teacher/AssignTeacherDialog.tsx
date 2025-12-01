@@ -22,27 +22,33 @@ export function AssignTeacherDialog({ open, onOpenChange, classId, currentTeache
   const { data: teachers, isLoading } = useQuery({
     queryKey: ['teachers'],
     queryFn: async () => {
-      const { data: teacherProfiles, error } = await supabase
+      // First get all teacher profiles
+      const { data: teacherProfiles, error: tpError } = await supabase
         .from('teacher_profiles')
-        .select(`
-          id,
-          user_id,
-          profiles!teacher_profiles_user_id_fkey (
-            id,
-            email,
-            full_name
-          )
-        `)
-        .order('profiles(full_name)');
+        .select('id, user_id');
 
-      if (error) throw error;
+      if (tpError) throw tpError;
+      if (!teacherProfiles || teacherProfiles.length === 0) return [];
 
-      return teacherProfiles.map((tp: any) => ({
-        id: tp.id,
-        userId: tp.user_id,
-        name: tp.profiles?.full_name || tp.profiles?.email || 'Unknown',
-        email: tp.profiles?.email
-      }));
+      // Then get profile info for each
+      const userIds = teacherProfiles.map(tp => tp.user_id);
+      const { data: profiles, error: profileError } = await supabase
+        .from('profiles')
+        .select('id, email, full_name')
+        .in('id', userIds);
+
+      if (profileError) throw profileError;
+
+      // Combine the data
+      return teacherProfiles.map((tp) => {
+        const profile = profiles?.find(p => p.id === tp.user_id);
+        return {
+          id: tp.id,
+          userId: tp.user_id,
+          name: profile?.full_name || profile?.email || 'Unknown Teacher',
+          email: profile?.email || ''
+        };
+      }).sort((a, b) => a.name.localeCompare(b.name));
     },
     enabled: open
   });
