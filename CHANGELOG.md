@@ -9,6 +9,57 @@ and this project adheres to semantic versioning principles.
 
 ## [Unreleased]
 
+### December 2, 2025 - Email Integration & Auth Patterns
+
+#### Added
+- Password reset email delivery via Resend integration (#AUTH-003)
+  - Emails now sent with styled HTML templates
+  - Reset links redirect to `/reset-password` page
+  - Activity logging for all password reset actions
+  - Support for temporary password generation
+  - **Files Changed:** `supabase/functions/reset-password/index.ts`
+
+- RESEND_API_KEY secret configured for production email delivery (#INFRA-001)
+  - Enables transactional emails across platform
+  - Used by: reset-password, submit-access-request, submit-demo-request, invite-teacher
+
+#### Fixed
+- Edge function authentication pattern for Deno environments (#AUTH-004)
+  - Migrated from `supabaseClient.auth.getUser()` to direct JWT decoding
+  - Extracts user ID from JWT `sub` claim directly
+  - Resolves authentication failures in serverless contexts
+  - **Files Changed:** `supabase/functions/generate-class-assessment/index.ts`
+
+#### Documentation
+- Created comprehensive development session report: `DEVELOPMENT_SESSION_2025-12-02.md`
+- Documented JWT decoding pattern for edge function authentication
+- Documented Resend email integration pattern
+
+---
+
+### November 14, 2025 - Adaptive Assessment Fixes
+
+#### Fixed
+- OpenAI API rate limiting in submission analysis (#AI-001)
+  - Migrated to Lovable AI Gateway with google/gemini-2.5-flash
+  - Added proper rate limit (429) and payment (402) error handling
+  - **Files Changed:** `supabase/functions/analyze-submission/index.ts`
+
+- Submission creation unique constraint violations (#DB-001)
+  - Implemented upsert logic to update existing submissions
+  - Prevents duplicate submissions per assignment/user
+  - **Files Changed:** `src/components/AdaptiveTestPage.tsx`
+
+- Database foreign key constraint on submission_analyses (#DB-002)
+  - Updated constraint to reference `assignment_submissions` (not `student_submissions`)
+  - Added ON DELETE CASCADE for data integrity
+  - **Files Changed:** Migration applied
+
+#### Documentation
+- Created development session report: `DEVELOPMENT_SESSION_2025-11-14.md`
+
+---
+
 ### November 10, 2025 - Morning Session
 
 #### Added
