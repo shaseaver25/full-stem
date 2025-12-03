@@ -1,5 +1,6 @@
-import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
-import { DraggableComponentCard } from './DraggableComponentCard';
+import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
+import { SortableContext, arrayMove, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { SortableComponentCard } from './SortableComponentCard';
 
 interface LessonComponent {
   id?: string;
@@ -23,14 +24,29 @@ interface ComponentListProps {
 }
 
 export function ComponentList({ components, onUpdate, onDelete, onReorder, lessonId }: ComponentListProps) {
-  const handleDragEnd = (result: DropResult) => {
-    if (!result.destination) return;
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    })
+  );
 
-    const items = Array.from(components);
-    const [reorderedItem] = items.splice(result.source.index, 1);
-    items.splice(result.destination.index, 0, reorderedItem);
+  const getComponentId = (component: LessonComponent, index: number) => {
+    return component.id || `temp-${component.component_type}-${index}`;
+  };
 
-    onReorder(items);
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    
+    if (over && active.id !== over.id) {
+      const oldIndex = components.findIndex((c, i) => getComponentId(c, i) === active.id);
+      const newIndex = components.findIndex((c, i) => getComponentId(c, i) === over.id);
+      
+      if (oldIndex !== -1 && newIndex !== -1) {
+        onReorder(arrayMove(components, oldIndex, newIndex));
+      }
+    }
   };
 
   if (components.length === 0) {
@@ -41,49 +57,25 @@ export function ComponentList({ components, onUpdate, onDelete, onReorder, lesso
     );
   }
 
+  const itemIds = components.map((c, i) => getComponentId(c, i));
+
   return (
-    <DragDropContext onDragEnd={handleDragEnd}>
-      <Droppable droppableId="components">
-        {(provided) => (
-          <div
-            {...provided.droppableProps}
-            ref={provided.innerRef}
-            className="space-y-4"
-          >
-            {components.map((component, index) => {
-              // Use component.id if available, otherwise create a stable ID
-              const stableId = component.id || `${component.component_type}-${component.order || index}`;
-              
-              return (
-              <Draggable
-                key={stableId}
-                draggableId={stableId}
-                index={index}
-              >
-                {(provided, snapshot) => (
-                  <div
-                    ref={provided.innerRef}
-                    {...provided.draggableProps}
-                    style={provided.draggableProps.style}
-                  >
-                    <DraggableComponentCard
-                      component={component}
-                      index={index}
-                      onUpdate={onUpdate}
-                      onDelete={onDelete}
-                      dragHandleProps={provided.dragHandleProps}
-                      isDragging={snapshot.isDragging}
-                      lessonId={lessonId}
-                    />
-                  </div>
-                )}
-              </Draggable>
-            );
-            })}
-            {provided.placeholder}
-          </div>
-        )}
-      </Droppable>
-    </DragDropContext>
+    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+      <SortableContext items={itemIds} strategy={verticalListSortingStrategy}>
+        <div className="space-y-4">
+          {components.map((component, index) => (
+            <SortableComponentCard
+              key={getComponentId(component, index)}
+              id={getComponentId(component, index)}
+              component={component}
+              index={index}
+              onUpdate={onUpdate}
+              onDelete={onDelete}
+              lessonId={lessonId}
+            />
+          ))}
+        </div>
+      </SortableContext>
+    </DndContext>
   );
 }

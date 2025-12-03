@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { GripVertical, Trash2, ChevronDown, ChevronUp, Plus, Volume2, Settings, Minus } from 'lucide-react';
-import { DraggableProvidedDragHandleProps } from 'react-beautiful-dnd';
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import { LocalFileUpload } from './LocalFileUpload';
 import { SlideTextExtractor } from './SlideTextExtractor';
@@ -37,13 +37,12 @@ interface LessonComponent {
   read_aloud: boolean;
 }
 
-interface DraggableComponentCardProps {
+interface SortableComponentCardProps {
+  id: string;
   component: LessonComponent;
   index: number;
   onUpdate: (index: number, updates: Partial<LessonComponent>) => void;
   onDelete: (index: number) => void;
-  dragHandleProps: DraggableProvidedDragHandleProps | null | undefined;
-  isDragging: boolean;
   lessonId?: string;
 }
 
@@ -64,15 +63,28 @@ const componentTypeLabels: Record<string, string> = {
   resources: 'Resources',
 };
 
-export function DraggableComponentCard({
+export function SortableComponentCard({
+  id,
   component,
   index,
   onUpdate,
   onDelete,
-  dragHandleProps,
-  isDragging,
   lessonId,
-}: DraggableComponentCardProps) {
+}: SortableComponentCardProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
   const [isExpanded, setIsExpanded] = useState(true);
   const [isQuizBuilderOpen, setIsQuizBuilderOpen] = useState(false);
   const [isPollBuilderOpen, setIsPollBuilderOpen] = useState(false);
@@ -220,17 +232,17 @@ export function DraggableComponentCard({
               />
 
               <div className="space-y-3">
-                {(component.content.slides || []).map((slide: any, index: number) => (
-                  <div key={index} className="p-3 border rounded-lg bg-card space-y-2">
+                {(component.content.slides || []).map((slide: any, slideIndex: number) => (
+                  <div key={slideIndex} className="p-3 border rounded-lg bg-card space-y-2">
                     <div className="flex items-center justify-between">
-                      <Label className="text-sm font-medium">Slide {index + 1}</Label>
+                      <Label className="text-sm font-medium">Slide {slideIndex + 1}</Label>
                       <Button
                         type="button"
                         variant="ghost"
                         size="sm"
                         onClick={() => {
                           const newSlides = [...(component.content.slides || [])];
-                          newSlides.splice(index, 1);
+                          newSlides.splice(slideIndex, 1);
                           handleContentChange('slides', newSlides);
                         }}
                         className="h-6 px-2 text-destructive hover:text-destructive"
@@ -242,7 +254,7 @@ export function DraggableComponentCard({
                       value={slide.text || ''}
                       onChange={(e) => {
                         const newSlides = [...(component.content.slides || [])];
-                        newSlides[index] = { ...newSlides[index], text: e.target.value };
+                        newSlides[slideIndex] = { ...newSlides[slideIndex], text: e.target.value };
                         handleContentChange('slides', newSlides);
                       }}
                       placeholder="Enter the text content from this slide..."
@@ -253,7 +265,7 @@ export function DraggableComponentCard({
                       value={slide.notes || ''}
                       onChange={(e) => {
                         const newSlides = [...(component.content.slides || [])];
-                        newSlides[index] = { ...newSlides[index], notes: e.target.value };
+                        newSlides[slideIndex] = { ...newSlides[slideIndex], notes: e.target.value };
                         handleContentChange('slides', newSlides);
                       }}
                       placeholder="Optional notes for this slide"
@@ -420,27 +432,27 @@ export function DraggableComponentCard({
             <div className="flex items-center justify-between p-3 border rounded-lg">
               <div className="flex items-center gap-2">
                 <Volume2 className="h-4 w-4 text-muted-foreground" />
-                <Label htmlFor={`read-aloud-${index}`}>Enable Read Aloud</Label>
+                <Label htmlFor={`${component.id}-quiz-tts`} className="cursor-pointer">
+                  Enable Text-to-Speech for questions
+                </Label>
               </div>
               <input
                 type="checkbox"
-                id={`read-aloud-${index}`}
-                checked={component.read_aloud || false}
-                onChange={(e) => onUpdate(index, { read_aloud: e.target.checked })}
+                id={`${component.id}-quiz-tts`}
+                checked={component.content.enableTTS !== false}
+                onChange={(e) => handleContentChange('enableTTS', e.target.checked)}
                 className="h-4 w-4"
               />
             </div>
-            
+
             <Dialog open={isQuizBuilderOpen} onOpenChange={setIsQuizBuilderOpen}>
               <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>Quiz Builder</DialogTitle>
                 </DialogHeader>
-                <QuizBuilderComponent 
+                <QuizBuilderComponent
                   initialData={component.content?.quizData}
-                  lessonId={lessonId}
                   onSave={(quizData) => {
-                    console.log('💾 Quiz Builder: Saving quiz data to component:', quizData);
                     handleContentChange('quizData', quizData);
                     setIsQuizBuilderOpen(false);
                   }}
@@ -453,15 +465,15 @@ export function DraggableComponentCard({
       case 'poll':
         return (
           <div className="space-y-4">
-            <div className="p-4 bg-[#D1FAE5] border-2 border-[#065F46] rounded-lg">
-              <p className="font-semibold text-[#065F46] mb-2">📊 Poll/Survey Component</p>
+            <div className="p-4 bg-purple-50 border-2 border-purple-900 rounded-lg">
+              <p className="font-semibold text-purple-900 mb-2">📊 Poll/Survey Component</p>
               <p className="text-sm text-muted-foreground">
-                Poll content is managed through the dedicated Poll Builder interface. 
-                Click the "Configure Poll" button below to create questions, set poll options, configure display settings, and more.
+                Create interactive polls and surveys for student engagement. 
+                Click the "Configure Poll" button below to add questions and response options.
               </p>
               {component.content?.pollData ? (
                 <div className="mt-3 p-2 bg-green-50 border border-green-500 rounded text-sm text-green-800">
-                  ✓ Poll configured: {component.content.pollData.poll_question}
+                  ✓ Poll configured with {component.content.pollData.questions?.length || 0} question(s)
                 </div>
               ) : (
                 <div className="mt-3 p-2 bg-yellow-50 border border-yellow-500 rounded text-sm text-yellow-800">
@@ -477,31 +489,23 @@ export function DraggableComponentCard({
               <Settings className="h-4 w-4 mr-2" />
               {component.content?.pollData ? 'Edit Poll Configuration' : 'Configure Poll'}
             </Button>
-
-            <div className="flex items-center justify-between p-3 border rounded-lg">
-              <div className="flex items-center gap-2">
-                <Volume2 className="h-4 w-4 text-muted-foreground" />
-                <Label htmlFor={`read-aloud-poll-${index}`}>Enable Read Aloud</Label>
-              </div>
-              <input
-                type="checkbox"
-                id={`read-aloud-poll-${index}`}
-                checked={component.read_aloud || false}
-                onChange={(e) => onUpdate(index, { read_aloud: e.target.checked })}
-                className="h-4 w-4"
+            <div>
+              <Label>Poll Title (optional override)</Label>
+              <Input
+                value={component.content.title || ''}
+                onChange={(e) => handleContentChange('title', e.target.value)}
+                placeholder="e.g., Class Feedback Survey"
               />
             </div>
-            
+
             <Dialog open={isPollBuilderOpen} onOpenChange={setIsPollBuilderOpen}>
               <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>Poll Builder</DialogTitle>
                 </DialogHeader>
-                <PollBuilderComponent 
-                  componentId={component.id}
+                <PollBuilderComponent
                   initialData={component.content?.pollData}
                   onSave={(pollData) => {
-                    console.log('💾 Poll Builder: Saving poll data to component:', pollData);
                     handleContentChange('pollData', pollData);
                     setIsPollBuilderOpen(false);
                   }}
@@ -512,12 +516,12 @@ export function DraggableComponentCard({
         );
 
       case 'discussion':
-        return <DiscussionEditor 
-          content={component.content} 
-          onChange={(newContent) => {
-            onUpdate(index, { content: newContent });
-          }} 
-        />;
+        return (
+          <DiscussionEditor
+            content={component.content}
+            onChange={(value) => onUpdate(index, { content: value })}
+          />
+        );
 
       case 'codingEditor':
         return (
@@ -530,88 +534,48 @@ export function DraggableComponentCard({
                 placeholder="Coding exercise title"
               />
             </div>
-            
             <div>
-              <Label>Description</Label>
-              <Textarea
-                value={component.content.description || ''}
-                onChange={(e) => handleContentChange('description', e.target.value)}
-                placeholder="Brief description of the coding exercise"
-                rows={2}
-              />
+              <Label>Programming Language</Label>
+              <Select
+                value={component.content.language || 'python'}
+                onValueChange={(value) => handleContentChange('language', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="python">Python</SelectItem>
+                  <SelectItem value="javascript">JavaScript</SelectItem>
+                  <SelectItem value="html">HTML</SelectItem>
+                  <SelectItem value="css">CSS</SelectItem>
+                  <SelectItem value="java">Java</SelectItem>
+                  <SelectItem value="cpp">C++</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-
             <div>
               <Label>Starter Code</Label>
               <Textarea
                 value={component.content.starterCode || ''}
                 onChange={(e) => handleContentChange('starterCode', e.target.value)}
-                placeholder="Initial code for students to start with"
+                placeholder="# Enter starter code here..."
                 rows={6}
+                className="font-mono"
               />
             </div>
-
-            <div>
-              <Label>Programming Language</Label>
-              <Select
-                value={component.content.language || 'javascript'}
-                onValueChange={(value) => handleContentChange('language', value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select language" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="javascript">JavaScript</SelectItem>
-                  <SelectItem value="python">Python</SelectItem>
-                  <SelectItem value="java">Java</SelectItem>
-                  <SelectItem value="cpp">C++</SelectItem>
-                  <SelectItem value="html">HTML</SelectItem>
-                  <SelectItem value="css">CSS</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
             <div>
               <Label>Instructions</Label>
               <Textarea
                 value={component.content.instructions || ''}
                 onChange={(e) => handleContentChange('instructions', e.target.value)}
-                placeholder="What should students do? Step-by-step instructions..."
-                rows={4}
-              />
-            </div>
-
-            <div>
-              <Label>Expected Output</Label>
-              <Textarea
-                value={component.content.expectedOutput || ''}
-                onChange={(e) => handleContentChange('expectedOutput', e.target.value)}
-                placeholder="What output should students see when they run the correct code?"
+                placeholder="Instructions for the coding exercise..."
                 rows={3}
               />
             </div>
           </>
         );
 
-      case 'flashcards':
-        const cards = component.content.cards || [];
-        
-        const addCard = () => {
-          const newCards = [...cards, { id: `card-${Date.now()}`, frontText: '', backText: '', imageUrl: '' }];
-          handleContentChange('cards', newCards);
-        };
-
-        const removeCard = (index: number) => {
-          const newCards = cards.filter((_: any, i: number) => i !== index);
-          handleContentChange('cards', newCards);
-        };
-
-        const updateCard = (index: number, field: string, value: string) => {
-          const newCards = [...cards];
-          newCards[index] = { ...newCards[index], [field]: value };
-          handleContentChange('cards', newCards);
-        };
-
+      case 'desmos':
         return (
           <>
             <div>
@@ -619,104 +583,25 @@ export function DraggableComponentCard({
               <Input
                 value={component.content.title || ''}
                 onChange={(e) => handleContentChange('title', e.target.value)}
-                placeholder="Flashcard set title"
+                placeholder="Desmos activity title"
               />
             </div>
-
             <div>
-              <Label>Description</Label>
+              <Label>Desmos Activity URL or Embed Code</Label>
+              <Input
+                value={component.content.url || ''}
+                onChange={(e) => handleContentChange('url', e.target.value)}
+                placeholder="https://teacher.desmos.com/activitybuilder/..."
+              />
+            </div>
+            <div>
+              <Label>Instructions</Label>
               <Textarea
-                value={component.content.description || ''}
-                onChange={(e) => handleContentChange('description', e.target.value)}
-                placeholder="Brief description of this flashcard set"
-                rows={2}
+                value={component.content.instructions || ''}
+                onChange={(e) => handleContentChange('instructions', e.target.value)}
+                placeholder="Instructions for students..."
+                rows={3}
               />
-            </div>
-
-            <div>
-              <Label>Mode</Label>
-              <Select
-                value={component.content.mode || 'study'}
-                onValueChange={(value) => handleContentChange('mode', value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select mode" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="study">Study Mode (flip cards)</SelectItem>
-                  <SelectItem value="quiz">Quiz Mode (mark known/review)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <Separator className="my-4" />
-
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <Label className="text-base font-semibold">Flashcards ({cards.length})</Label>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={addCard}
-                  className="flex items-center gap-1"
-                >
-                  <Plus className="w-4 h-4" />
-                  Add Card
-                </Button>
-              </div>
-
-              {cards.length === 0 && (
-                <div className="text-center py-8 text-muted-foreground border-2 border-dashed rounded-lg">
-                  No cards yet. Click "Add Card" to create your first flashcard.
-                </div>
-              )}
-
-              {cards.map((card: any, index: number) => (
-                <Card key={card.id || index} className="bg-muted/30">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-sm">Card {index + 1}</CardTitle>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removeCard(index)}
-                        className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-                      >
-                        <Minus className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div>
-                      <Label className="text-xs">Front (Question/Term)</Label>
-                      <Input
-                        value={card.frontText || ''}
-                        onChange={(e) => updateCard(index, 'frontText', e.target.value)}
-                        placeholder="What students will see first"
-                      />
-                    </div>
-                    <div>
-                      <Label className="text-xs">Back (Answer/Definition)</Label>
-                      <Textarea
-                        value={card.backText || ''}
-                        onChange={(e) => updateCard(index, 'backText', e.target.value)}
-                        placeholder="The answer or definition"
-                        rows={2}
-                      />
-                    </div>
-                    <div>
-                      <Label className="text-xs">Image URL (Optional)</Label>
-                      <Input
-                        value={card.imageUrl || ''}
-                        onChange={(e) => updateCard(index, 'imageUrl', e.target.value)}
-                        placeholder="https://example.com/image.jpg"
-                      />
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
             </div>
           </>
         );
@@ -729,24 +614,50 @@ export function DraggableComponentCard({
               <Input
                 value={component.content.title || ''}
                 onChange={(e) => handleContentChange('title', e.target.value)}
-                placeholder="Activity name"
+                placeholder="Activity title"
               />
             </div>
             <div>
-              <Label>Description</Label>
-              <Textarea
-                value={component.content.description || ''}
-                onChange={(e) => handleContentChange('description', e.target.value)}
-                placeholder="What will students do?"
-                rows={3}
+              <Label>Activity Type</Label>
+              <Select
+                value={component.content.activityType || 'individual'}
+                onValueChange={(value) => handleContentChange('activityType', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="individual">Individual Work</SelectItem>
+                  <SelectItem value="pairs">Pair Work</SelectItem>
+                  <SelectItem value="group">Group Activity</SelectItem>
+                  <SelectItem value="class">Whole Class</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Instructions</Label>
+              <RichTextEditor
+                value={component.content.instructions || ''}
+                onChange={(value) => handleContentChange('instructions', value)}
+                placeholder="Enter activity instructions..."
               />
             </div>
             <div>
-              <Label>Resources</Label>
+              <Label>Duration (minutes)</Label>
               <Input
-                value={component.content.resources || ''}
-                onChange={(e) => handleContentChange('resources', e.target.value)}
-                placeholder="Materials or links"
+                type="number"
+                value={component.content.duration || ''}
+                onChange={(e) => handleContentChange('duration', parseInt(e.target.value) || '')}
+                placeholder="10"
+              />
+            </div>
+            <div>
+              <Label>Materials Needed</Label>
+              <Textarea
+                value={component.content.materials || ''}
+                onChange={(e) => handleContentChange('materials', e.target.value)}
+                placeholder="List any materials students will need..."
+                rows={2}
               />
             </div>
           </>
@@ -760,33 +671,33 @@ export function DraggableComponentCard({
               <Input
                 value={component.content.title || ''}
                 onChange={(e) => handleContentChange('title', e.target.value)}
-                placeholder="Assignment name"
+                placeholder="Assignment title"
               />
             </div>
             <div>
               <Label>Instructions</Label>
-              <Textarea
+              <RichTextEditor
                 value={component.content.instructions || ''}
-                onChange={(e) => handleContentChange('instructions', e.target.value)}
-                placeholder="Provide detailed instructions for the assignment"
+                onChange={(value) => handleContentChange('instructions', value)}
+                placeholder="Enter assignment instructions..."
+              />
+            </div>
+            <div>
+              <Label>Rubric/Grading Criteria (optional)</Label>
+              <Textarea
+                value={component.content.rubric || ''}
+                onChange={(e) => handleContentChange('rubric', e.target.value)}
+                placeholder="Describe how the assignment will be graded..."
                 rows={4}
               />
             </div>
             <div>
-              <Label>Points</Label>
+              <Label>Points Possible</Label>
               <Input
                 type="number"
                 value={component.content.points || ''}
-                onChange={(e) => handleContentChange('points', e.target.value)}
+                onChange={(e) => handleContentChange('points', parseInt(e.target.value) || '')}
                 placeholder="100"
-              />
-            </div>
-            <div>
-              <Label>Due Date</Label>
-              <Input
-                type="date"
-                value={component.content.dueDate || ''}
-                onChange={(e) => handleContentChange('dueDate', e.target.value)}
               />
             </div>
           </>
@@ -794,199 +705,328 @@ export function DraggableComponentCard({
 
       case 'reflection':
         return (
-          <div>
-            <Label>Reflection Prompt</Label>
-            <Textarea
-              value={component.content.prompt || ''}
-              onChange={(e) => handleContentChange('prompt', e.target.value)}
-              placeholder="What should students reflect on?"
-              rows={4}
-            />
-          </div>
+          <>
+            <div>
+              <Label>Reflection Title</Label>
+              <Input
+                value={component.content.title || ''}
+                onChange={(e) => handleContentChange('title', e.target.value)}
+                placeholder="Reflection title"
+              />
+            </div>
+            <div>
+              <Label>Reflection Prompts</Label>
+              <RichTextEditor
+                value={component.content.prompts || ''}
+                onChange={(value) => handleContentChange('prompts', value)}
+                placeholder="Enter reflection questions or prompts for students..."
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <Label htmlFor={`${component.id}-private`}>Private Reflections (only teacher can see)</Label>
+              <input
+                type="checkbox"
+                id={`${component.id}-private`}
+                checked={component.content.isPrivate || false}
+                onChange={(e) => handleContentChange('isPrivate', e.target.checked)}
+                className="h-4 w-4"
+              />
+            </div>
+          </>
         );
 
       case 'instructions':
         return (
-          <div>
-            <Label>Instructions</Label>
-            <Textarea
-              value={component.content.text || ''}
-              onChange={(e) => handleContentChange('text', e.target.value)}
-              placeholder="Step-by-step instructions"
-              rows={6}
-            />
-          </div>
+          <>
+            <div>
+              <Label>Title</Label>
+              <Input
+                value={component.content.title || ''}
+                onChange={(e) => handleContentChange('title', e.target.value)}
+                placeholder="Instructions section title"
+              />
+            </div>
+            <div>
+              <Label>Instructions Content</Label>
+              <RichTextEditor
+                value={component.content.body || ''}
+                onChange={(value) => handleContentChange('body', value)}
+                placeholder="Enter clear instructions for students..."
+              />
+            </div>
+          </>
+        );
+
+      case 'resources':
+        return (
+          <>
+            <div>
+              <Label>Resources Section Title</Label>
+              <Input
+                value={component.content.title || ''}
+                onChange={(e) => handleContentChange('title', e.target.value)}
+                placeholder="Additional Resources"
+              />
+            </div>
+            <div>
+              <Label>Resource Links & Descriptions</Label>
+              <RichTextEditor
+                value={component.content.body || ''}
+                onChange={(value) => handleContentChange('body', value)}
+                placeholder="Add links to external resources, videos, websites..."
+              />
+            </div>
+          </>
+        );
+
+      case 'flashcards':
+        return (
+          <>
+            <div>
+              <Label>Flashcard Set Title</Label>
+              <Input
+                value={component.content.title || ''}
+                onChange={(e) => handleContentChange('title', e.target.value)}
+                placeholder="e.g., Vocabulary Chapter 5"
+              />
+            </div>
+            <div className="space-y-3">
+              <Label>Flashcards</Label>
+              {(component.content.cards || []).map((card: any, cardIndex: number) => (
+                <div key={cardIndex} className="p-3 border rounded-lg space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm">Card {cardIndex + 1}</Label>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        const newCards = [...(component.content.cards || [])];
+                        newCards.splice(cardIndex, 1);
+                        handleContentChange('cards', newCards);
+                      }}
+                    >
+                      <Minus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <Input
+                    value={card.front || ''}
+                    onChange={(e) => {
+                      const newCards = [...(component.content.cards || [])];
+                      newCards[cardIndex] = { ...newCards[cardIndex], front: e.target.value };
+                      handleContentChange('cards', newCards);
+                    }}
+                    placeholder="Front (term/question)"
+                  />
+                  <Input
+                    value={card.back || ''}
+                    onChange={(e) => {
+                      const newCards = [...(component.content.cards || [])];
+                      newCards[cardIndex] = { ...newCards[cardIndex], back: e.target.value };
+                      handleContentChange('cards', newCards);
+                    }}
+                    placeholder="Back (definition/answer)"
+                  />
+                </div>
+              ))}
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  const newCards = [...(component.content.cards || []), { front: '', back: '' }];
+                  handleContentChange('cards', newCards);
+                }}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Card
+              </Button>
+            </div>
+          </>
         );
 
       default:
         return (
-          <div>
-            <Label>Content (JSON)</Label>
-            <Textarea
-              value={JSON.stringify(component.content, null, 2)}
-              onChange={(e) => {
-                try {
-                  const parsed = JSON.parse(e.target.value);
-                  onUpdate(index, { content: parsed });
-                } catch (err) {
-                  // Invalid JSON, don't update
-                }
-              }}
-              rows={6}
-            />
+          <div className="space-y-4">
+            <div>
+              <Label>Title</Label>
+              <Input
+                value={component.content.title || ''}
+                onChange={(e) => handleContentChange('title', e.target.value)}
+                placeholder="Component title"
+              />
+            </div>
+            <div>
+              <Label>Content (JSON)</Label>
+              <Textarea
+                value={JSON.stringify(component.content, null, 2)}
+                onChange={(e) => {
+                  try {
+                    const parsed = JSON.parse(e.target.value);
+                    onUpdate(index, { content: parsed });
+                  } catch (err) {
+                    // Invalid JSON, don't update
+                  }
+                }}
+                rows={6}
+              />
+            </div>
           </div>
         );
     }
   };
 
   return (
-    <Card className={`transition-all ${isDragging ? 'shadow-lg opacity-50 rotate-2' : ''}`}>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div 
-              {...dragHandleProps} 
-              className="cursor-grab active:cursor-grabbing hover:bg-accent p-2 rounded-md transition-colors group"
-              title="Drag to reorder"
-            >
-              <GripVertical className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
-            </div>
-            <CardTitle className="text-base">
-              {componentTypeLabels[component.component_type] || component.component_type}
-            </CardTitle>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={() => setIsExpanded(!isExpanded)}
-              className="h-8"
-              aria-label={isExpanded ? "Collapse component" : "Expand component"}
-            >
-              {isExpanded ? (
-                <>
-                  <ChevronUp className="h-4 w-4 mr-1" />
-                  <span className="text-xs">Collapse</span>
-                </>
-              ) : (
-                <>
-                  <ChevronDown className="h-4 w-4 mr-1" />
-                  <span className="text-xs">Expand</span>
-                </>
-              )}
-            </Button>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={() => onDelete(index)}
-              className="h-8 hover:bg-destructive/10"
-            >
-              <Trash2 className="h-4 w-4 text-destructive" />
-            </Button>
-          </div>
-        </div>
-      </CardHeader>
-
-      {isExpanded && (
-        <CardContent className="space-y-4">
-          {renderFields()}
-
-          <Separator className="my-4" />
-
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id={`assignable-${index}`}
-              checked={component.is_assignable || false}
-              onCheckedChange={(checked) => onUpdate(index, { is_assignable: checked as boolean })}
-            />
-            <label
-              htmlFor={`assignable-${index}`}
-              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-            >
-              Mark as Assignable (appears in Assignments tab)
-            </label>
-          </div>
-
-          <Separator className="my-4" />
-
-          {/* File Attachments - Hidden for slides component since it uses embed links only */}
-          {component.component_type !== 'slides' && (
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <Label className="text-sm font-medium">File Attachments</Label>
+    <div ref={setNodeRef} style={style}>
+      <Card className={`transition-all ${isDragging ? 'shadow-lg opacity-50 rotate-2' : ''}`}>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div 
+                {...attributes}
+                {...listeners}
+                className="cursor-grab active:cursor-grabbing hover:bg-accent p-2 rounded-md transition-colors group"
+                title="Drag to reorder"
+              >
+                <GripVertical className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
               </div>
+              <CardTitle className="text-base">
+                {componentTypeLabels[component.component_type] || component.component_type}
+              </CardTitle>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => setIsExpanded(!isExpanded)}
+                className="h-8"
+                aria-label={isExpanded ? "Collapse component" : "Expand component"}
+              >
+                {isExpanded ? (
+                  <>
+                    <ChevronUp className="h-4 w-4 mr-1" />
+                    <span className="text-xs">Collapse</span>
+                  </>
+                ) : (
+                  <>
+                    <ChevronDown className="h-4 w-4 mr-1" />
+                    <span className="text-xs">Expand</span>
+                  </>
+                )}
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => onDelete(index)}
+                className="h-8 hover:bg-destructive/10"
+              >
+                <Trash2 className="h-4 w-4 text-destructive" />
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
 
-              {component.component_type === 'assignment' && (
-                <div>
-                  <Label>Submission Link (Optional)</Label>
-                  <Input
-                    type="url"
-                    value={component.content.submissionLink || ''}
-                    onChange={(e) => handleContentChange('submissionLink', e.target.value)}
-                    placeholder="https://forms.google.com/... or other submission URL"
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Add a link where students can submit their work (e.g., Google Form, external platform)
-                  </p>
+        {isExpanded && (
+          <CardContent className="space-y-4">
+            {renderFields()}
+
+            <Separator className="my-4" />
+
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id={`assignable-${index}`}
+                checked={component.is_assignable || false}
+                onCheckedChange={(checked) => onUpdate(index, { is_assignable: checked as boolean })}
+              />
+              <label
+                htmlFor={`assignable-${index}`}
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                Mark as Assignable (appears in Assignments tab)
+              </label>
+            </div>
+
+            <Separator className="my-4" />
+
+            {/* File Attachments - Hidden for slides component since it uses embed links only */}
+            {component.component_type !== 'slides' && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm font-medium">File Attachments</Label>
                 </div>
-              )}
 
-              {canUseCloudAttachments && (
-                <div className="space-y-2">
-                  <Label className="text-xs text-muted-foreground">Cloud Storage</Label>
-                  <div className="flex flex-wrap gap-2">
-                    <DriveFilePicker
-                      onFileSelected={handleDriveFileSelected}
-                      disabled={!component.id || isAttachingDrive}
-                      variant="outline"
-                      size="sm"
+                {component.component_type === 'assignment' && (
+                  <div>
+                    <Label>Submission Link (Optional)</Label>
+                    <Input
+                      type="url"
+                      value={component.content.submissionLink || ''}
+                      onChange={(e) => handleContentChange('submissionLink', e.target.value)}
+                      placeholder="https://forms.google.com/... or other submission URL"
                     />
-                    <OneDriveFilePicker
-                      onFileSelected={handleOneDriveFileSelected}
-                      disabled={!component.id || isAttachingOneDrive}
-                    />
-                  </div>
-                  {!component.id && (
-                    <p className="text-xs text-muted-foreground">
-                      Save this component to enable cloud attachments.
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Add a link where students can submit their work (e.g., Google Form, external platform)
                     </p>
-                  )}
-                  {component.id && (
-                    <div className="space-y-2">
-                      <DriveAttachmentsList
-                        componentId={component.id}
-                        showEmbeds={false}
-                        canDelete={true}
+                  </div>
+                )}
+
+                {canUseCloudAttachments && (
+                  <div className="space-y-2">
+                    <Label className="text-xs text-muted-foreground">Cloud Storage</Label>
+                    <div className="flex flex-wrap gap-2">
+                      <DriveFilePicker
+                        onFileSelected={handleDriveFileSelected}
+                        disabled={!component.id || isAttachingDrive}
+                        variant="outline"
+                        size="sm"
                       />
-                      <OneDriveAttachmentsList
-                        componentId={component.id}
-                        showEmbeds={false}
-                        canDelete={true}
+                      <OneDriveFilePicker
+                        onFileSelected={handleOneDriveFileSelected}
+                        disabled={!component.id || isAttachingOneDrive}
                       />
                     </div>
-                  )}
-                </div>
-              )}
+                    {!component.id && (
+                      <p className="text-xs text-muted-foreground">
+                        Save this component to enable cloud attachments.
+                      </p>
+                    )}
+                    {component.id && (
+                      <div className="space-y-2">
+                        <DriveAttachmentsList
+                          componentId={component.id}
+                          showEmbeds={false}
+                          canDelete={true}
+                        />
+                        <OneDriveAttachmentsList
+                          componentId={component.id}
+                          showEmbeds={false}
+                          canDelete={true}
+                        />
+                      </div>
+                    )}
+                  </div>
+                )}
 
-              <LocalFileUpload onFileUploaded={handleLocalFileUploaded} variant="outline" size="sm" />
+                <LocalFileUpload onFileUploaded={handleLocalFileUploaded} variant="outline" size="sm" />
 
-              {component.content.uploadedFiles && component.content.uploadedFiles.length > 0 && (
-                <div className="space-y-2">
-                  <Label className="text-xs text-muted-foreground">Uploaded Files:</Label>
-                  <ul className="text-sm space-y-1">
-                    {component.content.uploadedFiles.map((file: any, idx: number) => (
-                      <li key={idx} className="flex items-center gap-2">
-                        <span className="text-primary">📎</span>
-                        <span>{file.name}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </div>
-          )}
-        </CardContent>
-      )}
-    </Card>
+                {component.content.uploadedFiles && component.content.uploadedFiles.length > 0 && (
+                  <div className="space-y-2">
+                    <Label className="text-xs text-muted-foreground">Uploaded Files:</Label>
+                    <ul className="text-sm space-y-1">
+                      {component.content.uploadedFiles.map((file: any, idx: number) => (
+                        <li key={idx} className="flex items-center gap-2">
+                          <span className="text-primary">📎</span>
+                          <span>{file.name}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            )}
+          </CardContent>
+        )}
+      </Card>
+    </div>
   );
 }
