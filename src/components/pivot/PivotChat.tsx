@@ -44,6 +44,7 @@ export const PivotChat: React.FC<PivotChatProps> = ({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
   const { startConversation, sendMessage, endConversation, requestHint, isLoading } = usePivotConversation();
+  const hasInitialized = useRef(false);
 
   // Auto-scroll to bottom
   const scrollToBottom = () => {
@@ -54,11 +55,12 @@ export const PivotChat: React.FC<PivotChatProps> = ({
     scrollToBottom();
   }, [messages]);
 
-  // Initialize conversation
+  // Initialize conversation - only once
   useEffect(() => {
+    if (hasInitialized.current || !user?.id) return;
+    hasInitialized.current = true;
+    
     const initConversation = async () => {
-      if (!user?.id) return;
-      
       const id = await startConversation({
         studentId: user.id,
         lessonId,
@@ -84,7 +86,7 @@ export const PivotChat: React.FC<PivotChatProps> = ({
     };
     
     initConversation();
-  }, [user, lessonId, componentId, componentType, questionId, questionText, startConversation]);
+  }, [user?.id, lessonId, componentId, componentType, questionId, questionText]);
 
   const handleSendMessage = async () => {
     if (!inputText.trim() || !conversationId) return;
