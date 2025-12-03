@@ -3537,13 +3537,6 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "pivot_conversations_lesson_id_fkey"
-            columns: ["lesson_id"]
-            isOneToOne: false
-            referencedRelation: "lessons"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "pivot_conversations_student_id_fkey"
             columns: ["student_id"]
             isOneToOne: false
