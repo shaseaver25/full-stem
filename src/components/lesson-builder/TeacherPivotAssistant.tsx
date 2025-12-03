@@ -114,9 +114,8 @@ export const TeacherPivotAssistant: React.FC<TeacherPivotAssistantProps> = ({
       <Button
         onClick={() => {
           setIsExpanded(true);
-          if (!suggestions) {
-            handleGetSuggestions();
-          }
+          setSuggestions(null);
+          handleGetSuggestions();
         }}
         className="fixed bottom-6 right-6 z-50 h-14 rounded-full shadow-lg"
         size="lg"
