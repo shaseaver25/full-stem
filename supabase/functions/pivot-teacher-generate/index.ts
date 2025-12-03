@@ -85,10 +85,23 @@ AVAILABLE COMPONENT TYPES:
     if (action === 'suggest') {
       // Generate 2 component ideas
       systemPrompt = `You are an expert instructional designer helping teachers enhance their lessons. Based on the lesson context, suggest TWO high-value components that:
-1. Complement existing content (don't duplicate)
+1. Complement existing content (don't duplicate what's already there)
 2. Support the learning objectives
 3. Engage students at different cognitive levels
-4. Fill gaps in the lesson flow (warmup, practice, assessment, reflection, etc.)
+4. Fill gaps in the lesson flow
+
+IMPORTANT: Suggest DIVERSE component types. Avoid suggesting the same types that already exist in the lesson. Choose from ALL available types:
+- Page (for new content/explanations)
+- Poll/Survey (for quick checks or opinions)
+- Discussion (for collaborative dialogue)
+- Flashcards (for vocabulary/concept review)
+- Reflection (for metacognitive journaling)
+- Video (with discussion questions)
+- Quiz/Assessment (for knowledge checks)
+- Activity (for hands-on practice)
+
+If the lesson already has quizzes, suggest something else like Reflection, Discussion, Poll, or Flashcards.
+If the lesson already has activities, suggest Page, Poll, or Flashcards instead.
 
 Format your response as:
 **Idea 1: [Component Type] - [Brief Title]**
