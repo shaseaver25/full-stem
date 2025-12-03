@@ -9,7 +9,9 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { GripVertical, Trash2, ChevronDown, ChevronUp, Plus, Volume2, Settings, Minus } from 'lucide-react';
+import { GripVertical, Trash2, ChevronDown, ChevronUp, Plus, Volume2, Settings, Minus, EyeOff } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import { LocalFileUpload } from './LocalFileUpload';
 import { SlideTextExtractor } from './SlideTextExtractor';
@@ -35,6 +37,7 @@ interface LessonComponent {
   reading_level?: number;
   language_code: string;
   read_aloud: boolean;
+  teacher_only?: boolean;
 }
 
 interface SortableComponentCardProps {
@@ -890,8 +893,14 @@ export function SortableComponentCard({
               >
                 <GripVertical className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
               </div>
-              <CardTitle className="text-base">
+              <CardTitle className="text-base flex items-center gap-2">
                 {componentTypeLabels[component.component_type] || component.component_type}
+                {component.teacher_only && (
+                  <Badge variant="secondary" className="text-xs font-normal bg-amber-100 text-amber-800 border-amber-300">
+                    <EyeOff className="h-3 w-3 mr-1" />
+                    Teacher Only
+                  </Badge>
+                )}
               </CardTitle>
             </div>
             <div className="flex items-center gap-2">
@@ -944,6 +953,25 @@ export function SortableComponentCard({
               >
                 Mark as Assignable (appears in Assignments tab)
               </label>
+            </div>
+
+            <div className="flex items-center justify-between p-3 rounded-lg border bg-amber-50/50 border-amber-200">
+              <div className="flex items-center gap-2">
+                <EyeOff className="h-4 w-4 text-amber-600" />
+                <div>
+                  <Label htmlFor={`teacher-only-${index}`} className="text-sm font-medium cursor-pointer">
+                    Teacher View Only
+                  </Label>
+                  <p className="text-xs text-muted-foreground">
+                    Hide this component from students
+                  </p>
+                </div>
+              </div>
+              <Switch
+                id={`teacher-only-${index}`}
+                checked={component.teacher_only || false}
+                onCheckedChange={(checked) => onUpdate(index, { teacher_only: checked })}
+              />
             </div>
 
             <Separator className="my-4" />
