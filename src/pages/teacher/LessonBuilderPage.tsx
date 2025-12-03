@@ -574,6 +574,29 @@ export default function LessonBuilderPage() {
       }
     }
 
+    // Normalize AI-generated quiz components - wrap questions in quizData structure
+    if (generatedComponent.component_type === 'quiz') {
+      const questions = (normalizedContent as any).questions || [];
+      normalizedContent = {
+        quizData: {
+          title: generatedComponent.title || (normalizedContent as any).title || 'Quiz',
+          questions: questions.map((q: any, idx: number) => ({
+            id: `q${idx + 1}`,
+            question_text: q.question || q.question_text || '',
+            question_type: q.type === 'multiple_choice' ? 'multiple_choice' : (q.type || 'multiple_choice'),
+            options: (q.options || []).map((opt: string, optIdx: number) => ({
+              id: `q${idx + 1}_opt${optIdx}`,
+              text: opt,
+              is_correct: optIdx === q.correct
+            })),
+            explanation: q.explanation || '',
+            points: q.points || 1
+          }))
+        }
+      };
+      console.log('🎯 Normalized quiz content:', normalizedContent);
+    }
+
     const newComponent: LessonComponent = {
       component_type: generatedComponent.component_type,
       title: generatedComponent.title,
