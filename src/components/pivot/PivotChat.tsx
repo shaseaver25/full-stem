@@ -68,18 +68,18 @@ export const PivotChat: React.FC<PivotChatProps> = ({
         questionText
       });
       
+      // Add welcome message regardless of whether conversation was created
+      const welcomeMsg: Message = {
+        id: 'welcome',
+        sender: 'pivot',
+        text: `Hi! I'm Pivot, your learning partner. I noticed you're working on this question. I won't give you the answer, but I'll help you figure it out! Let's start here: What part feels tricky?`,
+        timestamp: new Date(),
+        type: 'welcome'
+      };
+      setMessages([welcomeMsg]);
+      
       if (id) {
         setConversationId(id);
-        
-        // Add welcome message
-        const welcomeMsg: Message = {
-          id: 'welcome',
-          sender: 'pivot',
-          text: `Hi! I'm Pivot, your learning partner. I noticed you're working on this question. I won't give you the answer, but I'll help you figure it out! Let's start here: What part feels tricky?`,
-          timestamp: new Date(),
-          type: 'welcome'
-        };
-        setMessages([welcomeMsg]);
       }
     };
     
