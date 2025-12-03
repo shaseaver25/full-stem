@@ -112,6 +112,48 @@ export function QuizStudentView({ componentId, read_aloud = true, quizData: prel
     loadQuiz();
   }, [componentId]);
 
+  // Auto-translate all questions when language preference changes
+  useEffect(() => {
+    const translateAllQuestions = async () => {
+      if (!quizData || !settings.preferredLanguage || settings.preferredLanguage === 'en') {
+        setShowTranslation(false);
+        return;
+      }
+
+      console.log('🌐 Auto-translating quiz to:', settings.preferredLanguage);
+      setShowTranslation(true);
+
+      // Translate all questions and options
+      for (const question of quizData.questions) {
+        // Translate question text if not already translated
+        if (!translatedQuestions[question.id]) {
+          try {
+            const translated = await translate(question.question_text);
+            setTranslatedQuestions(prev => ({ ...prev, [question.id]: translated }));
+          } catch (error) {
+            console.error('Error translating question:', error);
+          }
+        }
+
+        // Translate options if not already translated
+        if (!translatedOptions[question.id]) {
+          const optionTranslations: Record<string, string> = {};
+          for (const option of question.options) {
+            try {
+              const translated = await translate(option.option_text);
+              optionTranslations[option.id] = translated;
+            } catch (error) {
+              console.error('Error translating option:', error);
+            }
+          }
+          setTranslatedOptions(prev => ({ ...prev, [question.id]: optionTranslations }));
+        }
+      }
+    };
+
+    translateAllQuestions();
+  }, [quizData, settings.preferredLanguage]);
+
   // Track time on current question
   useEffect(() => {
     setQuestionStartTime(new Date());
