@@ -122,39 +122,48 @@ export function QuizStudentView({ componentId, read_aloud = true, quizData: prel
         return;
       }
 
-      console.log('🌐 Auto-translating quiz to:', settings.preferredLanguage);
+      console.log('🌐 Auto-translating quiz to:', settings.preferredLanguage, 'Questions:', quizData.questions.length);
       setShowTranslation(true);
 
-      // Translate all questions and options
+      // Collect all translations first, then update state once
+      const questionTranslations: Record<string, string> = { ...translatedQuestions };
+      const optionTranslations: Record<string, Record<string, string>> = { ...translatedOptions };
+
       for (const question of quizData.questions) {
         // Translate question text if not already translated
-        if (!translatedQuestions[question.id]) {
+        if (!questionTranslations[question.id]) {
           try {
+            console.log('🔤 Translating question:', question.id);
             const translated = await translate(question.question_text);
-            setTranslatedQuestions(prev => ({ ...prev, [question.id]: translated }));
+            questionTranslations[question.id] = translated;
           } catch (error) {
             console.error('Error translating question:', error);
           }
         }
 
         // Translate options if not already translated
-        if (!translatedOptions[question.id]) {
-          const optionTranslations: Record<string, string> = {};
+        if (!optionTranslations[question.id]) {
+          optionTranslations[question.id] = {};
           for (const option of question.options) {
             try {
+              console.log('🔤 Translating option:', option.id);
               const translated = await translate(option.option_text);
-              optionTranslations[option.id] = translated;
+              optionTranslations[question.id][option.id] = translated;
             } catch (error) {
               console.error('Error translating option:', error);
             }
           }
-          setTranslatedOptions(prev => ({ ...prev, [question.id]: optionTranslations }));
         }
       }
+
+      // Update state once with all translations
+      setTranslatedQuestions(questionTranslations);
+      setTranslatedOptions(optionTranslations);
+      console.log('✅ Translation complete');
     };
 
     translateAllQuestions();
-  }, [quizData, settings.preferredLanguage]);
+  }, [quizData, settings.preferredLanguage, translate]);
 
   // Track time on current question
   useEffect(() => {
