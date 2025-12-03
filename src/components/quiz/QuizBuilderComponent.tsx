@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle2, Plus, Trash2, MoveUp, MoveDown, Lightbulb, Image as ImageIcon, Sparkles, Loader2, BookmarkPlus, BookOpen, Check } from 'lucide-react';
+import { CheckCircle2, Plus, Trash2, MoveUp, MoveDown, Lightbulb, Image as ImageIcon, Sparkles, Loader2, BookmarkPlus, BookOpen, Check, Shield } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
@@ -74,6 +74,12 @@ export function QuizBuilderComponent({ initialData, onSave, lessonId }: QuizBuil
   const [showCorrectAnswers, setShowCorrectAnswers] = useState<'immediately' | 'after_submission' | 'never'>(initialData?.showCorrectAnswers || 'after_submission');
   const [passThreshold, setPassThreshold] = useState(initialData?.passThreshold || 70);
   
+  // Proctoring settings
+  const [proctoringEnabled, setProctoringEnabled] = useState(initialData?.proctoringEnabled || false);
+  const [proctoringStrictness, setProctoringStrictness] = useState<'lenient' | 'standard' | 'strict'>(initialData?.proctoringStrictness || 'standard');
+  const [maxViolations, setMaxViolations] = useState(initialData?.maxViolations || 5);
+  const [autoSubmitOnViolations, setAutoSubmitOnViolations] = useState(initialData?.autoSubmitOnViolations || false);
+  
   // Questions
   const [questions, setQuestions] = useState<QuizQuestion[]>(initialData?.questions || []);
   const [addQuestionType, setAddQuestionType] = useState<string>('');
@@ -111,7 +117,12 @@ export function QuizBuilderComponent({ initialData, onSave, lessonId }: QuizBuil
         showCorrectAnswers,
         passThreshold,
         pointsTotal,
-        questions
+        questions,
+        // Proctoring settings
+        proctoringEnabled,
+        proctoringStrictness,
+        maxViolations,
+        autoSubmitOnViolations
       };
 
       console.log('📝 Quiz Builder: Quiz data prepared:', quizData);
@@ -548,6 +559,95 @@ export function QuizBuilderComponent({ initialData, onSave, lessonId }: QuizBuil
               />
               <span>%</span>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Proctoring Settings */}
+        <Card className="bg-background border-2 border-blue-200">
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              🛡️ Assessment Integrity (Proctoring)
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <Label htmlFor="proctoring-enabled">Enable Proctoring Mode</Label>
+                <p className="text-xs text-muted-foreground">
+                  Monitor student activity during the quiz (tab switches, fullscreen exits)
+                </p>
+              </div>
+              <Switch
+                id="proctoring-enabled"
+                checked={proctoringEnabled}
+                onCheckedChange={setProctoringEnabled}
+              />
+            </div>
+
+            {proctoringEnabled && (
+              <div className="space-y-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                {/* Strictness Level */}
+                <div className="space-y-2">
+                  <Label>Monitoring Strictness</Label>
+                  <Select 
+                    value={proctoringStrictness} 
+                    onValueChange={(v: 'lenient' | 'standard' | 'strict') => setProctoringStrictness(v)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="lenient">
+                        🟢 Lenient - 3 second grace period before logging
+                      </SelectItem>
+                      <SelectItem value="standard">
+                        🟡 Standard - 1.5 second grace period
+                      </SelectItem>
+                      <SelectItem value="strict">
+                        🔴 Strict - Immediate logging, blocks copy/paste
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Max Violations */}
+                <div className="flex items-center gap-4">
+                  <Label htmlFor="max-violations" className="w-40">Max Violations:</Label>
+                  <Input
+                    id="max-violations"
+                    type="number"
+                    min="1"
+                    max="20"
+                    value={maxViolations}
+                    onChange={(e) => setMaxViolations(parseInt(e.target.value) || 5)}
+                    className="w-20"
+                  />
+                  <span className="text-sm text-muted-foreground">warnings before action</span>
+                </div>
+
+                {/* Auto Submit */}
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label htmlFor="auto-submit">Auto-Submit on Max Violations</Label>
+                    <p className="text-xs text-muted-foreground">
+                      Automatically submit quiz when violation limit is reached
+                    </p>
+                  </div>
+                  <Switch
+                    id="auto-submit"
+                    checked={autoSubmitOnViolations}
+                    onCheckedChange={setAutoSubmitOnViolations}
+                  />
+                </div>
+
+                <Alert className="bg-blue-100 border-blue-300">
+                  <AlertDescription className="text-sm text-blue-900">
+                    📨 When enabled, students will see a consent modal before starting. 
+                    You'll receive a detailed integrity report showing all flagged activities with timestamps.
+                  </AlertDescription>
+                </Alert>
+              </div>
+            )}
           </CardContent>
         </Card>
 
