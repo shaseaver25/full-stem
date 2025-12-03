@@ -362,7 +362,9 @@ export default function ClassDetailPage() {
               {classData.published ? "Published" : "Draft"}
             </Badge>
             <span className="text-sm text-muted-foreground">
-              Created {format(new Date(classData.created_at), 'PPP')}
+              {classData.created_at && !isNaN(new Date(classData.created_at).getTime()) 
+                ? `Created ${format(new Date(classData.created_at), 'PPP')}`
+                : ''}
             </span>
           </div>
         </div>
@@ -656,7 +658,9 @@ export default function ClassDetailPage() {
                         <div className="text-right text-sm text-muted-foreground">
                           <div className="flex items-center gap-1">
                             <Calendar className="h-3 w-3" />
-                            Created {format(new Date(assignment.created_at), 'MMM d')}
+                            {assignment.created_at && !isNaN(new Date(assignment.created_at).getTime()) 
+                              ? `Created ${format(new Date(assignment.created_at), 'MMM d')}`
+                              : 'Created recently'}
                           </div>
                           {assignment.due_at && !isNaN(new Date(assignment.due_at).getTime()) && (
                             <div className="flex items-center gap-1 mt-1">
