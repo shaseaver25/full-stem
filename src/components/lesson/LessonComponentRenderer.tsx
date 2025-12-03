@@ -318,6 +318,11 @@ export function LessonComponentRenderer({
       }
     }
     
+    // Convert Google Slides /pub URLs to /embed format for iframe compatibility
+    if (embedUrl && embedUrl.includes('docs.google.com/presentation') && embedUrl.includes('/pub')) {
+      embedUrl = embedUrl.replace('/pub', '/embed');
+    }
+    
     return (
       <div className="space-y-4">
         {showTypeLabel && (
