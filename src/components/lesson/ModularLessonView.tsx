@@ -128,7 +128,7 @@ const ModularLessonView: React.FC<ModularLessonViewProps> = ({
       .replace(/^<p>(Real-Life Scenario|How Excel Helps)<\/p>/gm, '<h4>$1</h4>');
   };
 
-  // Combine main lesson content with lesson components
+  // Combine main lesson content with lesson components (filter out teacher-only for students)
   const allTabs = React.useMemo(() => {
     const tabs = [];
     
@@ -142,8 +142,9 @@ const ModularLessonView: React.FC<ModularLessonViewProps> = ({
       });
     }
     
-    // Add lesson components
-    components.forEach(component => {
+    // Add lesson components (filter out teacher_only components for student view)
+    const studentVisibleComponents = components.filter(c => !c.teacher_only);
+    studentVisibleComponents.forEach(component => {
       tabs.push({
         id: component.id,
         type: component.component_type,

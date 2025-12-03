@@ -101,9 +101,9 @@ const StudentLessonPage = () => {
 
   const { classes: classInfo, lesson_components } = lesson;
   
-  // Filter for student-visible components (enabled, non-teacher materials)
+  // Filter for student-visible components (enabled, not assignable, not teacher-only)
   const studentComponents = (lesson_components || [])
-    .filter((c: any) => c.enabled && !c.is_assignable)
+    .filter((c: any) => c.enabled && !c.is_assignable && !c.teacher_only)
     .sort((a: any, b: any) => a.order - b.order);
 
   const assignmentComponents = (lesson_components || [])

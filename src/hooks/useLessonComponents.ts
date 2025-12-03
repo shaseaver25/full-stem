@@ -12,6 +12,7 @@ export interface LessonComponent {
   order: number;
   enabled: boolean;
   is_assignable: boolean;
+  teacher_only?: boolean;
   created_at: string;
   updated_at: string;
 }
