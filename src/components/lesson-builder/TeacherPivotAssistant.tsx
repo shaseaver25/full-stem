@@ -67,7 +67,8 @@ export const TeacherPivotAssistant: React.FC<TeacherPivotAssistantProps> = ({
         body: {
           action: 'generate',
           lessonId,
-          ideaNumber
+          ideaNumber,
+          suggestions // Pass the suggestions so AI knows what each idea was
         }
       });
 
