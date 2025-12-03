@@ -42,11 +42,14 @@ export const usePivotConversation = () => {
       // Only include question_id if it's a valid UUID
       const questionId = isValidUUID(params.questionId) ? params.questionId : null;
       
+      // Don't include lesson_id if it's the same as componentId (means it's not a real lesson reference)
+      const lessonId = params.lessonId !== params.componentId ? params.lessonId : null;
+      
       const { data, error } = await supabase
         .from('pivot_conversations')
         .insert({
           student_id: params.studentId,
-          lesson_id: params.lessonId,
+          lesson_id: lessonId,
           component_id: params.componentId,
           component_type: params.componentType,
           question_id: questionId,
