@@ -12,9 +12,9 @@ serve(async (req) => {
   }
 
   try {
-    const { action, lessonId, ideaNumber, customRequest } = await req.json();
+    const { action, lessonId, ideaNumber, customRequest, suggestions } = await req.json();
     
-    console.log('🎓 Teacher Pivot Request:', { action, lessonId, ideaNumber });
+    console.log('🎓 Teacher Pivot Request:', { action, lessonId, ideaNumber, hasSuggestions: !!suggestions });
     
     // Get lesson data and components
     const supabase = createClient(
@@ -125,9 +125,13 @@ Component type guidelines:
 - poll: { question: "string", options: ["string"], allowMultiple: boolean }
 - flashcards: { cards: [{ front: "string", back: "string" }] }`;
 
-      userPrompt = customRequest 
-        ? `Generate a component based on this request: ${customRequest}\n\nLesson context:\n${lessonContext}`
-        : `Generate the component for Idea ${ideaNumber} based on this lesson context:\n\n${lessonContext}`;
+      if (customRequest) {
+        userPrompt = `Generate a component based on this request: ${customRequest}\n\nLesson context:\n${lessonContext}`;
+      } else if (suggestions) {
+        userPrompt = `You previously suggested these two ideas:\n\n${suggestions}\n\nNow generate the COMPLETE content for Idea ${ideaNumber}. Make sure the component_type matches what was suggested (e.g., if Idea ${ideaNumber} was a Quiz/Assessment, use component_type "quiz").\n\nLesson context:\n${lessonContext}`;
+      } else {
+        userPrompt = `Generate the component for Idea ${ideaNumber} based on this lesson context:\n\n${lessonContext}`;
+      }
     }
 
     const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
