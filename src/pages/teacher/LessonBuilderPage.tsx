@@ -579,18 +579,30 @@ export default function LessonBuilderPage() {
       const questions = (normalizedContent as any).questions || [];
       normalizedContent = {
         quizData: {
+          id: `quiz_${Date.now()}`,
           title: generatedComponent.title || (normalizedContent as any).title || 'Quiz',
+          instructions: 'Answer all questions to complete the quiz.',
+          time_limit_minutes: null,
+          attempts_allowed: 3,
+          randomize_questions: false,
+          randomize_answers: false,
+          show_correct_answers: 'after_submission',
+          pass_threshold_percentage: 70,
+          points_total: questions.length,
           questions: questions.map((q: any, idx: number) => ({
             id: `q${idx + 1}`,
+            question_order: idx,
             question_text: q.question || q.question_text || '',
             question_type: q.type === 'multiple_choice' ? 'multiple_choice' : (q.type || 'multiple_choice'),
+            points: q.points || 1,
+            hint_text: '',
+            explanation: q.explanation || '',
             options: (q.options || []).map((opt: string, optIdx: number) => ({
               id: `q${idx + 1}_opt${optIdx}`,
-              text: opt,
+              option_order: optIdx,
+              option_text: opt,
               is_correct: optIdx === q.correct
-            })),
-            explanation: q.explanation || '',
-            points: q.points || 1
+            }))
           }))
         }
       };
