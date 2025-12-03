@@ -105,8 +105,10 @@ export function QuizStudentView({ componentId, read_aloud = true, quizData: prel
   const [timeOnQuestion, setTimeOnQuestion] = useState<number>(0);
   
   const { speak, isPlaying, isLoading: isSpeaking } = useTextToSpeech();
-  const { translate, isTranslating, isEnabled: translationEnabled } = useTranslation();
   const { settings } = useAccessibility();
+  // Force enable translation when a non-English language is selected
+  const shouldForceTranslation = settings.preferredLanguage && settings.preferredLanguage !== 'en';
+  const { translate, isTranslating, isEnabled: translationEnabled } = useTranslation(shouldForceTranslation);
 
   useEffect(() => {
     loadQuiz();
