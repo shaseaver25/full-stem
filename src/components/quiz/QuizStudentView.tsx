@@ -117,6 +117,14 @@ export function QuizStudentView({ componentId, read_aloud = true, quizData: prel
   // Auto-translate all questions when language preference changes
   useEffect(() => {
     const translateAllQuestions = async () => {
+      console.log('🌐 Quiz translation check:', {
+        settingsLoading,
+        hasQuizData: !!quizData,
+        preferredLanguage: settings.preferredLanguage,
+        translationEnabled: settings.translationEnabled,
+        shouldForceTranslation
+      });
+      
       // Wait for settings to finish loading before checking language
       if (settingsLoading) {
         console.log('🌐 Waiting for accessibility settings to load...');
@@ -124,6 +132,11 @@ export function QuizStudentView({ componentId, read_aloud = true, quizData: prel
       }
       
       if (!quizData || !settings.preferredLanguage || settings.preferredLanguage === 'en') {
+        console.log('🌐 Translation skipped:', { 
+          noQuizData: !quizData, 
+          noLanguage: !settings.preferredLanguage, 
+          isEnglish: settings.preferredLanguage === 'en' 
+        });
         setShowTranslation(false);
         return;
       }
