@@ -27,10 +27,20 @@ export const usePivotConversation = () => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
+  // Helper to check if string is valid UUID
+  const isValidUUID = (str?: string): boolean => {
+    if (!str) return false;
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    return uuidRegex.test(str);
+  };
+
   const startConversation = async (params: StartConversationParams) => {
     setIsLoading(true);
     try {
       console.log('🔄 Starting Pivot conversation:', params);
+      
+      // Only include question_id if it's a valid UUID
+      const questionId = isValidUUID(params.questionId) ? params.questionId : null;
       
       const { data, error } = await supabase
         .from('pivot_conversations')
@@ -39,7 +49,7 @@ export const usePivotConversation = () => {
           lesson_id: params.lessonId,
           component_id: params.componentId,
           component_type: params.componentType,
-          question_id: params.questionId,
+          question_id: questionId,
           question_text: params.questionText
         })
         .select()
