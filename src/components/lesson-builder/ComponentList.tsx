@@ -13,6 +13,7 @@ interface LessonComponent {
   reading_level?: number;
   language_code: string;
   read_aloud: boolean;
+  teacher_only?: boolean;
 }
 
 interface ComponentListProps {

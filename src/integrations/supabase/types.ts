@@ -2710,6 +2710,7 @@ export type Database = {
           order: number
           read_aloud: boolean | null
           reading_level: number | null
+          teacher_only: boolean
           updated_at: string
         }
         Insert: {
@@ -2724,6 +2725,7 @@ export type Database = {
           order?: number
           read_aloud?: boolean | null
           reading_level?: number | null
+          teacher_only?: boolean
           updated_at?: string
         }
         Update: {
@@ -2738,6 +2740,7 @@ export type Database = {
           order?: number
           read_aloud?: boolean | null
           reading_level?: number | null
+          teacher_only?: boolean
           updated_at?: string
         }
         Relationships: [
