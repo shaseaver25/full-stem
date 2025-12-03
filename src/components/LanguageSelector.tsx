@@ -35,7 +35,11 @@ export function LanguageSelector() {
   const { settings, updateSettings } = useAccessibility();
 
   const handleLanguageChange = (newLanguage: string) => {
-    updateSettings({ preferredLanguage: newLanguage });
+    // Auto-enable translation when selecting a non-English language
+    updateSettings({ 
+      preferredLanguage: newLanguage,
+      translationEnabled: newLanguage !== 'en'
+    });
   };
 
   return (
