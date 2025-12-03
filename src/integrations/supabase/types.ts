@@ -832,6 +832,10 @@ export type Database = {
           graded_at: string | null
           graded_by: string | null
           id: string
+          integrity_reviewed: boolean | null
+          integrity_reviewed_at: string | null
+          integrity_reviewed_by: string | null
+          integrity_score: number | null
           max_score: number | null
           needs_manual_grading: boolean | null
           score: number | null
@@ -850,6 +854,10 @@ export type Database = {
           graded_at?: string | null
           graded_by?: string | null
           id?: string
+          integrity_reviewed?: boolean | null
+          integrity_reviewed_at?: string | null
+          integrity_reviewed_by?: string | null
+          integrity_score?: number | null
           max_score?: number | null
           needs_manual_grading?: boolean | null
           score?: number | null
@@ -868,6 +876,10 @@ export type Database = {
           graded_at?: string | null
           graded_by?: string | null
           id?: string
+          integrity_reviewed?: boolean | null
+          integrity_reviewed_at?: string | null
+          integrity_reviewed_by?: string | null
+          integrity_score?: number | null
           max_score?: number | null
           needs_manual_grading?: boolean | null
           score?: number | null
@@ -893,6 +905,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "class_assessment_submissions_integrity_reviewed_by_fkey"
+            columns: ["integrity_reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "class_assessment_submissions_student_id_fkey"
             columns: ["student_id"]
             isOneToOne: false
@@ -904,6 +923,7 @@ export type Database = {
       class_assessments: {
         Row: {
           allow_multiple_attempts: boolean | null
+          auto_submit_on_violations: boolean | null
           benchmark_document_name: string | null
           benchmark_document_url: string | null
           class_id: string
@@ -914,6 +934,9 @@ export type Database = {
           due_date: string | null
           id: string
           instructions: string | null
+          max_violations: number | null
+          proctoring_enabled: boolean | null
+          proctoring_strictness: string | null
           published: boolean | null
           show_correct_answers: boolean | null
           show_results_immediately: boolean | null
@@ -925,6 +948,7 @@ export type Database = {
         }
         Insert: {
           allow_multiple_attempts?: boolean | null
+          auto_submit_on_violations?: boolean | null
           benchmark_document_name?: string | null
           benchmark_document_url?: string | null
           class_id: string
@@ -935,6 +959,9 @@ export type Database = {
           due_date?: string | null
           id?: string
           instructions?: string | null
+          max_violations?: number | null
+          proctoring_enabled?: boolean | null
+          proctoring_strictness?: string | null
           published?: boolean | null
           show_correct_answers?: boolean | null
           show_results_immediately?: boolean | null
@@ -946,6 +973,7 @@ export type Database = {
         }
         Update: {
           allow_multiple_attempts?: boolean | null
+          auto_submit_on_violations?: boolean | null
           benchmark_document_name?: string | null
           benchmark_document_url?: string | null
           class_id?: string
@@ -956,6 +984,9 @@ export type Database = {
           due_date?: string | null
           id?: string
           instructions?: string | null
+          max_violations?: number | null
+          proctoring_enabled?: boolean | null
+          proctoring_strictness?: string | null
           published?: boolean | null
           show_correct_answers?: boolean | null
           show_results_immediately?: boolean | null
@@ -3805,6 +3836,51 @@ export type Database = {
             columns: ["poll_component_id"]
             isOneToOne: false
             referencedRelation: "poll_components"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      proctoring_events: {
+        Row: {
+          assignment_submission_id: string | null
+          created_at: string
+          details: Json | null
+          event_type: string
+          id: string
+          quiz_attempt_id: string | null
+          timestamp: string
+        }
+        Insert: {
+          assignment_submission_id?: string | null
+          created_at?: string
+          details?: Json | null
+          event_type: string
+          id?: string
+          quiz_attempt_id?: string | null
+          timestamp?: string
+        }
+        Update: {
+          assignment_submission_id?: string | null
+          created_at?: string
+          details?: Json | null
+          event_type?: string
+          id?: string
+          quiz_attempt_id?: string | null
+          timestamp?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proctoring_events_assignment_submission_id_fkey"
+            columns: ["assignment_submission_id"]
+            isOneToOne: false
+            referencedRelation: "assignment_submissions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proctoring_events_quiz_attempt_id_fkey"
+            columns: ["quiz_attempt_id"]
+            isOneToOne: false
+            referencedRelation: "class_assessment_submissions"
             referencedColumns: ["id"]
           },
         ]
