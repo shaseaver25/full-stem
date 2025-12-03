@@ -9,9 +9,19 @@ export function useTranslation(forceEnabled = false) {
   const { toast } = useToast();
 
   const translate = useCallback(async (text: string): Promise<string> => {
+    console.log('🔤 useTranslation.translate called:', {
+      forceEnabled,
+      translationEnabled: settings.translationEnabled,
+      preferredLanguage: settings.preferredLanguage,
+      textLength: text?.length
+    });
+    
     if (!forceEnabled && (!settings.translationEnabled || settings.preferredLanguage === 'en')) {
+      console.log('🔤 Translation skipped - conditions not met');
       return text;
     }
+    
+    console.log('🔤 Proceeding with translation to:', settings.preferredLanguage);
 
     if (!text || text.trim().length === 0) {
       return text;
