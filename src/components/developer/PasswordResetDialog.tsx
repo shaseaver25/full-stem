@@ -123,7 +123,7 @@ export const PasswordResetDialog: React.FC<PasswordResetDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
         {step === 'select' && (
           <>
             <DialogHeader>
