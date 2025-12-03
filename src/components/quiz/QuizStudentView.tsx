@@ -105,7 +105,7 @@ export function QuizStudentView({ componentId, read_aloud = true, quizData: prel
   const [timeOnQuestion, setTimeOnQuestion] = useState<number>(0);
   
   const { speak, isPlaying, isLoading: isSpeaking } = useTextToSpeech();
-  const { settings } = useAccessibility();
+  const { settings, isLoading: settingsLoading } = useAccessibility();
   // Force enable translation when a non-English language is selected
   const shouldForceTranslation = settings.preferredLanguage && settings.preferredLanguage !== 'en';
   const { translate, isTranslating, isEnabled: translationEnabled } = useTranslation(shouldForceTranslation);
@@ -117,6 +117,12 @@ export function QuizStudentView({ componentId, read_aloud = true, quizData: prel
   // Auto-translate all questions when language preference changes
   useEffect(() => {
     const translateAllQuestions = async () => {
+      // Wait for settings to finish loading before checking language
+      if (settingsLoading) {
+        console.log('🌐 Waiting for accessibility settings to load...');
+        return;
+      }
+      
       if (!quizData || !settings.preferredLanguage || settings.preferredLanguage === 'en') {
         setShowTranslation(false);
         return;
@@ -163,7 +169,7 @@ export function QuizStudentView({ componentId, read_aloud = true, quizData: prel
     };
 
     translateAllQuestions();
-  }, [quizData, settings.preferredLanguage, translate]);
+  }, [quizData, settings.preferredLanguage, translate, settingsLoading]);
 
   // Track time on current question
   useEffect(() => {
