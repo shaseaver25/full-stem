@@ -318,6 +318,13 @@ export function LessonComponentRenderer({
       }
     }
     
+    // Decode HTML entities in the URL (e.g., &amp; → &)
+    if (embedUrl) {
+      const textarea = document.createElement('textarea');
+      textarea.innerHTML = embedUrl;
+      embedUrl = textarea.value;
+    }
+    
     // Convert Google Slides /pub URLs to /embed format for iframe compatibility
     if (embedUrl && embedUrl.includes('docs.google.com/presentation') && embedUrl.includes('/pub')) {
       embedUrl = embedUrl.replace('/pub', '/embed');
