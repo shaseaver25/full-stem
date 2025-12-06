@@ -721,47 +721,44 @@ export default function LessonBuilderPage() {
           style={{ maxHeight: isMenuCollapsed ? '56px' : '500px' }}
         >
           {!isMenuCollapsed && (
-            <div className="flex items-center justify-between animate-fade-in">
-              <div className="flex items-center gap-4">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 animate-fade-in">
+              <div className="flex items-center gap-3">
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => navigate(classId ? `/classes/${classId}` : '/teacher/classes')}
                 >
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  Back
+                  <ArrowLeft className="h-4 w-4 mr-1 md:mr-2" />
+                  <span className="hidden sm:inline">Back</span>
                 </Button>
-                <div>
-                  <h1 className="text-2xl font-bold">Lesson Builder</h1>
+                <div className="min-w-0">
+                  <h1 className="text-lg md:text-2xl font-bold truncate">Lesson Builder</h1>
                   {isLoadingClass ? (
-                    <p className="text-sm text-muted-foreground">Loading class...</p>
+                    <p className="text-xs md:text-sm text-muted-foreground">Loading...</p>
                   ) : classData?.name ? (
-                    <p className="text-sm text-muted-foreground">{classData.name}</p>
-                  ) : classId ? (
-                    <p className="text-sm text-muted-foreground">Class ID: {classId}</p>
+                    <p className="text-xs md:text-sm text-muted-foreground truncate max-w-[150px] md:max-w-none">{classData.name}</p>
                   ) : null}
                 </div>
               </div>
-              <div className="flex items-center gap-4">
+              <div className="flex flex-wrap items-center gap-2">
                 {lessonId && (
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <div className="hidden sm:flex items-center gap-2 text-xs text-muted-foreground">
                     <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
-                    Auto-saving to your device
+                    Auto-saving
                   </div>
                 )}
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    onClick={() => setIsPreview(!isPreview)}
-                  >
-                    <Eye className="h-4 w-4 mr-2" />
-                    {isPreview ? 'Edit' : 'Preview'}
-                  </Button>
-                  <Button onClick={handleSave} disabled={isSaving}>
-                    <Save className="h-4 w-4 mr-2" />
-                    {isSaving ? 'Saving...' : 'Save Lesson'}
-                  </Button>
-                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsPreview(!isPreview)}
+                >
+                  <Eye className="h-4 w-4 mr-1" />
+                  <span className="hidden sm:inline">{isPreview ? 'Edit' : 'Preview'}</span>
+                </Button>
+                <Button size="sm" onClick={handleSave} disabled={isSaving}>
+                  <Save className="h-4 w-4 mr-1" />
+                  <span className="hidden sm:inline">{isSaving ? 'Saving...' : 'Save'}</span>
+                </Button>
               </div>
             </div>
           )}
@@ -787,10 +784,10 @@ export default function LessonBuilderPage() {
         <Card>
           <CardContent className="pt-6 pb-24">
             <Tabs defaultValue="manual" className="w-full">
-              <TabsList className="grid w-full grid-cols-3 mb-6">
-                <TabsTrigger value="manual">Manual Build</TabsTrigger>
-                <TabsTrigger value="template">Import Template</TabsTrigger>
-                <TabsTrigger value="ai">AI Generator</TabsTrigger>
+              <TabsList className="flex flex-wrap h-auto gap-1 p-1 md:grid md:grid-cols-3 w-full mb-6">
+                <TabsTrigger value="manual" className="text-xs md:text-sm px-2 md:px-4">Manual Build</TabsTrigger>
+                <TabsTrigger value="template" className="text-xs md:text-sm px-2 md:px-4">Import</TabsTrigger>
+                <TabsTrigger value="ai" className="text-xs md:text-sm px-2 md:px-4">AI Generator</TabsTrigger>
               </TabsList>
 
               <TabsContent value="manual" className="mt-0">

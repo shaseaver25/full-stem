@@ -29,19 +29,19 @@ const SuperAdminDashboard: React.FC = () => {
       <Header />
       <div className="p-6 space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <Shield className="h-8 w-8 text-orange-600" />
+          <Shield className="h-6 w-6 md:h-8 md:w-8 text-orange-600" />
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">
-              Super Admin Dashboard
+            <h1 className="text-xl md:text-3xl font-bold text-gray-900">
+              Super Admin
             </h1>
-            <p className="text-gray-600">
+            <p className="text-sm text-gray-600 hidden md:block">
               System-wide administration and oversight
             </p>
           </div>
         </div>
-        <Badge variant="destructive" className="px-3 py-1">
+        <Badge variant="destructive" className="px-2 py-1 text-xs w-fit">
           ELEVATED ACCESS
         </Badge>
       </div>
@@ -51,30 +51,30 @@ const SuperAdminDashboard: React.FC = () => {
 
       {/* Main Content Tabs */}
       <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-6 bg-white">
-          <TabsTrigger value="overview" className="flex items-center gap-2">
-            <Activity className="h-4 w-4" />
-            Overview
+        <TabsList className="flex flex-wrap h-auto gap-1 p-1 md:grid md:grid-cols-6 w-full bg-white">
+          <TabsTrigger value="overview" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm px-2 md:px-3">
+            <Activity className="h-3 w-3 md:h-4 md:w-4" />
+            <span className="hidden sm:inline">Overview</span>
           </TabsTrigger>
-          <TabsTrigger value="users" className="flex items-center gap-2">
-            <Users className="h-4 w-4" />
-            Users
+          <TabsTrigger value="users" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm px-2 md:px-3">
+            <Users className="h-3 w-3 md:h-4 md:w-4" />
+            <span className="hidden sm:inline">Users</span>
           </TabsTrigger>
-          <TabsTrigger value="database" className="flex items-center gap-2">
-            <Database className="h-4 w-4" />
-            Database
+          <TabsTrigger value="database" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm px-2 md:px-3">
+            <Database className="h-3 w-3 md:h-4 md:w-4" />
+            <span className="hidden sm:inline">Database</span>
           </TabsTrigger>
-          <TabsTrigger value="audit" className="flex items-center gap-2">
-            <FileText className="h-4 w-4" />
-            Audit Logs
+          <TabsTrigger value="audit" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm px-2 md:px-3">
+            <FileText className="h-3 w-3 md:h-4 md:w-4" />
+            <span className="hidden sm:inline">Audit</span>
           </TabsTrigger>
-          <TabsTrigger value="tenants" className="flex items-center gap-2">
-            <Shield className="h-4 w-4" />
-            Tenants
+          <TabsTrigger value="tenants" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm px-2 md:px-3">
+            <Shield className="h-3 w-3 md:h-4 md:w-4" />
+            <span className="hidden sm:inline">Tenants</span>
           </TabsTrigger>
-          <TabsTrigger value="settings" className="flex items-center gap-2">
-            <Settings className="h-4 w-4" />
-            Settings
+          <TabsTrigger value="settings" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm px-2 md:px-3">
+            <Settings className="h-3 w-3 md:h-4 md:w-4" />
+            <span className="hidden sm:inline">Settings</span>
           </TabsTrigger>
         </TabsList>
 
