@@ -568,9 +568,9 @@ export function PresentationViewer({
                     className="w-full h-full border-0"
                     title={`${title || 'Presentation'} - Slide ${currentSlide + 1} of ${totalSlides}. Use arrow keys to navigate between slides.`}
                     allowFullScreen
-                    allow="autoplay; fullscreen"
+                    allow="autoplay; fullscreen; encrypted-media"
                     referrerPolicy="no-referrer-when-downgrade"
-                    loading="lazy"
+                    sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-presentation"
                     aria-label={`Slide ${currentSlide + 1} of ${totalSlides}`}
                     style={{ minHeight: '300px' }}
                   />

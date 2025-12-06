@@ -326,7 +326,8 @@ export function LessonComponentRenderer({
     }
     
     // Convert Google Slides /pub URLs to /embed format for iframe compatibility
-    if (embedUrl && embedUrl.includes('docs.google.com/presentation') && embedUrl.includes('/pub')) {
+    // But don't touch /pubembed URLs as they're already in correct format
+    if (embedUrl && embedUrl.includes('docs.google.com/presentation') && embedUrl.includes('/pub') && !embedUrl.includes('/pubembed')) {
       embedUrl = embedUrl.replace('/pub', '/embed');
     }
     
