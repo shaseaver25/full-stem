@@ -55,30 +55,30 @@ const DeveloperDashboard = () => {
           </Alert>
         )}
         
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
+        <div className="mb-6 md:mb-8">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-              <div className="flex items-center gap-3 mb-2">
-                <Code className="h-8 w-8 text-blue-600" />
-                <h1 className="text-3xl font-bold">Developer Dashboard</h1>
-                <Badge variant="destructive" className="bg-red-600">
-                  Internal Use Only
+              <div className="flex flex-wrap items-center gap-2 md:gap-3 mb-2">
+                <Code className="h-6 w-6 md:h-8 md:w-8 text-blue-600" />
+                <h1 className="text-xl md:text-3xl font-bold">Developer Dashboard</h1>
+                <Badge variant="destructive" className="bg-red-600 text-xs">
+                  Internal Only
                 </Badge>
                 {isProduction && (
-                  <Badge variant="outline" className="border-yellow-500 text-yellow-600">
-                    Production Mode - Read Only
+                  <Badge variant="outline" className="border-yellow-500 text-yellow-600 text-xs">
+                    Read Only
                   </Badge>
                 )}
               </div>
-              <p className="text-muted-foreground">
+              <p className="text-sm text-muted-foreground hidden md:block">
                 Full STEM Development Team - Curriculum Management & User Debugging
               </p>
-              <p className="text-sm text-muted-foreground">
-                Logged in as: {user?.email}
+              <p className="text-xs md:text-sm text-muted-foreground truncate max-w-[250px] md:max-w-none">
+                {user?.email}
               </p>
             </div>
             <Link to="/admin/build-class">
-              <Button>
+              <Button size="sm" className="w-full md:w-auto">
                 <Plus className="h-4 w-4 mr-2" />
                 Build Class
               </Button>
@@ -87,46 +87,46 @@ const DeveloperDashboard = () => {
         </div>
 
         <Tabs defaultValue="sandbox" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-10">
-            <TabsTrigger value="sandbox" className="flex items-center gap-2">
-              <Database className="h-4 w-4" />
-              Sandbox
+          <TabsList className="flex flex-wrap h-auto gap-1 p-1 md:grid md:grid-cols-10 w-full">
+            <TabsTrigger value="sandbox" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm px-2 md:px-3">
+              <Database className="h-3 w-3 md:h-4 md:w-4" />
+              <span className="hidden sm:inline">Sandbox</span>
             </TabsTrigger>
-            <TabsTrigger value="impersonation" className="flex items-center gap-2">
-              <Users className="h-4 w-4" />
-              Impersonation
+            <TabsTrigger value="impersonation" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm px-2 md:px-3">
+              <Users className="h-3 w-3 md:h-4 md:w-4" />
+              <span className="hidden sm:inline">Impersonate</span>
             </TabsTrigger>
-            <TabsTrigger value="features" className="flex items-center gap-2">
-              <Shield className="h-4 w-4" />
-              Features
+            <TabsTrigger value="features" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm px-2 md:px-3">
+              <Shield className="h-3 w-3 md:h-4 md:w-4" />
+              <span className="hidden sm:inline">Features</span>
             </TabsTrigger>
-            <TabsTrigger value="performance" className="flex items-center gap-2">
-              <Activity className="h-4 w-4" />
-              Performance
+            <TabsTrigger value="performance" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm px-2 md:px-3">
+              <Activity className="h-3 w-3 md:h-4 md:w-4" />
+              <span className="hidden sm:inline">Perf</span>
             </TabsTrigger>
-            <TabsTrigger value="errors" className="flex items-center gap-2">
-              <Zap className="h-4 w-4" />
-              Errors
+            <TabsTrigger value="errors" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm px-2 md:px-3">
+              <Zap className="h-3 w-3 md:h-4 md:w-4" />
+              <span className="hidden sm:inline">Errors</span>
             </TabsTrigger>
-            <TabsTrigger value="ai-costs" className="flex items-center gap-2">
-              <DollarSign className="h-4 w-4" />
-              AI Costs
+            <TabsTrigger value="ai-costs" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm px-2 md:px-3">
+              <DollarSign className="h-3 w-3 md:h-4 md:w-4" />
+              <span className="hidden sm:inline">AI</span>
             </TabsTrigger>
-            <TabsTrigger value="content" className="flex items-center gap-2">
-              <FileText className="h-4 w-4" />
-              Content
+            <TabsTrigger value="content" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm px-2 md:px-3">
+              <FileText className="h-3 w-3 md:h-4 md:w-4" />
+              <span className="hidden sm:inline">Content</span>
             </TabsTrigger>
-            <TabsTrigger value="users" className="flex items-center gap-2">
-              <Users className="h-4 w-4" />
-              Users
+            <TabsTrigger value="users" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm px-2 md:px-3">
+              <Users className="h-3 w-3 md:h-4 md:w-4" />
+              <span className="hidden sm:inline">Users</span>
             </TabsTrigger>
-            <TabsTrigger value="settings" className="flex items-center gap-2">
-              <Settings className="h-4 w-4" />
-              Settings
+            <TabsTrigger value="settings" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm px-2 md:px-3">
+              <Settings className="h-3 w-3 md:h-4 md:w-4" />
+              <span className="hidden sm:inline">Settings</span>
             </TabsTrigger>
-            <TabsTrigger value="reports" className="flex items-center gap-2">
-              <FileText className="h-4 w-4" />
-              Reports & Docs
+            <TabsTrigger value="reports" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm px-2 md:px-3">
+              <FileText className="h-3 w-3 md:h-4 md:w-4" />
+              <span className="hidden sm:inline">Docs</span>
             </TabsTrigger>
           </TabsList>
 
