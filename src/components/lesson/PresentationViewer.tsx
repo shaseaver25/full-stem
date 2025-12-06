@@ -562,14 +562,17 @@ export function PresentationViewer({
               </Card>
             ) : (
               <>
-                <div className="aspect-video w-full rounded-lg overflow-hidden shadow-lg" role="img" aria-label={`Embedded presentation: ${title || 'Presentation'}`}>
+                <div className="aspect-video w-full rounded-lg overflow-hidden shadow-lg bg-white" role="img" aria-label={`Embedded presentation: ${title || 'Presentation'}`}>
                   <iframe
                     src={embedUrl}
-                    className="w-full h-full"
+                    className="w-full h-full border-0"
                     title={`${title || 'Presentation'} - Slide ${currentSlide + 1} of ${totalSlides}. Use arrow keys to navigate between slides.`}
                     allowFullScreen
                     allow="autoplay; fullscreen"
+                    referrerPolicy="no-referrer-when-downgrade"
+                    loading="lazy"
                     aria-label={`Slide ${currentSlide + 1} of ${totalSlides}`}
+                    style={{ minHeight: '300px' }}
                   />
                 </div>
 
