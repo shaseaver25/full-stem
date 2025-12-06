@@ -344,14 +344,14 @@ export default function ClassDetailPage() {
       <Header />
       <div className="container mx-auto p-6 space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-4">
+      <div className="flex flex-col md:flex-row md:items-center gap-4">
         <Button variant="outline" size="sm" onClick={() => navigate('/teacher/dashboard')}>
           <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Dashboard
+          Back
         </Button>
-        <div className="flex-1">
-          <h1 className="text-3xl font-bold">{classData.name}</h1>
-          <div className="flex items-center gap-4 mt-2">
+        <div className="flex-1 min-w-0">
+          <h1 className="text-2xl md:text-3xl font-bold truncate">{classData.name}</h1>
+          <div className="flex flex-wrap items-center gap-2 mt-2">
             {classData.subject && (
               <Badge variant="outline">{classData.subject}</Badge>
             )}
@@ -361,28 +361,31 @@ export default function ClassDetailPage() {
             <Badge variant={classData.published ? "default" : "secondary"}>
               {classData.published ? "Published" : "Draft"}
             </Badge>
-            <span className="text-sm text-muted-foreground">
+            <span className="text-xs md:text-sm text-muted-foreground hidden sm:inline">
               {classData.created_at && !isNaN(new Date(classData.created_at).getTime()) 
                 ? `Created ${format(new Date(classData.created_at), 'PPP')}`
                 : ''}
             </span>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Button 
             variant={classData.published ? "outline" : "default"}
+            size="sm"
             onClick={() => togglePublish.mutate(!classData.published)}
             disabled={togglePublish.isPending}
+            className="text-xs md:text-sm"
           >
-            {classData.published ? "Hide from Students" : "Make Visible to Students"}
+            {classData.published ? "Hide" : "Publish"}
           </Button>
           <Button 
-            variant="outline" 
+            variant="outline"
+            size="sm"
             onClick={() => setIsShareModalOpen(true)}
             className="flex items-center gap-2"
           >
             <Share2 className="h-4 w-4" />
-            Share Class
+            <span className="hidden sm:inline">Share</span>
           </Button>
         </div>
       </div>
@@ -401,26 +404,26 @@ export default function ClassDetailPage() {
 
       {/* Main Content Tabs */}
       <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="overview" className="flex items-center gap-2">
-            <BookOpen className="h-4 w-4" />
-            Overview
+        <TabsList className="flex flex-wrap h-auto gap-1 p-1 md:grid md:grid-cols-5 w-full">
+          <TabsTrigger value="overview" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm px-2 md:px-3">
+            <BookOpen className="h-3 w-3 md:h-4 md:w-4" />
+            <span className="hidden sm:inline">Overview</span>
           </TabsTrigger>
-          <TabsTrigger value="lessons" className="flex items-center gap-2">
-            <GraduationCap className="h-4 w-4" />
-            Lessons
+          <TabsTrigger value="lessons" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm px-2 md:px-3">
+            <GraduationCap className="h-3 w-3 md:h-4 md:w-4" />
+            <span className="hidden sm:inline">Lessons</span>
           </TabsTrigger>
-          <TabsTrigger value="roster" className="flex items-center gap-2">
-            <Users className="h-4 w-4" />
-            Roster
+          <TabsTrigger value="roster" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm px-2 md:px-3">
+            <Users className="h-3 w-3 md:h-4 md:w-4" />
+            <span className="hidden sm:inline">Roster</span>
           </TabsTrigger>
-          <TabsTrigger value="assignments" className="flex items-center gap-2">
-            <ClipboardList className="h-4 w-4" />
-            Assignments
+          <TabsTrigger value="assignments" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm px-2 md:px-3">
+            <ClipboardList className="h-3 w-3 md:h-4 md:w-4" />
+            <span className="hidden sm:inline">Assign</span>
           </TabsTrigger>
-          <TabsTrigger value="messages" className="flex items-center gap-2">
-            <MessageSquare className="h-4 w-4" />
-            Messages
+          <TabsTrigger value="messages" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm px-2 md:px-3">
+            <MessageSquare className="h-3 w-3 md:h-4 md:w-4" />
+            <span className="hidden sm:inline">Messages</span>
           </TabsTrigger>
         </TabsList>
 
