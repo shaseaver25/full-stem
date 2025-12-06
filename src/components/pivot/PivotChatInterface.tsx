@@ -169,7 +169,7 @@ const PivotChatInterface: React.FC<PivotChatInterfaceProps> = ({
           onKeyPress={handleKeyPress}
           placeholder="Ask me anything..."
           disabled={isLoading}
-          className="flex-1 border rounded-full px-4"
+          className="flex-1 border rounded-full px-4 bg-background text-foreground"
         />
         <Button
           onClick={handleSendMessage}
