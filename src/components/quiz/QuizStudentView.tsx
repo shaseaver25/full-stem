@@ -104,7 +104,7 @@ export function QuizStudentView({ componentId, read_aloud = true, quizData: prel
   const [questionStartTime, setQuestionStartTime] = useState<Date>(new Date());
   const [timeOnQuestion, setTimeOnQuestion] = useState<number>(0);
   
-  const { speak, isPlaying, isLoading: isSpeaking } = useTextToSpeech();
+  const { speak, isPlaying, isLoading: isSpeaking } = useTextToSpeech(true); // Force enable for manual read aloud button
   const { settings, isLoading: settingsLoading } = useAccessibility();
   // Force enable translation when a non-English language is selected
   const shouldForceTranslation = settings.preferredLanguage && settings.preferredLanguage !== 'en';
