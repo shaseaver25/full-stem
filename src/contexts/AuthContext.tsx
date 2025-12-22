@@ -4,6 +4,28 @@ import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { logError, setErrorUser, clearErrorUser } from '@/utils/errorLogging';
 
+// TEMPORARY: Auth bypass flag - set to true when Supabase Auth is down
+const AUTH_BYPASS_MODE = true;
+
+// Mock user for bypass mode
+const BYPASS_USER: User = {
+  id: 'bypass-dev-user-123',
+  email: 'developer@fullstem.dev',
+  app_metadata: {},
+  user_metadata: { full_name: 'Developer (Bypass Mode)' },
+  aud: 'authenticated',
+  created_at: new Date().toISOString(),
+} as User;
+
+const BYPASS_SESSION: Session = {
+  access_token: 'bypass-token',
+  refresh_token: 'bypass-refresh',
+  expires_in: 3600,
+  expires_at: Math.floor(Date.now() / 1000) + 3600,
+  token_type: 'bearer',
+  user: BYPASS_USER,
+} as Session;
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
@@ -25,12 +47,19 @@ export const useAuth = () => {
 };
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+  const [user, setUser] = useState<User | null>(AUTH_BYPASS_MODE ? BYPASS_USER : null);
+  const [session, setSession] = useState<Session | null>(AUTH_BYPASS_MODE ? BYPASS_SESSION : null);
+  const [loading, setLoading] = useState(!AUTH_BYPASS_MODE);
+  const [isSuperAdmin, setIsSuperAdmin] = useState(AUTH_BYPASS_MODE);
 
   useEffect(() => {
+    // If bypass mode is enabled, skip all Supabase auth
+    if (AUTH_BYPASS_MODE) {
+      console.warn('⚠️ AUTH BYPASS MODE ENABLED - All routes accessible without authentication');
+      setLoading(false);
+      return;
+    }
+
     let isInitialLoad = true;
 
     // Get initial session FIRST

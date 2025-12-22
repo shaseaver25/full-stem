@@ -5,6 +5,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';
 import { hasPermission, type UserRole } from '@/utils/roleUtils';
 
+// TEMPORARY: Auth bypass flag - must match AuthContext
+const AUTH_BYPASS_MODE = true;
+
 interface RequireRoleProps {
   children: React.ReactNode;
   allowedRoles: UserRole[];
@@ -13,9 +16,15 @@ interface RequireRoleProps {
 const RequireRole: React.FC<RequireRoleProps> = ({ children, allowedRoles }) => {
   const { user, loading: authLoading } = useAuth();
   const [userRoles, setUserRoles] = useState<UserRole[]>([]);
-  const [checking, setChecking] = useState(true);
+  const [checking, setChecking] = useState(!AUTH_BYPASS_MODE);
 
   useEffect(() => {
+    // If bypass mode is enabled, skip role checking
+    if (AUTH_BYPASS_MODE) {
+      setChecking(false);
+      return;
+    }
+
     const checkUserRole = async () => {
       if (!user) {
         setChecking(false);
@@ -46,6 +55,11 @@ const RequireRole: React.FC<RequireRoleProps> = ({ children, allowedRoles }) => 
       checkUserRole();
     }
   }, [user, authLoading]);
+
+  // In bypass mode, allow everything
+  if (AUTH_BYPASS_MODE) {
+    return <>{children}</>;
+  }
 
   if (authLoading || checking) {
     return (
