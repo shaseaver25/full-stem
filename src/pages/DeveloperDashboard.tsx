@@ -5,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Code, Users, FileText, Settings, Shield, Database, Plus, AlertTriangle, Zap, Activity, DollarSign } from 'lucide-react';
+import { Code, Users, FileText, Settings, Shield, Database, Plus, AlertTriangle, Zap, Activity, DollarSign, Network } from 'lucide-react';
 import Header from '@/components/Header';
 import UserImpersonation from '@/components/developer/UserImpersonation';
 import ImpersonationLogs from '@/components/developer/ImpersonationLogs';
@@ -77,12 +77,20 @@ const DeveloperDashboard = () => {
                 {user?.email}
               </p>
             </div>
-            <Link to="/admin/build-class">
-              <Button size="sm" className="w-full md:w-auto">
-                <Plus className="h-4 w-4 mr-2" />
-                Build Class
-              </Button>
-            </Link>
+            <div className="flex gap-2">
+              <Link to="/dev/architecture">
+                <Button variant="outline" size="sm" className="w-full md:w-auto">
+                  <Network className="h-4 w-4 mr-2" />
+                  Architecture
+                </Button>
+              </Link>
+              <Link to="/admin/build-class">
+                <Button size="sm" className="w-full md:w-auto">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Build Class
+                </Button>
+              </Link>
+            </div>
           </div>
         </div>
 

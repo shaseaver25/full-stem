@@ -54,6 +54,7 @@ const CourseEditorPage = React.lazy(() => import("./pages/CourseEditorPage"));
 const ComponentsPage = React.lazy(() => import("./pages/ComponentsPage"));
 const TeacherDemoPage = React.lazy(() => import("./pages/TeacherDemoPage"));
 const DeveloperDashboard = React.lazy(() => import("./pages/DeveloperDashboard"));
+const ArchitecturePage = React.lazy(() => import("./pages/developer/ArchitecturePage"));
 const SuperAdminDashboard = React.lazy(() => import("./pages/SuperAdminDashboard"));
 const ClassManagementPage = React.lazy(() => import("./pages/ClassManagementPage"));
 const ClassLessonPage = React.lazy(() => import("./pages/ClassLessonPage"));
@@ -448,6 +449,16 @@ function AppContent() {
             <ErrorBoundary>
               <DeveloperRoute>
                 <DeveloperDashboard />
+              </DeveloperRoute>
+            </ErrorBoundary>
+          } 
+        />
+        <Route 
+          path="/dev/architecture" 
+          element={
+            <ErrorBoundary>
+              <DeveloperRoute>
+                <ArchitecturePage />
               </DeveloperRoute>
             </ErrorBoundary>
           } 
