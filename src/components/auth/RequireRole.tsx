@@ -5,8 +5,21 @@ import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';
 import { type UserRole } from '@/utils/roleUtils';
 
-// TODO: Configure this via environment variables. Make sure it's false in production.
-const AUTH_BYPASS_MODE = false;
+/**
+ * Bypass flag should be controlled by environment variables so we never leave
+ * bypass enabled in production by accident.
+ *
+ * Vite: set VITE_AUTH_BYPASS=true in a local .env file to enable
+ * Create React App: set REACT_APP_AUTH_BYPASS=true in a local .env file to enable
+ *
+ * Default: false
+ */
+const AUTH_BYPASS_MODE =
+  // Vite / modern bundlers
+  ((import.meta as any)?.env?.VITE_AUTH_BYPASS === 'true') ||
+  // CRA / process.env fallback
+  (typeof process !== 'undefined' && (process.env as any)?.REACT_APP_AUTH_BYPASS === 'true') ||
+  false;
 
 interface RequireRoleProps {
   children: React.ReactNode;
