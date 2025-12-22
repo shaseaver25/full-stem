@@ -1,5 +1,8 @@
 project_id = "irxzpsvzlihqitlicoql"
 
+[functions.create-dev-user]
+verify_jwt = false
+
 [functions.grade-short-answer]
 verify_jwt = false
 
