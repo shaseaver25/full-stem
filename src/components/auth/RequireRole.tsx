@@ -47,14 +47,7 @@ const RequireRole: React.FC<RequireRoleProps> = ({ children, allowedRoles }) => 
         console.error('Error checking user roles:', error);
         setUserRoles([]);
       } finally {
-        setChecking(false);Create docs/API_DOCUMENTATION.md documenting all edge functions: text-to-speech, quiz-generation, personalize-assignment, store-oauth-tokens, veCreate docs/DATABASE_SCHEMA.md with: entity relationship diCreate docs/ARCHITECTURE.md with: high-level system architecture diagram, component relationships (frontend/backend/database), data flow through the system, Supabase integration overview, key architectural decisions, scalability considerations
-          agram, complete table reference (name, columns, types, constraints), Row Level Security (RLS) policies explanation for each table, migration procedures, and key relationships between tables like classes->lessons->lesson_componCreate docs/FEATURES.md documenting: AI Lesson Generation (how it uses Lovable AI to create lessons), Assessment Proctoring (integrity monitoring, violation detection), Accessibility Features (TTS, translations, dyslexia mode), Google Drive/OneDrive Integration (file management), Pivot AI Assistant (Socratic tutoring), Co-teaching Support (multi-teacher collaboration)
-Create docs/SECURITY.md with: security audit findings and status, RLS policy details for sensitive tables, FERPA/COPPA compliance notes, authentication flow, MFA setup and enforcement, encryption for PII (tokens, sensitive data), SQL injection prevention, XSS prevention with SafeHtml componentCreate docs/DEVELOPMENT_WORKFLOW.md with: Git branching strategy, code style and conventions, testing approach (unit tests, integration tests), common development tasks (adding features, debugging), build and deployment process, performance optimization tips, debugging tools available
-            Create docs/TROUBLESHOOTING.md with solutions for: Supabase connectivity issues, Google Drive authentication errors and token refresh problems, ElevenLabs TTS quota errors, environment variable configuration issues, common React/TypeScript compilation errors, database migration failures, and where to check logs (browser console, Supabase dashboard)
-            
-            ents
-          rify-mfa, setup-mfa. Include RPC functions: has_role(), is_teacher_of_class(), can_view_student(). For each include parameters, response format, error codes, example usage
-        
+        setChecking(false);
       }
     };
 
