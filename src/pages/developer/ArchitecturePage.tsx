@@ -2,12 +2,38 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Network, Database, Users, Cloud, Shield, Layers, Server, Globe, ArrowLeft } from 'lucide-react';
+import { Network, Database, Users, Cloud, Shield, Layers, Server, Globe, ArrowLeft, RefreshCw, Activity, BookOpen, GraduationCap } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import Header from '@/components/Header';
+import { usePlatformStats } from '@/hooks/usePlatformStats';
+import { Skeleton } from '@/components/ui/skeleton';
+
+const StatCard = ({ title, value, icon: Icon, color, loading }: { 
+  title: string; 
+  value: number; 
+  icon: React.ElementType; 
+  color: string;
+  loading?: boolean;
+}) => (
+  <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
+    <Icon className={`h-8 w-8 ${color}`} />
+    <div>
+      {loading ? (
+        <Skeleton className="h-6 w-12" />
+      ) : (
+        <p className="text-2xl font-bold">{value.toLocaleString()}</p>
+      )}
+      <p className="text-xs text-muted-foreground">{title}</p>
+    </div>
+  </div>
+);
 
 const ArchitecturePage = () => {
+  const { data: stats, isLoading, refetch, dataUpdatedAt } = usePlatformStats();
+
+  const lastUpdated = dataUpdatedAt ? new Date(dataUpdatedAt).toLocaleTimeString() : 'Never';
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -21,22 +47,57 @@ const ArchitecturePage = () => {
             </Button>
           </Link>
           
-          <div className="flex items-center gap-3 mb-2">
-            <Network className="h-8 w-8 text-primary" />
-            <h1 className="text-3xl font-bold">Platform Architecture</h1>
-            <Badge variant="destructive">Developer Only</Badge>
+          <div className="flex items-center justify-between flex-wrap gap-4">
+            <div>
+              <div className="flex items-center gap-3 mb-2">
+                <Network className="h-8 w-8 text-primary" />
+                <h1 className="text-3xl font-bold">Platform Architecture</h1>
+                <Badge variant="destructive">Developer Only</Badge>
+              </div>
+              <p className="text-muted-foreground">
+                Full STEM Platform technical architecture and system design
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground">Updated: {lastUpdated}</span>
+              <Button variant="outline" size="sm" onClick={() => refetch()}>
+                <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+                Refresh
+              </Button>
+            </div>
           </div>
-          <p className="text-muted-foreground">
-            Full STEM Platform technical architecture and system design
-          </p>
         </div>
 
+        {/* Live Stats Banner */}
+        <Card className="mb-6 border-primary/20 bg-gradient-to-r from-primary/5 to-transparent">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Activity className="h-5 w-5 text-primary" />
+              Live Platform Stats
+              <Badge variant="secondary" className="ml-2">Auto-refreshes every 30s</Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
+              <StatCard title="Total Users" value={stats?.users.total || 0} icon={Users} color="text-blue-500" loading={isLoading} />
+              <StatCard title="Students" value={stats?.users.students || 0} icon={GraduationCap} color="text-green-500" loading={isLoading} />
+              <StatCard title="Teachers" value={stats?.users.teachers || 0} icon={Users} color="text-purple-500" loading={isLoading} />
+              <StatCard title="Classes" value={stats?.content.classes || 0} icon={BookOpen} color="text-orange-500" loading={isLoading} />
+              <StatCard title="Lessons" value={stats?.content.lessons || 0} icon={BookOpen} color="text-cyan-500" loading={isLoading} />
+              <StatCard title="Components" value={stats?.content.lessonComponents || 0} icon={Layers} color="text-pink-500" loading={isLoading} />
+              <StatCard title="Edge Funcs" value={stats?.edgeFunctions.length || 0} icon={Server} color="text-yellow-500" loading={isLoading} />
+              <StatCard title="DB Tables" value={stats?.tables.length || 0} icon={Database} color="text-emerald-500" loading={isLoading} />
+            </div>
+          </CardContent>
+        </Card>
+
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid grid-cols-4 w-full max-w-2xl">
+          <TabsList className="grid grid-cols-5 w-full max-w-3xl">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="frontend">Frontend</TabsTrigger>
             <TabsTrigger value="backend">Backend</TabsTrigger>
             <TabsTrigger value="data">Data Flow</TabsTrigger>
+            <TabsTrigger value="inventory">Inventory</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
@@ -74,7 +135,7 @@ const ArchitecturePage = () => {
 │                                    │                                         │
 │                                    ▼                                         │
 │  ┌─────────────────────────────────────────────────────────────────────┐    │
-│  │                        EDGE FUNCTIONS (Deno)                         │    │
+│  │                   EDGE FUNCTIONS (${stats?.edgeFunctions.length || '50+'}  Deno Functions)              │    │
 │  │  ┌───────────────┐  ┌───────────────┐  ┌───────────────┐            │    │
 │  │  │ AI Processing │  │  Translation  │  │   Grading     │            │    │
 │  │  │  (OpenAI)     │  │  (Multi-lang) │  │  (Adaptive)   │            │    │
@@ -154,11 +215,11 @@ const ArchitecturePage = () => {
                   </div>
                   <div className="flex justify-between">
                     <span>Edge Functions</span>
-                    <Badge variant="outline">Deno</Badge>
+                    <Badge variant="outline">{stats?.edgeFunctions.length || 0} functions</Badge>
                   </div>
                   <div className="flex justify-between">
-                    <span>Storage</span>
-                    <Badge variant="outline">S3-compatible</Badge>
+                    <span>Tables</span>
+                    <Badge variant="outline">{stats?.tables.length || 0} tables</Badge>
                   </div>
                 </CardContent>
               </Card>
@@ -188,8 +249,8 @@ const ArchitecturePage = () => {
                     <Badge variant="outline">GPT-4o-mini</Badge>
                   </div>
                   <div className="flex justify-between">
-                    <span>Grading</span>
-                    <Badge variant="outline">Adaptive AI</Badge>
+                    <span>AI Chats</span>
+                    <Badge variant="outline">{stats?.activity.aiTutorChats || 0}</Badge>
                   </div>
                 </CardContent>
               </Card>
@@ -202,48 +263,50 @@ const ArchitecturePage = () => {
                 <CardTitle className="flex items-center gap-2">
                   <Users className="h-5 w-5" />
                   User Role Architecture
+                  <Badge variant="secondary" className="ml-2">
+                    {stats?.users.total || 0} total users
+                  </Badge>
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="bg-muted rounded-lg p-6 font-mono text-sm overflow-x-auto">
-                  <pre className="whitespace-pre text-foreground">{`
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                            USER ROLES & PORTALS                              │
-├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                              │
-│  ┌────────────────┐    ┌────────────────┐    ┌────────────────┐             │
-│  │    STUDENT     │    │    TEACHER     │    │     ADMIN      │             │
-│  ├────────────────┤    ├────────────────┤    ├────────────────┤             │
-│  │ • Dashboard    │    │ • Dashboard    │    │ • Dashboard    │             │
-│  │ • My Classes   │    │ • Classes      │    │ • All Classes  │             │
-│  │ • Assignments  │    │ • Gradebook    │    │ • Users        │             │
-│  │ • Grades       │    │ • Assignments  │    │ • Analytics    │             │
-│  │ • Pivot Tutor  │    │ • AI Tutor Mon │    │ • Content Mgmt │             │
-│  │ • Class Lesson │    │ • Lesson Build │    │ • Quizzes/Polls│             │
-│  └────────────────┘    │ • Analytics    │    └────────────────┘             │
-│                        └────────────────┘                                    │
-│                                                                              │
-│  ┌────────────────┐    ┌────────────────┐    ┌────────────────┐             │
-│  │    PARENT      │    │  SUPER ADMIN   │    │   DEVELOPER    │             │
-│  ├────────────────┤    ├────────────────┤    ├────────────────┤             │
-│  │ • Dashboard    │    │ • All Access   │    │ • Full Access  │             │
-│  │ • Child View   │    │ • Tenant Mgmt  │    │ • Impersonation│             │
-│  │ • Reports      │    │ • System Config│    │ • Feature Flags│             │
-│  │ • Progress     │    │ • Audit Logs   │    │ • Debug Tools  │             │
-│  └────────────────┘    └────────────────┘    │ • AI Costs     │             │
-│                                              │ • Error Logs   │             │
-│                                              └────────────────┘             │
-└─────────────────────────────────────────────────────────────────────────────┘
-                  `}</pre>
+                <div className="grid md:grid-cols-3 gap-4 mb-6">
+                  <div className="p-4 border rounded-lg">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="font-semibold">Students</span>
+                      <Badge>{stats?.users.students || 0}</Badge>
+                    </div>
+                    <ul className="text-sm text-muted-foreground space-y-1">
+                      <li>• Dashboard</li>
+                      <li>• My Classes</li>
+                      <li>• Assignments</li>
+                      <li>• Pivot AI Tutor</li>
+                    </ul>
+                  </div>
+                  <div className="p-4 border rounded-lg">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="font-semibold">Teachers</span>
+                      <Badge>{stats?.users.teachers || 0}</Badge>
+                    </div>
+                    <ul className="text-sm text-muted-foreground space-y-1">
+                      <li>• Class Management</li>
+                      <li>• Gradebook</li>
+                      <li>• Lesson Builder</li>
+                      <li>• AI Monitoring</li>
+                    </ul>
+                  </div>
+                  <div className="p-4 border rounded-lg">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="font-semibold">Admins</span>
+                      <Badge>{stats?.users.admins || 0}</Badge>
+                    </div>
+                    <ul className="text-sm text-muted-foreground space-y-1">
+                      <li>• All Classes</li>
+                      <li>• User Management</li>
+                      <li>• Analytics</li>
+                      <li>• Content Management</li>
+                    </ul>
+                  </div>
                 </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Component Structure</CardTitle>
-              </CardHeader>
-              <CardContent>
                 <div className="bg-muted rounded-lg p-6 font-mono text-sm overflow-x-auto">
                   <pre className="whitespace-pre text-foreground">{`
 src/
@@ -260,15 +323,8 @@ src/
 │   └── pivot/           # Pivot AI Tutor
 │
 ├── pages/               # Route components
-│   ├── admin/           # Admin pages
-│   ├── teacher/         # Teacher pages
-│   ├── student/         # Student pages
-│   ├── developer/       # Developer pages
-│   └── classes/         # Class management
-│
 ├── contexts/            # React Context providers
 ├── hooks/               # Custom React hooks
-├── utils/               # Utility functions
 └── integrations/        # External service clients
                   `}</pre>
                 </div>
@@ -281,53 +337,17 @@ src/
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Server className="h-5 w-5" />
-                  Edge Functions Architecture
+                  Edge Functions
+                  <Badge variant="secondary">{stats?.edgeFunctions.length || 0} deployed</Badge>
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="bg-muted rounded-lg p-6 font-mono text-sm overflow-x-auto">
-                  <pre className="whitespace-pre text-foreground">{`
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                         EDGE FUNCTIONS (50+ Functions)                       │
-├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                              │
-│  ┌─────────────────────────────────────────────────────────────────────┐    │
-│  │                         AI / CONTENT                                 │    │
-│  │  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐      │    │
-│  │  │ pivot-chat      │  │ socratic-tutor  │  │ ai-lesson-gen   │      │    │
-│  │  │ pivot-hint      │  │ ai-insights     │  │ ai-goals        │      │    │
-│  │  │ ai-reflection   │  │ ai-weekly-digest│  │ ai-class-digest │      │    │
-│  │  └─────────────────┘  └─────────────────┘  └─────────────────┘      │    │
-│  └─────────────────────────────────────────────────────────────────────┘    │
-│                                                                              │
-│  ┌─────────────────────────────────────────────────────────────────────┐    │
-│  │                         GRADING / ASSESSMENT                         │    │
-│  │  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐      │    │
-│  │  │ grade-short-ans │  │ analyze-submis  │  │ generate-quiz   │      │    │
-│  │  │ adaptive-content│  │ generate-poll   │  │ class-assessment│      │    │
-│  │  └─────────────────┘  └─────────────────┘  └─────────────────┘      │    │
-│  └─────────────────────────────────────────────────────────────────────┘    │
-│                                                                              │
-│  ┌─────────────────────────────────────────────────────────────────────┐    │
-│  │                         CONTENT PROCESSING                           │    │
-│  │  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐      │    │
-│  │  │ translate-text  │  │ text-to-speech  │  │ elevenlabs-tts  │      │    │
-│  │  │ extract-text    │  │ parse-lesson    │  │ transcribe-video│      │    │
-│  │  │ extract-slide   │  │ embed-content   │  │ benchmark-doc   │      │    │
-│  │  └─────────────────┘  └─────────────────┘  └─────────────────┘      │    │
-│  └─────────────────────────────────────────────────────────────────────┘    │
-│                                                                              │
-│  ┌─────────────────────────────────────────────────────────────────────┐    │
-│  │                         USER / AUTH                                  │    │
-│  │  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐      │    │
-│  │  │ create-dev-user │  │ invite-teacher  │  │ update-user     │      │    │
-│  │  │ setup-mfa       │  │ verify-mfa      │  │ store-oauth     │      │    │
-│  │  │ create-demo-cls │  │ seed-demo-data  │  │ import-csv      │      │    │
-│  │  └─────────────────┘  └─────────────────┘  └─────────────────┘      │    │
-│  └─────────────────────────────────────────────────────────────────────┘    │
-│                                                                              │
-└─────────────────────────────────────────────────────────────────────────────┘
-                  `}</pre>
+                <div className="grid md:grid-cols-4 gap-2">
+                  {stats?.edgeFunctions.map((fn) => (
+                    <Badge key={fn} variant="outline" className="justify-center py-1 font-mono text-xs">
+                      {fn}
+                    </Badge>
+                  ))}
                 </div>
               </CardContent>
             </Card>
@@ -351,7 +371,6 @@ src/
 │  │  • Email/Password login                                            │     │
 │  │  • MFA support (TOTP)                                              │     │
 │  │  • OAuth (Google)                                                  │     │
-│  │  • Session management                                              │     │
 │  └────────────────────────────────────────────────────────────────────┘     │
 │                                    │                                         │
 │                                    ▼                                         │
@@ -360,7 +379,6 @@ src/
 │  │  • user_roles table (separate from profiles)                       │     │
 │  │  • has_role() security definer function                            │     │
 │  │  • RequireRole React component                                     │     │
-│  │  • Route protection (DeveloperRoute, ProtectedTeacherRoute, etc.)  │     │
 │  └────────────────────────────────────────────────────────────────────┘     │
 │                                    │                                         │
 │                                    ▼                                         │
@@ -368,16 +386,14 @@ src/
 │  │  Layer 3: Row-Level Security (RLS)                                 │     │
 │  │  • Per-table policies                                              │     │
 │  │  • User-scoped data access                                         │     │
-│  │  • Role-based visibility (teacher sees class, student sees own)    │     │
-│  │  • Developer/Super Admin override policies                         │     │
+│  │  • Role-based visibility                                           │     │
 │  └────────────────────────────────────────────────────────────────────┘     │
 │                                    │                                         │
 │                                    ▼                                         │
 │  ┌────────────────────────────────────────────────────────────────────┐     │
 │  │  Layer 4: Edge Function Security                                   │     │
-│  │  • JWT verification (verify_jwt = true/false in config.toml)       │     │
+│  │  • JWT verification (verify_jwt in config.toml)                    │     │
 │  │  • Service role key for admin operations                           │     │
-│  │  • CORS headers configured                                         │     │
 │  │  • Secrets management via Supabase Vault                           │     │
 │  └────────────────────────────────────────────────────────────────────┘     │
 │                                                                              │
@@ -394,6 +410,7 @@ src/
                 <CardTitle className="flex items-center gap-2">
                   <Database className="h-5 w-5" />
                   Data Model Overview
+                  <Badge variant="secondary">{stats?.tables.length || 0} tables</Badge>
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -412,12 +429,13 @@ src/
 │           ▼                    ▼                    ▼                        │
 │  ┌────────────────┐   ┌────────────────┐   ┌────────────────┐               │
 │  │   profiles     │   │  user_roles    │   │ teacher_profiles│               │
-│  │  (all users)   │   │ (role assign)  │   │  (teacher data) │               │
+│  │  (${String(stats?.users.total || 0).padEnd(4)} users)  │   │ (role assign)  │   │  (teacher data) │               │
 │  └────────────────┘   └────────────────┘   └────────────────┘               │
 │                                                    │                         │
 │                                                    ▼                         │
 │                                           ┌────────────────┐                 │
 │                                           │    classes     │                 │
+│                                           │  (${String(stats?.content.classes || 0).padEnd(4)} total) │                 │
 │                                           └────────┬───────┘                 │
 │                                                    │                         │
 │              ┌─────────────────────────────────────┼─────────────┐           │
@@ -425,24 +443,14 @@ src/
 │              ▼                    ▼                ▼             ▼           │
 │     ┌────────────────┐   ┌────────────────┐ ┌────────────┐ ┌──────────────┐  │
 │     │ class_students │   │    lessons     │ │ assignments│ │class_teachers│  │
-│     └────────────────┘   └────────┬───────┘ └──────┬─────┘ └──────────────┘  │
-│              │                    │                │                         │
-│              │                    ▼                ▼                         │
-│              │           ┌────────────────┐ ┌──────────────┐                 │
-│              │           │lesson_components│ │ submissions  │                 │
-│              │           └────────────────┘ └──────────────┘                 │
-│              │                                                               │
-│              ▼                                                               │
-│     ┌────────────────┐                                                       │
-│     │    students    │◄──────┐                                               │
-│     └────────────────┘       │                                               │
-│              │               │                                               │
-│              ▼               │                                               │
-│     ┌────────────────┐       │                                               │
-│     │student_progress│       │                                               │
-│     │ ai_tutor_chats │───────┘                                               │
-│     │ quiz_responses │                                                       │
-│     └────────────────┘                                                       │
+│     └────────────────┘   │  (${String(stats?.content.lessons || 0).padEnd(4)} total) │ │ (${String(stats?.content.assignments || 0).padEnd(4)} tot)│ └──────────────┘  │
+│                          └────────┬───────┘ └──────┬─────┘                   │
+│                                   │                │                         │
+│                                   ▼                ▼                         │
+│                          ┌────────────────┐ ┌──────────────┐                 │
+│                          │lesson_components│ │ submissions  │                 │
+│                          │  (${String(stats?.content.lessonComponents || 0).padEnd(4)} total) │ │ (${String(stats?.activity.submissions || 0).padEnd(4)} tot)  │                 │
+│                          └────────────────┘ └──────────────┘                 │
 │                                                                              │
 └─────────────────────────────────────────────────────────────────────────────┘
                   `}</pre>
@@ -459,6 +467,7 @@ src/
                   <pre className="whitespace-pre text-foreground">{`
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                        PIVOT AI TUTOR DATA FLOW                              │
+│                        (${stats?.activity.aiTutorChats || 0} conversations logged)                          │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                              │
 │  ┌─────────┐     ┌─────────────┐     ┌─────────────┐     ┌─────────────┐    │
@@ -482,20 +491,71 @@ src/
 │  └─────────────────────────────────────────────────────────────────────┘    │
 │                                                                              │
 └─────────────────────────────────────────────────────────────────────────────┘
-
-                        ADAPTIVE CONTENT PIPELINE
-
-  ┌──────────┐    ┌─────────────┐    ┌─────────────┐    ┌──────────────┐
-  │ Student  │───▶│  Determine  │───▶│  Fetch Base │───▶│   Adapt to   │
-  │  Access  │    │Reading Level│    │   Content   │    │ Level + Lang │
-  └──────────┘    └─────────────┘    └─────────────┘    └──────────────┘
-                         │                                      │
-                         ▼                                      ▼
-                  ┌─────────────┐                       ┌──────────────┐
-                  │  students   │                       │  translated  │
-                  │(reading_lvl)│                       │   content    │
-                  └─────────────┘                       └──────────────┘
                   `}</pre>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="inventory" className="space-y-6">
+            <div className="grid md:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Database className="h-5 w-5" />
+                    Database Tables
+                    <Badge variant="secondary">{stats?.tables.length || 0}</Badge>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 gap-2">
+                    {stats?.tables.map((table) => (
+                      <Badge key={table} variant="outline" className="justify-start py-1 font-mono text-xs">
+                        {table}
+                      </Badge>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Server className="h-5 w-5" />
+                    Edge Functions
+                    <Badge variant="secondary">{stats?.edgeFunctions.length || 0}</Badge>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 gap-2 max-h-96 overflow-y-auto">
+                    {stats?.edgeFunctions.map((fn) => (
+                      <Badge key={fn} variant="outline" className="justify-start py-1 font-mono text-xs">
+                        {fn}
+                      </Badge>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Activity Summary</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid md:grid-cols-3 gap-4">
+                  <div className="p-4 border rounded-lg text-center">
+                    <p className="text-3xl font-bold text-primary">{stats?.activity.submissions || 0}</p>
+                    <p className="text-sm text-muted-foreground">Total Submissions</p>
+                  </div>
+                  <div className="p-4 border rounded-lg text-center">
+                    <p className="text-3xl font-bold text-primary">{stats?.activity.aiTutorChats || 0}</p>
+                    <p className="text-sm text-muted-foreground">AI Tutor Conversations</p>
+                  </div>
+                  <div className="p-4 border rounded-lg text-center">
+                    <p className="text-3xl font-bold text-primary">{stats?.activity.quizResponses || 0}</p>
+                    <p className="text-sm text-muted-foreground">Quiz Responses</p>
+                  </div>
                 </div>
               </CardContent>
             </Card>
