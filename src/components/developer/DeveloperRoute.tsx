@@ -3,12 +3,20 @@ import { Navigate } from 'react-router-dom';
 import { useUserRole } from '@/hooks/useUserRole';
 import { Loader2 } from 'lucide-react';
 
+// TEMPORARY: Auth bypass flag - must match AuthContext
+const AUTH_BYPASS_MODE = true;
+
 interface DeveloperRouteProps {
   children: React.ReactNode;
 }
 
 const DeveloperRoute: React.FC<DeveloperRouteProps> = ({ children }) => {
   const { roles, isLoading } = useUserRole();
+
+  // In bypass mode, allow everything
+  if (AUTH_BYPASS_MODE) {
+    return <>{children}</>;
+  }
 
   if (isLoading) {
     return (
