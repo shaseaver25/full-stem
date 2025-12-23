@@ -130,6 +130,13 @@ export const queryKeys = {
     detail: (userId: string) => 
       [...queryKeys.profiles.all, 'detail', userId] as const,
   },
+  
+  // User roles queries (cached for performance)
+  userRoles: {
+    all: ['userRoles'] as const,
+    byUser: (userId: string) => 
+      [...queryKeys.userRoles.all, 'user', userId] as const,
+  },
 };
 
 /**

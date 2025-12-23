@@ -1,66 +1,85 @@
-import { useState, useEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { queryKeys, cachePresets } from '@/config/queryClient';
+import type { Database } from '@/integrations/supabase/types';
 
-// Auth bypass flag - disabled for normal operation
-const AUTH_BYPASS_MODE = false;
-
-// All roles for bypass mode
-const BYPASS_ROLES = ['developer', 'super_admin', 'admin', 'teacher', 'student', 'parent'];
+type AppRole = Database['public']['Enums']['app_role'];
 
 /**
- * Hook to fetch and manage user roles from the user_roles table
- * Returns all roles the user has
+ * Hook to fetch and cache user roles from the user_roles table
+ * Uses React Query for persistent caching across page navigations
  */
 export const useUserRole = () => {
   const { user, loading: authLoading } = useAuth();
-  const [roles, setRoles] = useState<string[]>(AUTH_BYPASS_MODE ? BYPASS_ROLES : []);
-  const [isLoading, setIsLoading] = useState(!AUTH_BYPASS_MODE);
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    // If bypass mode is enabled, grant all roles immediately
-    if (AUTH_BYPASS_MODE) {
-      setRoles(BYPASS_ROLES);
-      setIsLoading(false);
-      return;
-    }
+  const {
+    data: roles = [],
+    isLoading,
+    refetch,
+  } = useQuery({
+    queryKey: queryKeys.userRoles.byUser(user?.id ?? 'anonymous'),
+    queryFn: async (): Promise<AppRole[]> => {
+      if (!user?.id) return [];
+      
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id);
 
-    // Wait for auth to finish loading before checking roles
-    if (authLoading) {
-      setIsLoading(true);
-      return;
-    }
-
-    if (!user?.id) {
-      setRoles([]);
-      setIsLoading(false);
-      return;
-    }
-
-    const fetchUserRoles = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', user.id);
-
-        if (error) throw error;
-        
-        setRoles(data?.map(r => r.role) || []);
-      } catch (error) {
+      if (error) {
         console.error('Error fetching user roles:', error);
-        setRoles([]);
-      } finally {
-        setIsLoading(false);
+        return [];
       }
-    };
+      
+      return data?.map(r => r.role) || [];
+    },
+    // Only run query when we have a user
+    enabled: !!user?.id && !authLoading,
+    // Use stable cache preset - roles rarely change
+    ...cachePresets.stable,
+    // Don't retry too aggressively for roles
+    retry: 2,
+  });
 
-    fetchUserRoles();
+  /**
+   * Invalidate the roles cache - call this after role changes
+   */
+  const invalidateRoles = () => {
+    if (user?.id) {
+      queryClient.invalidateQueries({ 
+        queryKey: queryKeys.userRoles.byUser(user.id) 
+      });
+    }
+  };
 
-    // Note: Real-time subscriptions disabled to prevent React Strict Mode issues
-    // Roles will be fetched on mount and when user changes
-    // If real-time updates are needed, implement at component level instead
-  }, [user?.id, authLoading]);
+  return { 
+    roles, 
+    isLoading: authLoading || isLoading,
+    refetch,
+    invalidateRoles,
+  };
+};
 
-  return { roles, isLoading };
+/**
+ * Hook to check if user has a specific role
+ */
+export const useHasRole = (role: AppRole) => {
+  const { roles, isLoading } = useUserRole();
+  return {
+    hasRole: roles.includes(role),
+    isLoading,
+  };
+};
+
+/**
+ * Hook to check if user has any of the specified roles
+ */
+export const useHasAnyRole = (allowedRoles: AppRole[]) => {
+  const { roles, isLoading } = useUserRole();
+  return {
+    hasAnyRole: roles.some(role => allowedRoles.includes(role)),
+    isLoading,
+  };
 };
