@@ -4,8 +4,8 @@ import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { logError, setErrorUser, clearErrorUser } from '@/utils/errorLogging';
 
-// TEMPORARY: Auth bypass flag - set to true when Supabase Auth is down
-const AUTH_BYPASS_MODE = true;
+// Auth bypass flag - disabled for normal operation
+const AUTH_BYPASS_MODE = false;
 
 // Mock user for bypass mode
 const BYPASS_USER: User = {

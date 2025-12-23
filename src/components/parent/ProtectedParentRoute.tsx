@@ -14,13 +14,17 @@ const ProtectedParentRoute = ({ children }: ProtectedParentRouteProps) => {
   const [checking, setChecking] = useState(true);
 
   useEffect(() => {
-    const checkParentRole = async () => {
-      if (!user) {
-        setIsParent(false);
-        setChecking(false);
-        return;
-      }
+    // Wait for auth to finish loading
+    if (authLoading) return;
+    
+    // No user = not a parent
+    if (!user) {
+      setIsParent(false);
+      setChecking(false);
+      return;
+    }
 
+    const checkParentRole = async () => {
       try {
         // Check if user has parent, super_admin, or developer role
         const { data, error } = await supabase
@@ -44,7 +48,7 @@ const ProtectedParentRoute = ({ children }: ProtectedParentRouteProps) => {
     };
 
     checkParentRole();
-  }, [user]);
+  }, [user, authLoading]);
 
   if (authLoading || checking) {
     return (

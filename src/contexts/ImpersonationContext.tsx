@@ -24,7 +24,7 @@ export const useImpersonation = () => {
 };
 
 export const ImpersonationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [isImpersonating, setIsImpersonating] = useState(false);
   const [impersonatedUser, setImpersonatedUser] = useState<any | null>(null);
   const [impersonatedRole, setImpersonatedRole] = useState<string | null>(null);
@@ -33,12 +33,16 @@ export const ImpersonationProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // Check if current user is a developer
   useEffect(() => {
-    const checkDeveloperStatus = async () => {
-      if (!user) {
-        setIsDeveloper(false);
-        return;
-      }
+    // Wait for auth to finish loading
+    if (authLoading) return;
+    
+    // No user = not a developer
+    if (!user) {
+      setIsDeveloper(false);
+      return;
+    }
 
+    const checkDeveloperStatus = async () => {
       try {
         const { data, error } = await supabase.rpc('is_developer', { _user_id: user.id });
         if (error) {
@@ -54,7 +58,7 @@ export const ImpersonationProvider: React.FC<{ children: React.ReactNode }> = ({
     };
 
     checkDeveloperStatus();
-  }, [user]);
+  }, [user, authLoading]);
 
   const startImpersonation = async (userId: string, role: string) => {
     if (!user || !isDeveloper) {

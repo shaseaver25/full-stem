@@ -5,8 +5,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';
 import { hasPermission, type UserRole } from '@/utils/roleUtils';
 
-// TEMPORARY: Auth bypass flag - must match AuthContext
-const AUTH_BYPASS_MODE = true;
+// Auth bypass flag - disabled for normal operation
+const AUTH_BYPASS_MODE = false;
 
 interface RequireRoleProps {
   children: React.ReactNode;

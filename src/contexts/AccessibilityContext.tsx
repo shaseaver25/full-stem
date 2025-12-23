@@ -1,6 +1,7 @@
 import React, { createContext, useState, useEffect, useContext, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface AccessibilitySettings {
   ttsEnabled: boolean;
@@ -32,70 +33,69 @@ const defaultSettings: AccessibilitySettings = {
 const AccessibilityContext = createContext<AccessibilityContextType | null>(null);
 
 export function AccessibilityProvider({ children }: { children: ReactNode }) {
+  const { user, loading: authLoading } = useAuth();
   const [settings, setSettings] = useState<AccessibilitySettings>(defaultSettings);
   const [isLoading, setIsLoading] = useState(true);
   const [liveRegionMessage, setLiveRegionMessage] = useState('');
   const [liveRegionPriority, setLiveRegionPriority] = useState<'polite' | 'assertive'>('polite');
   const { toast } = useToast();
 
-  // Load settings from Supabase on mount
+  // Load settings from Supabase when user changes
   useEffect(() => {
-    loadSettings();
-  }, []);
-
-  const loadSettings = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        setIsLoading(false);
-        return;
-      }
-
-      const { data, error } = await supabase
-        .from('accessibility_settings')
-        .select('*')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      if (error) {
-        console.error('Error loading accessibility settings:', error);
-        setIsLoading(false);
-        return;
-      }
-
-      if (data) {
-        setSettings({
-          ttsEnabled: data.tts_enabled,
-          translationEnabled: data.translation_enabled,
-          highContrast: data.high_contrast,
-          dyslexiaFont: data.dyslexia_font,
-          preferredLanguage: data.preferred_language,
-          voiceStyle: data.voice_style,
-          darkMode: data.dark_mode || false,
-        });
-      }
-    } catch (error) {
-      console.error('Error in loadSettings:', error);
-    } finally {
+    // Wait for auth to finish loading
+    if (authLoading) return;
+    
+    // No user = use defaults, no DB query needed
+    if (!user) {
       setIsLoading(false);
+      return;
     }
-  };
+
+    const loadSettings = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('accessibility_settings')
+          .select('*')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        if (error) {
+          console.error('Error loading accessibility settings:', error);
+          return;
+        }
+
+        if (data) {
+          setSettings({
+            ttsEnabled: data.tts_enabled,
+            translationEnabled: data.translation_enabled,
+            highContrast: data.high_contrast,
+            dyslexiaFont: data.dyslexia_font,
+            preferredLanguage: data.preferred_language,
+            voiceStyle: data.voice_style,
+            darkMode: data.dark_mode || false,
+          });
+        }
+      } catch (error) {
+        console.error('Error in loadSettings:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadSettings();
+  }, [user, authLoading]);
 
   const updateSettings = async (updates: Partial<AccessibilitySettings>) => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      // Always update local settings immediately for demo/anonymous users
-      const newSettings = { ...settings, ...updates };
-      setSettings(newSettings);
-      
-      // Only persist to database if user is authenticated
-      if (!user) {
-        // For demo/anonymous users, just keep settings in memory
-        return;
-      }
+    // Always update local settings immediately
+    const newSettings = { ...settings, ...updates };
+    setSettings(newSettings);
+    
+    // Only persist to database if user is authenticated
+    if (!user) {
+      return;
+    }
 
+    try {
       const { error } = await supabase
         .from('accessibility_settings')
         .upsert({
