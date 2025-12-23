@@ -4,11 +4,18 @@
  * Features:
  * - Intelligent caching with stale-time policies
  * - Query key factories for cache invalidation
- * - Retry logic with exponential backoff
+ * - Retry logic with exponential backoff (integrated with Phase 1 error handling)
  * - Performance-optimized defaults
  */
 
 import { QueryClient } from '@tanstack/react-query';
+import { createQueryRetryFn, createQueryRetryDelay, RETRY_PRESETS } from '@/hooks/useQueryRetry';
+
+// Create retry functions integrated with error handling
+const queryRetryFn = createQueryRetryFn(RETRY_PRESETS.query);
+const queryRetryDelay = createQueryRetryDelay(RETRY_PRESETS.query);
+const mutationRetryFn = createQueryRetryFn({ maxRetries: 1 });
+const mutationRetryDelay = createQueryRetryDelay({ initialDelay: 1000 });
 
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -19,11 +26,11 @@ export const queryClient = new QueryClient({
       // Keep unused data in cache for 10 minutes
       gcTime: 10 * 60 * 1000,
       
-      // Retry failed requests up to 3 times
-      retry: 3,
+      // Smart retry: retryable errors (network, timeout) retry; permanent errors (auth, permission) fail immediately
+      retry: queryRetryFn,
       
-      // Exponential backoff: 1s, 2s, 4s
-      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+      // Exponential backoff with jitter: 500ms base, 5s max
+      retryDelay: queryRetryDelay,
       
       // Refetch on window focus for fresh data
       refetchOnWindowFocus: true,
@@ -35,11 +42,11 @@ export const queryClient = new QueryClient({
       placeholderData: (previousData) => previousData,
     },
     mutations: {
-      // Retry mutations once on failure
-      retry: 1,
+      // Smart retry for mutations
+      retry: mutationRetryFn,
       
-      // 3 second retry delay for mutations
-      retryDelay: 3000,
+      // Slower retry delay for mutations (1s base)
+      retryDelay: mutationRetryDelay,
     },
   },
 });

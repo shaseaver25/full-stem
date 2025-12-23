@@ -1,8 +1,10 @@
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { logError, setErrorUser, clearErrorUser } from '@/utils/errorLogging';
+import { retryAuth } from '@/utils/queryRetry';
+import { handleAuthError } from '@/utils/error';
 
 // Auth bypass flag - disabled for normal operation
 const AUTH_BYPASS_MODE = false;
@@ -52,6 +54,42 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(!AUTH_BYPASS_MODE);
   const [isSuperAdmin, setIsSuperAdmin] = useState(AUTH_BYPASS_MODE);
 
+  // Retry-enabled session fetch
+  const fetchSessionWithRetry = useCallback(async () => {
+    const result = await retryAuth(
+      async () => {
+        const { data, error } = await supabase.auth.getSession();
+        if (error) throw error;
+        return data.session;
+      },
+      { context: { action: 'getSession', page: 'auth' } }
+    );
+    
+    if (!result.success && result.error) {
+      handleAuthError(result.error, { action: 'getSession' });
+    }
+    
+    return result.success ? result.data : null;
+  }, []);
+
+  // Retry-enabled super admin check
+  const checkSuperAdminWithRetry = useCallback(async (userId: string): Promise<boolean> => {
+    const result = await retryAuth(
+      async () => {
+        const { data, error } = await supabase.rpc('is_super_admin', { _user_id: userId });
+        if (error) throw error;
+        return data || false;
+      },
+      { context: { action: 'is_super_admin', page: 'auth' } }
+    );
+    
+    if (!result.success && result.error) {
+      logError(result.error, 'AuthContext: is_super_admin check failed after retries');
+    }
+    
+    return result.success ? (result.data ?? false) : false;
+  }, []);
+
   useEffect(() => {
     // If bypass mode is enabled, skip all Supabase auth
     if (AUTH_BYPASS_MODE) {
@@ -62,8 +100,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     let isInitialLoad = true;
 
-    // Get initial session FIRST
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    // Get initial session with retry logic
+    fetchSessionWithRetry().then((session) => {
       setSession(session);
       setUser(session?.user ?? null);
       
@@ -74,16 +112,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       // Defer super admin check for initial session
       if (session?.user) {
-        setTimeout(async () => {
-          try {
-            const { data } = await supabase.rpc('is_super_admin', {
-              _user_id: session.user.id
-            });
-            setIsSuperAdmin(data || false);
-          } catch (error) {
-            logError(error, 'AuthContext: is_super_admin check');
-            setIsSuperAdmin(false);
-          }
+        setTimeout(() => {
+          checkSuperAdminWithRetry(session.user.id).then(setIsSuperAdmin);
         }, 0);
       }
       
@@ -111,16 +141,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         // Defer async operations to avoid deadlocks
         if (session?.user) {
-          setTimeout(async () => {
-            try {
-              const { data } = await supabase.rpc('is_super_admin', {
-                _user_id: session.user.id
-              });
-              setIsSuperAdmin(data || false);
-            } catch (error) {
-              logError(error, 'AuthContext: is_super_admin onAuthStateChange');
-              setIsSuperAdmin(false);
-            }
+          setTimeout(() => {
+            checkSuperAdminWithRetry(session.user.id).then(setIsSuperAdmin);
           }, 0);
         } else {
           setIsSuperAdmin(false);
@@ -129,55 +151,76 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     );
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [fetchSessionWithRetry, checkSuperAdminWithRetry]);
 
   const signUp = async (email: string, password: string, fullName: string) => {
     const redirectUrl = `${window.location.origin}/`;
     
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: redirectUrl,
-        data: {
-          full_name: fullName,
-          role: 'student' // DEFAULT TO STUDENT ROLE
-        }
-      }
-    });
+    const result = await retryAuth(
+      async () => {
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: redirectUrl,
+            data: {
+              full_name: fullName,
+              role: 'student' // DEFAULT TO STUDENT ROLE
+            }
+          }
+        });
+        if (error) throw error;
+        return null;
+      },
+      { context: { action: 'signUp', page: 'auth' } }
+    );
 
-    return { error };
+    return { error: result.success ? null : result.error };
   };
 
   const signIn = async (email: string, password: string) => {
-    try {
-      console.log('🔄 Calling Supabase signInWithPassword...');
-      const { error, data } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
-      
-      console.log('📊 Supabase response:', { hasError: !!error, hasData: !!data });
-      
-      if (error) {
-        console.error('🚫 Supabase auth error:', error);
-      }
+    console.log('🔄 Calling Supabase signInWithPassword with retry...');
+    
+    const result = await retryAuth(
+      async () => {
+        const { error, data } = await supabase.auth.signInWithPassword({
+          email,
+          password
+        });
+        
+        console.log('📊 Supabase response:', { hasError: !!error, hasData: !!data });
+        
+        if (error) {
+          console.error('🚫 Supabase auth error:', error);
+          throw error;
+        }
+        
+        return data;
+      },
+      { context: { action: 'signIn', page: 'auth' } }
+    );
 
-      return { error };
-    } catch (err) {
-      console.error('💥 Network error in signIn:', err);
-      logError(err, 'AuthContext: signIn');
-      return { error: err };
+    if (!result.success && result.error) {
+      handleAuthError(result.error, { action: 'signIn' });
     }
+
+    return { error: result.success ? null : result.error };
   };
 
   const signOut = async () => {
-    try {
-      clearErrorUser();
-      await supabase.auth.signOut();
-    } catch (error) {
-      logError(error, 'AuthContext: signOut');
-      throw error;
+    const result = await retryAuth(
+      async () => {
+        clearErrorUser();
+        const { error } = await supabase.auth.signOut();
+        if (error) throw error;
+        return null;
+      },
+      { context: { action: 'signOut', page: 'auth' } }
+    );
+    
+    if (!result.success && result.error) {
+      handleAuthError(result.error, { action: 'signOut' });
+      throw result.error;
     }
   };
 
