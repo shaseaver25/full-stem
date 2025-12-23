@@ -3,8 +3,8 @@ import { Navigate } from 'react-router-dom';
 import { useUserRole } from '@/hooks/useUserRole';
 import { Loader2 } from 'lucide-react';
 
-// TEMPORARY: Auth bypass flag - must match AuthContext
-const AUTH_BYPASS_MODE = true;
+// Auth bypass flag - disabled for normal operation
+const AUTH_BYPASS_MODE = false;
 
 interface DeveloperRouteProps {
   children: React.ReactNode;

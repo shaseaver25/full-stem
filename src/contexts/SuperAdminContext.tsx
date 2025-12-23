@@ -36,7 +36,7 @@ export const useSuperAdmin = () => {
 };
 
 export const SuperAdminProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
   const [session, setSession] = useState<SuperAdminSession>({
@@ -47,13 +47,17 @@ export const SuperAdminProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   // Check if user is super admin
   useEffect(() => {
-    const checkSuperAdmin = async () => {
-      if (!user) {
-        setIsSuperAdmin(false);
-        setLoading(false);
-        return;
-      }
+    // Wait for auth to finish loading
+    if (authLoading) return;
+    
+    // No user = not super admin
+    if (!user) {
+      setIsSuperAdmin(false);
+      setLoading(false);
+      return;
+    }
 
+    const checkSuperAdmin = async () => {
       try {
         const { data, error } = await supabase.rpc('is_super_admin', {
           _user_id: user.id
@@ -75,7 +79,7 @@ export const SuperAdminProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     };
 
     checkSuperAdmin();
-  }, [user]);
+  }, [user, authLoading]);
 
   // Load current session
   const loadSession = async () => {

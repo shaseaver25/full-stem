@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
-// TEMPORARY: Auth bypass flag - must match AuthContext
-const AUTH_BYPASS_MODE = true;
+// Auth bypass flag - disabled for normal operation
+const AUTH_BYPASS_MODE = false;
 
 // All roles for bypass mode
 const BYPASS_ROLES = ['developer', 'super_admin', 'admin', 'teacher', 'student', 'parent'];
