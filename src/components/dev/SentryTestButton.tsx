@@ -45,8 +45,9 @@ export function SentryTestButton() {
     }
   };
 
-  // Only show in development
-  if (!isDev) return null;
+  // Show in development OR when ?sentry-test=true is in URL (for production testing)
+  const showTestButton = isDev || new URLSearchParams(window.location.search).get('sentry-test') === 'true';
+  if (!showTestButton) return null;
 
   return (
     <div className="fixed bottom-4 right-4 z-50 bg-background border border-border rounded-lg shadow-lg p-4 max-w-sm">
