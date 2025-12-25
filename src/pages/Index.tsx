@@ -10,6 +10,7 @@ import HowItWorks from "@/components/HowItWorks";
 import CoreTracks from "@/components/CoreTracks";
 import Testimonials from "@/components/Testimonials";
 import Footer from "@/components/Footer";
+import { SentryTestButton } from "@/components/dev/SentryTestButton";
 import { GraduationCap, Users, BookOpen, ArrowRight, Volume2 } from "lucide-react";
 
 const Index = () => {
@@ -144,6 +145,7 @@ const Index = () => {
       <CoreTracks />
       <Testimonials />
       <Footer />
+      <SentryTestButton />
     </div>
   );
 };
